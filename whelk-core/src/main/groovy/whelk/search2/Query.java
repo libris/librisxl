@@ -96,7 +96,7 @@ public class Query {
         if (queryParams.skipStats) {
             return getEsQueryDsl(getEsQuery());
         } else {
-            List<String> subjectTypes = getFullQueryTree().getSubjectTypesList();
+            List<String> subjectTypes = getFullQueryTree().getRdfSubjectTypesList();
             return getEsQueryDsl(getEsQuery(), getEsAggQuery(subjectTypes), getPostFilter(subjectTypes));
         }
     }
@@ -181,12 +181,12 @@ public class Query {
         return mustWrap(Stream.of(mainQuery, functionScore, constantScore).filter(Predicate.not(Map::isEmpty)).toList());
     }
 
-    protected Map<String, Object> getEsAggQuery(Collection<String> subjectTypes) {
-        return buildAggQuery(appParams.sliceList, whelk.getJsonld(), subjectTypes, esSettings, getSelectedFacets());
+    protected Map<String, Object> getEsAggQuery(Collection<String> rdfSubjectTypes) {
+        return buildAggQuery(appParams.sliceList, whelk.getJsonld(), rdfSubjectTypes, esSettings, getSelectedFacets());
     }
 
-    protected Map<String, Object> getPostFilter(Collection<String> subjectTypes) {
-        return getEsMmSelectedFacets(getSelectedFacets().getAllMultiOrMenuSelected(), subjectTypes, whelk.getJsonld(), esSettings);
+    protected Map<String, Object> getPostFilter(Collection<String> rdfSubjectTypes) {
+        return getEsMmSelectedFacets(getSelectedFacets().getAllMultiOrMenuSelected(), rdfSubjectTypes, whelk.getJsonld(), esSettings);
     }
 
     protected Map<String, Object> getPartialCollectionView() {
@@ -291,12 +291,12 @@ public class Query {
 
     private QueryTree mergeTrees(QueryTree baseTree, List<QueryTree> other) {
         // TODO: How to handle e.g. "X AND ((typ:Agent AND isPartOf:X) OR (typ:Verk AND year:1990))"?
-        var baseTreeSubjectTypes = baseTree.getSubjectTypesNode();
-        if (baseTreeSubjectTypes.isEmpty()) {
+        var baseTreeRdfSubjectType = baseTree.getRdfSubjectType();
+        if (baseTreeRdfSubjectType.isNoType()) {
             for (QueryTree o : other) {
-                var otherSubjectTypesNode = o.getSubjectTypesNode();
-                if (otherSubjectTypesNode.isPresent()) {
-                    baseTree = baseTree.add(otherSubjectTypesNode.get());
+                var otherRdfSubjectType = o.getRdfSubjectType();
+                if (!otherRdfSubjectType.isNoType()) {
+                    baseTree = baseTree.add(otherRdfSubjectType.asNode());
                     break;
                 }
             }
@@ -317,7 +317,7 @@ public class Query {
     }
 
     private static Map<String, Object> getEsMmSelectedFacets(Map<String, List<Node>> mmSelected,
-                                                                Collection<String> subjectTypes,
+                                                                Collection<String> rdfSubjectTypes,
                                                                 JsonLd jsonLd,
                                                                 ESSettings esSettings) {
         if (mmSelected.isEmpty()) {
@@ -328,7 +328,7 @@ public class Query {
                 .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
                 .toList();
         return (orGrouped.size() == 1 ? orGrouped.getFirst() : new And(orGrouped))
-                .expand(jsonLd, subjectTypes)
+                .expand(jsonLd, rdfSubjectTypes)
                 .toEs(esSettings);
     }
 
@@ -381,13 +381,13 @@ public class Query {
 
     private record AggContext(JsonLd jsonLd,
                               Map<String, List<Node>> mmSelected,
-                              Collection<String> subjectTypes,
+                              Collection<String> rdfSubjectTypes,
                               ESSettings esSettings,
                               SelectedFacets selectedFacets) { }
 
     private static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
                                                      JsonLd jsonLd,
-                                                     Collection<String> subjectTypes,
+                                                     Collection<String> rdfSubjectTypes,
                                                      ESSettings esSettings,
                                                      SelectedFacets selectedFacets) {
         if (sliceList.isEmpty()) {
@@ -400,7 +400,7 @@ public class Query {
 
         Map<String, Object> query = new LinkedHashMap<>();
 
-        var ctx = new AggContext(jsonLd, mmSelected, subjectTypes, esSettings, selectedFacets);
+        var ctx = new AggContext(jsonLd, mmSelected, rdfSubjectTypes, esSettings, selectedFacets);
         for (AppParams.Slice slice : sliceList) {
             addSliceToAggQuery(query, slice, ctx);
         }
@@ -428,7 +428,7 @@ public class Query {
         var p = new Path(property).expand(ctx.jsonLd);
         var paths = property instanceof Property.Ix // TODO for now exclude altPaths for _categoryByCollection
                 ? List.of(p)
-                : p.getAltPaths(ctx.jsonLd, ctx.subjectTypes);
+                : p.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes);
 
         paths.forEach(path -> {
             String jsonPath = path.jsonForm();
@@ -450,7 +450,7 @@ public class Query {
                             }
                         })
                     : ctx.mmSelected;
-            Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.subjectTypes, ctx.jsonLd, ctx.esSettings);
+            Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
             query.put(field, filterWrap(aggs, property.name(), filter));
         });
     }

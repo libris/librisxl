@@ -24,8 +24,8 @@ public final class Or extends Group {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> subjectTypes) {
-        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, subjectTypes), Objects::nonNull);
+    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rdfSubjectTypes), Objects::nonNull);
     }
 
     @Override
@@ -36,6 +36,11 @@ public final class Or extends Group {
     @Override
     public boolean implies(Node node, JsonLd jsonLd) {
         return children.stream().allMatch(child -> child.implies(node, jsonLd));
+    }
+
+    @Override
+    public RdfSubjectType rdfSubjectType() {
+        return children.stream().allMatch(Type.class::isInstance) ? new RdfSubjectType(this) : RdfSubjectType.noType();
     }
 
     @Override

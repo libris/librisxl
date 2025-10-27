@@ -28,13 +28,8 @@ public final class Type extends PathValue {
     }
 
     @Override
-    public Optional<Node> subjectTypesNode() {
-        return Optional.of(this);
-    }
-
-    @Override
-    public List<String> subjectTypesList() {
-        return List.of(type);
+    public RdfSubjectType rdfSubjectType() {
+        return new RdfSubjectType(this);
     }
 
     public Property.RdfType rdfTypeProperty() {

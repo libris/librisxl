@@ -18,10 +18,10 @@ public record Not(Node node) implements Node {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> subjectTypes) {
+    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         return node instanceof FilterAlias
                 ? null
-                : new Not(node.expand(jsonLd, subjectTypes));
+                : new Not(node.expand(jsonLd, rdfSubjectTypes));
     }
 
     @Override
@@ -60,6 +60,11 @@ public record Not(Node node) implements Node {
         }
         Node inverse = other.getInverse();
         return !(inverse instanceof Not) && inverse.implies(node, jsonLd);
+    }
+
+    @Override
+    public RdfSubjectType rdfSubjectType() {
+        return RdfSubjectType.noType();
     }
 
     @Override

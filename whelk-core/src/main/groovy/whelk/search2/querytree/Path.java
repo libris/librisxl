@@ -185,9 +185,9 @@ public class Path {
             return this;
         }
 
-        public List<ExpandedPath> getAltPaths(JsonLd jsonLd, Collection<String> subjectTypes) {
+        public List<ExpandedPath> getAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
             if (origPath != null && origPath.first() instanceof Property p && !p.isPlatformTerm() && !p.isRdfType()) {
-                Set<Property> integralRelations = subjectTypes.stream()
+                Set<Property> integralRelations = rdfSubjectTypes.stream()
                         .map(t -> QueryUtil.getIntegralRelationsForType(t, jsonLd))
                         .flatMap(List::stream)
                         .collect(Collectors.toSet());
@@ -198,7 +198,7 @@ public class Path {
                         .map(ir -> applyIntegralRelation(ir, jsonLd))
                         .forEach(path -> path.ifPresent(altPaths::add));
 
-                if (altPaths.isEmpty() || subjectTypes.stream().anyMatch(t -> p.mayAppearOnType(t, jsonLd))) {
+                if (altPaths.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> p.mayAppearOnType(t, jsonLd))) {
                     altPaths.add(this);
                 }
 

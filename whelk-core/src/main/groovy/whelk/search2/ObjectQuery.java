@@ -46,13 +46,13 @@ public class ObjectQuery extends Query {
 
         JsonLd ld = whelk.getJsonld();
 
-        List<String> givenSubjectTypes = queryTree.getSubjectTypesList();
+        List<String> givenSubjectTypes = queryTree.getRdfSubjectTypesList();
 
         Set<String> inferredSubjectTypes = new HashSet<>();
         Map<Property, List<String>> predicateToSubjectTypes = new HashMap<>();
 
         curatedPredicates.forEach(p -> {
-            List<String> subjects = queryTree.getSubjectTypesList().stream()
+            List<String> subjects = queryTree.getRdfSubjectTypesList().stream()
                     .filter(t -> p.appearsOnType(t, ld) || p.indirectlyAppearsOnType(t, ld))
                     .toList();
             if (!subjects.isEmpty()) {

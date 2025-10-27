@@ -51,7 +51,7 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> subjectTypes) {
+    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         return this;
     }
 
@@ -93,6 +93,11 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     @Override
     public boolean implies(Node node, JsonLd jsonLd) {
         return implies(node, this::equals);
+    }
+
+    @Override
+    public RdfSubjectType rdfSubjectType() {
+        return RdfSubjectType.noType();
     }
 
     @Override

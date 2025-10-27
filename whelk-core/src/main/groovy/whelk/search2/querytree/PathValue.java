@@ -82,8 +82,8 @@ public sealed class PathValue implements Node permits Type {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> subjectTypes) {
-        return path.isValid() ? _expand(jsonLd, subjectTypes) : this;
+    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return path.isValid() ? _expand(jsonLd, rdfSubjectTypes) : this;
     }
 
     public Node expand(JsonLd jsonLd) {
@@ -118,6 +118,11 @@ public sealed class PathValue implements Node permits Type {
     @Override
     public boolean implies(Node node, JsonLd jsonLd) {
         return implies(node, this::equals);
+    }
+
+    @Override
+    public RdfSubjectType rdfSubjectType() {
+        return RdfSubjectType.noType();
     }
 
     @Override
@@ -305,12 +310,12 @@ public sealed class PathValue implements Node permits Type {
         return m;
     }
 
-    private Node _expand(JsonLd jsonLd, Collection<String> subjectTypes) {
+    private Node _expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         Path.ExpandedPath expandedPath = path.expand(jsonLd, value);
 
 
-        if (!subjectTypes.isEmpty()) {
-            List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, subjectTypes);
+        if (!rdfSubjectTypes.isEmpty()) {
+            List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, rdfSubjectTypes);
             List<Path.ExpandedPath> alt2Paths = expandedPath.getAlt2Paths(jsonLd);
             var altPvNodes = Stream.concat(altPaths.stream(), alt2Paths.stream())
                     .map(this::withPath)

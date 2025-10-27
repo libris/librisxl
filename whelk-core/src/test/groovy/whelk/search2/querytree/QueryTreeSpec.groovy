@@ -390,7 +390,7 @@ class QueryTreeSpec extends Specification {
 
     def "collect subject types"() {
         given:
-        def subjectTypes = new QueryTree(tree, disambiguate).getSubjectTypesList()
+        def subjectTypes = new QueryTree(tree, disambiguate).getRdfSubjectTypesList()
 
 
         expect:

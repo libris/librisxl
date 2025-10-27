@@ -15,7 +15,7 @@ import java.util.function.Predicate;
 public sealed interface Node permits FilterAlias, FreeText, Group, Not, PathValue {
     Map<String, Object> toEs(ESSettings esSettings);
 
-    Node expand(JsonLd jsonLd, Collection<String> subjectTypes);
+    Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
 
     Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink);
 
@@ -27,6 +27,8 @@ public sealed interface Node permits FilterAlias, FreeText, Group, Not, PathValu
 
     boolean implies(Node node, JsonLd jsonLd);
 
+    RdfSubjectType rdfSubjectType();
+
     default boolean implies(Node node, Predicate<Node> cmp) {
         return switch (node) {
             case And and -> and.children().stream().allMatch(cmp);
@@ -37,13 +39,5 @@ public sealed interface Node permits FilterAlias, FreeText, Group, Not, PathValu
 
     default List<Node> children() {
         return Collections.emptyList();
-    }
-
-    default List<String> subjectTypesList() {
-        return List.of();
-    }
-
-    default Optional<Node> subjectTypesNode() {
-        return Optional.empty();
     }
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import static whelk.search2.QueryUtil.mustWrap;
 
@@ -24,9 +25,9 @@ public final class And extends Group {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> subjectTypes) {
-        List<String> subjectTypesInGroup = subjectTypesList();
-        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, subjectTypesInGroup.isEmpty() ? subjectTypes : subjectTypesInGroup), Objects::nonNull);
+    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        List<String> rdfSubjectTypesInGroup = rdfSubjectType().asList().stream().map(Type::type).toList();
+        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rdfSubjectTypesInGroup.isEmpty() ? rdfSubjectTypes : rdfSubjectTypesInGroup), Objects::nonNull);
     }
 
     @Override
@@ -67,18 +68,12 @@ public final class And extends Group {
     }
 
     @Override
-    public Optional<Node> subjectTypesNode() {
+    public RdfSubjectType rdfSubjectType() {
         return children().stream()
-                .filter(n -> n instanceof Type || (n instanceof Or && n.children().stream().allMatch(Type.class::isInstance)))
-                .findFirst();
-    }
-
-    @Override
-    public List<String> subjectTypesList() {
-        return subjectTypesNode().map(n -> n instanceof Type t
-                        ? List.of(t.type())
-                        : n.children().stream().map(Type.class::cast).map(Type::type).toList())
-                .orElse(List.of());
+                .map(Node::rdfSubjectType)
+                .filter(Predicate.not(RdfSubjectType::isNoType))
+                .findFirst()
+                .orElse(RdfSubjectType.noType());
     }
 
     @Override

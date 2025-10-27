@@ -32,8 +32,8 @@ public sealed class FilterAlias implements Node {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> subjectTypes) {
-        return getParsed().expand(jsonLd, subjectTypes);
+    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return getParsed().expand(jsonLd, rdfSubjectTypes);
     }
 
     @Override
@@ -70,6 +70,11 @@ public sealed class FilterAlias implements Node {
     @Override
     public boolean implies(Node node, JsonLd jsonLd) {
         return implies(node, this::equals) || getParsed().implies(node, jsonLd);
+    }
+
+    @Override
+    public RdfSubjectType rdfSubjectType() {
+        return RdfSubjectType.noType();
     }
 
     @Override

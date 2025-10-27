@@ -59,7 +59,7 @@ public class PredicateObjectQuery extends ObjectQuery {
             return getEsQueryDsl(getEsQuery(queryTree));
         }
 
-        Set<String> subjectTypes = Stream.concat(queryTree.getSubjectTypesList().stream(), predicatesByInferredSubjectType.keySet().stream())
+        Set<String> subjectTypes = Stream.concat(queryTree.getRdfSubjectTypesList().stream(), predicatesByInferredSubjectType.keySet().stream())
                 .collect(Collectors.toSet());
         var aggQuery = getEsAggQuery(subjectTypes);
         var postFilter = getPostFilter(subjectTypes);

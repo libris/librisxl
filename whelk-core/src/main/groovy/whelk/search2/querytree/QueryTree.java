@@ -55,12 +55,12 @@ public class QueryTree {
         return new QueryTree(merge(tree, other.tree(), jsonLd)).reduce(jsonLd);
     }
 
-    public List<String> getSubjectTypesList() {
-        return isEmpty() ? List.of() : tree.subjectTypesList();
+    public List<String> getRdfSubjectTypesList() {
+        return tree.rdfSubjectType().asList().stream().map(Type::type).toList();
     }
 
-    public Optional<Node> getSubjectTypesNode() {
-        return isEmpty() ? Optional.empty() : tree.subjectTypesNode();
+    public RdfSubjectType getRdfSubjectType() {
+        return tree.rdfSubjectType();
     }
 
     public Map<String, Object> toSearchMapping(QueryParams queryParams, String apiParam) {
@@ -269,69 +269,89 @@ public class QueryTree {
             return or.mapAndReinstantiate(n -> merge(n, b, jsonLd));
         }
 
-        TypeUtil aTypeUtil = new TypeUtil(a);
+        RdfSubjectType aRdfSubjectType = a.rdfSubjectType();
 
-        if (aTypeUtil.isNoType()) {
+        if (aRdfSubjectType.isNoType()) {
             // No type conflict, just merge as is
             return doMerge(a, b, jsonLd);
         }
 
-        if (aTypeUtil.isMultiType()) {
+        if (aRdfSubjectType.isMultiType()) {
             // type:(T1 OR T2) X --> (type:T1 X) OR (type:T2 X)
-            var groupedByType = aTypeUtil.groupByType();
-            var merged = merge(aTypeUtil.groupByType(), b, jsonLd);
+            var groupedByType = groupByType(a, aRdfSubjectType);
+            var merged = merge(groupedByType, b, jsonLd);
             // If nothing was merged return the original more compact form,
             return merged.equals(groupedByType) ? a : merged;
         }
 
-        return doMerge(a, compatibleSubTree(aTypeUtil.singleType().type(), b, jsonLd), jsonLd);
+        return doMerge(a, compatibleSubTree(aRdfSubjectType.singleType().type(), b, jsonLd), jsonLd);
     }
 
-    private static Node compatibleSubTree(String aType, Node bTree, JsonLd jsonLd) {
+    private static Node compatibleSubTree(String aSubjectType, Node bTree, JsonLd jsonLd) {
         if (bTree == null) {
             return null;
         }
 
         if (bTree instanceof Or or) {
-            return or.mapFilterAndReinstantiate(n -> compatibleSubTree(aType, n, jsonLd), Objects::nonNull);
+            return or.mapFilterAndReinstantiate(n -> compatibleSubTree(aSubjectType, n, jsonLd), Objects::nonNull);
         }
 
-        TypeUtil bTypeUtil = new TypeUtil(bTree);
+        RdfSubjectType bRdfSubjectType = bTree.rdfSubjectType();
 
-        if (bTypeUtil.isNoType()) {
-            return compatibleByDomain(aType, bTree, jsonLd);
+        if (bRdfSubjectType.isNoType()) {
+            return compatibleByDomain(aSubjectType, bTree, jsonLd);
         }
 
-        if (bTypeUtil.isMultiType()) {
-            return compatibleSubTree(aType, bTypeUtil.groupByTypeAndCompatible(jsonLd), jsonLd);
+        if (bRdfSubjectType.isMultiType()) {
+            return compatibleSubTree(aSubjectType, groupByTypeAndCompatible(bTree, bRdfSubjectType, jsonLd), jsonLd);
         }
 
-        Type bType = bTypeUtil.singleType();
+        Type bSubjectType = bRdfSubjectType.singleType();
 
-        if (jsonLd.isSubClassOf(aType, bType.type())) {
+        if (jsonLd.isSubClassOf(aSubjectType, bSubjectType.type())) {
             // Explicit b type given and compatible with a type -> assume that the entire b expression is compatible with a.
-            return bTypeUtil.rest();
+            return noTypeTree(bTree, bRdfSubjectType.asNode());
         }
 
-        Optional<Property> aToBIntegralRelation = QueryUtil.getIntegralRelationsForType(aType, jsonLd)
+        Optional<Property> aToBIntegralRelation = QueryUtil.getIntegralRelationsForType(aSubjectType, jsonLd)
                 .stream()
                 .filter(p -> p.range().stream()
-                        .anyMatch(r -> jsonLd.isSubClassOf(bType.type(), r)))
+                        .anyMatch(r -> jsonLd.isSubClassOf(bSubjectType.type(), r)))
                 .findFirst();
         if (aToBIntegralRelation.isPresent()) {
             // Also compatible types, indirectly via integral relation
             Property relation = aToBIntegralRelation.get();
-            PathValue integralType = bType.withPath(new Path(List.of(relation, bType.rdfTypeProperty())));
-            return _replace(bTree, bType, integralType);
+            PathValue integralType = bSubjectType.withPath(new Path(List.of(relation, bSubjectType.rdfTypeProperty())));
+            return _replace(bTree, bSubjectType, integralType);
         }
 
         // b type incompatible with a type
         return null;
     }
 
-    private static Node compatibleByDomain(String subjectType, Node tree, JsonLd jsonLd) {
+    private static Or groupByType(Node n, RdfSubjectType nRdfSubjectType) {
+        Node noTypeTree = noTypeTree(n, nRdfSubjectType.asNode());
+        return new Or(nRdfSubjectType.asList().stream().map(t -> (Node) new And(List.of(t, noTypeTree))).toList());
+    }
+
+    // FIXME: Naming
+    private static Or groupByTypeAndCompatible(Node n, RdfSubjectType nRdfSubjectType, JsonLd jsonLd) {
+        List<Node> grouped = new ArrayList<>();
+        Node noTypeTree = noTypeTree(n, nRdfSubjectType.asNode());
+        for (Type t : nRdfSubjectType.asList()) {
+            var compatibleInGroup = compatibleByDomain(t.type(), noTypeTree, jsonLd);
+            grouped.add(compatibleInGroup == null ? t : new And(List.of(t, compatibleInGroup)));
+        }
+        return new Or(grouped);
+    }
+
+    private static Node noTypeTree(Node tree, Node typeNode) {
+        return _remove(tree, List.of(typeNode));
+    }
+
+    private static Node compatibleByDomain(String rdfSubjectType, Node tree, JsonLd jsonLd) {
         Predicate<PathValue> isCompatibleByDomain = pv -> pv.path().firstProperty()
-                .filter(p -> p.appearsOnType(subjectType, jsonLd) || p.indirectlyAppearsOnType(subjectType, jsonLd))
+                .filter(p -> p.appearsOnType(rdfSubjectType, jsonLd) || p.indirectlyAppearsOnType(rdfSubjectType, jsonLd))
                 .isPresent();
 
         Predicate<Node> isIncompatible = node -> switch (node) {
@@ -357,68 +377,4 @@ public class QueryTree {
 
         return (nodesToKeep.size() == 1 ? nodesToKeep.getFirst() : new And(nodesToKeep));
     }
-
-    private static class TypeUtil {
-        private final Node typeNode;
-        private Node rest;
-
-        private List<Type> list;
-
-        TypeUtil(Node n) {
-            this.typeNode = n.subjectTypesNode().orElse(null);
-            if (!isNoType()) {
-                this.rest = _remove(n, List.of(typeNode));
-            }
-        }
-
-        boolean isNoType() {
-            return typeNode == null;
-        }
-
-        boolean isSingleType() {
-            return typeList().size() == 1;
-        }
-
-        boolean isMultiType() {
-            return typeList().size() > 1;
-        }
-
-        Type singleType() {
-            assert isSingleType();
-            return typeList().getFirst();
-        }
-
-        List<Type> typeList() {
-            if (list == null) {
-                if (typeNode == null) {
-                    this.list = List.of();
-                } else if (typeNode instanceof Type t) {
-                    this.list = List.of(t);
-                } else {
-                    this.list = typeNode.children().stream().map(Type.class::cast).toList();
-                }
-            }
-            return list;
-        }
-
-        Node rest() {
-            return rest;
-        }
-
-        Or groupByType() {
-            assert isMultiType();
-            return new Or(typeList().stream().map(t -> (Node) new And(List.of(t, rest()))).toList());
-        }
-
-        // FIXME: Naming
-        Or groupByTypeAndCompatible(JsonLd jsonLd) {
-            List<Node> grouped = new ArrayList<>();
-            for (Type t : typeList()) {
-                var compatibleInGroup = compatibleByDomain(t.type(), rest(), jsonLd);
-                grouped.add(compatibleInGroup == null ? t : new And(List.of(t, compatibleInGroup)));
-            }
-            return new Or(grouped);
-        }
-    }
-
 }

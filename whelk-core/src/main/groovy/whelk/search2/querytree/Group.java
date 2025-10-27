@@ -8,7 +8,6 @@ import whelk.search2.QueryUtil;
 import java.util.*;
 
 import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
