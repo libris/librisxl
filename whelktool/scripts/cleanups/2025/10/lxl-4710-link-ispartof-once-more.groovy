@@ -191,7 +191,7 @@ selectByIds(new File("ids.txt").readLines()) { doc ->
 
         if (sourceIdentifiedByType == "ISBN") {
             Set targetIdentifiedByValue = filteredIdentifiers.collect { toIsbn13(it["value"]) }.toSet() - null
-            if (sourceIdentifiedByValue != targetIdentifiedByValue) {
+            if (sourceIdentifiedByValue.disjoint(targetIdentifiedByValue)) {
                 _logSkip("${sourceIdentifiedByType} identifiers not matching in target ${properUri}. Source: ${sourceIdentifiedByValue}; target: ${targetIdentifiedByValue}")
                 return
             }      
