@@ -8,27 +8,30 @@ import whelk.search2.QueryParams
 import whelk.search2.VocabMappings
 
 class TestData {
-    static def excludeFilter = new Filter.AliasedFilter("excludeA", "NOT p1:A", [:])
-    static def includeFilter = new Filter.AliasedFilter("includeA", "NOT excludeA", [:])
+    static def excludeFilter = new FilterAlias("excludeA", "NOT p1:A", [:])
+    static def includeFilter = new FilterAlias("includeA", "NOT excludeA", [:])
+    static def XYFilter = new FilterAlias("XY", "p1:X p3:Y", [:])
 
     static def getDisambiguate() {
         def propertyAliasMappings = [
-                'p1'      : 'p1',
-                'p1label' : 'p1',
-                'p2'      : 'p2',
-                'p3'      : 'p3',
-                'p4'      : 'p4',
-                'p5'      : 'p5',
-                'p6'      : 'p6',
-                'p7'      : 'p7',
-                'p8'      : 'p8',
-                'p9'      : 'p9',
-                'p10'     : 'p10',
-                'p11'     : 'p11',
-                'p12'     : 'p12',
-                'p13'     : 'p13',
-                'type'    : 'rdf:type',
-                'rdf:type': 'rdf:type'
+                'p1'         : 'p1',
+                'p1label'    : 'p1',
+                'p2'         : 'p2',
+                'p3'         : 'p3',
+                'p4'         : 'p4',
+                'p5'         : 'p5',
+                'p6'         : 'p6',
+                'p7'         : 'p7',
+                'p8'         : 'p8',
+                'p9'         : 'p9',
+                'p10'        : 'p10',
+                'p11'        : 'p11',
+                'p12'        : 'p12',
+                'p13'        : 'p13',
+                'type'       : 'rdf:type',
+                'rdf:type'   : 'rdf:type',
+                'instanceof' : 'instanceOf',
+                'hasinstance': 'hasInstance'
         ]
         def ambiguousPropertyAliases = [
                 'p'     : ['p', 'p1'] as Set,
@@ -36,9 +39,12 @@ class TestData {
                 'pp'    : ['p3', 'p4'] as Set
         ]
         def classAliasMappings = [
-                't1': 'T1',
-                't2': 'T2',
-                't3': 'T3'
+                't1' : 'T1',
+                't2' : 'T2',
+                't3' : 'T3',
+                't1x': 'T1x',
+                't2x': 'T2x',
+                't3x': 'T3x'
         ]
         def ambiguousClassAliases = [
                 't' : ['T', 'T1'] as Set,
@@ -59,6 +65,7 @@ class TestData {
         def filterAliases = [
                 excludeFilter,
                 includeFilter,
+                XYFilter
         ]
 
         return new Disambiguate(vocabMappings, filterAliases, getJsonLd())
@@ -82,17 +89,17 @@ class TestData {
                 ],
                 [
                         '@id'   : 'p7',
-                        '@type' : 'ObjectProperty',
+                        '@type' : 'DatatypeProperty',
                         'domain': [['@id': 'T1']]
                 ],
                 [
                         '@id'   : 'p8',
-                        '@type' : 'ObjectProperty',
+                        '@type' : 'DatatypeProperty',
                         'domain': [['@id': 'T2']]
                 ],
                 [
                         '@id'   : 'p9',
-                        '@type' : 'ObjectProperty',
+                        '@type' : 'DatatypeProperty',
                         'domain': [['@id': 'T3']]
                 ],
                 [
@@ -169,13 +176,18 @@ class TestData {
                 ['@id': 'T1', '@type': 'Class'],
                 ['@id': 'T2', '@type': 'Class'],
                 ['@id': 'T3', '@type': 'Class'],
-                ['@id': 'T4', '@type': 'Class', 'subClassOf': [['@id': 'T3']]],
+                ['@id': 'T1x', '@type': 'Class', 'subClassOf': [['@id': 'T1']]],
+                ['@id': 'T2x', '@type': 'Class', 'subClassOf': [['@id': 'T2']]],
+                ['@id': 'T3x', '@type': 'Class', 'subClassOf': [['@id': 'T3']]],
                 ['@id': 'E1', '@type': 'Class'],
                 ['@id': 'E2', '@type': 'Class'],
                 ['@id': 'p', '@type': 'DatatypeProperty']
         ]]
         def ctx = [
-                '@context': ['@vocab': 'https://id.kb.se/vocab/', 'p2': ['@type': '@vocab']]
+                '@context': [
+                        '@vocab': 'https://id.kb.se/vocab/',
+                        'p2': ['@type': '@vocab']
+                ]
         ]
         return new JsonLd(ctx, [:], vocab)
     }
@@ -197,6 +209,6 @@ class TestData {
                         'p6'      : [:]
                 ]
         ]
-        return new AppParams(appConfig, new QueryParams([:]))
+        return new AppParams(appConfig)
     }
 }

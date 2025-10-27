@@ -730,6 +730,10 @@ class JsonLd {
         return type in bases
     }
 
+    boolean directDescendants(String typeA, String typeB) {
+        return isSubClassOf(typeA, typeB) || isSubClassOf(typeB, typeA);
+    }
+
     boolean isInstanceOf(Map entity, String baseType) {
         if (entity.is(null)) {
             return false

@@ -2,6 +2,7 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.querytree.FilterAlias;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 20;
@@ -50,7 +50,7 @@ public class QueryParams {
     public final String lens;
     public final Spell spell;
     public final String computedLabelLocale;
-    public final Map<String, String[]> aliased;
+    public final List<FilterAlias.QueryDefinedAlias> aliased;
     public final int cursor;
     public final ESSettings.Boost boost;
 
@@ -176,10 +176,15 @@ public class QueryParams {
                 .toList();
     }
 
-    private static Map<String, String[]> getAliased(Map<String, String[]> queryParameters) {
+    private static List<FilterAlias.QueryDefinedAlias> getAliased(Map<String, String[]> queryParameters) {
         return queryParameters.entrySet().stream()
-                .filter((entry) -> entry.getKey().startsWith(ApiParams.ALIAS))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .filter(entry -> entry.getKey().startsWith(ApiParams.ALIAS))
+                .map(entry -> new FilterAlias.QueryDefinedAlias(asqPrefix(entry.getKey()), entry.getValue()[0]))
+                .toList();
+    }
+
+    private static String asqPrefix(String queryParameter) {
+        return queryParameter.replaceFirst("_","");
     }
 
     private int getLimit(Map<String, String[]> queryParameters) throws InvalidQueryException {

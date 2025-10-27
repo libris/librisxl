@@ -9,8 +9,10 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static whelk.JsonLd.LD_KEYS;
+import static whelk.JsonLd.Rdfs.RDF_TYPE;
 import static whelk.JsonLd.looksLikeIri;
 import static whelk.search2.QueryUtil.encodeUri;
 import static whelk.search2.VocabMappings.expandPrefixed;
@@ -19,40 +21,42 @@ public class Disambiguate {
     private final JsonLd jsonLd;
 
     private final VocabMappings vocabMappings;
-    private final Map<String, Filter.AliasedFilter> filterAliasMappings;
+    private final Map<String, FilterAlias> filterAliasMappings;
 
     private enum VocabTermType {
         CLASS,
         ENUM
     }
 
-    public Disambiguate(VocabMappings vocabMappings, AppParams appParams, JsonLd jsonLd) {
+    public Disambiguate(VocabMappings vocabMappings, Collection<FilterAlias> appFilterAliases, Collection<FilterAlias.QueryDefinedAlias> queryFilterAliases, JsonLd jsonLd) {
         this.vocabMappings = vocabMappings;
-        this.filterAliasMappings = getFilterAliasMappings(appParams.siteFilters.getAliasedFilters());
+        this.filterAliasMappings = getFilterAliasMappings(appFilterAliases, queryFilterAliases);
         this.jsonLd = jsonLd;
     }
 
     // For test only
     @PackageScope
-    public Disambiguate(VocabMappings vocabMappings, Collection<Filter.AliasedFilter> filterAliasMappings, JsonLd jsonLd) {
+    public Disambiguate(VocabMappings vocabMappings, Collection<FilterAlias> filterAliasMappings, JsonLd jsonLd) {
         this.vocabMappings = vocabMappings;
-        this.filterAliasMappings = getFilterAliasMappings(filterAliasMappings);
+        this.filterAliasMappings = getFilterAliasMappings(filterAliasMappings, List.of());
         this.jsonLd = jsonLd;
     }
 
     public Subpath mapKey(String key, int offset) {
-        // TODO: Look up all indexed keys starting with underscore?
-        if (LD_KEYS.contains(key) || key.startsWith("_")) {
-            return new Key.RecognizedKey(key, offset);
-        }
-
         Optional<String> mappedProperty = getMappedTerm(key, vocabMappings.propertyAliasMappings);
         if (mappedProperty.isPresent()) {
+            if (mappedProperty.get().equals(RDF_TYPE)) {
+                return new Property.RdfType(jsonLd);
+            }
             return new Property(mappedProperty.get(), jsonLd, new Key.RecognizedKey(key, offset));
         }
 
         Set<String> multipleMappedProperties = getMappedTermsForAmbiguous(key, vocabMappings.ambiguousPropertyAliases);
         if (multipleMappedProperties.isEmpty()) {
+            // TODO: Look up all indexed keys starting with underscore?
+            if (LD_KEYS.contains(key) || key.startsWith("_")) {
+                return new Key.RecognizedKey(key, offset);
+            }
             return new Key.UnrecognizedKey(key, offset);
         }
 
@@ -126,7 +130,7 @@ public class Disambiguate {
         return Optional.empty();
     }
 
-    public Optional<Filter.AliasedFilter> mapToFilter(String alias) {
+    public Optional<FilterAlias> mapToFilter(String alias) {
         return Optional.ofNullable(filterAliasMappings.get(alias.toLowerCase()));
     }
 
@@ -156,8 +160,8 @@ public class Disambiguate {
         return ambiguousMappings.getOrDefault(alias.toLowerCase(), Collections.emptySet());
     }
 
-    private Map<String, Filter.AliasedFilter> getFilterAliasMappings(Collection<Filter.AliasedFilter> aliasedFilters) {
-        return aliasedFilters.stream()
-                .collect(Collectors.toMap(af -> af.alias().toLowerCase(), Function.identity()));
+    private Map<String, FilterAlias> getFilterAliasMappings(Collection<FilterAlias> appFilterAliases, Collection<FilterAlias.QueryDefinedAlias> queryFilterAliases) {
+        return Stream.concat(appFilterAliases.stream(), queryFilterAliases.stream())
+                .collect(Collectors.toMap(fa -> fa.alias().toLowerCase(), Function.identity()));
     }
 }

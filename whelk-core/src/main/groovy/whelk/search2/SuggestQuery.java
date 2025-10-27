@@ -65,7 +65,7 @@ public class SuggestQuery extends Query {
                                 String formattedLink = new Link((String) item.get(ID_KEY)).queryForm();
                                 Link placeholderLink = new Link("http://PLACEHOLDER_LINK");
                                 PathValue placeholderNode = new PathValue(predicate, Operator.EQUALS, placeholderLink);
-                                String template = queryTree.replace(edited.node(), placeholderNode).toQueryString();
+                                String template = qTree.replace(edited.node(), placeholderNode).toQueryString();
                                 int placeholderLinkStart = template.indexOf(placeholderLink.queryForm());
                                 int placeholderLinkEnd = placeholderLinkStart + placeholderLink.queryForm().length();
                                 String q = template.substring(0, placeholderLinkStart) + formattedLink + template.substring(placeholderLinkEnd);
@@ -90,8 +90,7 @@ public class SuggestQuery extends Query {
 
     @Override
     protected Object doGetEsQueryDsl() {
-        applySiteFilters(suggestQueryTree, SearchMode.SUGGEST);
-        var queryDsl = getEsQueryDsl(getEsQuery(suggestQueryTree, List.of()));
+        var queryDsl = getEsQueryDsl(getEsQuery(getFullQueryTree(suggestQueryTree)));
         queryDsl.remove("sort");
         return queryDsl;
     }
@@ -118,7 +117,7 @@ public class SuggestQuery extends Query {
     }
 
     private Edited getEdited() {
-        return queryTree.allDescendants().flatMap(node ->
+        return qTree.allDescendants().flatMap(node ->
                         switch (node) {
                             case FreeText ft -> ft.getCurrentlyEditedToken(queryParams.cursor)
                                     .map(token -> new Edited(ft, token))
@@ -160,7 +159,7 @@ public class SuggestQuery extends Query {
                     // Make a query with the currently edited token treated as prefix to get suggestions
                     // Also make a non-prefix query to get a higher relevancy score for exact matches
                     Or or = new Or(List.of(pv.withValue(unquote.apply(prefixFt)), pv.withValue(unquote.apply(ft))));
-                    return queryTree.replace(pv, or);
+                    return qTree.replace(pv, or);
                 }
 
                 this.propertySearch = true;
@@ -169,13 +168,13 @@ public class SuggestQuery extends Query {
                 Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
                 return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
             }
-        } else if (edited.node() instanceof FreeText ft && queryTree.isSimpleFreeText()) {
+        } else if (edited.node() instanceof FreeText ft && qTree.isSimpleFreeText()) {
             String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
-            return (edited.token().isQuoted() ? queryTree : queryTree.replace(ft, new Or(List.of(editedTokenAsPrefix(ft), ft))))
+            return (edited.token().isQuoted() ? qTree : qTree.replace(ft, new Or(List.of(editedTokenAsPrefix(ft), ft))))
                     .add(typeFilter);
         }
-        return queryTree;
+        return qTree;
     }
 
     private FreeText editedTokenAsPrefix(FreeText ft) {

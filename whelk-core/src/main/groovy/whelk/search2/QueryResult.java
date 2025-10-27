@@ -43,13 +43,13 @@ public class QueryResult {
     private final List<String> debug;
 
     public QueryResult(Map<?, ?> esResponse, List<String> debug) {
-        Map<String, Object> mainQueryResponse = getMainResponse(esResponse);
+        Map<String, Object> response = normalizeResponse(esResponse);
         this.debug = debug;
-        this.numHits = getNumHits(mainQueryResponse);
-        this.esItems = collectEsItems(mainQueryResponse);
-        this.aggs = collectAggResult(getAggregations(mainQueryResponse));
-        this.spell = Spell.collectSuggestions(mainQueryResponse);
-        this.pAggs = collectPAggResult(getPAggregations(mainQueryResponse, getSecondaryResponse(esResponse)));
+        this.numHits = getNumHits(response);
+        this.esItems = collectEsItems(response);
+        this.aggs = collectAggResult(getAggregations(response));
+        this.spell = Spell.collectSuggestions(response);
+        this.pAggs = collectPAggResult(getPAggregations(response));
     }
 
     public List<Map<String, Object>> collectItems(Function<Map<String, Object>, Map<String, Object>> applyLens) {
@@ -92,9 +92,6 @@ public class QueryResult {
         for (var e : aggsMap.entrySet()) {
             var path = e.getKey();
             var aggs = (Map<?, ?>) e.getValue();
-            if (path.equals(QueryParams.ApiParams.PREDICATES)) {
-                continue;
-            }
             var property = aggs
                     .keySet()
                     .stream()
@@ -121,28 +118,14 @@ public class QueryResult {
         return aggregations;
     }
 
-    private static Map<String, Object> getMainResponse(Map<?, ?> esResponse) {
-        return normalizeResponse(esResponse.get("responses") instanceof List<?> l
-                ? (Map<?, ?>) l.getFirst()
-                : esResponse);
-    }
-
-    private static Map<String, Object> getSecondaryResponse(Map<?, ?> esResponse) {
-        return normalizeResponse(esResponse.get("responses") instanceof List<?> l && l.size() > 1
-                ? (Map<?, ?>) l.get(1)
-                : Map.of());
-    }
-
     private static Map<String, Object> getAggregations(Map<String, Object> esResponse) {
-        var aggs = castToStringObjectMap(esResponse.get("aggregations"));
+        var aggs = new LinkedHashMap<>(castToStringObjectMap(esResponse.get("aggregations")));
         aggs.remove(PREDICATES);
         return aggs;
     }
 
-    private static Map<String, Object> getPAggregations(Map<String, Object> mainResponse, Map<String, Object> secondaryResponse) {
-        var aggs = ((Map<?, ?>) (secondaryResponse.isEmpty() ? mainResponse : secondaryResponse)
-                .getOrDefault("aggregations", Map.of()))
-                .get(PREDICATES);
+    private static Map<String, Object> getPAggregations(Map<String, Object> esResponse) {
+        var aggs = ((Map<?, ?>) esResponse.getOrDefault("aggregations", Map.of())).get(PREDICATES);
         return castToStringObjectMap(aggs);
     }
 
