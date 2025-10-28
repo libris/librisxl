@@ -230,10 +230,12 @@ public class Query {
         List<Map<String, Object>> mappings = new ArrayList<>();
 
         BiConsumer<QueryTree, String> addMapping = (tree, urlParam) -> {
-            var mapping = new LinkedHashMap<>(tree.toSearchMapping(queryParams, urlParam));
-            mapping.put("variable", urlParam);
-            linkLoader.queue(tree.collectLinks());
-            mappings.add(mapping);
+            if (!tree.isEmpty()) {
+                var mapping = new LinkedHashMap<>(tree.toSearchMapping(queryParams, urlParam));
+                mapping.put("variable", urlParam);
+                linkLoader.queue(tree.collectLinks());
+                mappings.add(mapping);
+            }
         };
 
         addMapping.accept(qTree, QueryParams.ApiParams.QUERY);
