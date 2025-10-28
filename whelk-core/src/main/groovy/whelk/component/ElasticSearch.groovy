@@ -126,7 +126,7 @@ class ElasticSearch {
             try {
                 indexSettings = getSettings()
             } catch (Exception e) {
-                log.warn("Could not get settings from ES, retying in 10 seconds (cannot proceed without them)..", e)
+                log.warn("Could not get settings from ES, retrying in 10 seconds (cannot proceed without them)..", e)
                 Thread.sleep(10000)
             }
         }
@@ -192,8 +192,17 @@ class ElasticSearch {
         try {
             response = client.performRequest('GET', "/${indexName}/_settings", '')
         } catch (UnexpectedHttpStatusException e) {
-            log.warn("Got unexpected status code ${e.statusCode} when getting ES settings: ${e.message}", e)
-            return [:]
+            // When ES is starting up there is a time when it accepts connections but cannot yet authenticate
+            // users because the security index is unavailable. This results in a 401 Unauthorized (with the
+            // exact same JSON response body as when the security index *IS* available but the credentials are
+            // incorrect). Meaning: when initSettings() is executed while ES is starting up, it can get a 401
+            // even with correct credentials.
+            if (e.getStatusCode() == 401) {
+                log.warn("Got unexpected status code ${e.statusCode} when getting ES settings. Either the ES credentials are wrong, or ES has not finished starting up. ${e.message}", e)
+            } else {
+                log.warn("Got unexpected status code ${e.statusCode} when getting ES settings: ${e.message}", e)
+            }
+            throw e
         }
 
         List<String> keys = response.keySet() as List
@@ -201,8 +210,7 @@ class ElasticSearch {
         if (keys.size() == 1 && response[(keys[0])].containsKey('settings')) {
             return response[(keys[0])]['settings']
         } else {
-            log.warn("Couldn't get settings from ES index ${indexName}, response was ${response}.")
-            return [:]
+            throw new RuntimeException("Couldn't get settings from ES index ${indexName}, response was ${response}.")
         }
     }
     
