@@ -196,14 +196,13 @@ class ElasticSearch {
             // users because the security index is unavailable. This results in a 401 Unauthorized (with the
             // exact same JSON response body as when the security index *IS* available but the credentials are
             // incorrect). Meaning: when initSettings() is executed while ES is starting up, it can get a 401
-            // even with correct credentials. So for now, if we get a 401, keep trying.
+            // even with correct credentials.
             if (e.getStatusCode() == 401) {
-                log.warn("Got unexpected status code ${e.statusCode} when getting ES settings, but we'll try again: ${e.message}", e)
-                throw e
+                log.warn("Got unexpected status code ${e.statusCode} when getting ES settings. Either the ES credentials are wrong, or ES has not finished starting up. ${e.message}", e)
             } else {
                 log.warn("Got unexpected status code ${e.statusCode} when getting ES settings: ${e.message}", e)
-                return [:]
             }
+            throw e
         }
 
         List<String> keys = response.keySet() as List
@@ -211,8 +210,7 @@ class ElasticSearch {
         if (keys.size() == 1 && response[(keys[0])].containsKey('settings')) {
             return response[(keys[0])]['settings']
         } else {
-            log.warn("Couldn't get settings from ES index ${indexName}, response was ${response}.")
-            return [:]
+            throw new RuntimeException("Couldn't get settings from ES index ${indexName}, response was ${response}.")
         }
     }
     
