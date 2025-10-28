@@ -474,6 +474,9 @@ class TypeNormalizer implements UsingJsonKeys {
             categories += mediaTypes
             categories += carrierTypes
 
+            // Remove the ambiguous NARC term Other
+            categories.remove("https://id.kb.se/marc/Other")
+
             instance.remove("genreForm")
             instance.remove("carrierType")
             instance.remove("mediaType")
