@@ -265,6 +265,13 @@ public class Dump {
         }
 
         var docs = whelk.bulkLoad(recordIdsOnPage).values();
+
+        // add meta/controlNumber
+        for (Document doc : docs) {
+            String controlNumber = doc.getControlNumber();
+            Document._set(List.of("@graph",1,"meta","controlNumber"), controlNumber, doc.data);
+        }
+
         docs.removeIf(Document::getDeleted);
 
         if (selection.startsWith("itemAndInstance:")) {
