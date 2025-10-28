@@ -56,11 +56,11 @@ public class QueryTree {
     }
 
     public List<String> getRdfSubjectTypesList() {
-        return tree.rdfSubjectType().asList().stream().map(Type::type).toList();
+        return getRdfSubjectType().asList().stream().map(Type::type).toList();
     }
 
     public RdfSubjectType getRdfSubjectType() {
-        return tree.rdfSubjectType();
+        return isEmpty() ? RdfSubjectType.noType() : tree.rdfSubjectType();
     }
 
     public Map<String, Object> toSearchMapping(QueryParams queryParams, String apiParam) {
