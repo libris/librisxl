@@ -19,8 +19,8 @@ skipped = getReportWriter("skipped")
 info = getReportWriter("info")
 def whelk = getWhelk()
 
-//selectBySqlWhere(where) { doc ->
-selectByIds(new File("ids.txt").readLines()) { doc ->
+selectBySqlWhere(where) { doc ->
+//selectByIds(new File("ids.txt").readLines()) { doc ->
     def sourceThing = doc.graph[1]
     def _logSkip = { msg -> skipped.println("${doc.doc.getURI()}: ${msg}") }
     def _logInfo = { msg -> info.println("Source: ${doc.doc.getURI()} ${msg}") }
@@ -191,14 +191,18 @@ selectByIds(new File("ids.txt").readLines()) { doc ->
 
         if (sourceIdentifiedByType == "ISBN") {
             Set targetIdentifiedByValue = filteredIdentifiers.collect { toIsbn13(it["value"]) }.toSet() - null
-            if (sourceIdentifiedByValue.disjoint(targetIdentifiedByValue)) {
+            if (sourceIdentifiedByValue.size() == 0 && targetIdentifiedByValue.size() == 0) {
+                // OK!
+            } else if (sourceIdentifiedByValue.disjoint(targetIdentifiedByValue)) {
                 _logSkip("${sourceIdentifiedByType} identifiers not matching in target ${properUri}. Source: ${sourceIdentifiedByValue}; target: ${targetIdentifiedByValue}")
                 return
             }      
         } else if (sourceIdentifiedByType == "ISSN") {
             Set targetIdentifiedByValue = filteredIdentifiers.collect { cleanIsbnIssn(it["value"]) }.toSet() - null
-            // For ISSN it's enough that source and target have one (non-null) value in common
-            if (sourceIdentifiedByValue.disjoint(targetIdentifiedByValue)) {
+            if (sourceIdentifiedByValue.size() == 0 && targetIdentifiedByValue.size() == 0) {
+                // OK!
+            } else if (sourceIdentifiedByValue.disjoint(targetIdentifiedByValue)) {
+                // For ISSN it's enough that source and target have one (non-null) value in common
                 if (sourceIdentifiedByValue.size() == 1 && targetIdentifiedByValue.size() == 1 && Unicode.damerauLevenshteinDistance(sourceIdentifiedByValue[0], targetIdentifiedByValue[0]) < 2) {
                     // // Allow for a simple typo
                 } else {
