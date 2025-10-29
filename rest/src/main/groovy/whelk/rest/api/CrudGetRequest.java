@@ -1,96 +1,101 @@
-package whelk.rest.api
+package whelk.rest.api;
 
-import whelk.JsonLd
-import whelk.util.http.BadRequestException
-import whelk.util.http.MimeTypes
-import whelk.util.http.NotFoundException
+import whelk.JsonLd;
+import whelk.util.http.BadRequestException;
+import whelk.util.http.MimeTypes;
+import whelk.util.http.NotFoundException;
 
-import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletRequest;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static whelk.rest.api.CrudUtils.*
+import static whelk.rest.api.CrudUtils.*;
 
 class CrudGetRequest {
-    private HttpServletRequest request
-    private String resourceId
-    private String dataLeaf
-    private String contentType
-    private View view
-    private Lens lens
-    private String profile
-    private String computedLabelLocale
+    private final HttpServletRequest request;
+    private String resourceId;
+    private String dataLeaf;
+    private final String contentType;
+    private View view;
+    private final Lens lens;
+    private final String profile;
+    private final String computedLabelLocale;
+
+    private static final Pattern PATH_PATTERN = Pattern.compile("^/(.+?)(/(data|data-view|_changesets)(\\.(\\w+))?)?$");
 
     static CrudGetRequest parse(HttpServletRequest request) {
-        return new CrudGetRequest(request)
+        return new CrudGetRequest(request);
     }
 
     private CrudGetRequest(HttpServletRequest request) {
-        this.request = request
-        parsePath(getPath())
-        contentType = getBestContentType(getAcceptHeader(request), dataLeaf)
-        lens = parseLens(request)
-        profile = parseProfile(request)
+        this.request = request;
+        parsePath(getPath());
+        contentType = getBestContentType(getAcceptHeader(request), dataLeaf);
+        lens = parseLens(request);
+        profile = parseProfile(request);
 
-        computedLabelLocale = parseComputedLabelLocale(request).orElse(null)
+        computedLabelLocale = parseComputedLabelLocale(request).orElse(null);
     }
 
     HttpServletRequest getHttpServletRequest() {
-        return request
+        return request;
     }
 
     String getPath() {
-        return Crud.getRequestPath(request)
+        return Crud.getRequestPath(request);
     }
 
     String getId() {
-        return resourceId
+        return resourceId;
     }
 
     Optional<String> getVersion() {
-        return Optional.ofNullable(request.getParameter("version"))
+        return Optional.ofNullable(request.getParameter("version"));
     }
 
     Optional<ETag> getIfNoneMatch() {
-        getIfNoneMatch(request)
+        return CrudUtils.getIfNoneMatch(request);
     }
 
     String getContentType() {
-        return contentType
+        return contentType;
     }
 
     boolean shouldEmbellish() {
-        if (getVersion().present && !getBoolParameter('embellished').orElse(false)) {
-            return false
+        if (getVersion().isPresent() && !getBoolParameter("embellished").orElse(false)) {
+            return false;
         }
 
-        return getBoolParameter("embellished").orElse(true)
+        return getBoolParameter("embellished").orElse(true);
     }
 
     boolean shouldFrame() {
-        return getBoolParameter("framed").orElse(contentType == MimeTypes.JSON)
+        return getBoolParameter("framed").orElse(MimeTypes.JSON.equals(contentType));
     }
 
     boolean shouldApplyInverseOf() {
-        return getBoolParameter("_applyInverseOf").orElse(false)
+        return getBoolParameter("_applyInverseOf").orElse(false);
     }
 
     boolean shouldComputeLabels() {
-        return computedLabelLocale != null
+        return computedLabelLocale != null;
     }
 
     String computedLabelLocale() {
-        return computedLabelLocale
+        return computedLabelLocale;
     }
 
     View getView() {
-        return view
+        return view;
     }
 
     Lens getLens() {
-        return lens
+        return lens;
     }
 
     Optional<String> getProfile() {
-        return Optional.ofNullable(profile)
+        return Optional.ofNullable(profile);
     }
 
     /**
@@ -100,78 +105,82 @@ class CrudGetRequest {
      * where view is 'data' or 'data-view'
      */
     private void parsePath(String path) {
-        def matcher = path =~ ~/^\/(.+?)(\/(data|data-view|_changesets)(\.(\w+))?)?$/
+        Matcher matcher = PATH_PATTERN.matcher(path);
         if (matcher.matches()) {
-            resourceId = matcher[0][1]
-            dataLeaf = matcher[0][2]
-            view = View.fromString(matcher[0][3])
+            resourceId = matcher.group(1);
+            dataLeaf = matcher.group(2);
+            view = View.fromString(matcher.group(3));
         } else {
-            throw new NotFoundException("Not found:" + path)
+            throw new NotFoundException("Not found:" + path);
         }
     }
 
     private Lens parseLens(HttpServletRequest request) {
-        String lens = request.getParameter('lens')
+        String lens = request.getParameter("lens");
         if (lens == null) {
-            return Lens.NONE
+            return Lens.NONE;
         }
         try {
-            return Lens.valueOf(lens.toUpperCase())
+            return Lens.valueOf(lens.toUpperCase());
         }
         catch (IllegalArgumentException e) {
-            throw new BadRequestException("Unknown lens:" + lens)
+            throw new BadRequestException("Unknown lens:" + lens);
         }
     }
 
     private String parseProfile(HttpServletRequest request) {
-        String param = request.getParameter('profile')
+        String param = request.getParameter("profile");
         if (param != null) {
-            return param
+            return param;
         }
-        String header = request.getHeader('Accept-Profile')
+        String header = request.getHeader("Accept-Profile");
         if (header != null) {
-            header = header.trim()
-            boolean startAngle = header.startsWith('<')
-            boolean endAngle = header.endsWith('>')
+            header = header.trim();
+            boolean startAngle = header.startsWith("<");
+            boolean endAngle = header.endsWith(">");
             if (startAngle || endAngle) {
-                int start = startAngle ? 1 : 0
-                int end = header.size() - (endAngle ? 1 : 0)
-                header = header.substring(start, end)
+                int start = startAngle ? 1 : 0;
+                int end = header.length() - (endAngle ? 1 : 0);
+                header = header.substring(start, end);
             }
-            return header
+            return header;
         }
-        return null
+        return null;
     }
 
     static Optional<String> parseComputedLabelLocale(HttpServletRequest request) {
-        return Optional.ofNullable(request.getParameter(JsonLd.Platform.COMPUTED_LABEL))
+        return Optional.ofNullable(request.getParameter(JsonLd.Platform.COMPUTED_LABEL));
     }
 
     private Optional<Boolean> getBoolParameter(String name) {
+        Object param = request.getParameter(name);
+        if (param == null) {
+            param = request.getAttribute(name);
+        }
         return Optional
-                .ofNullable(request.getParameter(name) ?: request.getAttribute(name))
-                .map(Boolean.&parseBoolean)
+                .ofNullable(param)
+                .map(o -> Boolean.parseBoolean(o.toString()));
     }
 
     enum View {
-        RESOURCE(''),
-        DATA('data'),
-        DATA_VIEW('data-view'),
-        CHANGE_SETS('_changesets');
+        RESOURCE(""),
+        DATA("data"),
+        DATA_VIEW("data-view"),
+        CHANGE_SETS("_changesets");
 
-        private String name
+        private final String name;
 
         View(String name) {
-            this.name = name
+            this.name = name;
         }
 
-        static View fromString(s) {
+        static View fromString(String s) {
             for (View v : values()) {
-                if (v.name == s) {
-                    return v
+                if (v.name.equals(s)) {
+                    return v;
                 }
             }
-            return RESOURCE
+            return RESOURCE;
         }
     }
 
