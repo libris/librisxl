@@ -1,33 +1,38 @@
-package whelk.rest.api
+package whelk.rest.api;
 
-import groovy.transform.CompileStatic
-import whelk.converter.marc.MarcFrameConverter
+import whelk.converter.marc.MarcFrameConverter;
 
-import javax.servlet.http.HttpServlet
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Map;
 
-import static whelk.util.http.HttpTools.sendResponse
+import static whelk.util.http.HttpTools.sendResponse;
 
-@CompileStatic
-class MarcframeData extends HttpServlet {
+public class MarcframeData extends HttpServlet {
 
-    String cachedResponseBody
+    private String cachedResponseBody;
 
     @Override
-    void init() {
+    public void init() throws ServletException {
         synchronized (this) {
             if (cachedResponseBody == null) {
-                var mfconverter = new MarcFrameConverter()
-                Map data = (Map) mfconverter.readConfig('marcframe.json')
-                cachedResponseBody = mfconverter.mapper.writeValueAsString(data)
+                try {
+                    var mfconverter = new MarcFrameConverter();
+                    Map<?, ?> data = (Map<?, ?>) mfconverter.readConfig("marcframe.json");
+                    cachedResponseBody = mfconverter.getMapper().writeValueAsString(data);
+                } catch (IOException e) {
+                    throw new ServletException("Failed to initialize MarcframeData", e);
+                }
             }
         }
     }
 
     @Override
-    void doGet(HttpServletRequest request, HttpServletResponse response) {
-        sendResponse(response, cachedResponseBody, "application/json")
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        sendResponse(response, cachedResponseBody, "application/json");
     }
 
 }
