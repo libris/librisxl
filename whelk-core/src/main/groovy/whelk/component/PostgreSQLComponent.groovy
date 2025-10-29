@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.metrics.prometheus.PrometheusHistogramMetricsTrackerFactory
-import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
@@ -41,8 +40,6 @@ import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicLong
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 import static groovy.transform.TypeCheckingMode.SKIP
 import static java.sql.Types.OTHER
@@ -2352,12 +2349,11 @@ class PostgreSQLComponent {
                 preparedStatement = connection.prepareStatement(query)
 
                 if (idType != null) {
-                    String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                    preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", OTHER)
+                    var json = "[{\"@type\": " + mapper.writeValueAsString(idType) + ", \"value\": " + mapper.writeValueAsString(idValue) + "}]"
+                    preparedStatement.setObject(1, json, OTHER)
                 }
                 else {
-                    String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                    preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", OTHER)
+                    preparedStatement.setObject(1, "[{\"value\": " + mapper.writeValueAsString(idValue) + "}]", OTHER)
                 }
 
                 rs = preparedStatement.executeQuery()
