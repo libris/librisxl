@@ -3,8 +3,6 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
-import whelk.search2.Operator;
-import whelk.search2.QueryParams;
 import whelk.search2.QueryUtil;
 
 import java.util.*;
@@ -15,9 +13,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static whelk.search2.QueryUtil.boolWrap;
-import static whelk.search2.QueryUtil.makeUpLink;
-import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 
 
@@ -32,10 +27,6 @@ public sealed abstract class Group implements Node permits And, Or {
     abstract String key();
 
     abstract Map<String, Object> wrap(List<Map<String, Object>> esChildren);
-
-    abstract List<String> collectRulingTypes();
-
-    abstract boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition);
 
     @Override
     public abstract boolean equals(Object o);
@@ -52,22 +43,11 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
         var m = new LinkedHashMap<String, Object>();
-        m.put(key(), mapToMap(c -> c.toSearchMapping(qt, queryParams)));
-        m.put("up", makeUpLink(qt, this, queryParams));
+        m.put(key(), mapToMap(c -> c.toSearchMapping(makeUpLink)));
+        m.put("up", makeUpLink.apply(this));
         return m;
-    }
-
-    @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
-        Node reduced = reduceTypes(jsonLd);
-        if (reduced instanceof Group g) {
-            rulingTypes = Stream.concat(g.collectRulingTypes().stream(), rulingTypes.stream())
-                    .collect(Collectors.toSet());
-            return g.expandChildren(jsonLd, rulingTypes);
-        }
-        return reduced.expand(jsonLd, rulingTypes);
     }
 
     @Override
@@ -80,19 +60,6 @@ public sealed abstract class Group implements Node permits And, Or {
     @Override
     public String toString() {
         return toQueryString(true);
-    }
-
-    @Override
-    public Node reduceTypes(JsonLd jsonLd) {
-        BiFunction<Node, Node, Boolean> hasMoreSpecificTypeThan = (a, b) -> a.isTypeNode()
-                && b.isTypeNode()
-                && jsonLd.isSubClassOf(((VocabTerm) (((PathValue) a).value())).key(), ((VocabTerm) (((PathValue) b).value())).key());
-
-        return reduceByCondition(hasMoreSpecificTypeThan);
-    }
-
-    Node expandChildren(JsonLd jsonLd, Collection<String> rulingTypes) {
-        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rulingTypes), Objects::nonNull);
     }
 
     List<Node> flattenChildren(List<Node> children) {
@@ -124,17 +91,30 @@ public sealed abstract class Group implements Node permits And, Or {
         };
     }
 
-    Node reduceByCondition(BiFunction<Node, Node, Boolean> condition) {
+    Node reduce(JsonLd jsonLd, BiFunction<Node, Node, Optional<Node>> pick) {
         List<Node> reduced = new ArrayList<>();
-        children().stream()
-                .map(child -> child instanceof Group g ? g.reduceByCondition(condition) : child)
-                .sorted(Comparator.comparing(Group.class::isInstance))
+        children().stream().map(child -> child.reduce(jsonLd))
                 .forEach(child -> {
-                    if (reduced.stream().noneMatch(otherChild -> implies(otherChild, child, condition))) {
-                        reduced.add(child);
+                    for (int i = 0; i < reduced.size(); i++) {
+                        Optional<Node> picked = pick.apply(child, reduced.get(i));
+                        if (picked.isPresent()) {
+                            reduced.set(i, picked.get());
+                            return;
+                        }
                     }
+                    reduced.add(child);
                 });
         return reduced.size() == 1 ? reduced.getFirst() : newInstance(reduced);
+    }
+
+    private Optional<Node> pick(Node a, Node b, JsonLd jsonLd) {
+        if (a.implies(b, jsonLd)) {
+            return Optional.of(a);
+        }
+        if (b.implies(a, jsonLd)) {
+            return Optional.of(b);
+        }
+        return Optional.empty();
     }
 
     private Map<String, Object> toEsNested(Map<String, List<Node>> nestedGroups, ESSettings esSettings) {

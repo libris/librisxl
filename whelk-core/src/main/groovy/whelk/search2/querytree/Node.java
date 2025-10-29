@@ -8,27 +8,36 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-public sealed interface Node permits Filter.AliasedFilter, FreeText, Group, Not, PathValue {
+public sealed interface Node permits FilterAlias, FreeText, Group, Not, PathValue {
     Map<String, Object> toEs(ESSettings esSettings);
 
-    Node expand(JsonLd jsonLd, Collection<String> rulingTypes);
+    Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
 
-    Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams);
+    Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink);
 
     String toQueryString(boolean topLevel);
 
     Node getInverse();
 
+    Node reduce(JsonLd jsonLd);
+
+    boolean implies(Node node, JsonLd jsonLd);
+
+    RdfSubjectType rdfSubjectType();
+
+    default boolean implies(Node node, Predicate<Node> cmp) {
+        return switch (node) {
+            case And and -> and.children().stream().allMatch(cmp);
+            case Or or -> or.children().stream().anyMatch(cmp);
+            default -> cmp.test(node);
+        };
+    }
+
     default List<Node> children() {
         return Collections.emptyList();
-    }
-
-    default Node reduceTypes(JsonLd jsonLd) {
-        return this;
-    }
-
-    default boolean isTypeNode() {
-        return false;
     }
 }

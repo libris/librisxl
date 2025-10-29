@@ -7,7 +7,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
-import static whelk.JsonLd.RECORD_KEY;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.JsonLd.isLink;
@@ -136,7 +135,18 @@ public non-sealed class Property implements Subpath {
     }
 
     public boolean mayAppearOnType(String type, JsonLd jsonLd) {
-        return domain.isEmpty() || domain.stream().anyMatch(d -> directDescendants(d, type, jsonLd));
+        return domain.isEmpty() || domain.stream().anyMatch(d -> jsonLd.directDescendants(d, type));
+    }
+
+    public boolean appearsOnType(String type, JsonLd jsonLd) {
+        // TODO: How strict should this be?
+//        return !domain.isEmpty() && domain.stream().anyMatch(d -> jsonLd.isSubClassOf(d, type));
+        return !domain.isEmpty() && domain.stream().anyMatch(d -> jsonLd.directDescendants(d, type));
+    }
+
+    public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
+        return QueryUtil.getIntegralRelationsForType(type, jsonLd).stream()
+                .anyMatch(relation -> relation.range().stream().anyMatch(t -> appearsOnType(t, jsonLd)));
     }
 
     public boolean isInverseOf(Property property) {
@@ -145,26 +155,6 @@ public non-sealed class Property implements Subpath {
 
     public List<Property> expand() {
         return isShorthand() ? propertyChain : List.of(this);
-    }
-
-    public List<Property> getApplicableIntegralRelations(JsonLd jsonLd, Collection<String> types) {
-//        TODO
-//        List<Property> integralRelations = jsonLd.getCategoryMembers("integral").stream()
-//              .map(p -> new Property(p, jsonLd))
-//              .toList();
-        List<Property> integralRelations = List.of(new Property("hasInstance", jsonLd), new Property("instanceOf", jsonLd));
-
-        if (name.equals(RECORD_KEY) || isRdfType()) {
-            return List.of();
-        }
-
-        return types.stream()
-                .map(t -> getIntegralRelationsForType(t, integralRelations, jsonLd))
-                .flatMap(List::stream)
-                .distinct()
-                .filter(ir -> ir.range().stream().anyMatch(irRangeType -> mayAppearOnType(irRangeType, jsonLd)))
-                .filter(prop -> !(isInverseOf(prop) || (isShorthand() && propertyChain.getFirst().isInverseOf(prop))))
-                .toList();
     }
 
     @Override
@@ -180,16 +170,6 @@ public non-sealed class Property implements Subpath {
     @Override
     public int hashCode() {
         return Objects.hash(name);
-    }
-
-    private List<Property> getIntegralRelationsForType(String type, Collection<Property> integralRelations, JsonLd jsonLd) {
-        return integralRelations.stream()
-                .filter(prop -> prop.domain().stream().anyMatch(d -> directDescendants(d, type, jsonLd)))
-                .toList();
-    }
-
-    private static boolean directDescendants(String a, String b, JsonLd jsonLd) {
-        return jsonLd.isSubClassOf(a, b) || jsonLd.isSubClassOf(b, a);
     }
 
     private String getSuperKey(JsonLd jsonLd) {
@@ -302,9 +282,15 @@ public non-sealed class Property implements Subpath {
         return (String) ((Map<?, ?>) o).get(ID_KEY);
     }
 
-    public static class TextQuery extends Property {
+    public static final class TextQuery extends Property {
         public TextQuery(JsonLd jsonLd) {
             super("textQuery", jsonLd);
+        }
+    }
+
+    public static final class RdfType extends Property {
+        public RdfType(JsonLd jsonLd, Key.RecognizedKey key) {
+            super(RDF_TYPE, jsonLd, key);
         }
     }
 

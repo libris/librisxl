@@ -4,7 +4,6 @@ import whelk.JsonLd;
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
-import whelk.search2.QueryParams;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,8 +11,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -26,17 +27,38 @@ import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.Operator.EQUALS;
 import static whelk.search2.Operator.GREATER_THAN;
 import static whelk.search2.QueryUtil.boolWrap;
-import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
 
-public record PathValue(Path path, Operator operator, Value value) implements Node {
+public sealed class PathValue implements Node permits Type {
+    private final Path path;
+    private final Operator operator;
+    private final Value value;
+
+    public PathValue(Path path, Operator operator, Value value) {
+        this.path = path;
+        this.operator = operator;
+        this.value = value;
+    }
+
     public PathValue(Property property, Operator operator, Value value) {
         this(new Path(property), operator, value);
     }
 
     public PathValue(String key, Operator operator, Value value) {
         this(new Path.ExpandedPath(new Key.RecognizedKey(key)), operator, value);
+    }
+
+    public Path path() {
+        return path;
+    }
+
+    public Operator operator() {
+        return operator;
+    }
+
+    public Value value() {
+        return value;
     }
 
     @Override
@@ -60,8 +82,8 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
-        return path.isValid() ? _expand(jsonLd, rulingTypes) : this;
+    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return path.isValid() ? _expand(jsonLd, rdfSubjectTypes) : this;
     }
 
     public Node expand(JsonLd jsonLd) {
@@ -69,8 +91,8 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
-        return _toSearchMapping(qt, queryParams);
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
+        return _toSearchMapping(makeUpLink);
     }
 
     @Override
@@ -89,18 +111,40 @@ public record PathValue(Path path, Operator operator, Value value) implements No
     }
 
     @Override
+    public Node reduce(JsonLd jsonLd) {
+        return this;
+    }
+
+    @Override
+    public boolean implies(Node node, JsonLd jsonLd) {
+        return implies(node, this::equals);
+    }
+
+    @Override
+    public RdfSubjectType rdfSubjectType() {
+        return RdfSubjectType.noType();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof PathValue other && hashCode() == other.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(path, operator, value);
+    }
+
     public boolean isTypeNode() {
-        return (getSoleProperty().filter(Property::isRdfType).isPresent() || getSoleKey().filter(Key::isType).isPresent())
-                && operator.equals(EQUALS)
-                && value instanceof VocabTerm;
+        return getSoleProperty().filter(Property::isRdfType).isPresent() && operator.equals(EQUALS) && value instanceof VocabTerm;
+    }
+
+    public Type asTypeNode() {
+        return new Type((Property.RdfType) getSoleProperty().get(), (VocabTerm) value());
     }
 
     public boolean hasEqualProperty(Property property) {
         return getSoleProperty().filter(property::equals).isPresent();
-    }
-
-    public boolean hasEqualProperty(String propertyKey) {
-        return getSoleProperty().map(Property::name).filter(propertyKey::equals).isPresent();
     }
 
     public PathValue withOperator(Operator replacement) {
@@ -152,6 +196,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
             case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
             case Numeric numeric -> esNumFilter(field, numeric, esSettings);
             case Resource resource -> esResourceFilter(field, resource);
+            case Term term -> esTermFilter(field, term);
         };
     }
 
@@ -226,7 +271,15 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return esTermQueryFilter(f, r.jsonForm());
     }
 
-    private Map<String, Object> _toSearchMapping(QueryTree qt, QueryParams queryParams) {
+    private Map<String, Object> esTermFilter(String f, Term t) {
+        if (operator.isRange()) {
+            // FIXME: Range makes no sense here
+            return nonsenseFilter();
+        }
+        return esTermQueryFilter(f, t.term());
+    }
+
+    private Map<String, Object> _toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
         Map<String, Object> m = new LinkedHashMap<>();
 
         var propertyChainAxiom = new LinkedList<>();
@@ -249,7 +302,7 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         };
         m.put("property", property);
         m.put(operator.termKey, value instanceof Resource r ? r.description() : value.queryForm());
-        m.put("up", makeUpLink(qt, this, queryParams));
+        m.put("up", makeUpLink.apply(this));
 
         m.put("_key", path.queryForm());
         m.put("_value", value.queryForm());
@@ -257,11 +310,12 @@ public record PathValue(Path path, Operator operator, Value value) implements No
         return m;
     }
 
-    private Node _expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+    private Node _expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         Path.ExpandedPath expandedPath = path.expand(jsonLd, value);
 
-        if (!rulingTypes.isEmpty()) {
-            List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, rulingTypes);
+
+        if (!rdfSubjectTypes.isEmpty()) {
+            List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, rdfSubjectTypes);
             List<Path.ExpandedPath> alt2Paths = expandedPath.getAlt2Paths(jsonLd);
             var altPvNodes = Stream.concat(altPaths.stream(), alt2Paths.stream())
                     .map(this::withPath)
@@ -333,10 +387,6 @@ public record PathValue(Path path, Operator operator, Value value) implements No
 
     private static Map<String, Object> esTermQueryFilter(String field, Object value) {
         return filterWrap(Map.of("term", Map.of(field, value)));
-    }
-
-    private static Map<String, Object> buildTermQuery(String field, Object value) {
-        return Map.of("term", Map.of(field, value));
     }
 
     // FIXME: Handle queries that are syntactically correct but make no sense and are guaranteed to return no hits

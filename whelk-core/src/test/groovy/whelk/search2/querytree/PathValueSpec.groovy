@@ -5,7 +5,6 @@ import whelk.JsonLd
 import whelk.search2.Disambiguate
 import whelk.search2.ESSettings
 import whelk.search2.EsMappings
-import whelk.search2.QueryParams
 
 class PathValueSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
@@ -14,8 +13,8 @@ class PathValueSpec extends Specification {
 
     def "convert to search mapping 1"() {
         given:
-        def pathValue = QueryTreeBuilder.buildTree('p1.@id:v1', disambiguate)
-        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), new QueryParams([:]))
+        def searchMapping = QueryTreeBuilder.buildTree('p1.@id:v1', disambiguate)
+                .toSearchMapping {n -> ['@id': '/find?_q=*'] }
 
         expect:
         searchMapping == [
@@ -29,31 +28,31 @@ class PathValueSpec extends Specification {
 
     def "convert to search mapping 2"() {
         given:
-        def pathValue = QueryTreeBuilder.buildTree('NOT p1.p2:E1', disambiguate)
-        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), new QueryParams([:]))
+        def searchMapping = QueryTreeBuilder.buildTree('NOT p1.p2:E1', disambiguate)
+                .toSearchMapping {n -> ['@id': '/find?_q=*'] }
 
         expect:
         searchMapping == [
                 'not': [
-                        'property' : [
+                        'property': [
                                 'propertyChainAxiom': [
                                         ['@id': 'p1', '@type': 'DatatypeProperty'],
                                         ['@id': 'p2', '@type': 'ObjectProperty', 'librisQueryCode': 'P2']
                                 ]
                         ],
-                        'equals': ['@id': 'E1', '@type': 'Class'],
-                        'up'       : ['@id': '/find?_q=*'],
-                        '_key'     : 'p1.p2',
-                        '_value'   : 'E1'
+                        'equals'  : ['@id': 'E1', '@type': 'Class'],
+                        'up'      : ['@id': '/find?_q=*'],
+                        '_key'    : 'p1.p2',
+                        '_value'  : 'E1'
                 ],
-                'up': ['@id': '/find?_q=*']
+                'up' : ['@id': '/find?_q=*']
         ]
     }
 
     def "convert to search mapping 3"() {
         given:
-        def pathValue = QueryTreeBuilder.buildTree('@reverse.p3.@reverse.p4:v1', disambiguate)
-        def searchMapping = pathValue.toSearchMapping(new QueryTree(pathValue), new QueryParams([:]))
+        def searchMapping = QueryTreeBuilder.buildTree('@reverse.p3.@reverse.p4:v1', disambiguate)
+                .toSearchMapping {n -> ['@id': '/find?_q=*'] }
 
         expect:
         searchMapping == [
@@ -86,9 +85,28 @@ class PathValueSpec extends Specification {
         "p3:T1"                      | "p3._str:T1"
         "p1:\"https://id.kb.se/v1\"" | "p1:\"https://id.kb.se/v1\""
         "p3:\"https://id.kb.se/v1\"" | "p3.@id:\"https://id.kb.se/v1\""
-        "type:T3"                    | "type:T3 OR type:T4"
+        "type:T3"                    | "type:T3 OR type:T3x"
         "p10:v1"                     | "p4.p1:v1 p4.p3.@id:\"https://id.kb.se/x\""
-        "p11:v1"                     | "p3.p4._str:v1 (\"p3.rdf:type\":T3 OR \"p3.rdf:type\":T4)"
+        "p11:v1"                     | "p3.p4._str:v1 (\"p3.rdf:type\":T3 OR \"p3.rdf:type\":T3x)"
+    }
+
+    def "expand 2"() {
+        given:
+        Node tree = QueryTreeBuilder.buildTree(query, disambiguate)
+
+        expect:
+        tree.expand(jsonLd, subjectTypes).toString() == result
+
+        where:
+        query                                | subjectTypes | result
+        "p1:v1"                              | []           | "p1:v1"
+        "p1:v1"                              | ["T1"]       | "instanceOf.p1:v1 OR p1:v1"
+        "p1:v1"                              | ["T2"]       | "hasInstance.p1:v1 OR p1:v1"
+        "p1:v1"                              | ["T3"]       | "p1:v1"
+        "hasInstance.p7:v7"                  | ["T1"]       | "p7:v7"
+        "hasInstance.p7:v7"                  | ["T2"]       | "hasInstance.p7:v7"
+        "instanceOf.p8:v8"                   | ["T1"]       | "instanceOf.p8:v8"
+        "instanceOf.p8:v8"                   | ["T2"]       | "p8:v8"
     }
 
     def "To ES query (negation + nested field)"() {

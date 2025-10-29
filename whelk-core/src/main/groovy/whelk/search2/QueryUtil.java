@@ -5,7 +5,7 @@ import com.google.common.net.UrlEscapers;
 
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.search2.querytree.Node;
+import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 
 import java.net.URLDecoder;
@@ -47,33 +47,36 @@ public class QueryUtil {
                 .replace("+", "%20");
     }
 
+    @SuppressWarnings("unchecked")
     public static Map<String, Object> castToStringObjectMap(Object o) {
-        Map<String, Object> m = new HashMap<>();
         if (o == null) {
-            return m;
+            return new HashMap<>();
         }
-        ((Map<?, ?>) o).forEach((k, v) -> m.put((String) k, v));
-        return m;
-    }
-
-    public static String makeViewFindUrl(QueryTree qt, QueryParams queryParams) {
-        return makeViewFindUrl(qt.toQueryString(), queryParams);
+        return (Map<String, Object>) o;
     }
 
     public static String makeViewFindUrl(String q, QueryParams queryParams) {
-        return makeFindUrl(q, queryParams.getCustomParamsMap(List.of(CUSTOM_SITE_FILTER, SORT, OBJECT, PREDICATES)), null);
+        return makeViewFindUrl(q, queryParams, QUERY);
     }
 
-    public static String makeFindUrl(QueryTree qt, QueryParams queryParams) {
-        return makeFindUrl(qt.toQueryString(), queryParams.getFullParamsMap(), null);
+    public static String makeViewFindUrl(String queryString, QueryParams queryParams, String apiParam) {
+        return makeFindUrl(queryString, queryParams.getCustomParamsMap(List.of(QUERY, CUSTOM_SITE_FILTER, SORT, OBJECT, PREDICATES)), null, apiParam);
     }
 
-    public static String makeFindUrl(QueryTree qt, QueryParams queryParams, Integer customOffset) {
-        return makeFindUrl(qt.toQueryString(), queryParams.getFullParamsMap(), customOffset);
+    public static String makeFindUrl(String q, QueryParams queryParams) {
+        return makeFindUrl(q, queryParams.getFullParamsMap(), null, QUERY);
     }
 
-    private static String makeFindUrl(String q, Map<String, String> params, Integer customOffset) {
-        params.put(QUERY, q);
+    public static String makeFindUrl(QueryTree q, QueryParams queryParams, Integer customOffset) {
+        return makeFindUrl(q.toQueryString(), queryParams, customOffset);
+    }
+
+    public static String makeFindUrl(String q, QueryParams queryParams, Integer customOffset) {
+        return makeFindUrl(q, queryParams.getFullParamsMap(), customOffset, QUERY);
+    }
+
+    private static String makeFindUrl(String queryString, Map<String, String> params, Integer customOffset, String apiParam) {
+        params.put(apiParam, queryString);
         if (customOffset != null) {
             if (customOffset > 0) {
                 params.put(OFFSET, "" + customOffset);
@@ -88,12 +91,6 @@ public class QueryUtil {
         return "/find?" + params.entrySet().stream()
                 .map(e -> makeParam(e.getKey(), e.getValue()))
                 .collect(Collectors.joining("&"));
-    }
-
-    public static Map<String, String> makeUpLink(QueryTree queryTree, Node n, QueryParams queryParams) {
-        QueryTree reducedTree = queryTree.remove(n);
-        String upUrl = makeViewFindUrl(reducedTree, queryParams);
-        return Map.of(JsonLd.ID_KEY, upUrl);
     }
 
     private static String makeParam(String key, String value) {
@@ -135,6 +132,18 @@ public class QueryUtil {
                 .map(graph -> ((List<?>) graph).get(1))
                 .map(QueryUtil::castToStringObjectMap)
                 .orElse(Collections.emptyMap());
+    }
+
+    public static List<Property> getIntegralRelationsForType(String type, JsonLd jsonLd) {
+        //        TODO
+//        List<Property> integralRelations = jsonLd.getCategoryMembers("integral").stream()
+//              .map(p -> new Property(p, jsonLd))
+//              .toList();
+        List<Property> integralRelations = List.of(new Property("hasInstance", jsonLd), new Property("instanceOf", jsonLd));
+
+        return integralRelations.stream()
+                .filter(prop -> prop.domain().stream().anyMatch(d -> jsonLd.isSubClassOf(d, type)))
+                .toList();
     }
 
     // leading wildcards e.g. "*foo" are removed by simple_query_string
