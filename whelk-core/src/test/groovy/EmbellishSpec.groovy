@@ -48,11 +48,11 @@ class EmbellishSpec extends Specification {
                                      ],
                                      'X': ['@type'         : 'fresnel:Lens',
                                            '@id'           : 'X-chips',
-                                           'showProperties': ['px1', ['inverseOf': 'py1'], 'IR', 'IR2', ['inverseOf': 'IR3'], ['inverseOf': 'px3']]
+                                           'showProperties': ['px1', ['inverseOf': 'py1'], 'IR', 'IR2', 'IR3', ['inverseOf': 'IR3'], ['inverseOf': 'px3']]
                                      ],
                                      'Y': ['@type'         : 'fresnel:Lens',
                                            '@id'           : 'Y-chips',
-                                           'showProperties': ['py1']
+                                           'showProperties': ['py1', ['inverseOf': 'IR3']]
                                      ]
                              ]],
                      'cards':
@@ -903,6 +903,88 @@ digraph {
         result['@graph'].size() == 2 + 1
     }
 
+    /*
+
+  ┌─────────────┐
+  │     X0      │
+  └─────────────┘
+    │
+    │ IR3
+    ▼
+┌−−−−−−−−−−−−−−−−−┐
+╎    embellish    ╎
+╎                 ╎
+╎ ┌─────────────┐ ╎
+╎ │  Y0 (full)  │ ╎
+╎ └─────────────┘ ╎
+╎   ▲             ╎
+╎   │ IR3         ╎
+╎   │             ╎
+╎ ┌─────────────┐ ╎
+╎ │ doc (START) │ ╎
+╎ └─────────────┘ ╎
+╎                 ╎
+└−−−−−−−−−−−−−−−−−┘
+
+
+
+Generated with: https://dot-to-ascii.ggerganov.com/
+
+.dot:
+
+digraph {
+    subgraph cluster_0 {
+        doc -> Y0 [ label = "IR3" ];
+        label = "embellish";
+    }
+    X0 -> Y0 [ label = "IR3" ];
+
+    doc [label = "doc (START)"];
+    Y0 [label = "Y0 (full)"];
+}
+
+     */
+
+    def "should not follow reverse integral links from resource reached by same relation but forward"() {
+        // i.e. instances should not pull in other instances linked to the same work
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
+
+        def doc = ['@graph': [
+                ['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                ['@type': 'X', '@id': '/thing',
+                 'IR3': [['@id': '/thingY0']]]
+        ]]
+
+        def docs = [
+                ['@graph': [['@type': 'R', '@id': '/recordY0', 'mainEntity': ['@id': '/thingY0']],
+                            ['@type': 'Y', '@id': '/thingY0',
+                             'py1': 'foo',
+                             'py2': 'bar']]],
+                ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
+                            ['@type': 'X', '@id': '/thingX0',
+                             'IR3': [['@id': '/thingY0']],
+                             'px1': 'foo',
+                             'px2': 'bar']]]
+        ]
+
+        def storage = new TestStorage(ld)
+        storage.add(doc)
+        docs.each(storage.&add)
+
+        def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
+
+        Document document = new Document(doc)
+
+        embellisher.embellish(document)
+        def result = document.data
+        
+        expect:
+        lens(find(result, '/thingY0')) == 'full'
+
+        result['@graph'].size() == 2 + 1
+    }
+
 
 
 
@@ -1135,6 +1217,9 @@ digraph {
             }
         }
         if (thing['@type'] == 'Y') {
+            if (thing['py1'] && thing['py2'] && thing['full']) {
+                return 'full'
+            }
             if (thing['py1'] && thing['py2']) {
                 return 'card'
             }
