@@ -4,7 +4,6 @@ import whelk.JsonLd;
 import whelk.search2.ESSettings;
 import whelk.search2.Operator;
 import whelk.search2.Query;
-import whelk.search2.QueryParams;
 import whelk.search2.QueryUtil;
 import whelk.util.Unicode;
 
@@ -17,13 +16,13 @@ import java.util.Map;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static whelk.search2.Query.Connective.AND;
 import static whelk.search2.Query.Connective.OR;
 import static whelk.search2.QueryUtil.isQuoted;
 import static whelk.search2.QueryUtil.isSimple;
-import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.parenthesize;
 import static whelk.search2.QueryUtil.quote;
 import static whelk.search2.QueryUtil.shouldWrap;
@@ -52,16 +51,16 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
+    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         return this;
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", textQuery != null ? textQuery.definition() : Map.of());
         m.put(EQUALS.termKey, queryForm());
-        m.put("up", makeUpLink(qt, this, queryParams));
+        m.put("up", makeUpLink.apply(this));
         return m;
     }
 
@@ -84,6 +83,21 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     @Override
     public Node getInverse() {
         return new Not(this);
+    }
+
+    @Override
+    public Node reduce(JsonLd jsonLd) {
+        return this;
+    }
+
+    @Override
+    public boolean implies(Node node, JsonLd jsonLd) {
+        return implies(node, this::equals);
+    }
+
+    @Override
+    public RdfSubjectType rdfSubjectType() {
+        return RdfSubjectType.noType();
     }
 
     @Override

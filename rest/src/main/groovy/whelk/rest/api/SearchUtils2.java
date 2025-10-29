@@ -34,9 +34,9 @@ public class SearchUtils2 {
         }
 
         QueryParams queryParams = new QueryParams(queryParameters);
-        AppParams appParams = new AppParams(getAppConfig(queryParameters), queryParams, whelk.getJsonld());
+        AppParams appParams = new AppParams(getAppConfig(queryParameters), whelk.getJsonld());
 
-        Query query = Query.init(queryParams, appParams, vocabMappings, esSettings, whelk);;
+        Query query = Query.init(queryParams, appParams, vocabMappings, esSettings, whelk);
 
         return query.collectResults();
     }
@@ -59,13 +59,10 @@ public class SearchUtils2 {
     public Map<String, Object> buildAppConfig(Map<String, Object> findDesc) {
         Map<String, Object> config = new LinkedHashMap<>();
 
-        Optional.ofNullable((Map<?, ?>) findDesc.get("statistics"))
-                .ifPresent(s -> config.put("statistics", s));
-
-        Stream.of("filterAliases", "defaultSiteFilters", "optionalSiteFilters", "relationFilters")
+        Stream.of("statistics", "filterAliases", "defaultSiteFilters", "optionalSiteFilters", "relationFilters")
                 .forEach(key ->
                         Optional.ofNullable(findDesc.get(key))
-                                .ifPresent(filters -> config.put("_" + key, filters))
+                                .ifPresent(filters -> config.put(key, filters))
                 );
 
         return config;

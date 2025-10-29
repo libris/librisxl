@@ -93,9 +93,9 @@ public class QueryTreeBuilder {
 
         Lex.Symbol symbol = leaf.value();
 
-        Optional<Filter.AliasedFilter> aliasedFilter = disambiguate.mapToFilter(symbol.value());
-        if (aliasedFilter.isPresent()) {
-            var af = aliasedFilter.get();
+        Optional<FilterAlias> filterAlias = disambiguate.mapToFilter(symbol.value());
+        if (filterAlias.isPresent()) {
+            var af = filterAlias.get();
             af.parse(disambiguate);
             return af;
         }
@@ -122,7 +122,8 @@ public class QueryTreeBuilder {
         Value value = path.lastProperty()
                 .flatMap(p -> disambiguate.mapValueForProperty(p, token))
                 .orElse(new FreeText(token));
-        return new PathValue(path, operator, value);
+        PathValue pathValue = new PathValue(path, operator, value);
+        return pathValue.isTypeNode() ? pathValue.asTypeNode() : pathValue;
     }
 
     private static Token getToken(Lex.Symbol symbol) {

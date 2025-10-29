@@ -1,7 +1,5 @@
 package whelk.search2;
 
-import whelk.search2.querytree.And;
-import whelk.search2.querytree.Filter;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Numeric;
 import whelk.search2.querytree.Or;
@@ -14,16 +12,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class SelectedFilters {
-    private final Map<Filter, List<Node>> activatedSiteFilters = new HashMap<>();
-    private final Map<Filter, List<Node>> deactivatedSiteFilters = new HashMap<>();
-
+public class SelectedFacets {
     private final Map<String, List<Node>> selectedByPropertyKey = new HashMap<>();
     private final Map<String, Query.Connective> propertyKeyToConnective = new HashMap<>();
     private final Set<String> rangeProps = new HashSet<>();
@@ -34,17 +27,14 @@ public class SelectedFilters {
             "_categoryByCollection.identify"
     );
 
-    public SelectedFilters(QueryTree queryTree, AppParams appParams) {
+
+    public SelectedFacets(QueryTree queryTree, List<AppParams.Slice> sliceList) {
         //FIXME
         for (String menuProp : menuProps) {
             selectedByPropertyKey.put(menuProp, new ArrayList<>());
         }
 
-        init(queryTree, appParams);
-    }
-
-    public SelectedFilters(QueryTree queryTree, AppParams.SiteFilters siteFilters) {
-        init(queryTree, siteFilters);
+        init(queryTree, sliceList);
     }
 
     public boolean isSelectable(String propertyKey) {
@@ -93,22 +83,6 @@ public class SelectedFilters {
 
     public boolean isRangeFilter(String propertyKey) {
         return rangeProps.contains(propertyKey);
-    }
-
-    public boolean isActivated(Filter filter) {
-        return activatedSiteFilters.containsKey(filter);
-    }
-
-    public boolean isExplicitlyDeactivated(Filter filter) {
-        return deactivatedSiteFilters.containsKey(filter);
-    }
-
-    public List<Node> getActivatingNodes(Filter filter) {
-        return activatedSiteFilters.get(filter);
-    }
-
-    public List<Node> getDeactivatingNodes(Filter filter) {
-        return deactivatedSiteFilters.get(filter);
     }
 
     private void addSlice(AppParams.Slice slice, QueryTree queryTree) {
@@ -194,44 +168,9 @@ public class SelectedFilters {
         }
     }
 
-    private void init(QueryTree queryTree, AppParams appParams) {
-        for (var slice : appParams.sliceList) {
+    private void init(QueryTree queryTree, List<AppParams.Slice> sliceList) {
+        for (var slice : sliceList) {
             addSlice(slice, queryTree);
-        }
-
-        init(queryTree, appParams.siteFilters);
-    }
-
-    private void init(QueryTree queryTree, AppParams.SiteFilters siteFilters) {
-        for (AppParams.SiteFilter sf : siteFilters.getAllFilters()) {
-            Filter f = sf.filter();
-
-            BiConsumer<Node, Map<Filter, List<Node>>> detectPresentFilter = (filterNode, map) -> {
-                if (filterNode instanceof And and) {
-                    List<Node> matching = queryTree.findTopNodesByCondition(and.children()::contains);
-                    if (matching.size() == and.children().size()) {
-                        map.computeIfAbsent(f, x -> new ArrayList<>()).addAll(matching);
-                    }
-                }
-                Optional<Node> matching = queryTree.findTopNodeByCondition(filterNode::equals);
-                matching.ifPresent(node -> map.computeIfAbsent(f, x -> new ArrayList<>()).add(node));
-            };
-
-            detectPresentFilter.accept(f.getParsed(), activatedSiteFilters);
-            detectPresentFilter.accept(f.getParsed().getInverse(), deactivatedSiteFilters);
-
-            if (f instanceof Filter.AliasedFilter af) {
-                detectPresentFilter.accept(af, activatedSiteFilters);
-                Node inverse = af.getInverse();
-                detectPresentFilter.accept(inverse, deactivatedSiteFilters);
-                if (inverse instanceof Filter.AliasedFilter aliasedFilter) {
-                    if (isActivated(af)) {
-                        deactivatedSiteFilters.computeIfAbsent(aliasedFilter, x -> new ArrayList<>())
-                                .addAll(getActivatingNodes(af));
-                    }
-                }
-            }
         }
     }
 }
-

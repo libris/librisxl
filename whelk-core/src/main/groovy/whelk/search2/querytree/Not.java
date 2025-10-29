@@ -2,14 +2,13 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.ESSettings;
-import whelk.search2.QueryParams;
 import whelk.search2.QueryUtil;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
-import static whelk.search2.QueryUtil.makeUpLink;
 import static whelk.search2.QueryUtil.parenthesize;
 
 public record Not(Node node) implements Node {
@@ -19,16 +18,16 @@ public record Not(Node node) implements Node {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rulingTypes) {
-        return node instanceof Filter.AliasedFilter
+    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return node instanceof FilterAlias
                 ? null
-                : new Not(node.expand(jsonLd, rulingTypes));
+                : new Not(node.expand(jsonLd, rdfSubjectTypes));
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(QueryTree qt, QueryParams queryParams) {
-        return Map.of("not", node.toSearchMapping(qt, queryParams),
-                "up", makeUpLink(qt, this, queryParams));
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
+        return Map.of("not", node.toSearchMapping(makeUpLink),
+                "up", makeUpLink.apply(this));
     }
 
     @Override
@@ -47,6 +46,25 @@ public record Not(Node node) implements Node {
     @Override
     public Node getInverse() {
         return node;
+    }
+
+    @Override
+    public Node reduce(JsonLd jsonLd) {
+        return this;
+    }
+
+    @Override
+    public boolean implies(Node other, JsonLd jsonLd) {
+        if (node instanceof FilterAlias || other instanceof Not(FilterAlias fa)) {
+            return equals(other);
+        }
+        Node inverse = other.getInverse();
+        return !(inverse instanceof Not) && inverse.implies(node, jsonLd);
+    }
+
+    @Override
+    public RdfSubjectType rdfSubjectType() {
+        return RdfSubjectType.noType();
     }
 
     @Override

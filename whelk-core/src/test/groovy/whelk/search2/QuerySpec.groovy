@@ -13,8 +13,8 @@ class QuerySpec extends Specification {
 
     def "build agg query"() {
         given:
-        SelectedFilters selectedFilters = new SelectedFilters(QueryTree.empty(), appParams)
-        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFilters)
+        SelectedFacets selectedFacets = new SelectedFacets(QueryTree.empty(), appParams.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFacets)
 
         expect:
         aggQuery == [
@@ -76,8 +76,9 @@ class QuerySpec extends Specification {
 
     def "build agg query with multi-selected"() {
         given:
-        SelectedFilters selectedFilters = new SelectedFilters(new QueryTree("type:(T1 OR T2)", disambiguate), appParams)
-        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFilters)
+        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree("type:(T1x OR T2x)", disambiguate), appParams.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFacets)
+
 
         expect:
         aggQuery == [
@@ -117,7 +118,7 @@ class QuerySpec extends Specification {
                                                            "bool": [
                                                                    "filter": [
                                                                            "term": [
-                                                                                   "@type": "T1"
+                                                                                   "@type": "T1x"
                                                                            ]
                                                                    ]
                                                            ]
@@ -125,7 +126,7 @@ class QuerySpec extends Specification {
                                                            "bool": [
                                                                    "filter": [
                                                                            "term": [
-                                                                                   "@type": "T2"
+                                                                                   "@type": "T2x"
                                                                            ]
                                                                    ]
                                                            ]
@@ -158,7 +159,7 @@ class QuerySpec extends Specification {
                                                            "bool": [
                                                                    "filter": [
                                                                            "term": [
-                                                                                   "@type": "T1"
+                                                                                   "@type": "T1x"
                                                                            ]
                                                                    ]
                                                            ]
@@ -166,7 +167,7 @@ class QuerySpec extends Specification {
                                                            "bool": [
                                                                    "filter": [
                                                                            "term": [
-                                                                                   "@type": "T2"
+                                                                                   "@type": "T2x"
                                                                            ]
                                                                    ]
                                                            ]
@@ -179,8 +180,8 @@ class QuerySpec extends Specification {
 
     def "build agg query, omit incompatible"() {
         given:
-        SelectedFilters selectedFilters = new SelectedFilters(new QueryTree("type:((T1 OR T2) T3)", disambiguate), appParams)
-        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFilters)
+        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree("type:((T1x OR T2x) T3)", disambiguate), appParams.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams.sliceList, jsonLd, [], esSettings, selectedFacets)
 
         expect:
         aggQuery == [

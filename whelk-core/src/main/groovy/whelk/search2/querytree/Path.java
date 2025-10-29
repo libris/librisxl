@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,7 +19,6 @@ import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.RECORD_KEY;
 import static whelk.JsonLd.Rdfs.RDF_TYPE;
 import static whelk.JsonLd.SEARCH_KEY;
-
 
 public class Path {
     // TODO: Get substitutions from context instead?
@@ -147,6 +147,7 @@ public class Path {
                     case Link ignored -> Optional.of(new Key.RecognizedKey(ID_KEY));
                     case VocabTerm ignored -> Optional.empty();
                 };
+                case Term ignored -> Optional.empty();
                 case null -> p.isType() || p.isVocabTerm() ? Optional.empty() : Optional.of(new Key.RecognizedKey(ID_KEY));
             };
         }
@@ -184,15 +185,20 @@ public class Path {
             return this;
         }
 
-        public List<ExpandedPath> getAltPaths(JsonLd jsonLd, Collection<String> types) {
-            if (origPath != null && origPath.first() instanceof Property p && !p.isPlatformTerm()) {
-                List<ExpandedPath> altPaths = p.getApplicableIntegralRelations(jsonLd, types).stream()
-                        .map(ir -> Stream.concat(Stream.of(ir), path().stream()))
-                        .map(Stream::toList)
-                        .map(ExpandedPath::new)
-                        .collect(Collectors.toList());
+        public List<ExpandedPath> getAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+            if (origPath != null && origPath.first() instanceof Property p && !p.isPlatformTerm() && !p.isRdfType()) {
+                Set<Property> integralRelations = rdfSubjectTypes.stream()
+                        .map(t -> QueryUtil.getIntegralRelationsForType(t, jsonLd))
+                        .flatMap(List::stream)
+                        .collect(Collectors.toSet());
 
-                if (altPaths.isEmpty() || types.stream().anyMatch(t -> p.mayAppearOnType(t, jsonLd))) {
+                List<ExpandedPath> altPaths = new ArrayList<>();
+
+                integralRelations.stream()
+                        .map(ir -> applyIntegralRelation(ir, jsonLd))
+                        .forEach(path -> path.ifPresent(altPaths::add));
+
+                if (altPaths.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> p.mayAppearOnType(t, jsonLd))) {
                     altPaths.add(this);
                 }
 
@@ -200,6 +206,25 @@ public class Path {
             }
 
             return List.of(this);
+        }
+
+        private Optional<ExpandedPath> applyIntegralRelation(Property integral, JsonLd jsonLd) {
+            if (first() instanceof Property p) {
+                if (integral.isInverseOf(p)) {
+                    List<Subpath> adjustedPath = new ArrayList<>(path());
+                    adjustedPath.removeFirst();
+                    return Optional.of(new ExpandedPath(adjustedPath));
+                } else {
+                    boolean followIntegralRelation = integral.range().stream().anyMatch(irRangeType -> p.mayAppearOnType(irRangeType, jsonLd));
+                    if (followIntegralRelation && !p.name().equals(RECORD_KEY)) {
+                        List<Subpath> adjustedPath = new ArrayList<>(path()) {{
+                            addFirst(integral);
+                        }};
+                        return Optional.of(new ExpandedPath(adjustedPath));
+                    }
+                }
+            }
+            return Optional.empty();
         }
 
         public List<ExpandedPath> getAlt2Paths(JsonLd jsonLd) {

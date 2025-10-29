@@ -37,36 +37,40 @@ class GroupSpec extends Specification {
         !((Set) [or1]).contains(and1)
     }
 
-    def "reduce by condition"() {
+    def "reduce"() {
         given:
-        Group group = (Group) buildTree(_group, disambiguate)
-        Node reduced = group.reduceByCondition { a, b -> (a == b) }
+        Node reduced = buildTree(group, disambiguate).reduce(TestData.jsonLd)
 
         expect:
         reduced.toString() == result
 
         where:
-        _group                                    | result
-        'p1:v1 p2:v2'                             | 'p1:v1 p2:v2'
-        'p1:v1 (p1:v1 OR p2:v2)'                  | 'p1:v1'
-        'p1:v1 OR (p1:v1 p2:v2)'                  | 'p1:v1'
-        'p1:v1 (p1:v1 OR p3:v3)'                  | 'p1:v1'
-        'p1:v1 (p2:v2 OR p3:v3)'                  | 'p1:v1 (p2:v2 OR p3:v3)'
-        'p1:v1 OR (p2:v2 p3:v3)'                  | 'p1:v1 OR (p2:v2 p3:v3)'
-        'p1:v1 (p1:v1 OR p2:v2 OR (p2:v2 p3:v3))' | 'p1:v1'
-        'p1:v1 OR (p1:v1 2:v2 (p2:v2 OR p3:v3))'  | 'p1:v1'
-        'p1:v1 (p2:v2 OR p3:v3 (p3:v3 OR p4:v4))' | 'p1:v1 (p2:v2 OR p3:v3)'
-        'p1:v1 OR (p2:v2 p3:v3 (p3:v3 OR p4:v4))' | 'p1:v1 OR (p2:v2 p3:v3)'
-        'p1:v1 (p2:v2 OR p3:v3 OR (p1:v1 p4:v4))' | 'p1:v1 (p2:v2 OR p3:v3 OR (p1:v1 p4:v4))'
-        'p1:v1 OR (p2:v2 p3:v3 (p1:v1 OR p4:v4))' | 'p1:v1 OR (p2:v2 p3:v3 (p1:v1 OR p4:v4))'
-        'p1:v1 p2:v2 (p2:v2 OR p3:v3)'            | 'p1:v1 p2:v2'
-        'p1:v1 OR p2:v2 OR (p2:v2 p3:v3)'         | 'p1:v1 OR p2:v2'
-        '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4)'       | '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4)'
-        '(p1:v1 p2:v2) OR (p3:v3 p4:v4)'          | '(p1:v1 p2:v2) OR (p3:v3 p4:v4)'
-        '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4) p1:v1' | 'p1:v1 (p3:v3 OR p4:v4)'
-        '(p1:v1 p2:v2) OR (p3:v3 p4:v4) OR p1:v1' | 'p1:v1 OR (p3:v3 p4:v4)'
-        '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'       | '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'
-        '(p1:v1 p2:v2) OR (p1:v1 p2:v2)'          | 'p1:v1 p2:v2'
+        group                                                                  | result
+        'p1:v1 p2:v2'                                                          | 'p1:v1 p2:v2'
+        'p1:v1 (p1:v1 OR p2:v2)'                                               | 'p1:v1'
+        'p1:v1 OR (p1:v1 p2:v2)'                                               | 'p1:v1'
+        'p1:v1 (p1:v1 OR p3:v3)'                                               | 'p1:v1'
+        'p1:v1 (p2:v2 OR p3:v3)'                                               | 'p1:v1 (p2:v2 OR p3:v3)'
+        'p1:v1 OR (p2:v2 p3:v3)'                                               | 'p1:v1 OR (p2:v2 p3:v3)'
+        'p1:v1 (p1:v1 OR p2:v2 OR (p2:v2 p3:v3))'                              | 'p1:v1'
+        'p1:v1 OR (p1:v1 2:v2 (p2:v2 OR p3:v3))'                               | 'p1:v1'
+        'p1:v1 (p2:v2 OR p3:v3 (p3:v3 OR p4:v4))'                              | 'p1:v1 (p2:v2 OR p3:v3)'
+        'p1:v1 OR (p2:v2 p3:v3 (p3:v3 OR p4:v4))'                              | 'p1:v1 OR (p2:v2 p3:v3)'
+        'p1:v1 (p2:v2 OR p3:v3 OR (p1:v1 p4:v4))'                              | 'p1:v1 (p2:v2 OR p3:v3 OR (p1:v1 p4:v4))'
+        'p1:v1 OR (p2:v2 p3:v3 (p1:v1 OR p4:v4))'                              | 'p1:v1 OR (p2:v2 p3:v3 (p1:v1 OR p4:v4))'
+        'p1:v1 p2:v2 (p2:v2 OR p3:v3)'                                         | 'p1:v1 p2:v2'
+        'p1:v1 OR p2:v2 OR (p2:v2 p3:v3)'                                      | 'p1:v1 OR p2:v2'
+        '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4)'                                    | '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4)'
+        '(p1:v1 p2:v2) OR (p3:v3 p4:v4)'                                       | '(p1:v1 p2:v2) OR (p3:v3 p4:v4)'
+        '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4) p1:v1'                              | 'p1:v1 (p3:v3 OR p4:v4)'
+        '(p1:v1 p2:v2) OR (p3:v3 p4:v4) OR p1:v1'                              | 'p1:v1 OR (p3:v3 p4:v4)'
+        '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'                                    | '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'
+        '(p1:v1 p2:v2) OR (p1:v1 p2:v2)'                                       | 'p1:v1 p2:v2'
+        '(p1:v1 p2:v2) OR (p2:v2 p3:v3)'                                       | '(p1:v1 p2:v2) OR (p2:v2 p3:v3)'
+        'type:T1x type:T1'                                                     | 'type:T1x'
+        '(type:T1x OR p1:v1) (type:T1 OR p1:v1)'                               | 'type:T1x OR p1:v1'
+        'type:T1x OR type:T1'                                                  | 'type:T1'
+        '(type:T1x p1:v1) OR (type:T1 p1:v1)'                                  | 'type:T1 p1:v1'
     }
 
     def "To ES query: group nested"() {
