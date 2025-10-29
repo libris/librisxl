@@ -211,6 +211,7 @@ class TypeNormalizer implements UsingJsonKeys {
         var oldWtype = work.get(TYPE)
 
         changed |= mappings.fixMarcLegacyType(instance, work)
+        changed |= moveInstanceGenreFormsToWork(instance, work)
 
 
         changed |= simplifyWorkType(work)
@@ -513,6 +514,15 @@ class TypeNormalizer implements UsingJsonKeys {
 
 
     // ----- Typenormalizer helper methods -----
+    static boolean moveInstanceGenreFormsToWork (Map instance, Map work) {
+        List instanceGenreFormsToMove = asList(instance.remove("genreForm"))
+        if (instanceGenreFormsToMove) {
+            work.put("genreForm", instanceGenreFormsToMove)
+            return true
+        }
+        return false
+    }
+
     static boolean assumedToBePrint(Map instance) {
         // TODO: carrierType == marc:RegularPrint || marc:RegularPrintReproduction
         // TODO: this is added to AudioCD:s etc.!
