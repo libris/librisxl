@@ -1,36 +1,35 @@
-package whelk.rest.api
+package whelk.rest.api;
 
-import groovy.util.logging.Log4j2 as Log
-import whelk.converter.marc.MarcFrameConverter
-import whelk.util.WhelkFactory
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import whelk.converter.marc.MarcFrameConverter;
+import whelk.util.WhelkFactory;
 
-import javax.servlet.ServletContextEvent
-import javax.servlet.ServletContextListener
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
-@Log
-class MarcFrameConverterInitializer implements ServletContextListener {
+public class MarcFrameConverterInitializer implements ServletContextListener {
+    private static final Logger log = LogManager.getLogger(MarcFrameConverterInitializer.class);
 
     @Override
-    void contextInitialized(ServletContextEvent sce) {
-        initMarcFrameConverterAsync()
+    public void contextInitialized(ServletContextEvent sce) {
+        initMarcFrameConverterAsync();
     }
 
     @Override
-    void contextDestroyed(ServletContextEvent sce) {
+    public void contextDestroyed(ServletContextEvent sce) {
         //
     }
 
     void initMarcFrameConverterAsync() {
-        new Thread(new Runnable() {
-            void run() {
-                try {
-                    WhelkFactory.getSingletonWhelk().getMarcFrameConverter()
-                    log.info("Started ${MarcFrameConverter.class.getSimpleName()}")
-                }
-                catch (Exception e) {
-                    log.warn("Error starting ${MarcFrameConverter.class.getSimpleName()}: $e", e)
-                }
+        new Thread(() -> {
+            try {
+                WhelkFactory.getSingletonWhelk().getMarcFrameConverter();
+                log.info("Started {}", MarcFrameConverter.class.getSimpleName());
             }
-        }).start()
+            catch (Exception e) {
+                log.warn("Error starting {}: {}", MarcFrameConverter.class.getSimpleName(), e, e);
+            }
+        }).start();
     }
 }
