@@ -102,7 +102,7 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     public boolean isWild() {
-        return Operator.WILDCARD.equals(toString());
+        return tokens.size() == 1 && Operator.WILDCARD.equals(tokens.getFirst().value());
     }
 
     public Optional<Token> getCurrentlyEditedToken(int cursorPos) {
