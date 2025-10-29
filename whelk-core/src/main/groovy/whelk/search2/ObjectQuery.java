@@ -161,7 +161,7 @@ public class ObjectQuery extends Query {
                 return new Link(o, thing);
             }
         }
-        throw new InvalidQueryException("No resource with id " + object + " was found");
+        throw new InvalidQueryException("No resource with id " + o + " was found");
     }
 
     private List<Property> loadCuratedPredicates() {
