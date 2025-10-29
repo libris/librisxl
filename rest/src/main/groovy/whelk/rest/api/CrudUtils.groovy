@@ -96,7 +96,7 @@ class CrudUtils {
      *
      * (See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html)
      */
-    private static String getAcceptHeader(HttpServletRequest request) {
+    static String getAcceptHeader(HttpServletRequest request) {
         String acceptHeader = request.getHeader("Accept")
         if (acceptHeader == null) {
             acceptHeader = '*/*'
