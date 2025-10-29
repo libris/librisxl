@@ -211,11 +211,12 @@ class TypeNormalizer implements UsingJsonKeys {
         var oldWtype = work.get(TYPE)
 
         changed |= mappings.fixMarcLegacyType(instance, work)
-        changed |= moveInstanceGenreFormsToWork(instance, work)
 
 
-        changed |= simplifyWorkType(work)
         changed |= simplifyInstanceType(instance)
+        changed |= moveInstanceGenreFormsToWork(instance, work)
+        changed |= simplifyWorkType(work)
+
 
         changed |= mappings.convertIssuanceType(instance, work)
 
@@ -355,7 +356,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         // ----- Section: clean up GF and carrierType -----
 
-        // NOTE: We will put non-RDA "carriers" in instanceGenreForms...
+        // NOTE: We will put non-RDA "carriers" in carrierTypes...
         List instanceGenreForms = asList(instance.get("genreForm"))
 
         var isBraille = dropRedundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
@@ -372,16 +373,16 @@ class TypeNormalizer implements UsingJsonKeys {
 
         if (isTactile && isBraille) {
             if (isVolume) {
-                instanceGenreForms << [(ID): KTG + 'BrailleVolume']
+                carrierTypes << [(ID): KTG + 'BrailleVolume']
             } else {
-                instanceGenreForms << [(ID): KTG + 'BrailleResource']
+                carrierTypes << [(ID): KTG + 'BrailleResource']
             }
             changed = true
         }
 
         // NOTE: Replacing unlinked "E-böcker" with linked, tentative kbgf:EBook
         if (instanceGenreForms.removeIf { it['prefLabel'] == 'E-böcker'}) {
-          instanceGenreForms << [(ID): KTG + 'EBook']
+            carrierTypes << [(ID): KTG + 'EBook']
           changed = true
         }
 
@@ -407,7 +408,7 @@ class TypeNormalizer implements UsingJsonKeys {
         // If something has old itype Electronic and new itype PhysicalResource,
         // we can assume it id an electronic storage medium
         if (isElectronic && (instance.get(TYPE, '') == 'PhysicalResource')) {
-            instanceGenreForms << [(ID): KTG + 'ElectronicStorageMedium']
+            carrierTypes << [(ID): KTG + 'ElectronicStorageMedium']
         }
 
         // Remove redundant MARC mediaTerms if the information is implied by computed category:
@@ -431,34 +432,34 @@ class TypeNormalizer implements UsingJsonKeys {
 
             if (itype == "Print") {
                 if (isVolume) {
-                    instanceGenreForms << [(ID): KTG + 'PrintedVolume']
+                    carrierTypes << [(ID): KTG + 'PrintedVolume']
                 } else {
-                    instanceGenreForms << [(ID): KTG + 'Print']
+                    carrierTypes << [(ID): KTG + 'Print']
                 }
                 changed = true
             } else if (itype == "Instance") {
                 if (isVolume) {
                     if (probablyPrint) {
-                        instanceGenreForms << [(ID): KTG + 'PrintedVolume']
+                        carrierTypes << [(ID): KTG + 'PrintedVolume']
                         changed = true
                         // TODO: if marc:RegularPrintReproduction, add production a Reproduction?
                     } else {
-                        instanceGenreForms << [(ID): KBRDA + 'Volume']
+                        carrierTypes << [(ID): KBRDA + 'Volume']
                         changed = true
                     }
                 } else {
                     if (probablyPrint) {
                         if (mappings.matches(carrierTypes, "Sheet")) {
-                            instanceGenreForms << [(ID): KTG + 'PrintedSheet']
+                            carrierTypes << [(ID): KTG + 'PrintedSheet']
                         } else {
-                            instanceGenreForms << [(ID): KTG + 'Print'] // TODO: may be PartOfPrint ?
+                            carrierTypes << [(ID): KTG + 'Print'] // TODO: may be PartOfPrint ?
                         }
                         changed = true
                     } else {
                         if (mappings.matches(carrierTypes, "Sheet")) {
-                            instanceGenreForms << [(ID): KBRDA + 'Sheet']
+                            carrierTypes << [(ID): KBRDA + 'Sheet']
                             if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
-                                instanceGenreForms << [(ID): SAOGF + 'Poster']
+                                carrierTypes << [(ID): SAOGF + 'Poster']
                             }
                             changed = true
                         }
@@ -471,7 +472,6 @@ class TypeNormalizer implements UsingJsonKeys {
         if (addCategory) {
             List<Map> categories = []
 
-            categories += instanceGenreForms
             categories += mediaTypes
             categories += carrierTypes
 
