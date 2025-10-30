@@ -831,12 +831,9 @@ public class SearchUtils {
         }
 
         String query = (String) queryParameters.remove("q");
-        List<String> initialParams;
+        List<String> initialParams = new ArrayList<>();
         if (query != null) {
-            initialParams = new ArrayList<>();
             initialParams.add(makeParam("q", query));
-        } else {
-            initialParams = new ArrayList<>();
         }
         List<String> keys = new ArrayList<>(queryParameters.keySet());
         Collections.sort(keys);

@@ -21,13 +21,13 @@ public class AccessControl {
     static final String GLOBALREG_KEY = "global_registrant";
     static final String KAT_KEY = "cataloger";
 
-    public static boolean checkDocumentToPost(Document newDoc, Map userPrivileges, JsonLd jsonld) {
+    public static boolean checkDocumentToPost(Document newDoc, Map<String, Object> userPrivileges, JsonLd jsonld) {
         return checkDocument(newDoc, userPrivileges, jsonld);
     }
 
     // FIXME Mocking in CrudSpec breaks if this is made static
     public boolean checkDocumentToPut(Document newDoc, Document oldDoc,
-                                      Map userPrivileges, JsonLd jsonld) {
+                                      Map<String, Object> userPrivileges, JsonLd jsonld) {
         if (oldDoc.isHolding(jsonld)) {
             String newDocSigel = newDoc.getHeldBySigel();
             String oldDocSigel = oldDoc.getHeldBySigel();
@@ -62,11 +62,11 @@ public class AccessControl {
     }
 
     // FIXME Mocking in CrudSpec breaks if this is made static
-    public boolean checkDocumentToDelete(Document oldDoc, Map userPrivileges, JsonLd jsonld) {
+    public boolean checkDocumentToDelete(Document oldDoc, Map<String, Object> userPrivileges, JsonLd jsonld) {
         return checkDocument(oldDoc, userPrivileges, jsonld);
     }
 
-    private static boolean checkDocument(Document document, Map userPrivileges, JsonLd jsonld) {
+    private static boolean checkDocument(Document document, Map<String, Object> userPrivileges, JsonLd jsonld) {
         if (!isValidActiveSigel(userPrivileges)) {
             return false;
         }
@@ -95,7 +95,7 @@ public class AccessControl {
         }
     }
 
-    private static boolean hasPermissionForSigel(String sigel, Map userPrivileges) {
+    private static boolean hasPermissionForSigel(String sigel, Map<String, Object> userPrivileges) {
         boolean result = false;
 
         // redundant, but we want to safeguard against future mishaps
@@ -118,7 +118,8 @@ public class AccessControl {
         return result;
     }
 
-    private static boolean hasCatalogingPermission(Map userPrivileges) {
+    private static boolean hasCatalogingPermission(Map<String, Object> userPrivileges) {
+        System.out.println(userPrivileges);
         List<Map<String, Object>> permissions = (List<Map<String, Object>>) userPrivileges.get("permissions");
         for (Map<String, Object> item : permissions) {
             Boolean katPermission = (Boolean) item.get(KAT_KEY);
@@ -129,19 +130,19 @@ public class AccessControl {
         return false;
     }
 
-    private static boolean hasGlobalRegistrantPermission(Map userPrivileges) {
+    private static boolean hasGlobalRegistrantPermission(Map<String, Object> userPrivileges) {
         return activeSigelPermissions(userPrivileges)
                 .map(p -> Boolean.TRUE.equals(p.get(GLOBALREG_KEY)))
                 .orElse(false);
     }
 
-    private static boolean isValidActiveSigel(Map userPrivileges) {
+    private static boolean isValidActiveSigel(Map<String, Object> userPrivileges) {
         return activeSigelPermissions(userPrivileges).isPresent();
     }
 
-    private static Optional<Map> activeSigelPermissions(Map userPrivileges) {
+    private static Optional<Map<String, Object>> activeSigelPermissions(Map<String, Object> userPrivileges) {
         String activeSigel = (String) userPrivileges.get("active_sigel");
-        Map permissions = null;
+        Map<String, Object> permissions = null;
         if (activeSigel != null) {
             List<Map<String, Object>> permissionsList = (List<Map<String, Object>>) userPrivileges.get("permissions");
             for (Map<String, Object> permission : permissionsList) {
