@@ -160,6 +160,9 @@ public class Crud extends WhelkHttpServlet {
         } catch (InvalidQueryException e) {
             log.info("Invalid query: {}", queryParameters);
             throw new BadRequestException("Invalid query, please check the documentation. " + e.getMessage());
+        } catch (IOException e) {
+            log.error("IOException during query: {}", e.toString(), e);
+            throw new WhelkRuntimeException("IOException during query.", e);
         }
     }
 

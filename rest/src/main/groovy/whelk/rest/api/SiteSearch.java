@@ -1,152 +1,161 @@
-package whelk.rest.api
+package whelk.rest.api;
 
-import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2 as Log
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import whelk.JsonLd;
+import whelk.Whelk;
+import whelk.exception.InvalidQueryException;
 
-import whelk.JsonLd
-import whelk.Whelk
-import whelk.exception.InvalidQueryException
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static whelk.JsonLd.findInData
-import static whelk.util.Jackson.mapper
+import static whelk.JsonLd.findInData;
+import static whelk.util.Jackson.mapper;
 
-@Log
-@CompileStatic
 class SiteSearch {
+    private static final Logger log = LogManager.getLogger(SiteSearch.class);
 
-    Whelk whelk
-    SearchUtils search
-    SearchUtils2 search2
+    Whelk whelk;
+    SearchUtils search;
+    SearchUtils2 search2;
 
-    protected Map<String, Map> appsIndex = [:]
-    protected Map<String, String> siteAlias = [:]
-    protected Map<String, Map> searchStatsReprs = [:]
+    protected Map<String, Map> appsIndex = new HashMap<>();
+    protected Map<String, String> siteAlias = new HashMap<>();
+    protected Map<String, Map> searchStatsReprs = new HashMap<>();
 
     SiteSearch(Whelk whelk) {
-        this.whelk = whelk
-        search = new SearchUtils(whelk)
-        setupApplicationSearchData()
+        this.whelk = whelk;
+        search = new SearchUtils(whelk);
+        setupApplicationSearchData();
 
-        search2 = new SearchUtils2(whelk)
+        search2 = new SearchUtils2(whelk);
     }
 
     String getDefaultSite() {
-        return whelk.applicationId
+        return whelk.getApplicationId();
     }
 
     protected synchronized void setupApplicationSearchData() {
-        for (var app : whelk.namedApplications.values()) {
-            siteAlias[app.alias] = app.id
+        for (Map.Entry<String, ?> entry : whelk.getNamedApplications().entrySet()) {
+            Object app = entry.getValue();
+            Map<String, Object> appMap = (Map<String, Object>) app;
+            String alias = (String) appMap.get("alias");
+            String id = (String) appMap.get("id");
+            siteAlias.put(alias, id);
             // Workaround for complicated path from webserver/webapp to REST API;
             // somehow local request appears as HTTPS even when requested over HTTP...
-            if (app.alias.startsWith('http:')) {
-                siteAlias['https' + app.alias.substring(4)] = app.id
+            if (alias.startsWith("http:")) {
+                siteAlias.put("https" + alias.substring(4), id);
             }
         }
 
-        var appIds = [whelk.applicationId]
-        appIds += whelk.namedApplications.keySet() as List<String>
+        List<String> appIds = new java.util.ArrayList<>();
+        appIds.add(whelk.getApplicationId());
+        appIds.addAll(whelk.getNamedApplications().keySet());
 
-        appIds.each { appId ->
-            var appDesc = getAndIndexDescription(appId)
-            if (appDesc) {
-                var findDesc = getAndIndexDescription("${appId}find")
-                var dataDesc = getAndIndexDescription("${appId}data")
-                searchStatsReprs[appId] = [
-                    (JsonLd.ID_KEY): appId,
-                    'statsfind': buildStatsReprFromSliceSpec(findDesc),
-                    'statsindex': buildStatsReprFromSliceSpec(dataDesc),
-                    'domain': appId.replaceAll('^https?://([^/]+)/', '$1')
-                ]
+        for (String appId : appIds) {
+            Map appDesc = getAndIndexDescription(appId);
+            if (appDesc != null) {
+                Map findDesc = getAndIndexDescription(appId + "find");
+                Map dataDesc = getAndIndexDescription(appId + "data");
+                Map<String, Object> statsRepr = new HashMap<>();
+                statsRepr.put(JsonLd.ID_KEY, appId);
+                statsRepr.put("statsfind", buildStatsReprFromSliceSpec(findDesc));
+                statsRepr.put("statsindex", buildStatsReprFromSliceSpec(dataDesc));
+                statsRepr.put("domain", appId.replaceAll("^https?://([^/]+)/", "$1"));
+                searchStatsReprs.put(appId, statsRepr);
             }
         }
     }
 
     protected Map getAndIndexDescription(String id) {
-        var data = whelk.loadData(id)
-        if (data) {
-            var desc = findInData(data, id)
-            if (desc) {
-                appsIndex[id] = desc
-                return desc
+        Map data = whelk.loadData(id);
+        if (data != null) {
+            Map desc = (Map) findInData(data, id);
+            if (desc != null) {
+                appsIndex.put(id, desc);
+                return desc;
             }
         }
-        return null
+        return null;
     }
 
     boolean isSearchResource(String path) {
-        return path == "/find" || path.startsWith("/find.") ||
-               path == "/data" || path.startsWith("/data.")
+        return path.equals("/find") || path.startsWith("/find.") ||
+               path.equals("/data") || path.startsWith("/data.");
     }
 
     protected String determineActiveSite(Map queryParameters, String baseUri) {
         // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
-        var paramSite = (String) queryParameters["_site"]
-        if (paramSite in searchStatsReprs) {
-            log.debug("Active site set by _site request parameter: ${paramSite}")
-            return paramSite
+        String paramSite = (String) queryParameters.get("_site");
+        if (searchStatsReprs.containsKey(paramSite)) {
+            log.debug("Active site set by _site request parameter: {}", paramSite);
+            return paramSite;
         }
-        var activeSite = defaultSite
-        if (baseUri in siteAlias) {
-            activeSite = siteAlias[baseUri]
+        String activeSite = getDefaultSite();
+        if (siteAlias.containsKey(baseUri)) {
+            activeSite = siteAlias.get(baseUri);
         }
-        log.debug("Active site: ${activeSite}")
-        return activeSite
+        log.debug("Active site: {}", activeSite);
+        return activeSite;
     }
 
-    Map findData(Map queryParameters, String baseUri, String path) throws InvalidQueryException {
-        var activeSite = determineActiveSite(queryParameters, baseUri)
+    Map findData(Map queryParameters, String baseUri, String path) throws InvalidQueryException, IOException {
+        String activeSite = determineActiveSite(queryParameters, baseUri);
 
-        var searchSettings = (Map) searchStatsReprs[activeSite]
+        Map searchSettings = searchStatsReprs.get(activeSite);
 
         // Depending on what site/client we're serving, we might need to add extra query parameters
         // before they're sent further.
-        if (activeSite != defaultSite) {
-            queryParameters.put('_site_base_uri', [activeSite] as String[])
-            if (searchSettings['domain']) {
-                queryParameters.put('_boost', [searchSettings['domain']] as String[])
+        if (!activeSite.equals(getDefaultSite())) {
+            queryParameters.put("_site_base_uri", new String[]{activeSite});
+            if (searchSettings.get("domain") != null) {
+                queryParameters.put("_boost", new String[]{(String) searchSettings.get("domain")});
             }
         }
-        if (path == "/data" || path.startsWith("/data.")) {
-            if (!queryParameters['_statsrepr'] && searchSettings['statsindex']) {
-                queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsindex'])] as String[])
+        if (path.equals("/data") || path.startsWith("/data.")) {
+            if (queryParameters.get("_statsrepr") == null && searchSettings.get("statsindex") != null) {
+                queryParameters.put("_statsrepr", new String[]{mapper.writeValueAsString(searchSettings.get("statsindex"))});
             }
-            return toDataIndexDescription(appsIndex["${activeSite}data" as String], queryParameters)
-        } else if ("_q" in queryParameters || "_o" in queryParameters || "_r" in queryParameters) {
-            var appId = "https://beta.libris.kb.se/"
-            var appDesc = getAndIndexDescription(appId)
-            if (appDesc) {
-                var findDesc = getAndIndexDescription("${appId}find")
-                queryParameters.put('_appConfig', [mapper.writeValueAsString(search2.buildAppConfig(findDesc))] as String[])
+            return toDataIndexDescription(appsIndex.get(activeSite + "data"), queryParameters);
+        } else if (queryParameters.containsKey("_q") || queryParameters.containsKey("_o") || queryParameters.containsKey("_r")) {
+            String appId = "https://beta.libris.kb.se/";
+            Map appDesc = getAndIndexDescription(appId);
+            if (appDesc != null) {
+                Map findDesc = getAndIndexDescription(appId + "find");
+                queryParameters.put("_appConfig", new String[]{mapper.writeValueAsString(search2.buildAppConfig(findDesc))});
             }
-            return search2.doSearch(queryParameters)
+            return search2.doSearch(queryParameters);
         } else {
-            if (!queryParameters['_statsrepr'] && searchSettings['statsfind']) {
-                queryParameters.put('_statsrepr', [mapper.writeValueAsString(searchSettings['statsfind'])] as String[])
+            if (queryParameters.get("_statsrepr") == null && searchSettings.get("statsfind") != null) {
+                queryParameters.put("_statsrepr", new String[]{mapper.writeValueAsString(searchSettings.get("statsfind"))});
             }
-            return search.doSearch(queryParameters)
+            return search.doSearch(queryParameters);
         }
     }
 
-    Map toDataIndexDescription(Map appDesc, Map queryParameters) {
-        if (!queryParameters['_limit']) {
-            queryParameters.put('_limit', ["0"] as String[])
-        }
-        if (!queryParameters['q']) {
-            queryParameters.put('q', ["*"] as String[])
-        }
-        var searchResults = search.doSearch(queryParameters)
+    Map toDataIndexDescription(Map appDesc, Map queryParameters) throws InvalidQueryException, IOException {
+        queryParameters.computeIfAbsent("_limit", k -> new String[]{"0"});
+        queryParameters.computeIfAbsent("q", k -> new String[]{"*"});
+        Map searchResults = search.doSearch(queryParameters);
 
-        var results = [:]
-        results.putAll(appDesc)
-        results['statistics'] = searchResults['stats']
+        Map<String, Object> results = new HashMap<>(appDesc);
+        results.put("statistics", searchResults.get("stats"));
 
-        return results
+        return results;
     }
 
     protected Map buildStatsReprFromSliceSpec(Map desc) {
-        var stats = (Map) desc.get('statistics')
-        var sliceList = (List) stats?.get('sliceList')
-        return sliceList ? search.buildStatsReprFromSliceSpec(sliceList) : null
+        if (desc == null) {
+            return null;
+        }
+        Map stats = (Map) desc.get("statistics");
+        if (stats == null) {
+            return null;
+        }
+        List sliceList = (List) stats.get("sliceList");
+        return sliceList != null ? search.buildStatsReprFromSliceSpec(sliceList) : null;
     }
 }
