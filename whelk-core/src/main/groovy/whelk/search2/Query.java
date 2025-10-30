@@ -11,7 +11,6 @@ import whelk.util.DocumentUtil;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -813,32 +812,24 @@ public class Query {
         }
 
         private Map<String, Object> getRangeTemplate(String propertyKey) {
+            List<Node> selected = selectedFacets.getSelected(propertyKey);
             FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
-            String templateQueryString = qTree.remove(getSelectedFacets().getSelected(propertyKey))
+            String templateQueryString = qTree.remove(selected)
                     .add(placeholderNode)
                     .toQueryString();
             String templateUrl = QueryUtil.makeViewFindUrl(templateQueryString, queryParams);
 
-            Function<Operator, String> getLimit = op -> getSelectedFacets().getRangeSelected(propertyKey)
-                    .stream()
-                    .map(PathValue.class::cast)
-                    .map(PathValue::toOrEquals)
-                    .filter(pv -> pv.operator().equals(op))
-                    .findFirst()
-                    .map(PathValue::value)
-                    .map(Value::toString)
-                    .orElse("");
-
-            String minLimit = getLimit.apply(Operator.GREATER_THAN_OR_EQUALS);
-            String maxLimit = getLimit.apply(Operator.LESS_THAN_OR_EQUALS);
-
-            String gtoe = Operator.GREATER_THAN_OR_EQUALS.termKey;
-            String ltoe = Operator.LESS_THAN_OR_EQUALS.termKey;
+            String selectedMin = "";
+            String selectedMax = "";
+            if (selected.size() == 1 && ((PathValue) selected.getFirst()).value() instanceof YearRange yr) {
+                selectedMin = yr.min();
+                selectedMax = yr.max();
+            }
 
             Map<String, String> mapping = Map.of(
                     "variable", propertyKey,
-                    gtoe, minLimit,
-                    ltoe, maxLimit
+                    Operator.GREATER_THAN_OR_EQUALS.termKey, selectedMin,
+                    Operator.LESS_THAN_OR_EQUALS.termKey, selectedMax
             );
 
             return Map.of(

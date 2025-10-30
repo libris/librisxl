@@ -6,6 +6,7 @@ import whelk.search2.querytree.Or;
 import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.YearRange;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,7 +74,7 @@ public class SelectedFacets {
 
     public List<Node> getRangeSelected(String propertyKey) {
         return getSelected(propertyKey).stream()
-                .filter(n -> ((PathValue) n).operator().isRange())
+                .filter(n -> ((PathValue) n).operator().isRange() || ((PathValue) n).value() instanceof YearRange)
                 .toList();
     }
 

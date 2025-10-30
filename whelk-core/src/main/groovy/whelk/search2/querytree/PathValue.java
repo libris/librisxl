@@ -197,6 +197,7 @@ public sealed class PathValue implements Node permits Type {
             case Numeric numeric -> esNumFilter(field, numeric, esSettings);
             case Resource resource -> esResourceFilter(field, resource);
             case Term term -> esTermFilter(field, term);
+            case YearRange yearRange -> esYearRangeFilter(field, yearRange, esSettings);
         };
     }
 
@@ -234,13 +235,32 @@ public sealed class PathValue implements Node permits Type {
         return esFreeTextFilter(field, new FreeText(n.toString()), esSettings);
     }
 
+    private Map<String, Object> esYearRangeFilter(String field, YearRange yearRange, ESSettings esSettings) {
+        if (operator.isRange()) {
+            // FIXME
+            return nonsenseFilter();
+        }
+
+        EsMappings esMappings = esSettings.mappings();
+
+        if (esMappings.hasFourDigitsShortField(field)) {
+            return esRangeFilter(field, yearRange.toEsInt());
+        }
+
+        if (esMappings.isDateTypeField(field)) {
+            return esRangeFilter(field, yearRange.toEsDate());
+        }
+
+        return esFreeTextFilter(field, new FreeText(yearRange.toString()), esSettings);
+    }
+
     private Map<String, Object> esNumOrDateFilter(String f, Object v) {
         return switch (operator) {
             case EQUALS -> esTermQueryFilter(f, v);
-            case GREATER_THAN_OR_EQUALS -> esRangeFilter(f, v, "gte");
-            case GREATER_THAN -> esRangeFilter(f, v, "gt");
-            case LESS_THAN_OR_EQUALS -> esRangeFilter(f, v, "lte");
-            case LESS_THAN -> esRangeFilter(f, v, "lt");
+            case GREATER_THAN_OR_EQUALS -> esRangeFilter(f, "gte", v);
+            case GREATER_THAN -> esRangeFilter(f, "gt", v);
+            case LESS_THAN_OR_EQUALS -> esRangeFilter(f, "lte", v);
+            case LESS_THAN -> esRangeFilter(f, "lt", v);
         };
     }
 
@@ -369,12 +389,16 @@ public sealed class PathValue implements Node permits Type {
         return new Or(altFields);
     }
 
-    private static Map<String, Object> esRangeFilter(String path, Object value, String key) {
-        return filterWrap(rangeWrap(Map.of(path, Map.of(key, value))));
+    private static Map<String, Object> esRangeFilter(String field, String esRangeOp, Object value) {
+        return esRangeFilter(field, Map.of(esRangeOp, value));
     }
 
-    private static Map<String, Object> existsFilter(String path) {
-        return Map.of("exists", Map.of("field", path));
+    private static Map<String, Object> esRangeFilter(String field, Map<String, Object> esRangeObj) {
+        return filterWrap(rangeWrap(Map.of(field, esRangeObj)));
+    }
+
+    private static Map<String, Object> existsFilter(String field) {
+        return Map.of("exists", Map.of("field", field));
     }
 
     private static Map<String, Object> filterWrap(Map<?, ?> m) {

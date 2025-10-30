@@ -148,6 +148,7 @@ public class Path {
                     case VocabTerm ignored -> Optional.empty();
                 };
                 case Term ignored -> Optional.empty();
+                case YearRange ignored -> Optional.empty();
                 case null -> p.isType() || p.isVocabTerm() ? Optional.empty() : Optional.of(new Key.RecognizedKey(ID_KEY));
             };
         }
