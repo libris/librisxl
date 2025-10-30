@@ -119,7 +119,6 @@ public class AccessControl {
     }
 
     private static boolean hasCatalogingPermission(Map<String, Object> userPrivileges) {
-        System.out.println(userPrivileges);
         List<Map<String, Object>> permissions = (List<Map<String, Object>>) userPrivileges.get("permissions");
         for (Map<String, Object> item : permissions) {
             Boolean katPermission = (Boolean) item.get(KAT_KEY);
