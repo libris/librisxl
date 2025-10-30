@@ -107,16 +107,6 @@ public sealed abstract class Group implements Node permits And, Or {
         return reduced.size() == 1 ? reduced.getFirst() : newInstance(reduced);
     }
 
-    private Optional<Node> pick(Node a, Node b, JsonLd jsonLd) {
-        if (a.implies(b, jsonLd)) {
-            return Optional.of(a);
-        }
-        if (b.implies(a, jsonLd)) {
-            return Optional.of(b);
-        }
-        return Optional.empty();
-    }
-
     private Map<String, Object> toEsNested(Map<String, List<Node>> nestedGroups, ESSettings esSettings) {
         List<Map<String, Object>> esChildren = new ArrayList<>();
         List<Node> nonNested = new ArrayList<>(children());
