@@ -25,16 +25,16 @@ class EmbellishSpec extends Specification {
                     ["@id": "https://example.org/ns/px2"],
                     ["@id": "https://example.org/ns/px3"],
                     ["@id": "https://example.org/ns/py1"],
-                    ["@id": "https://example.org/ns/CR",
+                    ["@id": "https://example.org/ns/IR",
                      "category": ["@id": "integral"]],
-                    ["@id": "https://example.org/ns/CR2",
+                    ["@id": "https://example.org/ns/IR2",
                      "category": ["@id": "integral"]],
-                    ["@id": "https://example.org/ns/CR3",
+                    ["@id": "https://example.org/ns/IR3",
                      "category": ["@id": "integral"],
-                     "inverseOf": ["@id": "https://example.org/ns/RCR3"]],
-                    ["@id": "https://example.org/ns/RCR3",
+                     "inverseOf": ["@id": "https://example.org/ns/RIR3"]],
+                    ["@id": "https://example.org/ns/RIR3",
                      "category": ["@id": "integral"],
-                     "inverseOf": ["@id": "https://example.org/ns/CR3"]],
+                     "inverseOf": ["@id": "https://example.org/ns/IR3"]],
             ]
     ]
 
@@ -48,11 +48,11 @@ class EmbellishSpec extends Specification {
                                      ],
                                      'X': ['@type'         : 'fresnel:Lens',
                                            '@id'           : 'X-chips',
-                                           'showProperties': ['px1', ['inverseOf': 'py1'], 'CR', 'CR2', ['inverseOf': 'CR3'], ['inverseOf': 'px3']]
+                                           'showProperties': ['px1', ['inverseOf': 'py1'], 'IR', 'IR2', 'IR3', ['inverseOf': 'IR3'], ['inverseOf': 'px3']]
                                      ],
                                      'Y': ['@type'         : 'fresnel:Lens',
                                            '@id'           : 'Y-chips',
-                                           'showProperties': ['py1']
+                                           'showProperties': ['py1', ['inverseOf': 'IR3']]
                                      ]
                              ]],
                      'cards':
@@ -227,7 +227,7 @@ digraph {
                            ┌−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┐
                            ╎                        embellish                          ╎
                            ╎                                                           ╎
-                           ╎ ┌───────────┐  CR    ┌───────────┐   px1    ┌───────────┐ ╎  px1   ┌───────────┐
+                           ╎ ┌───────────┐  IR    ┌───────────┐   px1    ┌───────────┐ ╎  px1   ┌───────────┐
                            ╎ │ X6 (card) │ ─────▶ │ X7 (card) │ ───────▶ │ X8 (chip) │ ╎ ─────▶ │    Y3     │
                            ╎ └───────────┘        └───────────┘          └───────────┘ ╎        └───────────┘
                            ╎   ▲                                                       ╎
@@ -235,7 +235,7 @@ digraph {
                            ╎   │                                                       ╎
 ┌−−−−−−−−−−−−−−−−−−−−−−−−−−    │                                                        −−−−−−−−−−−−−−−−−−−−−−┐
 ╎                              │                                                                              ╎
-╎ ┌─────────────┐   CR       ┌───────────┐  px1   ┌───────────┐   CR     ┌───────────┐   px1    ┌───────────┐ ╎  px1   ┌────┐
+╎ ┌─────────────┐   IR       ┌───────────┐  px1   ┌───────────┐   IR     ┌───────────┐   px1    ┌───────────┐ ╎  px1   ┌────┐
 ╎ │ doc (START) │ ─────────▶ │ X0 (full) │ ─────▶ │ X3 (card) │ ───────▶ │ X4 (card) │ ───────▶ │ X5 (chip) │ ╎ ─────▶ │ Y2 │
 ╎ └─────────────┘            └───────────┘        └───────────┘          └───────────┘          └───────────┘ ╎        └────┘
 ╎   │                                               ▲                                                         ╎
@@ -262,15 +262,15 @@ Generated with: https://dot-to-ascii.ggerganov.com/
 digraph {
     rankdir=LR;
     subgraph cluster_0 {
-        doc -> X0 [ label = "CR" ];
+        doc -> X0 [ label = "IR" ];
         doc -> X1 [ label = "px1" ];
         X0 -> X3 [ label = "px1" ];
         X0 -> X6 [ label = "px1" ];
         X1 -> X2 [ label = "px1" ];
         X1 -> X3 [ label = "px1" ];
-        X3 -> X4 [ label = "CR" ];
+        X3 -> X4 [ label = "IR" ];
         X4 -> X5 [ label = "px1" ];
-        X6 -> X7 [ label = "CR" ];
+        X6 -> X7 [ label = "IR" ];
         X7 -> X8 [ label = "px1" ];
         label = "embellish";
     }
@@ -297,7 +297,7 @@ digraph {
         def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
-                              ['@type': 'X', '@id': '/thing', 'CR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX1']]
+                              ['@type': 'X', '@id': '/thing', 'IR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX1']]
         ]]
 
         def docs = [
@@ -316,7 +316,7 @@ digraph {
 
                 ['@graph': [['@type': 'R', '@id': '/recordX3', 'mainEntity': ['@id': '/thingX3']],
                             ['@type': 'X', '@id': '/thingX3',
-                             'CR'   : ['@id': '/thingX4'],
+                             'IR'   : ['@id': '/thingX4'],
                              'px1'  : 'foo',
                              'px2'  : 'foo']]],
 
@@ -328,7 +328,7 @@ digraph {
 
                 ['@graph': [['@type': 'R', '@id': '/recordX6', 'mainEntity': ['@id': '/thingX6']],
                             ['@type': 'X', '@id': '/thingX6',
-                             'CR'   : ['@id': '/thingX7'],
+                             'IR'   : ['@id': '/thingX7'],
                              'px1'  : 'foo',
                              'px2'  : 'foo']]],
 
@@ -379,15 +379,15 @@ digraph {
                          ┌−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┐
                          ╎                        embellish                          ╎
                          ╎                                                           ╎
-                         ╎ ┌───────────┐  CR    ┌───────────┐   px1    ┌───────────┐ ╎
+                         ╎ ┌───────────┐  IR    ┌───────────┐   px1    ┌───────────┐ ╎
                          ╎ │ X7 (full) │ ─────▶ │ X8 (full) │ ───────▶ │ X9 (card) │ ╎
                          ╎ └───────────┘        └───────────┘          └───────────┘ ╎
                          ╎   ▲                                                       ╎
-                         ╎   │ CR2                                                   ╎
+                         ╎   │ IR2                                                   ╎
                          ╎   │                                                       ╎
 ┌−−−−−−−−−−−−−−−−−−−−−−−−    │                                                        −−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−┐
 ╎                            │                                                                                                  ╎
-╎ ┌─────────────┐  CR      ┌───────────┐  px1   ┌───────────┐   CR     ┌───────────┐   CR    ┌───────────┐  px1   ┌───────────┐ ╎  px1   ┌────┐
+╎ ┌─────────────┐  IR      ┌───────────┐  px1   ┌───────────┐   IR     ┌───────────┐   IR    ┌───────────┐  px1   ┌───────────┐ ╎  px1   ┌────┐
 ╎ │ doc (START) │ ───────▶ │ X0 (full) │ ─────▶ │ X3 (card) │ ───────▶ │ X4 (card) │ ──────▶ │ X5 (card) │ ─────▶ │ X6 (chip) │ ╎ ─────▶ │ Y1 │
 ╎ └─────────────┘          └───────────┘        └───────────┘          └───────────┘         └───────────┘        └───────────┘ ╎        └────┘
 ╎   │                                             ▲                                                                             ╎
@@ -408,15 +408,15 @@ Generated with: https://dot-to-ascii.ggerganov.com/
 digraph {
     rankdir=LR;
     subgraph cluster_0 {
-        doc -> X0 [ label = "CR" ];
+        doc -> X0 [ label = "IR" ];
         doc -> X1 [ label = "px1" ];
         X0 -> X3 [ label = "px1" ];
-        X0 -> X7 [ label = "CR2" ];
+        X0 -> X7 [ label = "IR2" ];
         X1 -> X3 [ label = "px1" ];
-        X3 -> X4 [ label = "CR" ];
-        X4 -> X5 [ label = "CR" ];
+        X3 -> X4 [ label = "IR" ];
+        X4 -> X5 [ label = "IR" ];
         X5 -> X6 [ label = "px1" ];
-        X7 -> X8 [ label = "CR" ];
+        X7 -> X8 [ label = "IR" ];
         X8 -> X9 [ label = "px1" ];
         label = "embellish";
     }
@@ -441,13 +441,13 @@ digraph {
         def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
-                              ['@type': 'X', '@id': '/thing', 'CR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX1']]
+                              ['@type': 'X', '@id': '/thing', 'IR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX1']]
         ]]
 
         def docs = [
                 ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
                             ['@type': 'X', '@id': '/thingX0',
-                             'CR2'  : [['@id': '/thingX7']],
+                             'IR2'  : [['@id': '/thingX7']],
                              'px1'  : [['@id': '/thingX3']],
                              'px2'  : 'foo']]],
 
@@ -458,13 +458,13 @@ digraph {
 
                 ['@graph': [['@type': 'R', '@id': '/recordX3', 'mainEntity': ['@id': '/thingX3']],
                             ['@type': 'X', '@id': '/thingX3',
-                             'CR'   : ['@id': '/thingX4'],
+                             'IR'   : ['@id': '/thingX4'],
                              'px1'  : 'foo',
                              'px2'  : 'foo']]],
 
                 ['@graph': [['@type': 'R', '@id': '/recordX4', 'mainEntity': ['@id': '/thingX4']],
                             ['@type': 'X', '@id': '/thingX4',
-                             'CR'   : ['@id': '/thingX5'],
+                             'IR'   : ['@id': '/thingX5'],
                              'px1'  : 'foo',
                              'px2'  : 'foo']]],
 
@@ -479,7 +479,7 @@ digraph {
                              'px2'  : 'foo']]],
 
                 ['@graph': [['@type': 'R', '@id': '/recordX7', 'mainEntity': ['@id': '/thingX7']],
-                            ['@type': 'X', '@id': '/thingX7', 'CR': ['@id': '/thingX8'], 'px1': 'foo', 'px2': 'foo']]],
+                            ['@type': 'X', '@id': '/thingX7', 'IR': ['@id': '/thingX8'], 'px1': 'foo', 'px2': 'foo']]],
 
                 ['@graph': [['@type': 'R', '@id': '/recordX8', 'mainEntity': ['@id': '/thingX8']],
                             ['@type': 'X', '@id': '/thingX8', 'px1': ['@id': '/thingX9'], 'px2': 'foo']]],
@@ -532,7 +532,7 @@ digraph {
 ╎                 px1                     ╎
 ╎   ┌─────────────────────────┐           ╎
 ╎   │                         ▼           ╎
-╎ ┌─────────────┐  CR       ┌───────────┐ ╎
+╎ ┌─────────────┐  IR       ┌───────────┐ ╎
 ╎ │ doc (START) │ ────────▶ │ X0 (full) │ ╎
 ╎ └─────────────┘           └───────────┘ ╎
 ╎                                         ╎
@@ -544,7 +544,7 @@ Generated with: https://dot-to-ascii.ggerganov.com/
 digraph {
     rankdir=LR;
     subgraph cluster_0 {
-        doc -> X0 [ label = "CR" ];
+        doc -> X0 [ label = "IR" ];
         doc -> X0 [ label = "px1" ];
 
 
@@ -563,7 +563,7 @@ digraph {
         def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
 
         def doc = ['@graph': [['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
-                              ['@type': 'X', '@id': '/thing', 'CR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX0']]
+                              ['@type': 'X', '@id': '/thing', 'IR': ['@id': '/thingX0'], 'px1': ['@id': '/thingX0']]
         ]]
 
         def docs = [
@@ -601,7 +601,7 @@ digraph {
 ╎                 px1                                     ╎
 ╎   ┌─────────────────────────────────────────┐           ╎
 ╎   │                                         ▼           ╎
-╎ ┌─────────────┐  CR   ┌───────────┐  CR   ┌───────────┐ ╎
+╎ ┌─────────────┐  IR   ┌───────────┐  IR   ┌───────────┐ ╎
 ╎ │ doc (START) │ ────▶ │ X0 (full) │ ────▶ │ X1 (full) │ ╎
 ╎ └─────────────┘       └───────────┘       └───────────┘ ╎
 ╎                                                         ╎
@@ -613,9 +613,9 @@ Generated with: https://dot-to-ascii.ggerganov.com/
 digraph {
     rankdir=LR;
     subgraph cluster_0 {
-        doc -> X0 [ label = "CR" ];
+        doc -> X0 [ label = "IR" ];
         doc -> X1 [ label = "px1" ];
-        X0 -> X1 [ label = "CR" ];
+        X0 -> X1 [ label = "IR" ];
 
         label = "embellish";
     }
@@ -634,14 +634,14 @@ digraph {
         def doc = ['@graph': [
                 ['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
                 ['@type': 'X', '@id': '/thing',
-                 'CR' : ['@id': '/thingX0'],
+                 'IR' : ['@id': '/thingX0'],
                  'px1': ['@id': '/thingX1']]
         ]]
 
         def docs = [
                 ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
                             ['@type': 'X', '@id': '/thingX0',
-                             'CR'   : [['@id': '/thingX1']],
+                             'IR'   : [['@id': '/thingX1']],
                              'px1'  : 'foo',
                              'px2'  : 'foo']]],
 
@@ -679,13 +679,13 @@ digraph {
 ╎ │  X1 (full)  │ ╎
 ╎ └─────────────┘ ╎
 ╎   │             ╎
-╎   │ CR3         ╎
+╎   │ IR3         ╎
 ╎   ▼             ╎
 ╎ ┌─────────────┐ ╎
 ╎ │  X0 (full)  │ ╎
 ╎ └─────────────┘ ╎
 ╎   │             ╎
-╎   │ CR3         ╎
+╎   │ IR3         ╎
 ╎   ▼             ╎
 ╎ ┌─────────────┐ ╎
 ╎ │ doc (START) │ ╎
@@ -698,8 +698,8 @@ Generated with: https://dot-to-ascii.ggerganov.com/
 .dot:
 digraph {
     subgraph cluster_0 {
-        X1 -> X0 [ label = "CR3" ];
-        X0 -> doc [ label = "CR3" ];
+        X1 -> X0 [ label = "IR3" ];
+        X0 -> doc [ label = "IR3" ];
 
         label = "embellish";
     }
@@ -724,13 +724,13 @@ digraph {
         def docs = [
                 ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
                             ['@type': 'X', '@id': '/thingX0',
-                             'CR3'  : [['@id': '/thing']],
+                             'IR3'  : [['@id': '/thing']],
                              'px1'  : 'foo',
                              'px2'  : 'foo']]],
 
                 ['@graph': [['@type': 'R', '@id': '/recordX1', 'mainEntity': ['@id': '/thingX1']],
                             ['@type': 'X', '@id': '/thingX1',
-                             'CR3'  : [['@id': '/thingX0']],
+                             'IR3'  : [['@id': '/thingX0']],
                              'px1'  : 'foo',
                              'px2'  : 'foo']]],
         ]
@@ -765,7 +765,7 @@ digraph {
 ╎ │ doc (START) │            ◀┐      ╎
 ╎ └─────────────┘             │      ╎
 ╎   │                         │      ╎
-╎   │ p1                      │ CR3  ╎
+╎   │ p1                      │ IR3  ╎
 ╎   ▼                         │      ╎
 ╎ ┌─────────────┐             │      ╎
 ╎ │  X0 (full)  │            ─┘      ╎
@@ -779,7 +779,7 @@ Generated with: https://dot-to-ascii.ggerganov.com/
 digraph {
     subgraph cluster_0 {
         doc -> X0 [ label = "p1" ];
-        X0 -> doc [ label = "CR3" ];
+        X0 -> doc [ label = "IR3" ];
 
 
         label = "embellish";
@@ -805,7 +805,7 @@ digraph {
         def docs = [
                 ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
                             ['@type': 'X', '@id': '/thingX0',
-                             'CR3'  : [['@id': '/thing']],
+                             'IR3'  : [['@id': '/thing']],
                              'px1'  : 'foo',
                              'px2'  : 'foo']]],
         ]
@@ -840,7 +840,7 @@ digraph {
 ╎   ┌───▶ │  X0 (full)  │ ─┐      ╎
 ╎   │     └─────────────┘  │      ╎
 ╎   │       │              │      ╎
-╎   │ px1   │ CR3          │ px3  ╎
+╎   │ px1   │ IR3          │ px3  ╎
 ╎   │       ▼              │      ╎
 ╎   │     ┌─────────────┐  │      ╎
 ╎   └──── │ doc (START) │ ◀┘      ╎
@@ -853,7 +853,7 @@ Generated with: https://dot-to-ascii.ggerganov.com/
 .dot:
 digraph {
     subgraph cluster_0 {
-        X0 -> doc [ label = "CR3" ];
+        X0 -> doc [ label = "IR3" ];
         X0 -> doc [ label = "px3" ];
         doc -> X0 [ label = "px1" ];
 
@@ -880,7 +880,7 @@ digraph {
         def docs = [
                 ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
                             ['@type': 'X', '@id': '/thingX0',
-                             'CR3': [['@id': '/thing']],
+                             'IR3': [['@id': '/thing']],
                              'px3': [['@id': '/thing']],
                              'px1': 'foo',
                              'px2': 'foo']]]
@@ -899,6 +899,88 @@ digraph {
 
         expect:
         lens(find(result, '/thingX0')) == 'full'
+
+        result['@graph'].size() == 2 + 1
+    }
+
+    /*
+
+  ┌─────────────┐
+  │     X0      │
+  └─────────────┘
+    │
+    │ IR3
+    ▼
+┌−−−−−−−−−−−−−−−−−┐
+╎    embellish    ╎
+╎                 ╎
+╎ ┌─────────────┐ ╎
+╎ │  Y0 (full)  │ ╎
+╎ └─────────────┘ ╎
+╎   ▲             ╎
+╎   │ IR3         ╎
+╎   │             ╎
+╎ ┌─────────────┐ ╎
+╎ │ doc (START) │ ╎
+╎ └─────────────┘ ╎
+╎                 ╎
+└−−−−−−−−−−−−−−−−−┘
+
+
+
+Generated with: https://dot-to-ascii.ggerganov.com/
+
+.dot:
+
+digraph {
+    subgraph cluster_0 {
+        doc -> Y0 [ label = "IR3" ];
+        label = "embellish";
+    }
+    X0 -> Y0 [ label = "IR3" ];
+
+    doc [label = "doc (START)"];
+    Y0 [label = "Y0 (full)"];
+}
+
+     */
+
+    def "should not follow reverse integral links from resource reached by same relation but forward"() {
+        // i.e. instances should not pull in other instances linked to the same work
+        given:
+        def ld = new JsonLd(CONTEXT_DATA, DISPLAY_DATA, VOCAB_DATA)
+
+        def doc = ['@graph': [
+                ['@type': 'R', '@id': '/record', 'mainEntity': ['@id': '/thing']],
+                ['@type': 'X', '@id': '/thing',
+                 'IR3': [['@id': '/thingY0']]]
+        ]]
+
+        def docs = [
+                ['@graph': [['@type': 'R', '@id': '/recordY0', 'mainEntity': ['@id': '/thingY0']],
+                            ['@type': 'Y', '@id': '/thingY0',
+                             'py1': 'foo',
+                             'py2': 'bar']]],
+                ['@graph': [['@type': 'R', '@id': '/recordX0', 'mainEntity': ['@id': '/thingX0']],
+                            ['@type': 'X', '@id': '/thingX0',
+                             'IR3': [['@id': '/thingY0']],
+                             'px1': 'foo',
+                             'px2': 'bar']]]
+        ]
+
+        def storage = new TestStorage(ld)
+        storage.add(doc)
+        docs.each(storage.&add)
+
+        def embellisher = new Embellisher(ld, storage.&getFull, storage.&getCards, storage.&getReverseLinks)
+
+        Document document = new Document(doc)
+
+        embellisher.embellish(document)
+        def result = document.data
+        
+        expect:
+        lens(find(result, '/thingY0')) == 'full'
 
         result['@graph'].size() == 2 + 1
     }
@@ -1135,6 +1217,9 @@ digraph {
             }
         }
         if (thing['@type'] == 'Y') {
+            if (thing['py1'] && thing['py2'] && thing['full']) {
+                return 'full'
+            }
             if (thing['py1'] && thing['py2']) {
                 return 'card'
             }
