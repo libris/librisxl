@@ -960,6 +960,8 @@ public class SearchUtils {
             List<?> paramValues;
             if (paramValue instanceof List) {
                 paramValues = (List<?>) paramValue;
+            } else if (paramValue instanceof Object[]) {
+                paramValues = Arrays.asList((Object[]) paramValue);
             } else {
                 paramValues = List.of(paramValue);
             }
