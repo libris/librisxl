@@ -1,7 +1,7 @@
 package whelk.rest.api;
 
-import groovy.xml.StreamingMarkupBuilder;
 import groovy.xml.XmlSlurper;
+import groovy.xml.XmlUtil;
 import groovy.xml.slurpersupport.GPathResult;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -339,7 +339,7 @@ public class RemoteSearchAPI extends WhelkHttpServlet {
                 for (Object libCode : (Iterable<?>) libraryCodesObj) {
                     GPathResult it = (GPathResult) libCode;
                     Map<String, Object> map = new HashMap<>();
-                    map.put("database", createString((GPathResult) it.getProperty("@id")));
+                    map.put("database", it.getProperty("@id").toString());
 
                     Object childrenObj = it.children();
                     if (childrenObj instanceof Iterable) {
@@ -496,8 +496,10 @@ public class RemoteSearchAPI extends WhelkHttpServlet {
     }
 
     String createString(GPathResult root) {
-        StreamingMarkupBuilder builder = new StreamingMarkupBuilder();
-        return builder.bind(root).toString();
+        if (root == null) {
+            return "";
+        }
+        return XmlUtil.serialize(root);
     }
 
     private boolean isValidIsbn(String query) {
