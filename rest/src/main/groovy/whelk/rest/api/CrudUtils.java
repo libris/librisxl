@@ -16,7 +16,6 @@ import whelk.util.http.NotFoundException;
 import whelk.util.http.UnsupportedContentTypeException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
