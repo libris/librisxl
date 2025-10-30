@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.SocketException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -48,7 +49,7 @@ public class RemoteSearchAPI extends WhelkHttpServlet {
     static {
         try {
             Properties props = PropertyLoader.loadProperties("secret");
-            metaProxyInfoUrl = new URL(props.getProperty("metaProxyInfoUrl", "http://mproxy.libris.kb.se/db_Metaproxy.xml"));
+            metaProxyInfoUrl = URI.create(props.getProperty("metaProxyInfoUrl", "http://mproxy.libris.kb.se/db_Metaproxy.xml")).toURL();
             metaProxyBaseUrl = props.getProperty("metaProxyBaseUrl", "http://mproxy.libris.kb.se:8000");
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize RemoteSearchAPI", e);
@@ -227,7 +228,7 @@ public class RemoteSearchAPI extends WhelkHttpServlet {
             log.debug("Remaining databases: {}", databaseList);
             StringBuilder queryStrBuilder = new StringBuilder();
             for (Map.Entry<String, Object> entry : urlParams.entrySet()) {
-                if (queryStrBuilder.length() == 0) {
+                if (queryStrBuilder.isEmpty()) {
                     queryStrBuilder.append("?");
                 } else {
                     queryStrBuilder.append("&");
@@ -251,7 +252,7 @@ public class RemoteSearchAPI extends WhelkHttpServlet {
                             queryToUse = "dc.identifier=" + query;
                         }
 
-                        url = new URL(remoteURLs.get(database) + queryStr + "&query=" + URLEncoder.encode(queryToUse, StandardCharsets.UTF_8));
+                        url = URI.create(remoteURLs.get(database) + queryStr + "&query=" + URLEncoder.encode(queryToUse, StandardCharsets.UTF_8)).toURL();
                         log.debug("submitting to futures");
                         futures.add(queue.submit(new MetaproxyQuery(url, database)));
                     }
@@ -519,8 +520,8 @@ public class RemoteSearchAPI extends WhelkHttpServlet {
 
         String generatedId = IdGenerator.generate();
         LegacyIntegrationTools.makeRecordLibrisResident(marcRecord);
-        if (marcRecord.getControlfields("001").size() != 0) {
-            mutableFieldList.remove(marcRecord.getControlfields("001").get(0));
+        if (!marcRecord.getControlfields("001").isEmpty()) {
+            mutableFieldList.remove(marcRecord.getControlfields("001").getFirst());
         }
         marcRecord.addField(marcRecord.createControlfield("001", generatedId));
 
