@@ -855,19 +855,19 @@ public class SearchUtils {
 
         Offsets offsets = new Offsets(total, limit, offset);
 
-        result.put("first", List.of(JsonLd.ID_KEY, makeFindUrl(st, pageParams)));
-        result.put("last", List.of(JsonLd.ID_KEY, makeFindUrl(st, pageParams, offsets.last)));
+        result.put("first", Map.of(JsonLd.ID_KEY, makeFindUrl(st, pageParams)));
+        result.put("last", Map.of(JsonLd.ID_KEY, makeFindUrl(st, pageParams, offsets.last)));
 
         if (offsets.prev != null) {
             if (offsets.prev == 0) {
                 result.put("previous", result.get("first"));
             } else {
-                result.put("previous", List.of(JsonLd.ID_KEY, makeFindUrl(st, pageParams, offsets.prev)));
+                result.put("previous", Map.of(JsonLd.ID_KEY, makeFindUrl(st, pageParams, offsets.prev)));
             }
         }
 
         if (offsets.next != null) {
-            result.put("next", List.of(JsonLd.ID_KEY, makeFindUrl(st, pageParams, offsets.next)));
+            result.put("next", Map.of(JsonLd.ID_KEY, makeFindUrl(st, pageParams, offsets.next)));
         }
 
         return result;
