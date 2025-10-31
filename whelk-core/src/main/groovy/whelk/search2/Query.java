@@ -432,13 +432,18 @@ public class Query {
                 : p.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes);
 
         paths.forEach(path -> {
-            String jsonPath = path.jsonForm();
-            String field = ctx.esSettings.mappings().hasFourDigitsKeywordField(jsonPath)
-                    ? String.format("%s%s", jsonPath, FOUR_DIGITS_KEYWORD_SUFFIX)
-                    : (ctx.esSettings.mappings().hasKeywordSubfield(jsonPath) ? String.format("%s.%s", jsonPath, KEYWORD) : jsonPath);
-            Map<String, Object> aggs = path.getEsNestedStem(ctx.esSettings.mappings())
-                    .map(nestedStem -> buildNestedAggQuery(field, slice, nestedStem, ctx))
-                    .orElse(buildCoreAqqQuery(field, slice, ctx));
+            String field = path.jsonForm();
+            if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
+                field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
+            } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
+                field = String.format("%s.%s", field, KEYWORD);
+            } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
+                field = String.format("%s.%s", field, JsonLd.ID_KEY);
+            }
+            Optional<String> nestedStem = path.getEsNestedStem(ctx.esSettings.mappings());
+            Map<String, Object> aggs = nestedStem.isPresent()
+                    ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
+                    : buildCoreAqqQuery(field, slice, ctx);
             Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrMenu(pKey)
                     ? with(new HashMap<>(ctx.mmSelected), m -> {
                             m.remove(pKey);

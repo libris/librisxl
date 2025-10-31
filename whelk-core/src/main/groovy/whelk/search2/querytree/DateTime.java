@@ -21,6 +21,11 @@ public record DateTime(QueryDateTime dateTime, Token token) implements Value {
     }
 
     @Override
+    public boolean isRangeOpCompatible() {
+        return true;
+    }
+
+    @Override
     public String toString() {
         return dateTime.toDateString();
     }

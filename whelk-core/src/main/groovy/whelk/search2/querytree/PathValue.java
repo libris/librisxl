@@ -18,8 +18,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
+import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
@@ -78,7 +80,7 @@ public sealed class PathValue implements Node permits Type {
     }
 
     public Map<String, Object> getCoreEsQuery(ESSettings esSettings) {
-        return _getCoreEsQuery(esSettings);
+        return _getCoreEsQuery(path.jsonForm(), value, esSettings);
     }
 
     @Override
@@ -188,16 +190,23 @@ public sealed class PathValue implements Node permits Type {
                 .map(nestedStem -> nestedWrap(nestedStem, getCoreEsQuery(esSettings)));
     }
 
-    private Map<String, Object> _getCoreEsQuery(ESSettings esSettings) {
-        String field = path.jsonForm();
-        return switch (value) {
-            case DateTime dateTime -> esDateFilter(field, dateTime, esSettings);
-            case FreeText ft -> esFreeTextFilter(field, ft, esSettings);
+    private Map<String, Object> _getCoreEsQuery(String f, Value v, ESSettings esSettings) {
+        if (operator.isRange() && !v.isRangeOpCompatible()) {
+            // FIXME
+            return nonsenseFilter();
+        }
+        boolean valueIsObject = path.last() instanceof Property p && p.isObjectProperty();
+        return switch (v) {
+            case DateTime dateTime -> esDateFilter(f, dateTime, esSettings);
+            case FreeText ft -> ft.isWild()
+                    ? existsFilter(f)
+                    : esFreeTextFilter(valueIsObject ? f + "." + SEARCH_KEY : f, ft, esSettings);
             case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
-            case Numeric numeric -> esNumFilter(field, numeric, esSettings);
-            case Resource resource -> esResourceFilter(field, resource);
-            case Term term -> esTermFilter(field, term);
-            case YearRange yearRange -> esYearRangeFilter(field, yearRange, esSettings);
+            case Numeric numeric -> esNumFilter(f, numeric, esSettings);
+            case Link link -> esResourceFilter(valueIsObject ? f + "." + ID_KEY : f, link);
+            case VocabTerm vocabTerm -> esResourceFilter(f, vocabTerm);
+            case Term term -> esTermFilter(f, term);
+            case YearRange yearRange -> esYearRangeFilter(f, yearRange, esSettings);
         };
     }
 
@@ -207,7 +216,7 @@ public sealed class PathValue implements Node permits Type {
             return esNumOrDateFilter(field, d.dateTime().toElasticDateString());
         }
         // Treat as free text
-        return esFreeTextFilter(field, new FreeText(d.toString()), esSettings);
+        return _getCoreEsQuery(field, new FreeText(d.toString()), esSettings);
     }
 
     private Map<String, Object> esNumFilter(String field, Numeric n, ESSettings esSettings) {
@@ -232,15 +241,10 @@ public sealed class PathValue implements Node permits Type {
         }
 
         // Treat as free text
-        return esFreeTextFilter(field, new FreeText(n.toString()), esSettings);
+        return _getCoreEsQuery(field, new FreeText(n.toString()), esSettings);
     }
 
     private Map<String, Object> esYearRangeFilter(String field, YearRange yearRange, ESSettings esSettings) {
-        if (operator.isRange()) {
-            // FIXME
-            return nonsenseFilter();
-        }
-
         EsMappings esMappings = esSettings.mappings();
 
         if (esMappings.hasFourDigitsShortField(field)) {
@@ -251,7 +255,7 @@ public sealed class PathValue implements Node permits Type {
             return esRangeFilter(field, yearRange.toEsDate());
         }
 
-        return esFreeTextFilter(field, new FreeText(yearRange.toString()), esSettings);
+        return _getCoreEsQuery(field, new FreeText(yearRange.toString()), esSettings);
     }
 
     private Map<String, Object> esNumOrDateFilter(String f, Object v) {
@@ -265,37 +269,15 @@ public sealed class PathValue implements Node permits Type {
     }
 
     private Map<String, Object> esFreeTextFilter(String f, FreeText ft, ESSettings esSettings) {
-        if (ft.isWild()) {
-            if (operator.isRange()) {
-                // FIXME: Range makes no sense here
-                return nonsenseFilter();
-            }
-            return existsFilter(f);
-        }
-
         var boostSettings = esSettings.boost().fieldBoost();
-
-        if (operator.isRange()) {
-            // FIXME: Range makes no sense here
-            return nonsenseFilter();
-        }
-
         return ft.toEs(boostSettings.withField(f));
     }
 
     private Map<String, Object> esResourceFilter(String f, Resource r) {
-        if (operator.isRange()) {
-            // FIXME: Range makes no sense here
-            return nonsenseFilter();
-        }
         return esTermQueryFilter(f, r.jsonForm());
     }
 
     private Map<String, Object> esTermFilter(String f, Term t) {
-        if (operator.isRange()) {
-            // FIXME: Range makes no sense here
-            return nonsenseFilter();
-        }
         return esTermQueryFilter(f, t.term());
     }
 

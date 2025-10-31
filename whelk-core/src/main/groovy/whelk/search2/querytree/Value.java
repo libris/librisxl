@@ -7,4 +7,8 @@ public sealed interface Value permits DateTime, FreeText, Numeric, Resource, Ter
     default boolean isMultiToken() {
         return false;
     }
+
+    default boolean isRangeOpCompatible() {
+        return false;
+    }
 }

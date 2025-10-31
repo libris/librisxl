@@ -11,6 +11,11 @@ public record Numeric(long value, Token token) implements Value {
     }
 
     @Override
+    public boolean isRangeOpCompatible() {
+        return true;
+    }
+
+    @Override
     public String toString() {
         return "" + value;
     }
