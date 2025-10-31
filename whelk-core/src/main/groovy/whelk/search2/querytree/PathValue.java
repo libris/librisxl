@@ -248,7 +248,7 @@ public sealed class PathValue implements Node permits Type {
         EsMappings esMappings = esSettings.mappings();
 
         if (esMappings.hasFourDigitsShortField(field)) {
-            return esRangeFilter(field, yearRange.toEsInt());
+            return esRangeFilter(field + FOUR_DIGITS_SHORT_SUFFIX, yearRange.toEsInt());
         }
 
         if (esMappings.isDateTypeField(field)) {
