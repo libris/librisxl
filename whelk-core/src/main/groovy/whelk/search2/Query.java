@@ -644,8 +644,7 @@ public class Query {
                                 observation.put("object", v instanceof Resource r ? r.description() : v.toString());
                                 if (connective == Connective.OR) {
                                     observation.put("_selected", isSelected);
-                                }
-                                if (selectedFacets.isMenuSelectable(propertyKey) && isSelected) {
+                                } else if (isSelected) {
                                     observation.put("_selected", true);
                                 }
                                 if (o.subSlices != null && slice.subSlice() != null) {
@@ -665,31 +664,24 @@ public class Query {
                                 return;
                             }
 
-                            switch (connective) {
-                                case AND -> {
-                                    if (!isSelected) {
-                                        addObservation.accept(qt.add(pv));
-                                    }
-                                }
-                                case OR -> {
-                                    var selected = selectedFacets.getSelected(propertyKey);
-                                    if (isSelected) {
-                                        selected.stream()
-                                                .filter(pv::equals)
-                                                .findFirst()
-                                                .map(qt::remove)
-                                                .ifPresent(addObservation);
-                                    } else {
-                                        if (selected.isEmpty()) {
-                                            addObservation.accept(qt.add(pv));
-                                        } else {
-                                            var newSelected = with(new ArrayList<>(selected), l -> {
-                                                l.add(pv);
+                            var selected = selectedFacets.getSelected(propertyKey);
+                            if (isSelected) {
+                                selected.stream()
+                                        .filter(pv::equals)
+                                        .findFirst()
+                                        .map(qt::remove)
+                                        .ifPresent(addObservation);
+                            } else {
+                                if (selected.isEmpty()) {
+                                    addObservation.accept(qt.add(pv));
+                                } else {
+                                    var newSelected = with(new ArrayList<>(selected), l -> l.add(pv));
+                                    var alteredTree = qt.remove(selected)
+                                            .add(switch (connective) {
+                                                case AND -> new And(newSelected);
+                                                case OR -> new Or(newSelected);
                                             });
-                                            var alteredTree = qt.remove(selected).add(new Or(newSelected));
-                                            addObservation.accept(alteredTree);
-                                        }
-                                    }
+                                    addObservation.accept(alteredTree);
                                 }
                             }
                         });
@@ -781,6 +773,7 @@ public class Query {
                         sliceNode.put("dimension", propertyKey);
                         sliceNode.put("observation", observations);
                         sliceNode.put("maxItems", slice.size());
+                        sliceNode.put("_connective", selectedFacets.getConnective(propertyKey).name());
                         result.put(propertyKey, sliceNode);
                     }
 
