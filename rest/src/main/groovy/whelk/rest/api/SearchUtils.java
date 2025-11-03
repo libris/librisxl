@@ -288,13 +288,11 @@ public class SearchUtils {
                 for (Map<String, Object> suggestion : spellSuggestions) {
                     Map<String, Object> paramsWithNewQ = new HashMap<>(pageParams);
                     paramsWithNewQ.put("q", suggestion.get("text"));
-                    Map<String, Object> spellItem = new HashMap<>();
-                    spellItem.put("label", suggestion.get("text"));
-                    spellItem.put("labelHTML", suggestion.get("highlighted"));
-                    Map<String, Object> view = new HashMap<>();
-                    view.put("@id", makeFindUrl(SearchType.ELASTIC, paramsWithNewQ, offset));
-                    spellItem.put("view", view);
-                    spellList.add(spellItem);
+                    spellList.add(Map.of(
+                            "label", suggestion.get("text"),
+                            "labelHTML", suggestion.get("highlighted"),
+                            "view", Map.of(JsonLd.ID_KEY, makeFindUrl(SearchType.ELASTIC, paramsWithNewQ, offset))
+                    ));
                 }
             }
             result.put("_spell", spellList);
