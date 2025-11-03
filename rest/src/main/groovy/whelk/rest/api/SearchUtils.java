@@ -518,11 +518,11 @@ public class SearchUtils {
                                 .map(rel -> makeParam("p", rel + "." + JsonLd.ID_KEY))
                                 .collect(Collectors.joining("&"));
 
-                Map<String, Object> observation = new HashMap<>();
-                observation.put("totalItems", count);
-                observation.put("view", Collections.singletonMap("@id", viewUrl));
-                observation.put("object", lookup.chip(relations.getFirst()));
-                observations.add(observation);
+                observations.add(Map.of(
+                        "totalItems", count,
+                        "view", Collections.singletonMap("@id", viewUrl),
+                        "object", lookup.chip(relations.getFirst())
+                ));
             }
 
             Map<String, Object> sliceNode = new HashMap<>();
