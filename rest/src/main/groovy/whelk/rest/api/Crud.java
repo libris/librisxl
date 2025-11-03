@@ -10,10 +10,8 @@ import whelk.JsonLd;
 import whelk.JsonLdValidator;
 import whelk.TargetVocabMapper;
 import whelk.Whelk;
-import whelk.component.PostgreSQLComponent;
 import whelk.exception.ElasticIOException;
 import whelk.exception.InvalidQueryException;
-import whelk.exception.StaleUpdateException;
 import whelk.exception.UnexpectedHttpStatusException;
 import whelk.exception.WhelkRuntimeException;
 import whelk.history.History;
@@ -35,8 +33,6 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import static whelk.rest.api.CrudUtils.ETag;
 import static whelk.util.Jackson.mapper;
@@ -160,6 +156,9 @@ public class Crud extends WhelkHttpServlet {
         } catch (InvalidQueryException e) {
             log.info("Invalid query: {}", queryParameters);
             throw new BadRequestException("Invalid query, please check the documentation. " + e.getMessage());
+        } catch (IOException e) {
+            log.error("IOException during query: {}", e.toString(), e);
+            throw new WhelkRuntimeException("IOException during query.", e);
         }
     }
 

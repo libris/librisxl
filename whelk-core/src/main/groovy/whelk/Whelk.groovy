@@ -57,7 +57,7 @@ class Whelk {
     Map displayData
     Map vocabData
     Map contextData
-    JsonLd jsonld
+    public JsonLd jsonld
 
     FresnelUtil fresnelUtil
     MarcFrameConverter marcFrameConverter
