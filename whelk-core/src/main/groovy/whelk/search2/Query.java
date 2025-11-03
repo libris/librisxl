@@ -662,25 +662,24 @@ public class Query {
                                 return;
                             }
 
-                            switch (connective) {
-                                case AND -> addObservation.accept(qt.add(pv));
-                                case OR -> {
-                                    var selected = selectedFacets.getSelected(propertyKey);
-                                    if (isSelected) {
-                                        selected.stream()
-                                                .filter(pv::equals)
-                                                .findFirst()
-                                                .map(qt::remove)
-                                                .ifPresent(addObservation);
-                                    } else {
-                                        if (selected.isEmpty()) {
-                                            addObservation.accept(qt.add(pv));
-                                        } else {
-                                            var newSelected = with(new ArrayList<>(selected), l -> l.add(pv));
-                                            var alteredTree = qt.remove(selected).add(new Or(newSelected));
-                                            addObservation.accept(alteredTree);
-                                        }
-                                    }
+                            var selected = selectedFacets.getSelected(propertyKey);
+                            if (isSelected) {
+                                selected.stream()
+                                        .filter(pv::equals)
+                                        .findFirst()
+                                        .map(qt::remove)
+                                        .ifPresent(addObservation);
+                            } else {
+                                if (selected.isEmpty()) {
+                                    addObservation.accept(qt.add(pv));
+                                } else {
+                                    var newSelected = with(new ArrayList<>(selected), l -> l.add(pv));
+                                    var alteredTree = qt.remove(selected)
+                                            .add(switch (connective) {
+                                                case AND -> new And(newSelected);
+                                                case OR -> new Or(newSelected);
+                                            });
+                                    addObservation.accept(alteredTree);
                                 }
                             }
                         });
