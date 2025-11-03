@@ -642,10 +642,7 @@ public class Query {
                                 observation.put("totalItems", count);
                                 observation.put("view", Map.of(JsonLd.ID_KEY, makeViewFindUrl(alteredTree.toQueryString(), queryParams)));
                                 observation.put("object", v instanceof Resource r ? r.description() : v.toString());
-                                if (connective == Connective.OR) {
-                                    observation.put("_selected", isSelected);
-                                }
-                                if (selectedFacets.isMenuSelectable(propertyKey) && isSelected) {
+                                if (isSelected) {
                                     observation.put("_selected", true);
                                 }
                                 if (o.subSlices != null && slice.subSlice() != null) {
@@ -666,11 +663,7 @@ public class Query {
                             }
 
                             switch (connective) {
-                                case AND -> {
-                                    if (!isSelected) {
-                                        addObservation.accept(qt.add(pv));
-                                    }
-                                }
+                                case AND -> addObservation.accept(qt.add(pv));
                                 case OR -> {
                                     var selected = selectedFacets.getSelected(propertyKey);
                                     if (isSelected) {
@@ -683,9 +676,7 @@ public class Query {
                                         if (selected.isEmpty()) {
                                             addObservation.accept(qt.add(pv));
                                         } else {
-                                            var newSelected = with(new ArrayList<>(selected), l -> {
-                                                l.add(pv);
-                                            });
+                                            var newSelected = with(new ArrayList<>(selected), l -> l.add(pv));
                                             var alteredTree = qt.remove(selected).add(new Or(newSelected));
                                             addObservation.accept(alteredTree);
                                         }
@@ -781,6 +772,7 @@ public class Query {
                         sliceNode.put("dimension", propertyKey);
                         sliceNode.put("observation", observations);
                         sliceNode.put("maxItems", slice.size());
+                        sliceNode.put("_connective", selectedFacets.getConnective(propertyKey).name());
                         result.put(propertyKey, sliceNode);
                     }
 
