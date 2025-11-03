@@ -389,22 +389,15 @@ public class SearchUtils {
      *
      */
     public Map<String, Object> makeSiteFilter(String siteBaseUri) {
-        Map<String, Object> prefixId = new HashMap<>();
-        prefixId.put(JsonLd.ID_KEY, siteBaseUri);
-
-        Map<String, Object> prefixSameAs = new HashMap<>();
-        // ideally, we'd use ID_KEY here too, but that
-        // breaks the test case :/
-        prefixSameAs.put("sameAs.@id", siteBaseUri);
-
-        List<Map<String, Object>> should = new ArrayList<>();
-        should.add(Map.of("prefix", prefixId));
-        should.add(Map.of("prefix", prefixSameAs));
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("should", should);
-        result.put("minimum_should_match", 1);
-        return result;
+        return Map.of(
+                "should", Map.of(
+                        "prefix", Map.of(JsonLd.ID_KEY, siteBaseUri),
+                        // ideally, we'd use ID_KEY here too, but that
+                        // breaks the test case :/
+                        "prefix", Map.of("sameAs.@id", siteBaseUri)
+                ),
+                "minimum_should_match", 1
+        );
     }
 
     /**
