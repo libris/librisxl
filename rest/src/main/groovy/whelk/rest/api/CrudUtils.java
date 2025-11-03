@@ -28,7 +28,7 @@ class CrudUtils {
     static final MediaType RDFXML = MediaType.parse(MimeTypes.RDF);
     static final MediaType N3 = MediaType.parse(MimeTypes.N3);
 
-    static final Map<String, List<MediaType>> ALLOWED_MEDIA_TYPES_BY_EXT = new HashMap<>();
+    static final Map<String, List<MediaType>> ALLOWED_MEDIA_TYPES_BY_EXT = new LinkedHashMap<>();
     static {
         ALLOWED_MEDIA_TYPES_BY_EXT.put("", Arrays.asList(JSONLD, JSON));
         ALLOWED_MEDIA_TYPES_BY_EXT.put("jsonld", List.of(JSONLD));
