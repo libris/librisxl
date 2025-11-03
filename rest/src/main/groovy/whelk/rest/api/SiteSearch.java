@@ -56,16 +56,16 @@ class SiteSearch {
         appIds.addAll(whelk.getNamedApplications().keySet());
 
         for (String appId : appIds) {
-            Map appDesc = getAndIndexDescription(appId);
+            var appDesc = getAndIndexDescription(appId);
             if (appDesc != null) {
-                Map findDesc = getAndIndexDescription(appId + "find");
-                Map dataDesc = getAndIndexDescription(appId + "data");
-                Map<String, Object> statsRepr = new HashMap<>();
-                statsRepr.put(JsonLd.ID_KEY, appId);
-                statsRepr.put("statsfind", buildStatsReprFromSliceSpec(findDesc));
-                statsRepr.put("statsindex", buildStatsReprFromSliceSpec(dataDesc));
-                statsRepr.put("domain", appId.replaceAll("^https?://([^/]+)/", "$1"));
-                searchStatsReprs.put(appId, statsRepr);
+                var findDesc = getAndIndexDescription(appId + "find");
+                var dataDesc = getAndIndexDescription(appId + "data");
+                searchStatsReprs.put(appId, Map.of(
+                        JsonLd.ID_KEY, appId,
+                        "statsfind", buildStatsReprFromSliceSpec(findDesc),
+                        "statsindex", buildStatsReprFromSliceSpec(dataDesc),
+                        "domain", appId.replaceAll("^https?://([^/]+)/", "$1")
+                ));
             }
         }
     }
