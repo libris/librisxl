@@ -390,11 +390,11 @@ public class SearchUtils {
      */
     public Map<String, Object> makeSiteFilter(String siteBaseUri) {
         return Map.of(
-                "should", Map.of(
-                        "prefix", Map.of(JsonLd.ID_KEY, siteBaseUri),
+                "should", List.of(
+                        Map.of("prefix", Map.of(JsonLd.ID_KEY, siteBaseUri)),
                         // ideally, we'd use ID_KEY here too, but that
                         // breaks the test case :/
-                        "prefix", Map.of("sameAs.@id", siteBaseUri)
+                        Map.of("prefix", Map.of("sameAs.@id", siteBaseUri))
                 ),
                 "minimum_should_match", 1
         );
