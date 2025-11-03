@@ -434,13 +434,12 @@ public class SearchUtils {
             String sort = treeValue != null && "key".equals(treeValue.get("sort")) ? "_key" : "_count";
             String sortOrder = treeValue != null && "asc".equals(treeValue.get("sortOrder")) ? "asc" : "desc";
 
-            Map<String, Object> terms = new HashMap<>();
-            terms.put("field", key);
-            terms.put("size", treeValue != null && treeValue.get("size") != null ? treeValue.get("size") : size);
-            terms.put("order", Collections.singletonMap(sort, sortOrder));
-
             Map<String, Object> keyQuery = new HashMap<>();
-            keyQuery.put("terms", terms);
+            keyQuery.put("terms", Map.of(
+                    "field", key,
+                    "size", treeValue != null && treeValue.get("size") != null ? treeValue.get("size") : size,
+                    "order", Collections.singletonMap(sort, sortOrder)
+            ));
 
             if (treeValue != null && treeValue.get("subItems") instanceof Map) {
                 keyQuery.put("aggs", buildAggQuery(treeValue.get("subItems"), size));
