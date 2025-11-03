@@ -3,6 +3,7 @@ import java.util.regex.Pattern
 
 import whelk.Whelk
 import static whelk.util.Jackson.mapper
+import static whelk.JsonLd.isLink
 
 def missingCategoryLog = getReportWriter("missing_category_log.tsv")
 
@@ -478,7 +479,6 @@ class TypeNormalizer implements UsingJsonKeys {
             // Remove the ambiguous NARC term Other
             categories.removeAll { it['@id'] == "https://id.kb.se/marc/Other" }
 
-            instance.remove("genreForm")
             instance.remove("carrierType")
             instance.remove("mediaType")
 
@@ -515,9 +515,14 @@ class TypeNormalizer implements UsingJsonKeys {
 
     // ----- Typenormalizer helper methods -----
     static boolean moveInstanceGenreFormsToWork (Map instance, Map work) {
-        List instanceGenreFormsToMove = asList(instance.remove("genreForm"))
+        List instanceGenreFormsToMove = asList(instance.get("genreForm")).findAll() {isLink(it)}
+
+        // Add unlinked instance GenreForms as categories
+        List unlinkedInstanceGenreForms = asList(instance.remove("genreForm")).findAll() {!isLink(it)}
+        instance.put("category", instance.get("category", []) + unlinkedInstanceGenreForms)
+
         if (instanceGenreFormsToMove) {
-            work.put("genreForm", instanceGenreFormsToMove)
+            work.put("genreForm",  work.get("genreForm", []) + instanceGenreFormsToMove)
             return true
         }
         return false
