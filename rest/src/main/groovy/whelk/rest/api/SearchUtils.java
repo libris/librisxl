@@ -244,9 +244,7 @@ public class SearchUtils {
         for (Map<String, Object> mapping : mappingsToProcess) {
             Map<String, Object> params = removeMappingFromParams(pageParams, mapping);
             String upUrl = makeFindUrl(SearchType.ELASTIC, params, offset);
-            Map<String, Object> up = new HashMap<>();
-            up.put(JsonLd.ID_KEY, upUrl);
-            mapping.put("up", up);
+            mapping.put("up", Map.of(JsonLd.ID_KEY, upUrl));
         }
 
         if (reverseObject != null) {
@@ -254,27 +252,24 @@ public class SearchUtils {
             paramsWithoutO.remove("o");
             paramsWithoutO.remove("p");
             String upUrl = makeFindUrl(SearchType.ELASTIC, paramsWithoutO, offset);
-            Map<String, Object> mapping = new HashMap<>();
-            mapping.put("variable", "o");
-            mapping.put("object", lookup.chip(reverseObject));  // TODO: object/predicate/???
-            Map<String, Object> up = new HashMap<>();
-            up.put(JsonLd.ID_KEY, upUrl);
-            mapping.put("up", up);
-            mappings.add(mapping);
+
+            mappings.add(Map.of(
+                    "variable", "o",
+                    "object", lookup.chip(reverseObject), // TODO: object/predicate/???
+                    "up", Map.of(JsonLd.ID_KEY, upUrl)
+            ));
         }
 
         if (reverseObject != null && predicates != null && !predicates.isEmpty()) {
             Map<String, Object> paramsWithoutP = new HashMap<>(pageParams);
             paramsWithoutP.remove("p");
             String upUrl = makeFindUrl(SearchType.ELASTIC, paramsWithoutP, offset);
-            Map<String, Object> mapping = new HashMap<>();
-            mapping.put("variable", "p");
-            mapping.put("object", reverseObject);
-            mapping.put("predicate", lookup.chip(predicates.getFirst()));
-            Map<String, Object> up = new HashMap<>();
-            up.put(JsonLd.ID_KEY, upUrl);
-            mapping.put("up", up);
-            mappings.add(mapping);
+            mappings.add(Map.of(
+                    "variable", "p",
+                    "object", reverseObject,
+                    "predicate", lookup.chip(predicates.getFirst()),
+                    "up", Map.of(JsonLd.ID_KEY, upUrl)
+            ));
         }
 
         Map<String, Object> result = assembleSearchResults(SearchType.ELASTIC,
