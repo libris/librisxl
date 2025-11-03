@@ -132,7 +132,7 @@ public class LegacyMarcAPI extends WhelkHttpServlet {
                 // This is a hack, to allow holding-information to be included when using the default profile
                 String sigel = LegacyIntegrationTools.uriToLegacySigel(library);
                 if (profileString.contains("extrafields=")) {
-                    String[] lines = profileString.split(System.getProperty("line.separator"));
+                    String[] lines = profileString.split("\n");
                     StringBuilder sb = new StringBuilder();
                     for (String line : lines) {
                         sb.append(line);
@@ -142,12 +142,12 @@ public class LegacyMarcAPI extends WhelkHttpServlet {
                             }
                             sb.append(sigel + ":852,856;");
                         }
-                        sb.append(System.getProperty("line.separator"));
+                        sb.append("\n");
                     }
                     profileString = sb.toString();
                 }
                 else {
-                    profileString = "extrafields=" + sigel + ":852,856;" + System.getProperty("line.separator") + profileString;
+                    profileString = "extrafields=" + sigel + ":852,856;" + "\n" + profileString;
                 }
             }
 
