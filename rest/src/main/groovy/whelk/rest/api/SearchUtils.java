@@ -438,7 +438,7 @@ public class SearchUtils {
             keyQuery.put("terms", Map.of(
                     "field", key,
                     "size", treeValue != null && treeValue.get("size") != null ? treeValue.get("size") : size,
-                    "order", Collections.singletonMap(sort, sortOrder)
+                    "order", Map.of(sort, sortOrder)
             ));
 
             if (treeValue != null && treeValue.get("subItems") instanceof Map) {
@@ -485,7 +485,7 @@ public class SearchUtils {
 
                         observations.add(Map.of(
                                 "totalItems", bucket.get("doc_count"),
-                                "view", Collections.singletonMap(JsonLd.ID_KEY, searchPageUrl),
+                                "view", Map.of(JsonLd.ID_KEY, searchPageUrl),
                                 "_selected", isSelected,
                                 "object", lookup.chip(itemId)
                         ));
@@ -493,7 +493,7 @@ public class SearchUtils {
                         String searchPageUrl = baseUrlForKey + "&" + ESQuery.AND_PREFIX + makeParam(key, itemId);
                         observations.add(Map.of(
                                 "totalItems", bucket.get("doc_count"),
-                                "view", Collections.singletonMap(JsonLd.ID_KEY, searchPageUrl),
+                                "view", Map.of(JsonLd.ID_KEY, searchPageUrl),
                                 "object", lookup.chip(itemId)
                         ));
                     }
@@ -520,7 +520,7 @@ public class SearchUtils {
 
                 observations.add(Map.of(
                         "totalItems", count,
-                        "view", Collections.singletonMap("@id", viewUrl),
+                        "view", Map.of("@id", viewUrl),
                         "object", lookup.chip(relations.getFirst())
                 ));
             }
@@ -589,7 +589,7 @@ public class SearchUtils {
                 List<String> relations = Arrays.asList(relation, r);
                 result.add(new Tuple2<>(relations, count + blankWork.remove(r)));
             } else {
-                result.add(new Tuple2<>(Collections.singletonList(relation), count));
+                result.add(new Tuple2<>(List.of(relation), count));
             }
         }
 
@@ -614,7 +614,7 @@ public class SearchUtils {
 
     private int numberOfIncomingLinks(String iri) {
         try {
-            Map<String, List<String>> queryMap = Collections.singletonMap(JsonLd.ID_KEY, Collections.singletonList(iri));
+            Map<String, List<String>> queryMap = Map.of(JsonLd.ID_KEY, List.of(iri));
             Iterable<Map> results = new ElasticFind(esQuery).find(queryMap);
             List<Map<String, Object>> resultList = new ArrayList<>();
             for (Map m : results) {
@@ -668,7 +668,7 @@ public class SearchUtils {
                     Object proptype = chain.getLast().get(JsonLd.TYPE_KEY);
                     List<String> proptypes;
                     if (proptype instanceof String) {
-                        proptypes = Collections.singletonList((String) proptype);
+                        proptypes = List.of((String) proptype);
                     } else {
                         proptypes = (List<String>) proptype;
                     }
