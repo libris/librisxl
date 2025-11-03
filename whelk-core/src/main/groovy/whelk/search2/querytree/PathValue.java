@@ -161,18 +161,6 @@ public sealed class PathValue implements Node permits Type {
         return new PathValue(path, operator, value);
     }
 
-    public PathValue toOrEquals() {
-        if (value instanceof Numeric n) {
-            if (operator.equals(GREATER_THAN)) {
-                return new PathValue(path, Operator.GREATER_THAN_OR_EQUALS, n.increment());
-            }
-            if (operator.equals(Operator.LESS_THAN)) {
-                return new PathValue(path, Operator.LESS_THAN_OR_EQUALS, n.decrement());
-            }
-        }
-        return this;
-    }
-
     public Optional<Property> getSoleProperty() {
         return path.path().size() == 1 && path.first() instanceof Property p
                 ? Optional.of(p)

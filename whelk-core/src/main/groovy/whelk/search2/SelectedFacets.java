@@ -101,8 +101,6 @@ public class SelectedFacets {
 
             Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(property);
             Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
-            Predicate<Node> hasRangeOp = n -> ((PathValue) n).operator().isRange();
-            Predicate<Node> hasNumericValue = n -> ((PathValue) n).value() instanceof Numeric;
             Predicate<Node> isPropertyEquals = n -> isProperty.test(n) && hasEqualsOp.test(n);
 
             List<PathValue> allNodesWithProperty = queryTree.allDescendants().filter(isProperty).map(PathValue.class::cast).toList();
@@ -114,7 +112,7 @@ public class SelectedFacets {
             }
 
             List<Node> selected = queryTree.getTopNodes().stream()
-                    .filter(isPropertyEquals)
+                    .filter(slice.isRange() ? isProperty : isPropertyEquals)
                     .toList();
 
             if (!selected.isEmpty() && slice.getProperty() instanceof Property.Ix ix) {
@@ -122,30 +120,6 @@ public class SelectedFacets {
                 selected = selected.stream()
                         .filter(n -> true)
                         .toList();
-            }
-
-            if (slice.isRange()) {
-                List<Node> rangeSelected = queryTree.getTopNodes().stream()
-                        .filter(isProperty)
-                        .filter(hasRangeOp)
-                        .filter(hasNumericValue)
-                        .toList();
-                if (!rangeSelected.isEmpty()) {
-                    if (rangeSelected.equals(allNodesWithProperty)) {
-                        boolean isSelectableRange = rangeSelected.stream()
-                                .map(PathValue.class::cast)
-                                .map(PathValue::toOrEquals)
-                                .collect(Collectors.groupingBy(PathValue::operator))
-                                .values()
-                                .stream()
-                                .allMatch(group -> group.size() == 1);
-                        if (isSelectableRange) {
-                            selectedByPropertyKey.put(pKey, rangeSelected);
-                            propertyKeyToConnective.put(pKey, slice.defaultConnective());
-                        }
-                    }
-                    return;
-                }
             }
 
             List<Or> multiSelected = queryTree.getTopNodesOfType(Or.class).stream()
