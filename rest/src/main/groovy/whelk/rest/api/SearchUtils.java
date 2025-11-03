@@ -471,7 +471,7 @@ public class SearchUtils {
             sliceNode.put("dimension", key);
             sliceNode.put("dimensionChain", makeDimensionChain(key));
 
-            List<Map<String, Object>> buckets = (List<Map<String, Object>>) aggregation.get("buckets");
+            var buckets = (List<Map<String, Object>>) aggregation.get("buckets");
             if (buckets != null) {
                 for (Map<String, Object> bucket : buckets) {
                     String itemId = (String) bucket.get("key");
@@ -483,22 +483,19 @@ public class SearchUtils {
                                 ? baseUrlForKey.replace("&" + param, "") // FIXME: generate up-link in a cleaner way
                                 : baseUrlForKey + "&" + param;
 
-                        Map<String, Object> observation = new HashMap<>();
-                        observation.put("totalItems", bucket.get("doc_count"));
-                        observation.put("view", Collections.singletonMap(JsonLd.ID_KEY, searchPageUrl));
-                        observation.put("_selected", isSelected);
-                        observation.put("object", lookup.chip(itemId));
-
-                        observations.add(observation);
+                        observations.add(Map.of(
+                                "totalItems", bucket.get("doc_count"),
+                                "view", Collections.singletonMap(JsonLd.ID_KEY, searchPageUrl),
+                                "_selected", isSelected,
+                                "object", lookup.chip(itemId)
+                        ));
                     } else {
                         String searchPageUrl = baseUrlForKey + "&" + ESQuery.AND_PREFIX + makeParam(key, itemId);
-
-                        Map<String, Object> observation = new HashMap<>();
-                        observation.put("totalItems", bucket.get("doc_count"));
-                        observation.put("view", Collections.singletonMap(JsonLd.ID_KEY, searchPageUrl));
-                        observation.put("object", lookup.chip(itemId));
-
-                        observations.add(observation);
+                        observations.add(Map.of(
+                                "totalItems", bucket.get("doc_count"),
+                                "view", Collections.singletonMap(JsonLd.ID_KEY, searchPageUrl),
+                                "object", lookup.chip(itemId)
+                        ));
                     }
                 }
             }
