@@ -104,11 +104,16 @@ public class QueryTree {
     }
 
     public Stream<Node> allDescendants() {
-        return StreamSupport.stream(allDescendants(tree).spliterator(), false);
+        return allDescendants(tree);
+    }
+
+    public static Stream<Node> allDescendants(Node tree) {
+        return StreamSupport.stream(_allDescendants(tree).spliterator(), false);
     }
 
     public List<Link> collectLinks() {
         return allDescendants()
+                .flatMap(n -> n instanceof FilterAlias fa ? allDescendants(fa.getParsed()) : Stream.of(n))
                 .map(n -> n instanceof PathValue pv && pv.value() instanceof Link l ? l : null)
                 .filter(Objects::nonNull)
                 .toList();
@@ -240,7 +245,7 @@ public class QueryTree {
         return node instanceof FreeText ft && ft.isWild();
     }
 
-    private static Iterable<Node> allDescendants(Node node) {
+    private static Iterable<Node> _allDescendants(Node node) {
         Iterator<Node> i = new Iterator<>() {
             List<Node> nodes;
 
@@ -361,9 +366,7 @@ public class QueryTree {
             default -> false;
         };
 
-        List<Node> incompatibleNodes = StreamSupport.stream(allDescendants(tree).spliterator(), false)
-                .filter(isIncompatible)
-                .toList();
+        List<Node> incompatibleNodes = allDescendants(tree).filter(isIncompatible).toList();
 
         return _remove(tree, incompatibleNodes);
     }
