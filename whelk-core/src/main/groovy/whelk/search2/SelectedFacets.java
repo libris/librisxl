@@ -78,7 +78,7 @@ public class SelectedFacets {
     }
 
     public Query.Connective getConnective(String propertyKey) {
-        return propertyKeyToConnective.get(propertyKey);
+        return propertyKeyToConnective.getOrDefault(propertyKey, Query.Connective.AND);
     }
 
     public boolean isRangeFilter(String propertyKey) {
