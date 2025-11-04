@@ -42,7 +42,7 @@ public class QueryTree {
     }
 
     public QueryTree reduce(JsonLd jsonLd) {
-        return new QueryTree(tree.reduce(jsonLd));
+        return isEmpty() ? this : new QueryTree(tree.reduce(jsonLd));
     }
 
     public QueryTree merge(QueryTree other, JsonLd jsonLd) {
