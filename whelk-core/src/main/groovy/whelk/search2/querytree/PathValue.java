@@ -27,7 +27,6 @@ import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.Operator.EQUALS;
-import static whelk.search2.Operator.GREATER_THAN;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
@@ -236,11 +235,11 @@ public sealed class PathValue implements Node permits Type {
         EsMappings esMappings = esSettings.mappings();
 
         if (esMappings.hasFourDigitsShortField(field)) {
-            return esRangeFilter(field + FOUR_DIGITS_SHORT_SUFFIX, yearRange.toEsInt());
+            return esRangeFilter(field + FOUR_DIGITS_SHORT_SUFFIX, yearRange.toEsIntRange());
         }
 
         if (esMappings.isDateTypeField(field)) {
-            return esRangeFilter(field, yearRange.toEsDate());
+            return esRangeFilter(field, yearRange.toEsDateRange());
         }
 
         return _getCoreEsQuery(field, new FreeText(yearRange.toString()), esSettings);

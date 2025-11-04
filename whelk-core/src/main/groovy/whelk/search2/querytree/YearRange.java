@@ -21,11 +21,11 @@ public record YearRange(String min, String max, Token token) implements Value {
         return min + sep() + max;
     }
 
-    public Map<String, Object> toEsInt() {
+    public Map<String, Object> toEsIntRange() {
         return toEs(Integer::parseInt);
     }
 
-    public Map<String, Object> toEsDate() {
+    public Map<String, Object> toEsDateRange() {
         return toEs(s -> QueryDateTime.parse(s).toElasticDateString());
     }
 
