@@ -11,7 +11,6 @@ import whelk.util.DocumentUtil;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -433,13 +432,18 @@ public class Query {
                 : p.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes);
 
         paths.forEach(path -> {
-            String jsonPath = path.jsonForm();
-            String field = ctx.esSettings.mappings().hasFourDigitsKeywordField(jsonPath)
-                    ? String.format("%s%s", jsonPath, FOUR_DIGITS_KEYWORD_SUFFIX)
-                    : (ctx.esSettings.mappings().hasKeywordSubfield(jsonPath) ? String.format("%s.%s", jsonPath, KEYWORD) : jsonPath);
-            Map<String, Object> aggs = path.getEsNestedStem(ctx.esSettings.mappings())
-                    .map(nestedStem -> buildNestedAggQuery(field, slice, nestedStem, ctx))
-                    .orElse(buildCoreAqqQuery(field, slice, ctx));
+            String field = path.jsonForm();
+            if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
+                field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
+            } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
+                field = String.format("%s.%s", field, KEYWORD);
+            } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
+                field = String.format("%s.%s", field, JsonLd.ID_KEY);
+            }
+            Optional<String> nestedStem = path.getEsNestedStem(ctx.esSettings.mappings());
+            Map<String, Object> aggs = nestedStem.isPresent()
+                    ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
+                    : buildCoreAqqQuery(field, slice, ctx);
             Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrMenu(pKey)
                     ? with(new HashMap<>(ctx.mmSelected), m -> {
                             m.remove(pKey);
@@ -806,32 +810,24 @@ public class Query {
         }
 
         private Map<String, Object> getRangeTemplate(String propertyKey) {
+            List<Node> selected = selectedFacets.getSelected(propertyKey);
             FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
-            String templateQueryString = qTree.remove(getSelectedFacets().getSelected(propertyKey))
+            String templateQueryString = qTree.remove(selected)
                     .add(placeholderNode)
                     .toQueryString();
             String templateUrl = QueryUtil.makeViewFindUrl(templateQueryString, queryParams);
 
-            Function<Operator, String> getLimit = op -> getSelectedFacets().getRangeSelected(propertyKey)
-                    .stream()
-                    .map(PathValue.class::cast)
-                    .map(PathValue::toOrEquals)
-                    .filter(pv -> pv.operator().equals(op))
-                    .findFirst()
-                    .map(PathValue::value)
-                    .map(Value::toString)
-                    .orElse("");
-
-            String minLimit = getLimit.apply(Operator.GREATER_THAN_OR_EQUALS);
-            String maxLimit = getLimit.apply(Operator.LESS_THAN_OR_EQUALS);
-
-            String gtoe = Operator.GREATER_THAN_OR_EQUALS.termKey;
-            String ltoe = Operator.LESS_THAN_OR_EQUALS.termKey;
+            String selectedMin = "";
+            String selectedMax = "";
+            if (selected.size() == 1 && ((PathValue) selected.getFirst()).value() instanceof YearRange yr) {
+                selectedMin = yr.min();
+                selectedMax = yr.max();
+            }
 
             Map<String, String> mapping = Map.of(
                     "variable", propertyKey,
-                    gtoe, minLimit,
-                    ltoe, maxLimit
+                    Operator.GREATER_THAN_OR_EQUALS.termKey, selectedMin,
+                    Operator.LESS_THAN_OR_EQUALS.termKey, selectedMax
             );
 
             return Map.of(

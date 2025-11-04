@@ -18,8 +18,8 @@ class PathSpec extends Specification {
         where:
         _path   | result
         "p1"    | "p1"
-        "p5"    | "meta.p5.@id"
-        "p6"    | "p3.p4.@id"
+        "p5"    | "meta.p5"
+        "p6"    | "p3.p4"
         "p6.p1" | "p3.p4.p1"
     }
 

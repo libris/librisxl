@@ -78,16 +78,9 @@ class PathValueSpec extends Specification {
 
         where:
         query                        | result
-        "p1:v1"                      | "p1:v1"
-        "p3:v1"                      | "p3._str:v1"
-        "p1:T1"                      | "p1:T1"
-        "p2:T1"                      | "p2:T1"
-        "p3:T1"                      | "p3._str:T1"
-        "p1:\"https://id.kb.se/v1\"" | "p1:\"https://id.kb.se/v1\""
-        "p3:\"https://id.kb.se/v1\"" | "p3.@id:\"https://id.kb.se/v1\""
         "type:T3"                    | "type:T3 OR type:T3x"
-        "p10:v1"                     | "p4.p1:v1 p4.p3.@id:\"https://id.kb.se/x\""
-        "p11:v1"                     | "p3.p4._str:v1 (\"p3.rdf:type\":T3 OR \"p3.rdf:type\":T3x)"
+        "p10:v1"                     | "p4.p1:v1 p4.p3:\"https://id.kb.se/x\""
+        "p11:v1"                     | "p3.p4:v1 (\"p3.rdf:type\":T3 OR \"p3.rdf:type\":T3x)"
     }
 
     def "expand 2"() {
@@ -123,7 +116,7 @@ class PathValueSpec extends Specification {
                                                 "bool": [
                                                         "filter": [
                                                                 "term": [
-                                                                        "p3": "https://id.kb.se/x"
+                                                                        "p3.@id": "https://id.kb.se/x"
                                                                 ]
                                                         ]
                                                 ]
