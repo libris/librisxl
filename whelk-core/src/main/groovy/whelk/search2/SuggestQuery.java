@@ -173,6 +173,7 @@ public class SuggestQuery extends Query {
     private FreeText editedTokenAsPrefix(FreeText ft) {
         List<Token> tokensCopy = new ArrayList<>(ft.tokens());
         int editedIdx = ft.tokens().indexOf(edited.token());
+        // TODO: Maintain quoting. Use https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-multi-match-query#type-bool-prefix ?
         Token editedAsPrefix = new Token.Raw(edited.token().value() + Operator.WILDCARD);
         tokensCopy.set(editedIdx, editedAsPrefix);
         return ft.withTokens(tokensCopy);
