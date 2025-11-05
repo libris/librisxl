@@ -164,7 +164,7 @@ public class SuggestQuery extends Query {
         } else if (edited.node() instanceof FreeText ft && qTree.isSimpleFreeText()) {
             String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
-            return (edited.token().isQuoted() ? qTree : qTree.replace(ft, new Or(List.of(editedTokenAsPrefix(ft), ft))))
+            return qTree.replace(ft, new Or(List.of(editedTokenAsPrefix(ft), ft)))
                     .add(typeFilter);
         }
         return qTree;
