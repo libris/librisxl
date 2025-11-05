@@ -145,25 +145,18 @@ public class SuggestQuery extends Query {
                         .collect(Collectors.joining(" OR "));
 
                 FreeText ft = (FreeText) pv.value();
-                FreeText prefixFt = editedTokenAsPrefix(ft);
 
-                // FIXME: The unquoting is only needed until frontend no longer relies on quoted values not being treated as such.
-                Function<FreeText, FreeText> unquote = f -> {
-                    List<Token> unquotedTokens = f.tokens().stream()
-                            .map(t -> t.isQuoted() ? new Token.Raw(t.value()) : t)
-                            .toList();
-                    return f.withTokens(unquotedTokens);
-                };
+                FreeText prefixFt = editedTokenAsPrefix(ft);
 
                 if (searchableTypes.isEmpty()) {
                     // Make a query with the currently edited token treated as prefix to get suggestions
                     // Also make a non-prefix query to get a higher relevancy score for exact matches
-                    Or or = new Or(List.of(pv.withValue(unquote.apply(prefixFt)), pv.withValue(unquote.apply(ft))));
+                    Or or = new Or(List.of(pv.withValue(prefixFt), pv));
                     return qTree.replace(pv, or);
                 }
 
                 this.propertySearch = true;
-                Or or = new Or(List.of(unquote.apply(prefixFt), unquote.apply(ft)));
+                Or or = new Or(List.of(prefixFt, ft));
                 Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
                 Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
                 return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
