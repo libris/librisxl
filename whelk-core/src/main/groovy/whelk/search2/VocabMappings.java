@@ -178,7 +178,6 @@ public record VocabMappings(Map<String, Map<String, Set<String>>> properties, //
         nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
         nsToPrefix.put("https://id.kb.se/language/", "lang:");
         nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
-        nsToPrefix.put("https://id.kb.se/ns/librissearch/", "ls:");
 
         for (String ns : nsToPrefix.keySet()) {
             if (iri.startsWith(ns)) {
@@ -207,7 +206,6 @@ public record VocabMappings(Map<String, Map<String, Set<String>>> properties, //
         nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
         nsToPrefix.put("https://id.kb.se/language/", "lang:");
         nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
-        nsToPrefix.put("https://id.kb.se/ns/librissearch/", "ls:");
 
         for (String ns : nsToPrefix.keySet()) {
             String prefix = nsToPrefix.get(ns);
