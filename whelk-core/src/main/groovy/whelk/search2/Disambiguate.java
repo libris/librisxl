@@ -2,13 +2,10 @@ package whelk.search2;
 
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
-import whelk.search.QueryDateTime;
 import whelk.search2.querytree.*;
 
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,7 +28,7 @@ public class Disambiguate {
         this.vocabMappings = vocabMappings;
         this.filterAliasMappings = getFilterAliasMappings(appFilterAliases, queryFilterAliases);
         this.jsonLd = jsonLd;
-        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "marc"); // FIXME
+        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "marc"); // FIXME
     }
 
     // For test only
@@ -40,7 +37,7 @@ public class Disambiguate {
         this.vocabMappings = vocabMappings;
         this.filterAliasMappings = getFilterAliasMappings(filterAliasMappings, List.of());
         this.jsonLd = jsonLd;
-        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "marc"); // FIXME
+        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "marc"); // FIXME
     }
 
     public Subpath mapKey(String key, int offset) {
