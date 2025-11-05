@@ -145,7 +145,6 @@ public class SuggestQuery extends Query {
                         .collect(Collectors.joining(" OR "));
 
                 FreeText ft = (FreeText) pv.value();
-
                 FreeText prefixFt = editedTokenAsPrefix(ft);
 
                 if (searchableTypes.isEmpty()) {
