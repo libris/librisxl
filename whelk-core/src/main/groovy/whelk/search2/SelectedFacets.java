@@ -94,16 +94,17 @@ public class SelectedFacets {
                 rangeProps.add(pKey);
             }
 
-            // FIXME
-            var property = slice.getProperty() instanceof Property.Ix ix
-                    ? ix.term()
-                    : slice.getProperty();
+            var property = slice.getProperty();
 
             Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(property);
             Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
             Predicate<Node> isPropertyEquals = n -> isProperty.test(n) && hasEqualsOp.test(n);
 
             List<PathValue> allNodesWithProperty = queryTree.allDescendants().filter(isProperty).map(PathValue.class::cast).toList();
+
+            if (slice.subSlice() != null) {
+                addSlice(slice.subSlice(), queryTree);
+            }
 
             if (allNodesWithProperty.isEmpty()) {
                 selectedByPropertyKey.put(pKey, List.of());
@@ -114,14 +115,7 @@ public class SelectedFacets {
             List<Node> selected = queryTree.getTopNodes().stream()
                     .filter(slice.isRange() ? isProperty : isPropertyEquals)
                     .toList();
-
-            if (!selected.isEmpty() && slice.getProperty() instanceof Property.Ix ix) {
-
-                selected = selected.stream()
-                        .filter(n -> true)
-                        .toList();
-            }
-
+            
             List<Or> multiSelected = queryTree.getTopNodesOfType(Or.class).stream()
                     .filter(or -> or.children().stream().allMatch(isPropertyEquals))
                     .toList();
@@ -136,10 +130,6 @@ public class SelectedFacets {
                 selectedByPropertyKey.put(pKey, selected);
                 propertyKeyToConnective.put(pKey, selected.size() == 1 ? slice.defaultConnective() : Query.Connective.AND);
             }
-        }
-
-        if (slice.subSlice() != null) {
-            addSlice(slice.subSlice(), queryTree);
         }
     }
 

@@ -122,6 +122,15 @@ public class QueryTreeBuilder {
         Value value = path.lastProperty()
                 .flatMap(p -> disambiguate.mapValueForProperty(p, token))
                 .orElse(new FreeText(token));
+
+        if (path.last() instanceof Property p && p.hasSubPropertyWithRestrictedRange()) {
+            var narrowed = p.narrowToSubProperty(value, disambiguate);
+            var newPath = new ArrayList<>(path.path());
+            newPath.removeLast();
+            newPath.add(narrowed);
+            path = new Path(newPath);
+        }
+
         PathValue pathValue = new PathValue(path, operator, value);
         return pathValue.isTypeNode() ? pathValue.asTypeNode() : pathValue;
     }

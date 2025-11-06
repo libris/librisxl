@@ -61,18 +61,13 @@ class BlankNodeLinker implements DocumentUtil.Linker {
     }
 
     void loadDefinitions(Whelk whelk) {
-        def finder = new ElasticFind(new ESQuery(whelk))
-
         types.each { type ->
-            def q = [
-                    (JsonLd.TYPE_KEY): [type],
-                    "q"       : ["*"],
-                    '_sort'   : [JsonLd.ID_KEY]
-            ]
-
-            Iterables.partition(finder.findIds(q), 100).each { List<String> i ->
-                whelk.bulkLoad(i).each { id, doc ->
-                    addDefinition(doc.data[JsonLd.GRAPH_KEY][1])
+            whelk.loadAllByType(type).each {doc ->
+                addDefinition(doc.getThing())
+            }
+            whelk.jsonld.getSubClasses(type).forEach { subType ->
+                whelk.loadAllByType(subType).each {doc ->
+                    addDefinition(doc.getThing())
                 }
             }
         }

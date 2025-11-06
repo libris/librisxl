@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
+import whelk.util.Restrictions
 
 import javax.annotation.Nullable
 import java.util.regex.Matcher
@@ -130,6 +131,9 @@ class JsonLd {
     public Map<String, Map<String, Object>> vocabIndex
 
     public List<String> locales
+
+    public Restrictions restrictions = new Restrictions()
+
     private String vocabId
     private Map<String, String> nsToPrefixMap = [:]
     private Map<String, String> prefixToNsMap = [:]
@@ -1572,6 +1576,18 @@ class Link {
 
     String property() {
         return propertyPath().last()
+    }
+
+    static Link of(String relation, String iri) {
+        new Link(iri: iri, relation: relation)
+    }
+
+    static String iri(Link l) {
+        l.iri
+    }
+
+    static String relation(Link l) {
+        l.relation
     }
 }
 

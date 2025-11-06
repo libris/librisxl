@@ -207,7 +207,10 @@ class Whelk {
 
         setJsonld(new JsonLd(contextData, displayData, vocabData, locales))
 
+        jsonld.restrictions.init( { type -> storage.loadAllByType(type) }, jsonld)
+
         completeCore = true
+
         log.info("Loaded with core data")
     }
 
@@ -310,6 +313,10 @@ class Whelk {
         return storage.bulkLoad(systemIds, asOf)
                 .findAll { id, doc -> !doc.deleted }
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)): doc] }
+    }
+
+    Iterable<Document> loadAllByType(String type) {
+        return storage.loadAllByType(type)
     }
 
     private void reindexUpdated(Document updated, Document preUpdateDoc) {
