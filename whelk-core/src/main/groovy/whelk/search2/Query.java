@@ -5,10 +5,32 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.*;
+import whelk.search2.querytree.And;
+import whelk.search2.querytree.FilterAlias;
+import whelk.search2.querytree.FreeText;
+import whelk.search2.querytree.Link;
+import whelk.search2.querytree.Node;
+import whelk.search2.querytree.Or;
+import whelk.search2.querytree.Path;
+import whelk.search2.querytree.PathValue;
+import whelk.search2.querytree.Property;
+import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.Resource;
+import whelk.search2.querytree.Value;
+import whelk.search2.querytree.YearRange;
 import whelk.util.DocumentUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -16,8 +38,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
-import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
+import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeViewFindUrl;
@@ -427,7 +449,7 @@ public class Query {
         }
 
         var p = new Path(property).expand(ctx.jsonLd);
-        var paths = property instanceof Property.Ix // TODO for now exclude altPaths for _categoryByCollection
+        var paths = property.hasSubPropertyWithRestrictedRange() // TODO for now exclude altPaths for _categoryByCollection
                 ? List.of(p)
                 : p.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes);
 
@@ -457,7 +479,7 @@ public class Query {
                         })
                     : ctx.mmSelected;
             Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
-            query.put(field, filterWrap(aggs, property.name(), filter));
+            query.put(field, filterWrap(aggs, property.toString(), filter));
         });
     }
     
@@ -604,8 +626,7 @@ public class Query {
                 }
 
                 var property = slice.getProperty();
-
-                String propertyKey = property.name();
+                String propertyKey = slice.propertyKey();
                 List<Map<String, Object>> observations = new ArrayList<>();
 
                 Connective connective = selectedFacets.getConnective(propertyKey);
@@ -626,9 +647,7 @@ public class Query {
                             var o = entry.getValue();
                             int count = entry.getValue().count();
                             Value v = disambiguate.mapValueForProperty(property, bucketKey).orElse(new FreeText(bucketKey));
-                            var pv = property instanceof Property.Ix ix
-                                    ? new PathValue(ix.term(), Operator.EQUALS, v) // TODO this is just for the isSelected comparison
-                                    : new PathValue(property, Operator.EQUALS, v);
+                            var pv = new PathValue(property, Operator.EQUALS, v);
 
                             if (pv.value() instanceof Link l && l.iri().equals(queryParams.object)) {
                                 // TODO: This check won't be needed if/when we remove facets from resource page.
@@ -638,7 +657,7 @@ public class Query {
                             // TODO
                             boolean isSelected = selectedValue!=null && !selectedValue.isEmpty()
                                     ? selectedValue.stream().anyMatch(n -> n instanceof PathValue pv2 && pv2.value() instanceof Link l && v instanceof Link l2 && l.iri().equals(l2.iri()))
-                                    : selectedFacets.isSelected(pv, property.queryForm());
+                                    : selectedFacets.isSelected(pv, propertyKey);
 
                             Consumer<QueryTree> addObservation = alteredTree -> {
                                 Map<String, Object> observation = new LinkedHashMap<>();
@@ -737,7 +756,7 @@ public class Query {
 
                 slices.forEach(slice -> {
                     var property = slice.getProperty();
-                    var propertyKey = property.name();
+                    var propertyKey = slice.propertyKey();
 
                     if (!selectedFacets.isSelectable(propertyKey)) {
                         return;
@@ -754,10 +773,6 @@ public class Query {
                     if (selectedFacets.isMenuSelectable(propertyKey) && parentValue == null && selectedValue == null) {
                         var values = new HashSet<String>();
                         sliceResult.collectValues(values);
-
-                        var term = property instanceof Property.Ix ix
-                                ? ix.term()
-                                : property;
 
                         // TODO
                         mySelectedValue = qTree.findTopNodesByCondition(node -> node instanceof PathValue pv

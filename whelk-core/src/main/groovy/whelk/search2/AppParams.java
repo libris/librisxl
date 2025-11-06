@@ -51,21 +51,14 @@ public class AppParams {
 
         public Slice(Map<?, ?> settings, JsonLd jsonLd) {
             var chain = ((List<?>) settings.get("dimensionChain")).stream().map(String::valueOf).toList();
-            this.propertyKey = String.join(".", chain);
             this.sortOrder = getSortOrder(settings);
             this.bucketSortKey = getBucketSortKey(settings);
             this.itemLimit = itemLimit(settings);
             this.isRange = getRangeFlag(settings);
             this.defaultConnective = getConnective(settings);
             this.subSlice = getSubSlice(settings, jsonLd);
-
-            if (propertyKey.contains(".") && jsonLd.indexMapTerms.contains(propertyKey.split("\\.")[0])) {
-                var path = propertyKey.split("\\.");
-                var term = new Property(jsonLd.indexMapTermsFor.get(path[0]), jsonLd);
-                this.property = new Property.Ix(propertyKey, term);
-            } else {
-                this.property = new Property(propertyKey, jsonLd);
-            }
+            this.property = Property.getProperty(String.join(".", chain), jsonLd);
+            this.propertyKey = property.toString();
         }
 
         public Slice(Map<?, ?> settings, Slice parent, JsonLd jsonLd) {

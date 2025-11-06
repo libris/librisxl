@@ -2,13 +2,11 @@ package whelk.search2;
 
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
-import whelk.search.QueryDateTime;
 import whelk.search2.querytree.*;
+import whelk.util.Restrictions;
 
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -83,6 +81,14 @@ public class Disambiguate {
 
     public Optional<Value> mapValueForProperty(Property property, Token token) {
         return mapValueForProperty(property, token.value(), token);
+    }
+
+    public Restrictions.Narrowed tryNarrow(String property, Value value) {
+        if (value instanceof Link link) {
+            return jsonLd.restrictions.tryNarrow(whelk.Link.of(property, link.iri()));
+        }
+
+        return null;
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {
