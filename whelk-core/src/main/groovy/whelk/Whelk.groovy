@@ -312,6 +312,10 @@ class Whelk {
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)): doc] }
     }
 
+    Iterable<Document> loadAllByType(String type) {
+        return storage.loadAllByType(type)
+    }
+
     private void reindexUpdated(Document updated, Document preUpdateDoc) {
         indexAsyncOrSync {
             elastic.index(updated, this)

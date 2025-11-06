@@ -8,9 +8,7 @@ import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
-import whelk.util.DocumentUtil
 import whelk.util.DocumentUtil.Remove
-import whelk.util.Romanizer
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
