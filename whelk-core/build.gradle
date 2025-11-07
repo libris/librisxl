@@ -106,7 +106,7 @@ dependencies {
     api "org.apache.groovy:groovy-xml:${groovyVersion}"
     api "org.apache.groovy:groovy-yaml:${groovyVersion}"
     api "org.apache.groovy:groovy:${groovyVersion}"
-    api 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+    api "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation 'xerces:xercesImpl:2.11.0' //KP
 
     // Logging
