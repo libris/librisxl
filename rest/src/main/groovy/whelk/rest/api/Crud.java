@@ -18,6 +18,7 @@ import whelk.history.History;
 import whelk.rest.api.CrudGetRequest.Lens;
 import whelk.rest.security.AccessControl;
 import whelk.util.DocumentUtil;
+import whelk.search2.QueryGenerator;
 import whelk.util.FresnelUtil;
 import groovy.lang.Tuple2;
 import whelk.util.http.BadRequestException;
@@ -281,6 +282,26 @@ public class Crud extends WhelkHttpServlet {
                 whelk.getFresnelUtil().insertComputedLabels(items, new FresnelUtil.LangCode(request.computedLabelLocale()));
             } else {
                 whelk.getFresnelUtil().insertComputedLabels(data, new FresnelUtil.LangCode(request.computedLabelLocale()));
+            }
+        }
+
+        if (request.shouldGenerateBlankFindLinks()) {
+            if (!JsonLd.isFramed(data) ) {
+                // TODO? should we support this?
+                throw new BadRequestException("Cannot generate find links when not framed");
+            }
+            if (!request.shouldComputeLabels()) {
+                throw new BadRequestException("Cannot generate find links without computedLabel");
+            }
+
+            // FIXME FresnelUtil can't handle the whole search response because of @container @index in stats
+            // TODO at least compute labels in stats observations and search mappings predicate/object?
+            if (siteSearch.isSearchResource(request.getHttpServletRequest().getPathInfo())) {
+                @SuppressWarnings("unchecked")
+                List<Object> items = (List<Object>) data.get("items");
+                QueryGenerator.insertFindLinksOnBlankNodes(items, whelk);
+            } else {
+                QueryGenerator.insertFindLinksOnBlankNodes(data, whelk);
             }
         }
 
