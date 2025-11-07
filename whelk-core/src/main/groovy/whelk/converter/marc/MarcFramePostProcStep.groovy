@@ -2,7 +2,7 @@ package whelk.converter.marc
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 
 import whelk.JsonLd
 import whelk.ResourceCache

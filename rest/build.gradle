@@ -78,8 +78,8 @@ dependencies {
     implementation "org.apache.httpcomponents.core5:httpcore5:${httpComponentsCoreVersion}"
     implementation 'commons-cli:commons-cli:1.2'
     implementation 'commons-io:commons-io:2.20.0'
-    implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
-    implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+    implementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation 'xml-apis:xml-apis:1.4.01'
 
     // metrics

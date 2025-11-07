@@ -6,7 +6,7 @@ import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
 import whelk.util.PropertyLoader;
 
 import javax.servlet.Filter;
@@ -78,7 +78,7 @@ public class AuthenticationFilter implements Filter {
                     return;
                 }
 
-                HashMap<String, Object> result = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+                HashMap<String, Object> result = mapper.readValue(json, new TypeReference<HashMap<String, Object>>() {});
 
                 Object message = result.get("message");
                 if (message != null && message.toString().equals("Bearer token is expired.")) {
@@ -105,7 +105,7 @@ public class AuthenticationFilter implements Filter {
                     httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
                     response_code = HttpServletResponse.SC_UNAUTHORIZED;
                 }
-            } catch (org.codehaus.jackson.JsonParseException jpe) {
+            } catch (com.fasterxml.jackson.core.JsonParseException jpe) {
                 log.error("JsonParseException. Failed to parse:" + json, jpe);
                 httpResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 response_code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;

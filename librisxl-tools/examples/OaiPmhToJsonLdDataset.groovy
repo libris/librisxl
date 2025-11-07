@@ -1,5 +1,5 @@
 import groovy.xml.XmlUtil
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import whelk.importer.BasicOaiPmhImporter
 import whelk.converter.MarcJSONConverter
 import whelk.plugin.JsonLdToTurtle

@@ -1,7 +1,7 @@
 package whelk.converter
 
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.node.ObjectNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.MarcRecord
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader

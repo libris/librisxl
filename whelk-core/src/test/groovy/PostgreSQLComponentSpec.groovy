@@ -1,7 +1,7 @@
 package whelk.component
 
 import groovy.util.logging.Log4j2 as Log
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
 import whelk.Document
 

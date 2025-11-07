@@ -71,7 +71,7 @@ dependencies {
 
     // Common tools
     implementation "org.apache.groovy:groovy-all:${groovyVersion}"
-    implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 
     // Integration
     implementation 'mysql:mysql-connector-java:8.0.17'
