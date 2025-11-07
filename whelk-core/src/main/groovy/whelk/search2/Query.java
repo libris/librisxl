@@ -160,7 +160,7 @@ public class Query {
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
 
-        if (queryParams.spell.suggest && esSettings.mappings().isSpellCheckAvailable()) {
+        if (queryParams.spell.suggest) {
             var spellQuery = Spell.getSpellQuery(qTree);
             if (spellQuery.isPresent()) {
                 if (queryParams.spell.suggestOnly) {

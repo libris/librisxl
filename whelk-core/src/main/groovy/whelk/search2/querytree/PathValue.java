@@ -64,18 +64,7 @@ public sealed class PathValue implements Node permits Type {
 
     @Override
     public Map<String, Object> toEs(ESSettings esSettings) {
-        if (value instanceof FreeText ft) {
-            // FIXME: This is only needed until frontend no longer rely on quoted values not being treated as such.
-            List<Token> unquotedTokens = ft.tokens().stream()
-                    .map(t -> t.isQuoted() ? new Token.Raw(t.value(), t.offset()) : t)
-                    .toList();
-            FreeText newFt = new FreeText(ft.textQuery(), unquotedTokens, ft.connective());
-            PathValue newPv = new PathValue(path, operator, newFt);
-            return newPv.getEsNestedQuery(esSettings)
-                    .orElse(newPv.getCoreEsQuery(esSettings));
-        }
-        return getEsNestedQuery(esSettings)
-                .orElse(getCoreEsQuery(esSettings));
+        return getEsNestedQuery(esSettings).orElse(getCoreEsQuery(esSettings));
     }
 
     public Map<String, Object> getCoreEsQuery(ESSettings esSettings) {
