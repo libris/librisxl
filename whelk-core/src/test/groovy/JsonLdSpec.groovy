@@ -1,6 +1,6 @@
 package whelk.util
 
-import org.codehaus.jackson.map.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll

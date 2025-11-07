@@ -1,6 +1,6 @@
 package whelk.housekeeping
 
-import org.codehaus.jackson.map.JsonMappingException
+import com.fasterxml.jackson.databind.JsonMappingException
 import whelk.Document
 import whelk.IdGenerator
 import whelk.JsonLd
