@@ -788,7 +788,6 @@ public class ExportProfile {
             imageIx++;
         }
     }
-    }
 
     private static void insert9xxImage(MarcRecord record, int ix, String url, String width, String height) {
         if (url == null) {
