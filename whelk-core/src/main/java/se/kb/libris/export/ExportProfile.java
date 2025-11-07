@@ -752,39 +752,42 @@ public class ExportProfile {
 
     // https://id.kb.se/vocab/ImageObject -> 9xx
     public void insert9xxImages(MarcRecord record, Document document) {
-        if (getProperty("image9xx", "off").equalsIgnoreCase("ON")) {
-            int ix = 0;
-            for (var imageLink : JsonLd.asList(document.getThing().get("image"))) {
-                var uri = (String) DocumentUtil.getAtPath(imageLink, List.of(JsonLd.ID_KEY));
-                if (uri == null) {
-                    continue;
-                }
-
-                var imageObject = JsonLd.isLink((Map<?, ?>) imageLink)
-                        ? document.getEmbedded(uri)
-                        : imageLink;
-
-                if (imageObject == null) {
-                    continue;
-                }
-
-                insert9xxImage(record,
-                        ix,
-                        uri,
-                        (String) DocumentUtil.getAtPath(imageObject, List.of("width")),
-                        (String) DocumentUtil.getAtPath(imageObject, List.of("height")));
-
-                for (var thumbnail : JsonLd.asList(DocumentUtil.getAtPath(imageObject, List.of("thumbnail")))) {
-                    insert9xxImage(record,
-                            ix,
-                            (String) DocumentUtil.getAtPath(thumbnail, List.of(JsonLd.JSONLD_ALT_ID_KEY, 0, JsonLd.ID_KEY)),
-                            (String) DocumentUtil.getAtPath(thumbnail, List.of("width")),
-                            (String) DocumentUtil.getAtPath(thumbnail, List.of("height")));
-                }
-
-                ix++;
-            }
+        if (!getProperty("image9xx", "off").equalsIgnoreCase("ON")) {
+            return;
         }
+
+        int imageIx = 0;
+        for (var imageLink : JsonLd.asList(document.getThing().get("image"))) {
+            var uri = (String) DocumentUtil.getAtPath(imageLink, List.of(JsonLd.ID_KEY));
+            if (uri == null) {
+                continue;
+            }
+
+            var imageObject = JsonLd.isLink((Map<?, ?>) imageLink)
+                    ? document.getEmbedded(uri)
+                    : imageLink;
+
+            if (imageObject == null) {
+                continue;
+            }
+
+            insert9xxImage(record,
+                    imageIx,
+                    uri,
+                    (String) DocumentUtil.getAtPath(imageObject, List.of("width")),
+                    (String) DocumentUtil.getAtPath(imageObject, List.of("height")));
+
+            for (var thumbnail : JsonLd.asList(DocumentUtil.getAtPath(imageObject, List.of("thumbnail")))) {
+                insert9xxImage(record,
+                        imageIx,
+                        (String) DocumentUtil.getAtPath(thumbnail, List.of(JsonLd.JSONLD_ALT_ID_KEY, 0, JsonLd.ID_KEY)),
+                        (String) DocumentUtil.getAtPath(thumbnail, List.of("width")),
+                        (String) DocumentUtil.getAtPath(thumbnail, List.of("height")));
+            }
+
+            imageIx++;
+        }
+    }
     }
 
     private static void insert9xxImage(MarcRecord record, int ix, String url, String width, String height) {
