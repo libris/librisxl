@@ -559,21 +559,6 @@ class Document {
         }
     }
 
-    String getWorkType() {
-        Object workId = get(workIdPath)
-        if (workId == null)
-            return null
-
-        Map workObject = getEmbedded( (String) workId )
-        if (workObject == null)
-            return null
-
-        String type = workObject.get("@type")
-        if (type != null)
-            return type
-        return null
-    }
-
     boolean libraryIsRegistrant() {
         Object catObj = get(categoryPath)
         if (catObj == null)
@@ -592,47 +577,16 @@ class Document {
      * Get the embedded/embellished object for a certain id.
      * Will return null if there is no object with the requested id in this documents data.
      */
-    private Map getEmbedded(String id) {
-        List graphList = (List) data.get("@graph")
-        if (graphList == null)
-            return null
-
-        return getEmbedded(id, graphList)
-    }
-
-    private Map getEmbedded(String id, Map localData) {
-        Map map = (Map) localData
-        String objId = map.get("@id")
-        if (objId == id && map.size() > 1) {
-            return map
-        }
-        else {
-            for (Object key : localData.keySet()) {
-                Object object = localData.get(key)
-                if ((object instanceof List)) {
-                    Map next = getEmbedded(id, (List) object)
-                    if (next != null)
-                        return next
+    Map getEmbedded(String id) {
+        int ix = 0;
+        for (var entry : JsonLd.asList(data[JsonLd.GRAPH_KEY])) {
+            if (ix++ > 1 && entry[JsonLd.GRAPH_KEY] && entry[JsonLd.GRAPH_KEY][1]) {
+                if (id == entry[JsonLd.GRAPH_KEY][1][JsonLd.ID_KEY]) {
+                    return (Map) entry[JsonLd.GRAPH_KEY][1]
                 }
-                else if ((object instanceof Map)) {
-                    Map next = getEmbedded(id, (Map) object)
-                    if (next != null)
-                        return next
-                }
-                else
-                    return null
             }
         }
-        return null
-    }
 
-    private Map getEmbedded(String id, List localData) {
-        for (Object object : localData) {
-            Map map = (Map) object
-            Map candidate = getEmbedded(id, map)
-            if (candidate != null)
-                return candidate
-        }
         return null
     }
 

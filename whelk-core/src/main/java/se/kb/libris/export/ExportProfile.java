@@ -7,6 +7,9 @@ import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcFieldComparator;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.Subfield;
+import whelk.Document;
+import whelk.JsonLd;
+import whelk.util.DocumentUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,6 +17,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Properties;
@@ -745,6 +749,61 @@ public class ExportProfile {
 
         return false;
     }
+
+    // https://id.kb.se/vocab/ImageObject -> 9xx
+    public void insert9xxImages(MarcRecord record, Document document) {
+        if (getProperty("image9xx", "off").equalsIgnoreCase("ON")) {
+            int ix = 0;
+            for (var imageLink : JsonLd.asList(document.getThing().get("image"))) {
+                var uri = (String) DocumentUtil.getAtPath(imageLink, List.of(JsonLd.ID_KEY));
+                if (uri == null) {
+                    continue;
+                }
+
+                var imageObject = JsonLd.isLink((Map<?, ?>) imageLink)
+                        ? document.getEmbedded(uri)
+                        : imageLink;
+
+                if (imageObject == null) {
+                    continue;
+                }
+
+                insert9xxImage(record,
+                        ix,
+                        uri,
+                        (String) DocumentUtil.getAtPath(imageObject, List.of("width")),
+                        (String) DocumentUtil.getAtPath(imageObject, List.of("height")));
+
+                for (var thumbnail : JsonLd.asList(DocumentUtil.getAtPath(imageObject, List.of("thumbnail")))) {
+                    insert9xxImage(record,
+                            ix,
+                            (String) DocumentUtil.getAtPath(thumbnail, List.of(JsonLd.JSONLD_ALT_ID_KEY, 0, JsonLd.ID_KEY)),
+                            (String) DocumentUtil.getAtPath(thumbnail, List.of("width")),
+                            (String) DocumentUtil.getAtPath(thumbnail, List.of("height")));
+                }
+
+                ix++;
+            }
+        }
+    }
+
+    private static void insert9xxImage(MarcRecord record, int ix, String url, String width, String height) {
+        if (url == null) {
+            return;
+        }
+
+        var field = record.createDatafield("956"); // TODO TBD which field number to use
+        field.addSubfield('i', String.valueOf(ix));
+        field.addSubfield('u', url);
+        if (width != null) {
+            field.addSubfield('w', width);
+        }
+        if (height != null) {
+            field.addSubfield('h', height);
+        }
+        record.addField(field);
+    }
+
 
     public Vector<MarcRecord> mergeRecord(MarcRecord bibRecord, Map<String, MarcRecord> holdings, Set<MarcRecord> auths) {
         Vector<MarcRecord> ret = new Vector<MarcRecord>();
