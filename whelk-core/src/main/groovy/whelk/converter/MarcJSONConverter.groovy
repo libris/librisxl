@@ -40,7 +40,7 @@ class MarcJSONConverter {
 
     static Map toJSONMap(MarcRecord record) {
         def node = toObjectNode(record)
-        return mapper.readValue(node, Map)
+        return mapper.treeToValue(node, Map)
     }
 
     private static ObjectNode toObjectNode(MarcRecord record) {
