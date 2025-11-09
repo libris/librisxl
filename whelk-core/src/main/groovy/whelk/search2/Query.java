@@ -194,7 +194,7 @@ public class Query {
     protected Map<String, Object> getEsQuery(QueryTree queryTree) {
         List<Node> mmSelectedFacets = queryParams.skipStats
                 ? List.of()
-                : getSelectedFacets().getAllMultiOrMenuSelected().values().stream().flatMap(List::stream).toList();
+                : getSelectedFacets().getAllMultiOrRadioSelected().values().stream().flatMap(List::stream).toList();
         ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
         var mainQuery = queryTree.toEs(whelk.getJsonld(), currentEsSettings, mmSelectedFacets);
         var functionScore = currentEsSettings.boost().functionScore().toEs();
@@ -207,7 +207,7 @@ public class Query {
     }
 
     protected Map<String, Object> getPostFilter(Collection<String> rdfSubjectTypes) {
-        return getEsMmSelectedFacets(getSelectedFacets().getAllMultiOrMenuSelected(), rdfSubjectTypes, whelk.getJsonld(), esSettings);
+        return getEsMmSelectedFacets(getSelectedFacets().getAllMultiOrRadioSelected(), rdfSubjectTypes, whelk.getJsonld(), esSettings);
     }
 
     protected Map<String, Object> getPartialCollectionView() {
@@ -419,7 +419,7 @@ public class Query {
                             Map.of("field", JsonLd.TYPE_KEY)));
         }
 
-        Map<String, List<Node>> mmSelected = selectedFacets.getAllMultiOrMenuSelected();
+        Map<String, List<Node>> mmSelected = selectedFacets.getAllMultiOrRadioSelected();
 
         Map<String, Object> query = new LinkedHashMap<>();
 
@@ -466,7 +466,7 @@ public class Query {
             Map<String, Object> aggs = nestedStem.isPresent()
                     ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
                     : buildCoreAqqQuery(field, slice, ctx);
-            Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrMenu(pKey)
+            Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
                     ? with(new HashMap<>(ctx.mmSelected), m -> {
                             m.remove(pKey);
                             // FIXME
@@ -681,7 +681,7 @@ public class Query {
                                 }
                             };
 
-                            if (getSelectedFacets().isMenuSelectable(propertyKey)) {
+                            if (getSelectedFacets().isRadioButton(propertyKey)) {
                                 List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
                                 addObservation.accept(qt.remove(selected).add(pv));
                                 return;
@@ -770,7 +770,7 @@ public class Query {
 
                     // TODO
                     List<Node> mySelectedValue = selectedValue;
-                    if (selectedFacets.isMenuSelectable(propertyKey) && parentValue == null && selectedValue == null) {
+                    if (selectedFacets.isRadioButton(propertyKey) && parentValue == null && selectedValue == null) {
                         var values = new HashSet<String>();
                         sliceResult.collectValues(values);
 
