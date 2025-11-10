@@ -659,7 +659,13 @@ class Whelk {
                 insertCategoryByCollection(n, inCollectionById)
             }
             if (n['instanceOf']?['category']) {
-                insertCategoryByCollection(n['instanceOf'], inCollectionById)
+                var thing = n['instanceOf']
+                if (!(thing instanceof Map)) {
+                    log.warn("Bad instanceOf in ${document.shortId}")
+                    return
+                }
+
+                insertCategoryByCollection(thing, inCollectionById)
             }
         }
     }
