@@ -443,6 +443,16 @@ public class Query {
 
         Property property = slice.getProperty();
 
+        if (!slice.getShowIf().isEmpty()) {
+            // Enable @none facet if find/identify/@none in query
+            // TODO don't hardcode this if we decide it is what we want
+            if (ctx.selectedFacets().getSelected("_categoryByCollection.find").isEmpty()
+                && ctx.selectedFacets().getSelected("_categoryByCollection.identify").isEmpty()
+                && ctx.selectedFacets().getSelected("_categoryByCollection.@none").isEmpty()) {
+                return;
+            }
+        }
+
         if (!property.restrictions().isEmpty()) {
             // TODO: E.g. author (combining contribution.role and contribution.agent)
             throw new RuntimeException("Can't handle combined fields in aggs query");
@@ -476,6 +486,14 @@ public class Query {
                             if (slice.subSlice() != null) {
                                 m.remove(slice.subSlice().propertyKey());
                             }
+                            // TODO don't hardcode this if we decide it is what we want
+                            if ("_categoryByCollection.find".equals(pKey) || "_categoryByCollection.identify".equals(pKey)) {
+                                m.remove("_categoryByCollection.@none");
+                            }
+                            //if ("_categoryByCollection.@none".equals(pKey)) {
+                            //    m.remove("_categoryByCollection.find");
+                            //    m.remove("_categoryByCollection.identify");
+                            //}
                         })
                     : ctx.mmSelected;
             Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
@@ -682,8 +700,15 @@ public class Query {
                             };
 
                             if (getSelectedFacets().isRadioButton(propertyKey)) {
-                                List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
-                                addObservation.accept(qt.remove(selected).add(pv));
+                                // FIXME
+                                //List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
+                                //addObservation.accept(qt.remove(selected).add(pv));
+                                Predicate<Node> f = (Node n) -> n instanceof PathValue pv2
+                                        && pv2.path().path().getLast() instanceof Property p
+                                        && "category".equals(p.name());
+                                //
+                                var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f))).add(pv);
+                                addObservation.accept(qt2);
                                 return;
                             }
 
@@ -748,7 +773,26 @@ public class Query {
             }
 
             public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFacets selectedFacets) {
-                return getSliceByDimension(slices, selectedFacets, null, null);
+                var s = getSliceByDimension(slices, selectedFacets, null, null);
+
+                // Move @none to under selected find/identify
+                // TODO don't hardcode this if we decide it is what we want
+                var none = s.remove("_categoryByCollection.@none");
+                if (none != null) {
+                    var find =  s.get("_categoryByCollection.find");
+                    if (find != null) {
+                        DocumentUtil.traverse(find, (value, path) -> {
+                            if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true)) {
+                                var newV = new HashMap<>(m);
+                                ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put("_categoryByCollection.@none", none);
+                                return new DocumentUtil.Replace(newV);
+                            }
+                            return DocumentUtil.NOP;
+                        });
+                    }
+                }
+
+                return s;
             }
 
             private Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFacets selectedFacets, Value parentValue, List<Node> selectedValue) {
@@ -775,8 +819,10 @@ public class Query {
                         sliceResult.collectValues(values);
 
                         // TODO
-                        mySelectedValue = qTree.findTopNodesByCondition(node -> node instanceof PathValue pv
-                            && pv.value() instanceof Link link && values.contains(link.iri()));
+                        mySelectedValue = qTree.findTopNodesByCondition(node ->
+                                (node instanceof PathValue pv && pv.value() instanceof Link link && values.contains(link.iri()))
+
+                        );
 
 //pv.path().expand(whelk.getJsonld()).firstProperty().map(p -> p.equals(property)).orElse(false)
 //&& pv.value() instanceof Link link && values.contains(link.iri())
