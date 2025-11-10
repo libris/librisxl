@@ -700,6 +700,8 @@ public class Query {
                             };
 
                             if (getSelectedFacets().isRadioButton(propertyKey)) {
+                                // unselect others with same property
+                                // TODO don't hardcode category if this is what we want
                                 // FIXME
                                 //List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
                                 //addObservation.accept(qt.remove(selected).add(pv));
@@ -707,7 +709,11 @@ public class Query {
                                         && pv2.path().path().getLast() instanceof Property p
                                         && "category".equals(p.name());
                                 //
-                                var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f))).add(pv);
+                                var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
+                                if (selectedValue == null || !selectedValue.contains(pv)) {
+                                    qt2 = qt2.add(pv);
+                                }
+
                                 addObservation.accept(qt2);
                                 return;
                             }
