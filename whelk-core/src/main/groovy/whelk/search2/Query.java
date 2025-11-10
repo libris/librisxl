@@ -194,7 +194,7 @@ public class Query {
     protected Map<String, Object> getEsQuery(QueryTree queryTree) {
         List<Node> mmSelectedFacets = queryParams.skipStats
                 ? List.of()
-                : getSelectedFacets().getAllMultiOrMenuSelected().values().stream().flatMap(List::stream).toList();
+                : getSelectedFacets().getAllMultiOrRadioSelected().values().stream().flatMap(List::stream).toList();
         ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
         var mainQuery = queryTree.toEs(whelk.getJsonld(), currentEsSettings, mmSelectedFacets);
         var functionScore = currentEsSettings.boost().functionScore().toEs();
@@ -207,7 +207,7 @@ public class Query {
     }
 
     protected Map<String, Object> getPostFilter(Collection<String> rdfSubjectTypes) {
-        return getEsMmSelectedFacets(getSelectedFacets().getAllMultiOrMenuSelected(), rdfSubjectTypes, whelk.getJsonld(), esSettings);
+        return getEsMmSelectedFacets(getSelectedFacets().getAllMultiOrRadioSelected(), rdfSubjectTypes, whelk.getJsonld(), esSettings);
     }
 
     protected Map<String, Object> getPartialCollectionView() {
@@ -419,7 +419,7 @@ public class Query {
                             Map.of("field", JsonLd.TYPE_KEY)));
         }
 
-        Map<String, List<Node>> mmSelected = selectedFacets.getAllMultiOrMenuSelected();
+        Map<String, List<Node>> mmSelected = selectedFacets.getAllMultiOrRadioSelected();
 
         Map<String, Object> query = new LinkedHashMap<>();
 
@@ -442,6 +442,16 @@ public class Query {
         }
 
         Property property = slice.getProperty();
+
+        if (!slice.getShowIf().isEmpty()) {
+            // Enable @none facet if find/identify/@none in query
+            // TODO don't hardcode this if we decide it is what we want
+            if (ctx.selectedFacets().getSelected("_categoryByCollection.find").isEmpty()
+                && ctx.selectedFacets().getSelected("_categoryByCollection.identify").isEmpty()
+                && ctx.selectedFacets().getSelected("_categoryByCollection.@none").isEmpty()) {
+                return;
+            }
+        }
 
         if (!property.restrictions().isEmpty()) {
             // TODO: E.g. author (combining contribution.role and contribution.agent)
@@ -466,7 +476,7 @@ public class Query {
             Map<String, Object> aggs = nestedStem.isPresent()
                     ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
                     : buildCoreAqqQuery(field, slice, ctx);
-            Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrMenu(pKey)
+            Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
                     ? with(new HashMap<>(ctx.mmSelected), m -> {
                             m.remove(pKey);
                             // FIXME
@@ -476,6 +486,14 @@ public class Query {
                             if (slice.subSlice() != null) {
                                 m.remove(slice.subSlice().propertyKey());
                             }
+                            // TODO don't hardcode this if we decide it is what we want
+                            if ("_categoryByCollection.find".equals(pKey) || "_categoryByCollection.identify".equals(pKey)) {
+                                m.remove("_categoryByCollection.@none");
+                            }
+                            //if ("_categoryByCollection.@none".equals(pKey)) {
+                            //    m.remove("_categoryByCollection.find");
+                            //    m.remove("_categoryByCollection.identify");
+                            //}
                         })
                     : ctx.mmSelected;
             Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
@@ -681,9 +699,16 @@ public class Query {
                                 }
                             };
 
-                            if (getSelectedFacets().isMenuSelectable(propertyKey)) {
-                                List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
-                                addObservation.accept(qt.remove(selected).add(pv));
+                            if (getSelectedFacets().isRadioButton(propertyKey)) {
+                                // FIXME
+                                //List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
+                                //addObservation.accept(qt.remove(selected).add(pv));
+                                Predicate<Node> f = (Node n) -> n instanceof PathValue pv2
+                                        && pv2.path().path().getLast() instanceof Property p
+                                        && "category".equals(p.name());
+                                //
+                                var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f))).add(pv);
+                                addObservation.accept(qt2);
                                 return;
                             }
 
@@ -748,7 +773,26 @@ public class Query {
             }
 
             public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFacets selectedFacets) {
-                return getSliceByDimension(slices, selectedFacets, null, null);
+                var s = getSliceByDimension(slices, selectedFacets, null, null);
+
+                // Move @none to under selected find/identify
+                // TODO don't hardcode this if we decide it is what we want
+                var none = s.remove("_categoryByCollection.@none");
+                if (none != null) {
+                    var find =  s.get("_categoryByCollection.find");
+                    if (find != null) {
+                        DocumentUtil.traverse(find, (value, path) -> {
+                            if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true)) {
+                                var newV = new HashMap<>(m);
+                                ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put("_categoryByCollection.@none", none);
+                                return new DocumentUtil.Replace(newV);
+                            }
+                            return DocumentUtil.NOP;
+                        });
+                    }
+                }
+
+                return s;
             }
 
             private Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFacets selectedFacets, Value parentValue, List<Node> selectedValue) {
@@ -770,13 +814,15 @@ public class Query {
 
                     // TODO
                     List<Node> mySelectedValue = selectedValue;
-                    if (selectedFacets.isMenuSelectable(propertyKey) && parentValue == null && selectedValue == null) {
+                    if (selectedFacets.isRadioButton(propertyKey) && parentValue == null && selectedValue == null) {
                         var values = new HashSet<String>();
                         sliceResult.collectValues(values);
 
                         // TODO
-                        mySelectedValue = qTree.findTopNodesByCondition(node -> node instanceof PathValue pv
-                            && pv.value() instanceof Link link && values.contains(link.iri()));
+                        mySelectedValue = qTree.findTopNodesByCondition(node ->
+                                (node instanceof PathValue pv && pv.value() instanceof Link link && values.contains(link.iri()))
+
+                        );
 
 //pv.path().expand(whelk.getJsonld()).firstProperty().map(p -> p.equals(property)).orElse(false)
 //&& pv.value() instanceof Link link && values.contains(link.iri())

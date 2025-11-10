@@ -1,10 +1,8 @@
 package whelk.search2;
 
 import whelk.search2.querytree.Node;
-import whelk.search2.querytree.Numeric;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.PathValue;
-import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.YearRange;
 
@@ -15,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class SelectedFacets {
     private final Map<String, List<Node>> selectedByPropertyKey = new HashMap<>();
@@ -23,7 +20,7 @@ public class SelectedFacets {
     private final Set<String> rangeProps = new HashSet<>();
 
     // TODO: don't hardcode
-    private final Set<String> menuProps = Set.of(
+    private final Set<String> radioProps = Set.of(
             "_categoryByCollection.find",
             "_categoryByCollection.identify"
     );
@@ -31,8 +28,8 @@ public class SelectedFacets {
 
     public SelectedFacets(QueryTree queryTree, List<AppParams.Slice> sliceList) {
         //FIXME
-        for (String menuProp : menuProps) {
-            selectedByPropertyKey.put(menuProp, new ArrayList<>());
+        for (String radioProp : radioProps) {
+            selectedByPropertyKey.put(radioProp, new ArrayList<>());
         }
 
         init(queryTree, sliceList);
@@ -42,12 +39,12 @@ public class SelectedFacets {
         return selectedByPropertyKey.containsKey(propertyKey);
     }
 
-    public boolean isMultiOrMenu(String propertyKey) {
-        return isMultiSelectable(propertyKey) || isMenuSelectable(propertyKey);
+    public boolean isMultiOrRadio(String propertyKey) {
+        return isMultiSelectable(propertyKey) || isRadioButton(propertyKey);
     }
 
-    public boolean isMenuSelectable(String propertyKey) {
-        return isSelectable(propertyKey) && menuProps.contains(propertyKey);
+    public boolean isRadioButton(String propertyKey) {
+        return isSelectable(propertyKey) && radioProps.contains(propertyKey);
     }
 
     private boolean isMultiSelectable(String propertyKey) {
@@ -62,10 +59,10 @@ public class SelectedFacets {
         return isSelectable(propertyKey) && selectedByPropertyKey.get(propertyKey).contains(pathValue);
     }
 
-    public Map<String, List<Node>> getAllMultiOrMenuSelected() {
+    public Map<String, List<Node>> getAllMultiOrRadioSelected() {
         Map<String, List<Node>> result = new HashMap<>();
         selectedByPropertyKey.forEach((pKey, selected) -> {
-            if (isMultiOrMenu(pKey) && !getSelected(pKey).isEmpty()) {
+            if (isMultiOrRadio(pKey) && !getSelected(pKey).isEmpty()) {
                 result.put(pKey, getSelected(pKey));
             }
         });

@@ -46,6 +46,7 @@ public class AppParams {
         private final Query.Connective defaultConnective;
         private final Slice subSlice;
         private Slice parentSlice = null;
+        private final List<String> showIf;
 
         private final Property property;
 
@@ -57,6 +58,7 @@ public class AppParams {
             this.isRange = getRangeFlag(settings);
             this.defaultConnective = getConnective(settings);
             this.subSlice = getSubSlice(settings, jsonLd);
+            this.showIf = getShowIf(settings);
             this.property = Property.getProperty(String.join(".", chain), jsonLd);
             this.propertyKey = property.toString();
         }
@@ -134,7 +136,19 @@ public class AppParams {
                     .map(s -> new Slice(s, this, jsonLd))
                     .orElse(null);
         }
+
+
+        private List<String> getShowIf(Map<?, ?> settings) {
+            return Optional.ofNullable((List<?>) settings.get("showIf"))
+                    .map(l -> l.stream().map(String::valueOf).collect(Collectors.toList()))
+                    .orElse(Collections.emptyList());
+        }
+
+        public List<String> getShowIf() {
+            return showIf;
+        }
     }
+
 
     private List<Slice> getSliceList(Map<String, Object> appConfig, JsonLd jsonLd) {
         if (appConfig.containsKey("statistics")) {
