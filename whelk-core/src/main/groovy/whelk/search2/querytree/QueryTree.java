@@ -356,7 +356,7 @@ public class QueryTree {
 
     private static Node compatibleByDomain(String rdfSubjectType, Node tree, JsonLd jsonLd) {
         Predicate<PathValue> isCompatibleByDomain = pv -> pv.path().firstProperty()
-                .filter(p -> p.appearsOnType(rdfSubjectType, jsonLd) || p.indirectlyAppearsOnType(rdfSubjectType, jsonLd))
+                .filter(p -> p.hasDomainAdminMetadata(jsonLd) || p.appearsOnType(rdfSubjectType, jsonLd) || p.indirectlyAppearsOnType(rdfSubjectType, jsonLd))
                 .isPresent();
 
         Predicate<Node> isIncompatible = node -> switch (node) {
