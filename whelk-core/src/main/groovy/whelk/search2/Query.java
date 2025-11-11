@@ -261,6 +261,7 @@ public class Query {
 
         addMapping.accept(qTree, QueryParams.ApiParams.QUERY);
         addMapping.accept(rTree, QueryParams.ApiParams.CUSTOM_SITE_FILTER);
+        addMapping.accept(sTree, AppParams.DEFAULT_SITE_FILTERS);
 
         return mappings;
     }
