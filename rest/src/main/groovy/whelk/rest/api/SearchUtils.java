@@ -67,12 +67,12 @@ public class SearchUtils {
         }
     }
 
-    public Map<String, Object> doSearch(Map<String, Object> queryParameters) throws InvalidQueryException, IOException {
+    public Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
         if (whelk.elastic == null) {
             throw new WhelkRuntimeException("ElasticSearch not configured.");
         }
 
-        List<?> predicates = (List<?>) queryParameters.get("p");
+        String[] predicates = queryParameters.get("p");
         String object = getReservedQueryParameter("o", queryParameters);
         String value = getReservedQueryParameter("value", queryParameters);
         String query = getReservedQueryParameter("q", queryParameters);
@@ -96,7 +96,9 @@ public class SearchUtils {
         int offset = limitAndOffset.getV2();
 
         Map<String, Object> pageParams = new LinkedHashMap<>();
-        pageParams.put("p", predicates);
+        if (predicates != null) {
+            pageParams.put("p", Arrays.asList(predicates));
+        }
         pageParams.put("value", value);
         pageParams.put("q", query);
         pageParams.put("o", object);
@@ -126,7 +128,7 @@ public class SearchUtils {
         };
     }
 
-    private Map<String, Object> queryElasticSearch(Map<String, Object> queryParameters,
+    private Map<String, Object> queryElasticSearch(Map<String, String[]> queryParameters,
                                                     Map<String, Object> pageParams,
                                                     int limit,
                                                     int offset,
@@ -146,9 +148,9 @@ public class SearchUtils {
         // consistent across search paths
         //
         // TODO Only manipulate `_limit` in one place
-        queryParameters.put("_limit", List.of(String.valueOf(limit)));
+        queryParameters.put("_limit", new String[]{String.valueOf(limit)});
 
-        Map<String, Object> esResult = (Map<String, Object>) esQuery.doQuery((Map) queryParameters, suggest, spell);
+        Map<String, Object> esResult = (Map<String, Object>) esQuery.doQuery(queryParameters, suggest, spell);
         Lookup lookup = new Lookup();
 
         List<Map<String, Object>> mappings = new ArrayList<>();
@@ -858,7 +860,7 @@ public class SearchUtils {
      * Use default values if not in query.
      *
      */
-    public Tuple2<Integer, Integer> getLimitAndOffset(Map<String, Object> queryParams) throws InvalidQueryException {
+    public Tuple2<Integer, Integer> getLimitAndOffset(Map<String, String[]> queryParams) throws InvalidQueryException {
         int limit = parseIntFromQueryParams("_limit", queryParams, DEFAULT_LIMIT);
         // don't let users get carried away.
         if (limit > MAX_LIMIT) {
@@ -884,36 +886,21 @@ public class SearchUtils {
      * Use default value if key not found.
      *
      */
-    private int parseIntFromQueryParams(String key, Map<String, Object> queryParams, int defaultValue) {
+    private int parseIntFromQueryParams(String key, Map<String, String[]> queryParams, int defaultValue) {
         if (queryParams.containsKey(key)) {
-            Object value = queryParams.get(key);
-
             // if someone supplies multiple values, we just pick the
             // first one and discard the rest.
-            if (value instanceof List || value instanceof String[]) {
-                if (value instanceof List && !((List<?>) value).isEmpty()) {
-                    value = ((List<?>) value).getFirst();
-                } else if (value instanceof String[] && ((String[]) value).length > 0) {
-                    value = ((String[]) value)[0];
-                } else {
-                    return defaultValue;
-                }
-            }
-
-            if (value instanceof String strValue) {
+            var value = queryParams.get(key);
+            if (value.length > 0) {
                 try {
-                    return Integer.parseInt(strValue);
+                    return Integer.parseInt(value[0]);
                 } catch (NumberFormatException e) {
                     return defaultValue;
                 }
-            } else if (value instanceof Number numValue) {
-                return numValue.intValue();
-            } else {
-                return defaultValue;
             }
-        } else {
-            return defaultValue;
         }
+
+        return defaultValue;
     }
 
     /*
@@ -923,29 +910,19 @@ public class SearchUtils {
      * filtered out.
      *
      */
-    private Tuple2<List<Map<String, Object>>, Map<String, Object>> mapParams(Lookup lookup, Map<String, Object> params, Set<String> multiSelectable) {
+    private Tuple2<List<Map<String, Object>>, Map<String, Object>> mapParams(Lookup lookup, Map<String, String[]> params, Set<String> multiSelectable) {
         List<Map<String, Object>> result = new ArrayList<>();
         Map<String, Object> pageParams = new HashMap<>();
         List<String> reservedParams = getReservedParameters();
 
-        for (Map.Entry<String, Object> entry : params.entrySet()) {
+        for (var entry : params.entrySet()) {
             String param = entry.getKey();
-            Object paramValue = entry.getValue();
 
             if (param.startsWith("_") || reservedParams.contains(param)) {
                 continue;
             }
 
-            List<?> paramValues;
-            if (paramValue instanceof List) {
-                paramValues = (List<?>) paramValue;
-            } else if (paramValue instanceof Object[]) {
-                paramValues = Arrays.asList((Object[]) paramValue);
-            } else {
-                paramValues = List.of(paramValue);
-            }
-
-            for (Object val : paramValues) {
+            for (String val : entry.getValue()) {
                 String valueProp;
                 String termKey;
                 Object value;
@@ -953,13 +930,13 @@ public class SearchUtils {
                 if (param.equals(JsonLd.TYPE_KEY) || param.equals(JsonLd.ID_KEY)) {
                     valueProp = "object";
                     termKey = param;
-                    Map<String, Object> chip = lookup.chip((String) val);
+                    Map<String, Object> chip = lookup.chip(val);
                     chip.put(JsonLd.ID_KEY, val);
                     value = chip;
                 } else if (param.endsWith("." + JsonLd.ID_KEY)) {
                     valueProp = "object";
                     termKey = param.substring(0, param.length() - ("." + JsonLd.ID_KEY).length());
-                    Map<String, Object> chip = lookup.chip((String) val);
+                    Map<String, Object> chip = lookup.chip(val);
                     chip.put(JsonLd.ID_KEY, val);
                     value = chip;
                 } else {
@@ -980,10 +957,9 @@ public class SearchUtils {
                 }
                 result.add(mapping);
 
-                if (!pageParams.containsKey(param)) {
-                    pageParams.put(param, new ArrayList<>());
-                }
-                ((List<Object>) pageParams.get(param)).add(val);
+                @SuppressWarnings("unchecked")
+                var l = (List<Object>) pageParams.computeIfAbsent(param, k -> new ArrayList<>());
+                l.add(val);
             }
         }
 
@@ -1005,23 +981,14 @@ public class SearchUtils {
      * the String[] if found, null otherwise.
      *
      */
-    private String getReservedQueryParameter(String name, Map<String, Object> queryParameters) {
+    private String getReservedQueryParameter(String name, Map<String, String[]> queryParameters) {
         if (queryParameters.containsKey(name)) {
-            Object value = queryParameters.get(name);
-            // For reserved parameters, we assume only one value
-            if (value instanceof List && !((List<?>) value).isEmpty()) {
-                return (String) ((List<?>) value).getFirst();
-            } else if (value instanceof String[] arr) {
-                if (arr.length > 0) {
-                    return arr[0];
-                }
-            } else if (value instanceof String) {
-                return (String) value;
+            var value = queryParameters.get(name);
+            if (value != null && value.length > 0) {
+                return value[0];
             }
-            return null;
-        } else {
-            return null;
         }
+        return null;
     }
 
     private Object escapeQueryParam(Object input) {
