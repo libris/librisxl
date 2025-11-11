@@ -493,7 +493,7 @@ class MarcFrameConverterSpec extends Specification {
     }
 
     private json(obj) {
-        return converter.mapper.defaultPrettyPrintingWriter().writeValueAsString(
+        return converter.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(
                 sorted(obj))
     }
 
