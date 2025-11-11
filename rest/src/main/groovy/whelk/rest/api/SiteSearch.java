@@ -87,9 +87,9 @@ class SiteSearch {
                path.equals("/data") || path.startsWith("/data.");
     }
 
-    protected String determineActiveSite(Map queryParameters, String baseUri) {
+    protected String determineActiveSite(Map<String, String[]>  queryParameters, String baseUri) {
         // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
-        String paramSite = (String) queryParameters.get("_site");
+        String paramSite = queryParameters.containsKey("_site") ? queryParameters.get("_site")[0] : "";
         if (searchStatsReprs.containsKey(paramSite)) {
             log.debug("Active site set by _site request parameter: {}", paramSite);
             return paramSite;
@@ -102,7 +102,7 @@ class SiteSearch {
         return activeSite;
     }
 
-    Map findData(Map queryParameters, String baseUri, String path) throws InvalidQueryException, IOException {
+    Map findData(Map<String, String[]> queryParameters, String baseUri, String path) throws InvalidQueryException, IOException {
         String activeSite = determineActiveSite(queryParameters, baseUri);
 
         Map searchSettings = searchStatsReprs.get(activeSite);
@@ -136,7 +136,7 @@ class SiteSearch {
         }
     }
 
-    Map toDataIndexDescription(Map appDesc, Map queryParameters) throws InvalidQueryException, IOException {
+    Map toDataIndexDescription(Map appDesc, Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
         queryParameters.computeIfAbsent("_limit", k -> new String[]{"0"});
         queryParameters.computeIfAbsent("q", k -> new String[]{"*"});
         Map searchResults = search.doSearch(queryParameters);
