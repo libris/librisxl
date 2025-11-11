@@ -217,6 +217,7 @@ class TypeNormalizer implements UsingJsonKeys {
         changed |= simplifyWorkType(work)
 
 
+
         changed |= mappings.convertIssuanceType(instance, work)
 
         // FIXME: recursively normalize all subnodes (hasPart, relatedTo, etc.)!
@@ -513,21 +514,24 @@ class TypeNormalizer implements UsingJsonKeys {
 
     // ----- Typenormalizer helper methods -----
     static boolean moveInstanceGenreFormsToWork (Map instance, Map work) {
+        var changed = false
         List instanceGenreFormsToMove = asList(instance.get("genreForm")).findAll() {isLink(it)}
-
         // Move unlinked instance GFs to instance category
         List unlinkedInstanceGenreForms = asList(instance.remove("genreForm")).findAll() {!isLink(it)}
-        List allInstanceCategories = instance.get("category", []) + unlinkedInstanceGenreForms
+        List allInstanceCategories = instance.get("category") ?: [] + unlinkedInstanceGenreForms
+
         if (allInstanceCategories.size() > 0) {
-            instance.put("category", instance.get("category", []) + unlinkedInstanceGenreForms)
+            instance.put("category", allInstanceCategories)
+            changed = true
         }
 
         // Move all other instance GFs to work GF
         if (instanceGenreFormsToMove) {
-            work.put("genreForm",  work.get("genreForm", []) + instanceGenreFormsToMove)
-            return true
+            work.put("genreForm", work.get("genreForm", []) + instanceGenreFormsToMove)
+            changed = true
         }
-        return false
+
+        return changed
     }
 
     static boolean assumedToBePrint(Map instance) {
