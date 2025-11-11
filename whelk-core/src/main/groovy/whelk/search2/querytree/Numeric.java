@@ -11,12 +11,13 @@ public record Numeric(long value, Token token) implements Value {
     }
 
     @Override
-    public String toString() {
-        return "" + value;
+    public boolean isRangeOpCompatible() {
+        return true;
     }
 
-    public boolean isFourDigits() {
-        return value >= 1000 && value <= 9999;
+    @Override
+    public String toString() {
+        return "" + value;
     }
 
     public Numeric increment() {
@@ -35,5 +36,15 @@ public record Numeric(long value, Token token) implements Value {
     @Override
     public int hashCode() {
         return Long.hashCode(value);
+    }
+
+    public static Numeric parse(String s, Token token) {
+        if (s.matches("\\d+")) {
+            try {
+                return new Numeric(Long.parseLong(s), token);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return null;
     }
 }

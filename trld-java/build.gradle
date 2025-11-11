@@ -5,7 +5,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.fasterxml.jackson.jr:jackson-jr-objects:2.9.0'
+    implementation "com.fasterxml.jackson.jr:jackson-jr-objects:${jacksonVersion}"
 }
 
 jar {

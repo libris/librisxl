@@ -1,23 +1,38 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.Disambiguate;
 import whelk.search2.QueryUtil;
+import whelk.util.Restrictions;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
+import static whelk.JsonLd.Owl.DATATYPE_PROPERTY;
+import static whelk.JsonLd.Owl.HAS_VALUE;
+import static whelk.JsonLd.Owl.INVERSE_OF;
+import static whelk.JsonLd.Owl.OBJECT_PROPERTY;
+import static whelk.JsonLd.Owl.ON_PROPERTY;
+import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
+import static whelk.JsonLd.Owl.RESTRICTION;
+import static whelk.JsonLd.Rdfs.DOMAIN;
+import static whelk.JsonLd.Rdfs.RANGE;
+import static whelk.JsonLd.Rdfs.RDF_TYPE;
+import static whelk.JsonLd.Rdfs.SUBCLASS_OF;
+import static whelk.JsonLd.Rdfs.SUB_PROPERTY_OF;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.JsonLd.isLink;
-import static whelk.JsonLd.Owl.*;
-import static whelk.JsonLd.Rdfs.*;
 
 
 public non-sealed class Property implements Subpath {
     protected String name;
     protected Map<String, Object> definition;
-    private Key.RecognizedKey mappedKey;
+    protected Key.RecognizedKey mappedKey;
 
     protected List<String> domain;
     protected List<String> range;
@@ -28,8 +43,11 @@ public non-sealed class Property implements Subpath {
     public record Restriction(Property property, Value value) {
     }
 
-    protected List<Restriction> restrictions;
     protected List<Property> propertyChain;
+
+    //TODO consolidate restriction stuff
+    protected List<Restriction> restrictions;
+    protected Restrictions.Restriction rangeRestrictionDefinition = null;
 
     public Property(String name, JsonLd jsonLd, Key.RecognizedKey mappedKey) {
         this(name, jsonLd);
@@ -45,6 +63,18 @@ public non-sealed class Property implements Subpath {
         this.propertyChain = getPropertyChain(jsonLd);
         this.restrictions = getOnPropertyRestrictions(jsonLd);
         this.isVocabTerm = jsonLd.isVocabTerm(name);
+        this.rangeRestrictionDefinition = jsonLd.restrictions.tryFindRestriction(name);
+    }
+
+    public static Property getProperty(String name, JsonLd jsonLd) {
+        var narrowed = jsonLd.restrictions.tryFindNarrowByNarrowName(name);
+        if (narrowed != null) {
+            Property p = new Property(narrowed.restriction().parentProperty(), jsonLd);
+            //p.valueRestriction = narrowed.restriction();
+            return new NarrowedRestrictedProperty(p, narrowed);
+        } else {
+            return new Property(name, jsonLd);
+        }
     }
 
     // For test only
@@ -164,12 +194,29 @@ public non-sealed class Property implements Subpath {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Property p && name.equals(p.name());
+        return obj instanceof Property p && toString().equals(p.toString());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(toString());
+    }
+
+    public boolean hasSubPropertyWithRestrictedRange() {
+        return rangeRestrictionDefinition != null;
+    }
+
+    public Property narrowToSubProperty(Value value, Disambiguate disambiguate) {
+        if (!this.hasSubPropertyWithRestrictedRange()) {
+            throw new IllegalStateException("Not a value restriction term");
+        }
+
+        var r = disambiguate.tryNarrow(name, value);
+        if (r != null) {
+            return new NarrowedRestrictedProperty(this, r);
+        } else {
+            return this;
+        }
     }
 
     private String getSuperKey(JsonLd jsonLd) {
@@ -294,40 +341,27 @@ public non-sealed class Property implements Subpath {
         }
     }
 
-    public static class Ix extends Property {
-        private final Property term;
+    public static class NarrowedRestrictedProperty extends Property {
+        protected Restrictions.Narrowed narrowedToRestriction;
 
-        public Ix(String name, Property term) {
-            this.definition = Collections.emptyMap();
-            this.name = name;
-            this.term = term;
+        NarrowedRestrictedProperty(Property property, Restrictions.Narrowed narrowedToRestriction) {
+            this.name = property.name;
+            this.definition = property.definition;
+            this.domain = property.domain;
+            this.range = property.range;
+            this.inverseOf = property.inverseOf;
+            this.propertyChain = property.propertyChain;
+            this.restrictions = property.restrictions;
+            this.isVocabTerm = property.isVocabTerm;
 
-            this.domain = Collections.emptyList();
-            this.range = Collections.emptyList();
-            this.inverseOf = null;
-            this.propertyChain = Collections.emptyList();
-            this.restrictions = Collections.emptyList();
+            this.rangeRestrictionDefinition = property.rangeRestrictionDefinition;
+            this.narrowedToRestriction = narrowedToRestriction;
         }
 
+        // FIXME Path::jsonForm should not use toString
         @Override
-        public List<Property> expand() {
-            return name.contains(".")
-                    ? Arrays.stream(name.split("\\.")).map(s -> (Property) new Ix(s, null)).toList()
-                    : List.of(this);
-        }
-
-        @Override
-        public boolean isObjectProperty() {
-            return true;
-        }
-
-        @Override
-        public String queryForm() {
-            return term.name();
-        }
-
-        public Property term() {
-            return term;
+        public String toString() {
+            return narrowedToRestriction.propertyKey();
         }
     }
 }

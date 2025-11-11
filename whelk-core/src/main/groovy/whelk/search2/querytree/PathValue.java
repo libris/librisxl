@@ -18,14 +18,15 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
+import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.Operator.EQUALS;
-import static whelk.search2.Operator.GREATER_THAN;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
@@ -63,22 +64,11 @@ public sealed class PathValue implements Node permits Type {
 
     @Override
     public Map<String, Object> toEs(ESSettings esSettings) {
-        if (value instanceof FreeText ft) {
-            // FIXME: This is only needed until frontend no longer rely on quoted values not being treated as such.
-            List<Token> unquotedTokens = ft.tokens().stream()
-                    .map(t -> t.isQuoted() ? new Token.Raw(t.value(), t.offset()) : t)
-                    .toList();
-            FreeText newFt = new FreeText(ft.textQuery(), unquotedTokens, ft.connective());
-            PathValue newPv = new PathValue(path, operator, newFt);
-            return newPv.getEsNestedQuery(esSettings)
-                    .orElse(newPv.getCoreEsQuery(esSettings));
-        }
-        return getEsNestedQuery(esSettings)
-                .orElse(getCoreEsQuery(esSettings));
+        return getEsNestedQuery(esSettings).orElse(getCoreEsQuery(esSettings));
     }
 
     public Map<String, Object> getCoreEsQuery(ESSettings esSettings) {
-        return _getCoreEsQuery(esSettings);
+        return _getCoreEsQuery(path.jsonForm(), value, esSettings);
     }
 
     @Override
@@ -159,18 +149,6 @@ public sealed class PathValue implements Node permits Type {
         return new PathValue(path, operator, value);
     }
 
-    public PathValue toOrEquals() {
-        if (value instanceof Numeric n) {
-            if (operator.equals(GREATER_THAN)) {
-                return new PathValue(path, Operator.GREATER_THAN_OR_EQUALS, n.increment());
-            }
-            if (operator.equals(Operator.LESS_THAN)) {
-                return new PathValue(path, Operator.LESS_THAN_OR_EQUALS, n.decrement());
-            }
-        }
-        return this;
-    }
-
     public Optional<Property> getSoleProperty() {
         return path.path().size() == 1 && path.first() instanceof Property p
                 ? Optional.of(p)
@@ -188,15 +166,23 @@ public sealed class PathValue implements Node permits Type {
                 .map(nestedStem -> nestedWrap(nestedStem, getCoreEsQuery(esSettings)));
     }
 
-    private Map<String, Object> _getCoreEsQuery(ESSettings esSettings) {
-        String field = path.jsonForm();
-        return switch (value) {
-            case DateTime dateTime -> esDateFilter(field, dateTime, esSettings);
-            case FreeText ft -> esFreeTextFilter(field, ft, esSettings);
+    private Map<String, Object> _getCoreEsQuery(String f, Value v, ESSettings esSettings) {
+        if (operator.isRange() && !v.isRangeOpCompatible()) {
+            // FIXME
+            return nonsenseFilter();
+        }
+        boolean valueIsObject = path.last() instanceof Property p && p.isObjectProperty();
+        return switch (v) {
+            case DateTime dateTime -> esDateFilter(f, dateTime, esSettings);
+            case FreeText ft -> ft.isWild()
+                    ? existsFilter(f)
+                    : esFreeTextFilter(valueIsObject ? f + "." + SEARCH_KEY : f, ft, esSettings);
             case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
-            case Numeric numeric -> esNumFilter(field, numeric, esSettings);
-            case Resource resource -> esResourceFilter(field, resource);
-            case Term term -> esTermFilter(field, term);
+            case Numeric numeric -> esNumFilter(f, numeric, esSettings);
+            case Link link -> esResourceFilter(valueIsObject ? f + "." + ID_KEY : f, link);
+            case VocabTerm vocabTerm -> esResourceFilter(f, vocabTerm);
+            case Term term -> esTermFilter(f, term);
+            case YearRange yearRange -> esYearRangeFilter(f, yearRange, esSettings);
         };
     }
 
@@ -206,7 +192,7 @@ public sealed class PathValue implements Node permits Type {
             return esNumOrDateFilter(field, d.dateTime().toElasticDateString());
         }
         // Treat as free text
-        return esFreeTextFilter(field, new FreeText(d.toString()), esSettings);
+        return _getCoreEsQuery(field, new FreeText(d.toString()), esSettings);
     }
 
     private Map<String, Object> esNumFilter(String field, Numeric n, ESSettings esSettings) {
@@ -231,51 +217,43 @@ public sealed class PathValue implements Node permits Type {
         }
 
         // Treat as free text
-        return esFreeTextFilter(field, new FreeText(n.toString()), esSettings);
+        return _getCoreEsQuery(field, new FreeText(n.toString()), esSettings);
+    }
+
+    private Map<String, Object> esYearRangeFilter(String field, YearRange yearRange, ESSettings esSettings) {
+        EsMappings esMappings = esSettings.mappings();
+
+        if (esMappings.hasFourDigitsShortField(field)) {
+            return esRangeFilter(field + FOUR_DIGITS_SHORT_SUFFIX, yearRange.toEsIntRange());
+        }
+
+        if (esMappings.isDateTypeField(field)) {
+            return esRangeFilter(field, yearRange.toEsDateRange());
+        }
+
+        return _getCoreEsQuery(field, new FreeText(yearRange.toString()), esSettings);
     }
 
     private Map<String, Object> esNumOrDateFilter(String f, Object v) {
         return switch (operator) {
             case EQUALS -> esTermQueryFilter(f, v);
-            case GREATER_THAN_OR_EQUALS -> esRangeFilter(f, v, "gte");
-            case GREATER_THAN -> esRangeFilter(f, v, "gt");
-            case LESS_THAN_OR_EQUALS -> esRangeFilter(f, v, "lte");
-            case LESS_THAN -> esRangeFilter(f, v, "lt");
+            case GREATER_THAN_OR_EQUALS -> esRangeFilter(f, "gte", v);
+            case GREATER_THAN -> esRangeFilter(f, "gt", v);
+            case LESS_THAN_OR_EQUALS -> esRangeFilter(f, "lte", v);
+            case LESS_THAN -> esRangeFilter(f, "lt", v);
         };
     }
 
     private Map<String, Object> esFreeTextFilter(String f, FreeText ft, ESSettings esSettings) {
-        if (ft.isWild()) {
-            if (operator.isRange()) {
-                // FIXME: Range makes no sense here
-                return nonsenseFilter();
-            }
-            return existsFilter(f);
-        }
-
         var boostSettings = esSettings.boost().fieldBoost();
-
-        if (operator.isRange()) {
-            // FIXME: Range makes no sense here
-            return nonsenseFilter();
-        }
-
         return ft.toEs(boostSettings.withField(f));
     }
 
     private Map<String, Object> esResourceFilter(String f, Resource r) {
-        if (operator.isRange()) {
-            // FIXME: Range makes no sense here
-            return nonsenseFilter();
-        }
         return esTermQueryFilter(f, r.jsonForm());
     }
 
     private Map<String, Object> esTermFilter(String f, Term t) {
-        if (operator.isRange()) {
-            // FIXME: Range makes no sense here
-            return nonsenseFilter();
-        }
         return esTermQueryFilter(f, t.term());
     }
 
@@ -369,12 +347,16 @@ public sealed class PathValue implements Node permits Type {
         return new Or(altFields);
     }
 
-    private static Map<String, Object> esRangeFilter(String path, Object value, String key) {
-        return filterWrap(rangeWrap(Map.of(path, Map.of(key, value))));
+    private static Map<String, Object> esRangeFilter(String field, String esRangeOp, Object value) {
+        return esRangeFilter(field, Map.of(esRangeOp, value));
     }
 
-    private static Map<String, Object> existsFilter(String path) {
-        return Map.of("exists", Map.of("field", path));
+    private static Map<String, Object> esRangeFilter(String field, Map<String, Object> esRangeObj) {
+        return filterWrap(rangeWrap(Map.of(field, esRangeObj)));
+    }
+
+    private static Map<String, Object> existsFilter(String field) {
+        return Map.of("exists", Map.of("field", field));
     }
 
     private static Map<String, Object> filterWrap(Map<?, ?> m) {

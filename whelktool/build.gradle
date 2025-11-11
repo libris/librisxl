@@ -72,7 +72,7 @@ dependencies {
     implementation "org.apache.groovy:groovy-cli-commons:${groovyVersion}"
     implementation "org.apache.groovy:groovy-jsr223:${groovyVersion}"
     implementation "org.apache.groovy:groovy:${groovyVersion}"
-    implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation 'commons-codec:commons-codec:1.19.0'
     implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
 

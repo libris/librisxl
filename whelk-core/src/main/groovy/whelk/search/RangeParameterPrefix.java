@@ -13,7 +13,7 @@ public enum RangeParameterPrefix {
         this.prefix = prefix;
     }
 
-    String prefix() {
+    public String prefix() {
         return prefix;
     }
 

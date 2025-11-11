@@ -59,7 +59,7 @@ class Whelk {
     Map displayData
     Map vocabData
     Map contextData
-    JsonLd jsonld
+    public JsonLd jsonld
 
     FresnelUtil fresnelUtil
     MarcFrameConverter marcFrameConverter
@@ -207,7 +207,10 @@ class Whelk {
 
         setJsonld(new JsonLd(contextData, displayData, vocabData, locales))
 
+        jsonld.restrictions.init( { type -> storage.loadAllByType(type) }, jsonld)
+
         completeCore = true
+
         log.info("Loaded with core data")
     }
 
@@ -310,6 +313,10 @@ class Whelk {
         return storage.bulkLoad(systemIds, asOf)
                 .findAll { id, doc -> !doc.deleted }
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)): doc] }
+    }
+
+    Iterable<Document> loadAllByType(String type) {
+        return storage.loadAllByType(type)
     }
 
     private void reindexUpdated(Document updated, Document preUpdateDoc) {
@@ -652,7 +659,13 @@ class Whelk {
                 insertCategoryByCollection(n, inCollectionById)
             }
             if (n['instanceOf']?['category']) {
-                insertCategoryByCollection(n['instanceOf'], inCollectionById)
+                var thing = n['instanceOf']
+                if (!(thing instanceof Map)) {
+                    log.warn("Bad instanceOf in ${document.shortId}")
+                    return
+                }
+
+                insertCategoryByCollection(thing, inCollectionById)
             }
         }
     }

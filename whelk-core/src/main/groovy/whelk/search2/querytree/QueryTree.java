@@ -42,7 +42,7 @@ public class QueryTree {
     }
 
     public QueryTree reduce(JsonLd jsonLd) {
-        return new QueryTree(tree.reduce(jsonLd));
+        return isEmpty() ? this : new QueryTree(tree.reduce(jsonLd));
     }
 
     public QueryTree merge(QueryTree other, JsonLd jsonLd) {
@@ -356,13 +356,13 @@ public class QueryTree {
 
     private static Node compatibleByDomain(String rdfSubjectType, Node tree, JsonLd jsonLd) {
         Predicate<PathValue> isCompatibleByDomain = pv -> pv.path().firstProperty()
-                .filter(p -> p.appearsOnType(rdfSubjectType, jsonLd) || p.indirectlyAppearsOnType(rdfSubjectType, jsonLd))
+                .filter(p -> p.hasDomainAdminMetadata(jsonLd) || p.appearsOnType(rdfSubjectType, jsonLd) || p.indirectlyAppearsOnType(rdfSubjectType, jsonLd))
                 .isPresent();
 
         Predicate<Node> isIncompatible = node -> switch (node) {
             case PathValue pv -> !isCompatibleByDomain.test(pv);
             case Not(PathValue pv) -> !isCompatibleByDomain.test(pv);
-            case FilterAlias ignored -> true; // TODO?
+            case FilterAlias ignored -> false; // TODO?
             default -> false;
         };
 

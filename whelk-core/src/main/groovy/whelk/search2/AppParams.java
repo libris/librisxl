@@ -46,26 +46,21 @@ public class AppParams {
         private final Query.Connective defaultConnective;
         private final Slice subSlice;
         private Slice parentSlice = null;
+        private final List<String> showIf;
 
         private final Property property;
 
         public Slice(Map<?, ?> settings, JsonLd jsonLd) {
             var chain = ((List<?>) settings.get("dimensionChain")).stream().map(String::valueOf).toList();
-            this.propertyKey = String.join(".", chain);
             this.sortOrder = getSortOrder(settings);
             this.bucketSortKey = getBucketSortKey(settings);
             this.itemLimit = itemLimit(settings);
             this.isRange = getRangeFlag(settings);
             this.defaultConnective = getConnective(settings);
             this.subSlice = getSubSlice(settings, jsonLd);
-
-            if (propertyKey.contains(".") && jsonLd.indexMapTerms.contains(propertyKey.split("\\.")[0])) {
-                var path = propertyKey.split("\\.");
-                var term = new Property(jsonLd.indexMapTermsFor.get(path[0]), jsonLd);
-                this.property = new Property.Ix(propertyKey, term);
-            } else {
-                this.property = new Property(propertyKey, jsonLd);
-            }
+            this.showIf = getShowIf(settings);
+            this.property = Property.getProperty(String.join(".", chain), jsonLd);
+            this.propertyKey = property.toString();
         }
 
         public Slice(Map<?, ?> settings, Slice parent, JsonLd jsonLd) {
@@ -141,7 +136,19 @@ public class AppParams {
                     .map(s -> new Slice(s, this, jsonLd))
                     .orElse(null);
         }
+
+
+        private List<String> getShowIf(Map<?, ?> settings) {
+            return Optional.ofNullable((List<?>) settings.get("showIf"))
+                    .map(l -> l.stream().map(String::valueOf).collect(Collectors.toList()))
+                    .orElse(Collections.emptyList());
+        }
+
+        public List<String> getShowIf() {
+            return showIf;
+        }
     }
+
 
     private List<Slice> getSliceList(Map<String, Object> appConfig, JsonLd jsonLd) {
         if (appConfig.containsKey("statistics")) {

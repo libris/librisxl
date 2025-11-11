@@ -21,8 +21,6 @@ public class EsMappings {
     private final Set<String> longTypeFields;
     private final Set<String> nestedNotInParentFields;
 
-    private final boolean isSpellCheckAvailable;
-
     public static String KEYWORD = "keyword";
     public static String FOUR_DIGITS_KEYWORD_SUFFIX = "_4_digits_keyword";
     public static String FOUR_DIGITS_SHORT_SUFFIX = "_4_digits_short";
@@ -36,10 +34,6 @@ public class EsMappings {
         this.longTypeFields = getFieldsOfType("long", mappings);
         this.nestedNotInParentFields = new HashSet<>(nestedTypeFields);
         this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappings));
-
-        // TODO: temporary feature flag, to be removed
-        // this feature only works after a full reindex has been done, so we have to detect that
-        this.isSpellCheckAvailable = DocumentUtil.getAtPath(mappings, List.of("properties", "_sortKeyByLang", "properties", "sv", "fields", "trigram"), null) != null;
     }
 
     public boolean hasKeywordSubfield(String fieldPath) {
@@ -72,10 +66,6 @@ public class EsMappings {
 
     public Set<String> getNestedTypeFields() {
         return nestedTypeFields;
-    }
-
-    public boolean isSpellCheckAvailable() {
-        return isSpellCheckAvailable;
     }
 
     private static Set<String> getFourDigitsKeywordFields(Map<?, ?> mappings) {

@@ -2,10 +2,9 @@ package whelk.search2;
 
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
-import whelk.search.QueryDateTime;
 import whelk.search2.querytree.*;
+import whelk.util.Restrictions;
 
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -84,17 +83,24 @@ public class Disambiguate {
         return mapValueForProperty(property, token.value(), token);
     }
 
-    public Optional<Value> mapValueForProperty(Property property, String value, Token token) {
+    public Restrictions.Narrowed tryNarrow(String property, Value value) {
+        if (value instanceof Link link) {
+            return jsonLd.restrictions.tryNarrow(whelk.Link.of(property, link.iri()));
+        }
+
+        return null;
+    }
+
+    private Optional<Value> mapValueForProperty(Property property, String value, Token token) {
         if (value.equals(Operator.WILDCARD)) {
             return Optional.empty();
         }
         if (property.isXsdDate()) {
-            try {
-                QueryDateTime parsedDate = QueryDateTime.parse(value);
-                return Optional.of(new DateTime(parsedDate, token));
-            } catch (DateTimeParseException ignored) {
-                return Optional.empty();
+            var yearRange = YearRange.parse(value, token);
+            if (yearRange != null) {
+                return Optional.of(yearRange);
             }
+            return Optional.ofNullable(DateTime.parse(value, token));
         }
         if (property.isType() || property.isVocabTerm()) {
             Set<String> mappedTerms = mapToVocabTerm(value, property.isType() ? VocabTermType.CLASS : VocabTermType.ENUM);
@@ -112,19 +118,22 @@ public class Disambiguate {
                 return Optional.of(new Link(encodeUri(expanded), token));
             }
         }
-        if (value.matches("\\d+")) {
-            /*
-            TODO?
-            Optimally we would also check here that the given property is a DatatypeProperty and not an ObjectProperty
-            since only the former may have a numeric values, however there are fields such as reverseLinks.totalItemsByRelation.p
-            where p is not a DatatypeProperty but still the field has numeric values, so a query like
-            reverseLinks.totalItemsByRelation.instanceOf>1 wouldn't work due to the value 1 not being typed as Numeric
-            and by extension the query wouldn't pass as a valid range query.
-            */
-            try {
-                return Optional.of(new Numeric(Long.parseLong(value), token));
-            } catch (NumberFormatException ignored) {
-                return Optional.empty();
+        /*
+        TODO?
+        Optimally we would also check here that the given property is a DatatypeProperty and not an ObjectProperty
+        since only the former may have a numeric values, however there are fields such as reverseLinks.totalItemsByRelation.p
+        where p is not a DatatypeProperty but still the field has numeric values, so a query like
+        reverseLinks.totalItemsByRelation.instanceOf>1 wouldn't work due to the value 1 not being typed as Numeric
+        and by extension the query wouldn't pass as a valid range query.
+        */
+        var numeric = Numeric.parse(value, token);
+        if (numeric != null) {
+            return Optional.of(numeric);
+        }
+        if (property.isDatatypeProperty()) {
+            var yearRange = YearRange.parse(value, token);
+            if (yearRange != null) {
+                return Optional.of(yearRange);
             }
         }
         return Optional.empty();

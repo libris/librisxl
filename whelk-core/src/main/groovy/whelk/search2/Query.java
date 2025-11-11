@@ -5,20 +5,41 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.*;
+import whelk.search2.querytree.And;
+import whelk.search2.querytree.FilterAlias;
+import whelk.search2.querytree.FreeText;
+import whelk.search2.querytree.Link;
+import whelk.search2.querytree.Node;
+import whelk.search2.querytree.Or;
+import whelk.search2.querytree.Path;
+import whelk.search2.querytree.PathValue;
+import whelk.search2.querytree.Property;
+import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.Resource;
+import whelk.search2.querytree.Value;
+import whelk.search2.querytree.YearRange;
 import whelk.util.DocumentUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
-import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
+import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeViewFindUrl;
@@ -139,7 +160,7 @@ public class Query {
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
 
-        if (queryParams.spell.suggest && esSettings.mappings().isSpellCheckAvailable()) {
+        if (queryParams.spell.suggest) {
             var spellQuery = Spell.getSpellQuery(qTree);
             if (spellQuery.isPresent()) {
                 if (queryParams.spell.suggestOnly) {
@@ -173,7 +194,7 @@ public class Query {
     protected Map<String, Object> getEsQuery(QueryTree queryTree) {
         List<Node> mmSelectedFacets = queryParams.skipStats
                 ? List.of()
-                : getSelectedFacets().getAllMultiOrMenuSelected().values().stream().flatMap(List::stream).toList();
+                : getSelectedFacets().getAllMultiOrRadioSelected().values().stream().flatMap(List::stream).toList();
         ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
         var mainQuery = queryTree.toEs(whelk.getJsonld(), currentEsSettings, mmSelectedFacets);
         var functionScore = currentEsSettings.boost().functionScore().toEs();
@@ -186,7 +207,7 @@ public class Query {
     }
 
     protected Map<String, Object> getPostFilter(Collection<String> rdfSubjectTypes) {
-        return getEsMmSelectedFacets(getSelectedFacets().getAllMultiOrMenuSelected(), rdfSubjectTypes, whelk.getJsonld(), esSettings);
+        return getEsMmSelectedFacets(getSelectedFacets().getAllMultiOrRadioSelected(), rdfSubjectTypes, whelk.getJsonld(), esSettings);
     }
 
     protected Map<String, Object> getPartialCollectionView() {
@@ -398,7 +419,7 @@ public class Query {
                             Map.of("field", JsonLd.TYPE_KEY)));
         }
 
-        Map<String, List<Node>> mmSelected = selectedFacets.getAllMultiOrMenuSelected();
+        Map<String, List<Node>> mmSelected = selectedFacets.getAllMultiOrRadioSelected();
 
         Map<String, Object> query = new LinkedHashMap<>();
 
@@ -422,25 +443,40 @@ public class Query {
 
         Property property = slice.getProperty();
 
+        if (!slice.getShowIf().isEmpty()) {
+            // Enable @none facet if find/identify/@none in query
+            // TODO don't hardcode this if we decide it is what we want
+            if (ctx.selectedFacets().getSelected("_categoryByCollection.find").isEmpty()
+                && ctx.selectedFacets().getSelected("_categoryByCollection.identify").isEmpty()
+                && ctx.selectedFacets().getSelected("_categoryByCollection.@none").isEmpty()) {
+                return;
+            }
+        }
+
         if (!property.restrictions().isEmpty()) {
             // TODO: E.g. author (combining contribution.role and contribution.agent)
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
         var p = new Path(property).expand(ctx.jsonLd);
-        var paths = property instanceof Property.Ix // TODO for now exclude altPaths for _categoryByCollection
+        var paths = property.hasSubPropertyWithRestrictedRange() // TODO for now exclude altPaths for _categoryByCollection
                 ? List.of(p)
                 : p.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes);
 
         paths.forEach(path -> {
-            String jsonPath = path.jsonForm();
-            String field = ctx.esSettings.mappings().hasFourDigitsKeywordField(jsonPath)
-                    ? String.format("%s%s", jsonPath, FOUR_DIGITS_KEYWORD_SUFFIX)
-                    : (ctx.esSettings.mappings().hasKeywordSubfield(jsonPath) ? String.format("%s.%s", jsonPath, KEYWORD) : jsonPath);
-            Map<String, Object> aggs = path.getEsNestedStem(ctx.esSettings.mappings())
-                    .map(nestedStem -> buildNestedAggQuery(field, slice, nestedStem, ctx))
-                    .orElse(buildCoreAqqQuery(field, slice, ctx));
-            Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrMenu(pKey)
+            String field = path.jsonForm();
+            if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
+                field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
+            } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
+                field = String.format("%s.%s", field, KEYWORD);
+            } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
+                field = String.format("%s.%s", field, JsonLd.ID_KEY);
+            }
+            Optional<String> nestedStem = path.getEsNestedStem(ctx.esSettings.mappings());
+            Map<String, Object> aggs = nestedStem.isPresent()
+                    ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
+                    : buildCoreAqqQuery(field, slice, ctx);
+            Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
                     ? with(new HashMap<>(ctx.mmSelected), m -> {
                             m.remove(pKey);
                             // FIXME
@@ -450,10 +486,18 @@ public class Query {
                             if (slice.subSlice() != null) {
                                 m.remove(slice.subSlice().propertyKey());
                             }
+                            // TODO don't hardcode this if we decide it is what we want
+                            if ("_categoryByCollection.find".equals(pKey) || "_categoryByCollection.identify".equals(pKey)) {
+                                m.remove("_categoryByCollection.@none");
+                            }
+                            //if ("_categoryByCollection.@none".equals(pKey)) {
+                            //    m.remove("_categoryByCollection.find");
+                            //    m.remove("_categoryByCollection.identify");
+                            //}
                         })
                     : ctx.mmSelected;
             Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
-            query.put(field, filterWrap(aggs, property.name(), filter));
+            query.put(field, filterWrap(aggs, property.toString(), filter));
         });
     }
     
@@ -600,8 +644,7 @@ public class Query {
                 }
 
                 var property = slice.getProperty();
-
-                String propertyKey = property.name();
+                String propertyKey = slice.propertyKey();
                 List<Map<String, Object>> observations = new ArrayList<>();
 
                 Connective connective = selectedFacets.getConnective(propertyKey);
@@ -622,9 +665,7 @@ public class Query {
                             var o = entry.getValue();
                             int count = entry.getValue().count();
                             Value v = disambiguate.mapValueForProperty(property, bucketKey).orElse(new FreeText(bucketKey));
-                            var pv = property instanceof Property.Ix ix
-                                    ? new PathValue(ix.term(), Operator.EQUALS, v) // TODO this is just for the isSelected comparison
-                                    : new PathValue(property, Operator.EQUALS, v);
+                            var pv = new PathValue(property, Operator.EQUALS, v);
 
                             if (pv.value() instanceof Link l && l.iri().equals(queryParams.object)) {
                                 // TODO: This check won't be needed if/when we remove facets from resource page.
@@ -634,7 +675,7 @@ public class Query {
                             // TODO
                             boolean isSelected = selectedValue!=null && !selectedValue.isEmpty()
                                     ? selectedValue.stream().anyMatch(n -> n instanceof PathValue pv2 && pv2.value() instanceof Link l && v instanceof Link l2 && l.iri().equals(l2.iri()))
-                                    : selectedFacets.isSelected(pv, property.queryForm());
+                                    : selectedFacets.isSelected(pv, propertyKey);
 
                             Consumer<QueryTree> addObservation = alteredTree -> {
                                 Map<String, Object> observation = new LinkedHashMap<>();
@@ -658,9 +699,22 @@ public class Query {
                                 }
                             };
 
-                            if (getSelectedFacets().isMenuSelectable(propertyKey)) {
-                                List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
-                                addObservation.accept(qt.remove(selected).add(pv));
+                            if (getSelectedFacets().isRadioButton(propertyKey)) {
+                                // unselect others with same property
+                                // TODO don't hardcode category if this is what we want
+                                // FIXME
+                                //List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
+                                //addObservation.accept(qt.remove(selected).add(pv));
+                                Predicate<Node> f = (Node n) -> n instanceof PathValue pv2
+                                        && pv2.path().path().getLast() instanceof Property p
+                                        && "category".equals(p.name());
+                                //
+                                var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
+                                if (selectedValue == null || !selectedValue.contains(pv)) {
+                                    qt2 = qt2.add(pv);
+                                }
+
+                                addObservation.accept(qt2);
                                 return;
                             }
 
@@ -725,7 +779,26 @@ public class Query {
             }
 
             public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFacets selectedFacets) {
-                return getSliceByDimension(slices, selectedFacets, null, null);
+                var s = getSliceByDimension(slices, selectedFacets, null, null);
+
+                // Move @none to under selected find/identify
+                // TODO don't hardcode this if we decide it is what we want
+                var none = s.remove("_categoryByCollection.@none");
+                if (none != null) {
+                    var find =  s.get("_categoryByCollection.find");
+                    if (find != null) {
+                        DocumentUtil.traverse(find, (value, path) -> {
+                            if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true)) {
+                                var newV = new HashMap<>(m);
+                                ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put("_categoryByCollection.@none", none);
+                                return new DocumentUtil.Replace(newV);
+                            }
+                            return DocumentUtil.NOP;
+                        });
+                    }
+                }
+
+                return s;
             }
 
             private Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFacets selectedFacets, Value parentValue, List<Node> selectedValue) {
@@ -733,7 +806,7 @@ public class Query {
 
                 slices.forEach(slice -> {
                     var property = slice.getProperty();
-                    var propertyKey = property.name();
+                    var propertyKey = slice.propertyKey();
 
                     if (!selectedFacets.isSelectable(propertyKey)) {
                         return;
@@ -747,17 +820,15 @@ public class Query {
 
                     // TODO
                     List<Node> mySelectedValue = selectedValue;
-                    if (selectedFacets.isMenuSelectable(propertyKey) && parentValue == null && selectedValue == null) {
+                    if (selectedFacets.isRadioButton(propertyKey) && parentValue == null && selectedValue == null) {
                         var values = new HashSet<String>();
                         sliceResult.collectValues(values);
 
-                        var term = property instanceof Property.Ix ix
-                                ? ix.term()
-                                : property;
-
                         // TODO
-                        mySelectedValue = qTree.findTopNodesByCondition(node -> node instanceof PathValue pv
-                            && pv.value() instanceof Link link && values.contains(link.iri()));
+                        mySelectedValue = qTree.findTopNodesByCondition(node ->
+                                (node instanceof PathValue pv && pv.value() instanceof Link link && values.contains(link.iri()))
+
+                        );
 
 //pv.path().expand(whelk.getJsonld()).firstProperty().map(p -> p.equals(property)).orElse(false)
 //&& pv.value() instanceof Link link && values.contains(link.iri())
@@ -806,32 +877,24 @@ public class Query {
         }
 
         private Map<String, Object> getRangeTemplate(String propertyKey) {
+            List<Node> selected = selectedFacets.getSelected(propertyKey);
             FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
-            String templateQueryString = qTree.remove(getSelectedFacets().getSelected(propertyKey))
+            String templateQueryString = qTree.remove(selected)
                     .add(placeholderNode)
                     .toQueryString();
             String templateUrl = QueryUtil.makeViewFindUrl(templateQueryString, queryParams);
 
-            Function<Operator, String> getLimit = op -> getSelectedFacets().getRangeSelected(propertyKey)
-                    .stream()
-                    .map(PathValue.class::cast)
-                    .map(PathValue::toOrEquals)
-                    .filter(pv -> pv.operator().equals(op))
-                    .findFirst()
-                    .map(PathValue::value)
-                    .map(Value::toString)
-                    .orElse("");
-
-            String minLimit = getLimit.apply(Operator.GREATER_THAN_OR_EQUALS);
-            String maxLimit = getLimit.apply(Operator.LESS_THAN_OR_EQUALS);
-
-            String gtoe = Operator.GREATER_THAN_OR_EQUALS.termKey;
-            String ltoe = Operator.LESS_THAN_OR_EQUALS.termKey;
+            String selectedMin = "";
+            String selectedMax = "";
+            if (selected.size() == 1 && ((PathValue) selected.getFirst()).value() instanceof YearRange yr) {
+                selectedMin = yr.min();
+                selectedMax = yr.max();
+            }
 
             Map<String, String> mapping = Map.of(
                     "variable", propertyKey,
-                    gtoe, minLimit,
-                    ltoe, maxLimit
+                    Operator.GREATER_THAN_OR_EQUALS.termKey, selectedMin,
+                    Operator.LESS_THAN_OR_EQUALS.termKey, selectedMax
             );
 
             return Map.of(

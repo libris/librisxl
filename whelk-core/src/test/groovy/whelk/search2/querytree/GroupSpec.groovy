@@ -96,7 +96,7 @@ class GroupSpec extends Specification {
                                                                  "default_operator": "AND",
                                                                  "query"           : "y",
                                                                  "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4^1.0"]
+                                                                 "fields"          : ["p3.p4._str^1.0"]
                                                          ]
                                                  ]]
                                 ]
@@ -128,7 +128,7 @@ class GroupSpec extends Specification {
                                                                  "default_operator": "AND",
                                                                  "query"           : "y",
                                                                  "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4^1.0"]
+                                                                 "fields"          : ["p3.p4._str^1.0"]
                                                          ]
                                                  ]]
                                 ]
@@ -161,7 +161,7 @@ class GroupSpec extends Specification {
                                                                                           "default_operator": "AND",
                                                                                           "query"           : "y",
                                                                                           "analyze_wildcard": false,
-                                                                                          "fields"          : ["p3.p4^1.0"]
+                                                                                          "fields"          : ["p3.p4._str^1.0"]
                                                                                   ]
                                                                           ]]
                                                          ]
@@ -206,14 +206,14 @@ class GroupSpec extends Specification {
                                                                                             "default_operator": "AND",
                                                                                             "query"           : "y",
                                                                                             "analyze_wildcard": false,
-                                                                                            "fields"          : ["p3.p4^1.0"]
+                                                                                            "fields"          : ["p3.p4._str^1.0"]
                                                                                     ]
                                                                             ], [
                                                                                     "simple_query_string": [
                                                                                             "default_operator": "AND",
                                                                                             "query"           : "z",
                                                                                             "analyze_wildcard": false,
-                                                                                            "fields"          : ["p3.p4^1.0"]
+                                                                                            "fields"          : ["p3.p4._str^1.0"]
                                                                                     ]
                                                                             ]]
                                                          ]
@@ -247,7 +247,7 @@ class GroupSpec extends Specification {
                                                                  "default_operator": "AND",
                                                                  "query"           : "y",
                                                                  "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4^1.0"]
+                                                                 "fields"          : ["p3.p4._str^1.0"]
                                                          ]
                                                  ], [
                                                          "simple_query_string": [
@@ -261,7 +261,7 @@ class GroupSpec extends Specification {
                                                                  "default_operator": "AND",
                                                                  "query"           : "b",
                                                                  "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4^1.0"]
+                                                                 "fields"          : ["p3.p4._str^1.0"]
                                                          ]
                                                  ]]
                                 ]
