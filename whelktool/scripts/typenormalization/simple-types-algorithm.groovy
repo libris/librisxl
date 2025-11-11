@@ -211,11 +211,9 @@ class TypeNormalizer implements UsingJsonKeys {
         var oldItype = instance.get(TYPE)
         var oldWtype = work.get(TYPE)
 
-        changed |= mappings.fixMarcLegacyType(instance, work)
-
-
         changed |= simplifyInstanceType(instance)
         changed |= moveInstanceGenreFormsToWork(instance, work)
+        changed |= mappings.fixMarcLegacyType(instance, work)
         changed |= simplifyWorkType(work)
 
 
