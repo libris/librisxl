@@ -229,7 +229,7 @@ class TypeNormalizer implements UsingJsonKeys {
             missingCategoryLog.println("${instance[ID]}\tNo INSTANCE categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
         }
         if (!work.category || work.category.isEmpty()){
-            missingCategoryLog.println("${instance[ID]}\t No WORK categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
+            missingCategoryLog.println("${instance[ID]}\tNo WORK categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
         }
 
         return changed
@@ -515,10 +515,14 @@ class TypeNormalizer implements UsingJsonKeys {
     static boolean moveInstanceGenreFormsToWork (Map instance, Map work) {
         List instanceGenreFormsToMove = asList(instance.get("genreForm")).findAll() {isLink(it)}
 
-        // Add unlinked instance GenreForms as categories
+        // Move unlinked instance GFs to instance category
         List unlinkedInstanceGenreForms = asList(instance.remove("genreForm")).findAll() {!isLink(it)}
-        instance.put("category", instance.get("category", []) + unlinkedInstanceGenreForms)
+        List allInstanceCategories = instance.get("category", []) + unlinkedInstanceGenreForms
+        if (allInstanceCategories.size() > 0) {
+            instance.put("category", instance.get("category", []) + unlinkedInstanceGenreForms)
+        }
 
+        // Move all other instance GFs to work GF
         if (instanceGenreFormsToMove) {
             work.put("genreForm",  work.get("genreForm", []) + instanceGenreFormsToMove)
             return true
