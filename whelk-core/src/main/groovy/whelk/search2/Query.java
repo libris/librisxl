@@ -689,7 +689,10 @@ public class Query {
                                     observation.put("_selected", true);
                                 }
                                 if (o.subSlices != null && slice.subSlice() != null) {
-                                    observation.put("sliceByDimension", o.subSlices.getSliceByDimension(List.of(slice.subSlice()), selectedFacets, v, selectedValue));
+                                    var s = o.subSlices.getSliceByDimension(List.of(slice.subSlice()), selectedFacets, v, selectedValue);
+                                    if (!s.isEmpty()) {
+                                        observation.put("sliceByDimension", s);
+                                    }
                                 }
 
                                 observations.add(observation);
