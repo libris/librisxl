@@ -362,7 +362,7 @@ public class QueryTree {
         Predicate<Node> isIncompatible = node -> switch (node) {
             case PathValue pv -> !isCompatibleByDomain.test(pv);
             case Not(PathValue pv) -> !isCompatibleByDomain.test(pv);
-            case FilterAlias ignored -> true; // TODO?
+            case FilterAlias ignored -> false; // TODO?
             default -> false;
         };
 
