@@ -151,14 +151,16 @@ public class BulkJobDocument extends Document {
         _set(EXECUTION_PATH, executions, data);
     }
 
-    public Specification getSpecification() {
+    public SpecType getSpecificationType() {
         Map<String, Object> spec = getSpecificationRaw();
         if (spec == null) {
             throw new ModelValidationException("Nothing in " + SPECIFICATION_PATH);
         }
+        return fromKey(SpecType.class, get(spec, JsonLd.TYPE_KEY));
+    }
 
-        String specType = get(spec, JsonLd.TYPE_KEY);
-        return switch(fromKey(SpecType.class, specType)) {
+    public Specification getSpecification() {
+        return switch(getSpecificationType()) {
             case SpecType.Update -> new Specification.Update(
                     get(spec, MATCH_FORM_KEY, Collections.emptyMap()),
                     get(spec, TARGET_FORM_KEY, Collections.emptyMap())
