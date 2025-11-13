@@ -13,7 +13,7 @@ import java.util.function.Function;
 import static whelk.JsonLd.asList;
 
 public class DocumentComparator {
-    private static final Comparator<Object> BY_HASH = (o1, o2) -> o2.hashCode() - o1.hashCode();
+    private static final Comparator<Object> BY_HASH = Comparator.comparingInt(Object::hashCode);
 
     private final Function<Object, Boolean> isOrderedList;
 
