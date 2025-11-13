@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 
 public class AppParams {
+    public static final String DEFAULT_SITE_FILTERS = "defaultSiteFilters";
+
     public final List<Slice> sliceList;
     public final List<FilterAlias> filterAliases;
     public final Filters filters;
@@ -171,7 +173,7 @@ public class AppParams {
     }
 
     private static Filters getFilters(Map<String, Object> appConfig) {
-        return new Filters(getFilter(appConfig, "defaultSiteFilters"),
+        return new Filters(getFilter(appConfig, DEFAULT_SITE_FILTERS),
                 getFilter(appConfig, "optionalSiteFilters"),
                 getRelationFilters(appConfig)
         );
