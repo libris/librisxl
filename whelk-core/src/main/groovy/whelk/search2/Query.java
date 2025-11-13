@@ -218,15 +218,14 @@ public class Query {
 
         // TODO: Include _o search representation in search mapping?
         view.put("search", Map.of("mapping", getSearchMapping()));
-        view.put("itemOffset", queryParams.offset);
-        view.put("itemsPerPage", queryParams.limit);
 
-        if (queryParams.skipStats && queryParams.spell.asString().isEmpty() && queryParams.limit == 0) {
-            view.put("totalItems", 0);
+        if (queryParams.mappingOnly) {
             linkLoader.loadChips();
             return view;
         }
 
+        view.put("itemOffset", queryParams.offset);
+        view.put("itemsPerPage", queryParams.limit);
         view.put("totalItems", getQueryResult().numHits);
 
         view.putAll(Pagination.makeLinks(getQueryResult().numHits, esSettings.maxItems(), qTree, queryParams));
