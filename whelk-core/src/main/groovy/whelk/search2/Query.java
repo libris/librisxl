@@ -216,12 +216,17 @@ public class Query {
         view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
         view.put(JsonLd.ID_KEY, findUrl());
 
+        // TODO: Include _o search representation in search mapping?
+        view.put("search", Map.of("mapping", getSearchMapping()));
+
+        if (queryParams.mappingOnly) {
+            linkLoader.loadChips();
+            return view;
+        }
+
         view.put("itemOffset", queryParams.offset);
         view.put("itemsPerPage", queryParams.limit);
         view.put("totalItems", getQueryResult().numHits);
-
-        // TODO: Include _o search representation in search mapping?
-        view.put("search", Map.of("mapping", getSearchMapping()));
 
         view.putAll(Pagination.makeLinks(getQueryResult().numHits, esSettings.maxItems(), qTree, queryParams));
 
