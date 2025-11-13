@@ -223,4 +223,65 @@ class LinearitySpec extends Specification {
         recreatedVersions.equals(versions)
     }
 
+    def "linearity with nulls"() {
+        given:
+
+        def versions = [
+                [
+                        "a":"b"
+                ],
+                [
+                        "b":null
+                ],
+                [
+                        "c":"d"
+                ]
+        ]
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        for (int i = 0; i < diffs.size(); ++i) {
+            //System.err.println(mapper.writeValueAsString(diffs[i]))
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
+    def "linearity with nulls in odd places"() {
+        given:
+
+        def versions = [
+                [
+                        "a":["b", "c"]
+                ],
+                [
+                        "a":["b", null, "d", ["a": ["b", 2]]]
+                ],
+                [
+                        "a":["b", "c", "d", ["a": ["b", 3], "c":[true, "ok", null]]]
+                ],
+                [
+                        "a":["b", "c", "d", ["c": ["b", 3], "a":[true, "ok", "not null"]]]
+                ],
+        ]
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        for (int i = 0; i < diffs.size(); ++i) {
+            //System.err.println(mapper.writeValueAsString(diffs[i]))
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
 }

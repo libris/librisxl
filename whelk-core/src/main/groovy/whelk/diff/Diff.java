@@ -34,6 +34,21 @@ public class Diff {
 
     private static void diffInternal(Object oA, Object oB, List path, List result) {
 
+        if (oA != null && oB == null) {
+            // Map.of() does not tolerate nulls
+            Map replacment = new HashMap();
+            replacment.put("op", "replace");
+            replacment.put("path", formatRFC6901pointer(path));
+            replacment.put("value", null);
+            result.add(replacment);
+            return;
+        }
+
+        if (oA == null && oB != null) {
+            result.add(Map.of("op", "replace", "path", formatRFC6901pointer(path), "value", oB));
+            return;
+        }
+
         if (!oA.getClass().equals(oB.getClass())) {
             result.add(Map.of("op", "replace", "path", formatRFC6901pointer(path), "value", oB));
             return;
@@ -57,7 +72,13 @@ public class Diff {
                 for (Object key : added) {
                     ArrayList addedPath = new ArrayList(path);
                     addedPath.add(key);
-                    result.add(Map.of("op", "add", "path", formatRFC6901pointer(addedPath), "value", b.get(key)));
+
+                    // Map.of() does not tolerate nulls
+                    Map replacment = new HashMap();
+                    replacment.put("op", "add");
+                    replacment.put("path", formatRFC6901pointer(addedPath));
+                    replacment.put("value", b.get(key));
+                    result.add(replacment);
                 }
             }
 
@@ -82,7 +103,13 @@ public class Diff {
                 for (int i = a.size(); i < b.size(); ++i) {
                     List addedPath = new ArrayList(path);
                     addedPath.add(i);
-                    result.add(Map.of("op", "add", "path", formatRFC6901pointer(addedPath), "value", b.get(i)));
+
+                    // Map.of() does not tolerate nulls
+                    Map replacment = new HashMap();
+                    replacment.put("op", "add");
+                    replacment.put("path", formatRFC6901pointer(addedPath));
+                    replacment.put("value", b.get(i));
+                    result.add(replacment);
                 }
             } else if (countDiff < 0) {
                 for (int i = b.size(); i < a.size(); ++i) {

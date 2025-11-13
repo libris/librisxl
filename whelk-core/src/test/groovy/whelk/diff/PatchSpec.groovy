@@ -287,4 +287,75 @@ class PatchSpec extends Specification {
         after.equals(result)
     }
 
+    def "add null value"() {
+        given:
+        def patch = [
+                [
+                        "op":"add",
+                        "path": "/b",
+                        "value": null
+                ]
+        ]
+        def before = ["a": "c"]
+        def after = ["a": "c", "b": null]
+
+        def result = Patch.patch(before, patch)
+
+        expect:
+        after.equals(result)
+    }
+
+    def "remove null value"() {
+        given:
+        def patch = [
+                [
+                        "op":"remove",
+                        "path": "/b"
+                ]
+        ]
+        def before = ["a": "c", "b": null]
+        def after = ["a": "c"]
+
+        def result = Patch.patch(before, patch)
+
+        expect:
+        after.equals(result)
+    }
+
+    def "replace null value"() {
+        given:
+        def patch = [
+                [
+                        "op":"replace",
+                        "path": "/b",
+                        "value": "d"
+                ]
+        ]
+        def before = ["a": "c", "b": null]
+        def after = ["a": "c", "b": "d"]
+
+        def result = Patch.patch(before, patch)
+
+        expect:
+        after.equals(result)
+    }
+
+    def "replace with null value"() {
+        given:
+        def patch = [
+                [
+                        "op":"replace",
+                        "path": "/b",
+                        "value": null
+                ]
+        ]
+        def before = ["a": "c", "b": "d"]
+        def after = ["a": "c", "b": null]
+
+        def result = Patch.patch(before, patch)
+
+        expect:
+        after.equals(result)
+    }
+
 }

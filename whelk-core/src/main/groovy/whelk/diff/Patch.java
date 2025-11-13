@@ -59,15 +59,17 @@ public class Patch {
                         else
                             return null;
                     }
-                    else if (getAtRFC6901(data, path) == null || !removeAtRFC6901(data, path) || !setAtRFC6901(data, value, path)) // Value at path MUST exist
+                    else if (getAtRFC6901(data, path)[1].equals(false) || !removeAtRFC6901(data, path) || !setAtRFC6901(data, value, path)) // Value at path MUST exist
                         return null;
                     break;
                 }
                 case "copy": {
                     String fromPath = (String) op.get("from");
                     String toPath = (String) op.get("to");
-                    Object value = getAtRFC6901(data, fromPath);
-                    if (value == null)
+                    Object[] valueAndResult = getAtRFC6901(data, fromPath);
+                    Object value = valueAndResult[0];
+                    Object result = valueAndResult[1];
+                    if (result.equals(false))
                         return null;
                     if (toPath.equals("")) { // part to whole document copy
                         if (value instanceof Map)
@@ -82,8 +84,10 @@ public class Patch {
                 case "move": {
                     String fromPath = (String) op.get("from");
                     String toPath = (String) op.get("to");
-                    Object value = getAtRFC6901(data, fromPath);
-                    if (value == null)
+                    Object[] valueAndResult = getAtRFC6901(data, fromPath);
+                    Object value = valueAndResult[0];
+                    Object result = valueAndResult[1];
+                    if (result.equals(false))
                         return null;
                     if (!removeAtRFC6901(data, fromPath))
                         return null;
@@ -94,7 +98,10 @@ public class Patch {
                 case "test": {
                     String path = (String) op.get("path");
                     Object value = op.get("value");
-                    if (!getAtRFC6901(data, path).equals(value))
+                    Object[] valueAndResult = getAtRFC6901(data, path);
+                    Object existingValue = valueAndResult[0];
+                    Object result = valueAndResult[1];
+                    if (!existingValue.equals(value) || result.equals(false))
                         return null;
                     break;
                 }
@@ -179,9 +186,14 @@ public class Patch {
         return false;
     }
 
-    private static Object getAtRFC6901(Map data, String pointer) {
-        if (pointer.equals(""))
-            return data;
+    // Multiple return-values, because we must distinguish between "Yes a null value exists" and "No value exists".
+    private static Object[] getAtRFC6901(Map data, String pointer) {
+        Object[] result = new Object[2];
+        if (pointer.equals("")) {
+            result[0] = data;
+            result[1] = true;
+            return result;
+        }
         String[] tokens = tokenizePointer(pointer);
 
         Object node = data;
@@ -195,19 +207,29 @@ public class Patch {
                 Integer index = parseArrayIndex(token);
                 if (index != null && listNode.size() > index)
                     node = listNode.get(index);
-                else
-                    return null;
+                else {
+                    result[0] = null;
+                    result[1] = false;
+                    return result;
+                }
             } else if (node instanceof Map mapNode) {
                 if (mapNode.containsKey(token))
                     node = mapNode.get(token);
-                else
-                    return null;
+                else {
+                    result[0] = null;
+                    result[1] = false;
+                    return result;
+                }
             } else {
-                return null;
+                result[0] = null;
+                result[1] = false;
+                return result;
             }
         }
 
-        return node;
+        result[0] = node;
+        result[1] = true;
+        return result;
     }
 
     private static String[] tokenizePointer(String pointer) {
