@@ -49,6 +49,7 @@ public class AppParams {
         private final Slice subSlice;
         private Slice parentSlice = null;
         private final List<String> showIf;
+        private final boolean isReverseNested;
 
         private final Property property;
 
@@ -63,6 +64,7 @@ public class AppParams {
             this.showIf = getShowIf(settings);
             this.property = Property.getProperty(String.join(".", chain), jsonLd);
             this.propertyKey = property.toString();
+            this.isReverseNested = getReverseNested(settings);
         }
 
         public Slice(Map<?, ?> settings, Slice parent, JsonLd jsonLd) {
@@ -104,6 +106,10 @@ public class AppParams {
 
         public Property getProperty() {
             return property;
+        }
+
+        public boolean isReverseNested() {
+            return isReverseNested;
         }
 
         private Sort.Order getSortOrder(Map<?, ?> settings) {
@@ -148,6 +154,10 @@ public class AppParams {
 
         public List<String> getShowIf() {
             return showIf;
+        }
+
+        private boolean getReverseNested(Map<?, ?> settings) {
+            return Optional.ofNullable((Boolean) settings.get("reverseNested")).orElse(false);
         }
     }
 

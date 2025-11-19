@@ -8,6 +8,7 @@ import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
+import whelk.FeatureFlags
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -20,7 +21,9 @@ import whelk.util.Unicode
 import java.util.concurrent.LinkedBlockingQueue
 
 import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
+import static whelk.FeatureFlags.Flag.EXPERIMENTAL_INDEX_HOLDING_ORGS
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
+import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
@@ -542,6 +545,23 @@ class ElasticSearch {
                 }
                 value.putAll(flattened)
             }
+
+            if (whelk.features.isEnabled(EXPERIMENTAL_INDEX_HOLDING_ORGS)) {
+                if ('Item' != searchCard[TYPE_KEY]
+                        && path
+                        && "heldBy" == path.last()
+                        && !path.contains('hasComponent')
+                        && value instanceof Map
+                        && value[JsonLd.ID_KEY]
+                        && !value['isPartOf']) {
+                    var org = whelk.relations.getBy((String) value[JsonLd.ID_KEY], ['isPartOf'])
+                    if (!org.isEmpty()) {
+                        value['isPartOf'] = [(JsonLd.ID_KEY): org.first()]
+                    }
+                }
+            }
+
+            return DocumentUtil.NOP
         }
 
         // In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged

@@ -78,6 +78,7 @@ public class Query {
     }
 
     public static final String NESTED_AGG_NAME = "n";
+    public static final String REVERSE_NESTED_AGG_NAME = "r";
 
     public Query(QueryParams queryParams,
                  AppParams appParams,
@@ -520,6 +521,24 @@ public class Query {
             Map<String, Object> query = new LinkedHashMap<>();
             addSliceToAggQuery(query, slice.subSlice(), ctx);
             q.put("aggs", query);
+        }
+        else if (slice.isReverseNested()) {
+            // count the number of top-level documents instead of the number of nested docs
+            // for example multiple holdings with the same organization (heldBy.isPartOf.@id)
+            q = new LinkedHashMap<>(q);
+            Map<String, Object> reverse = Map.of(
+                    REVERSE_NESTED_AGG_NAME, Map.of(
+                            "reverse_nested", Collections.emptyMap(),
+                            "aggs", Map.of(
+                                    REVERSE_NESTED_AGG_NAME, Map.of(
+                                            "cardinality", Map.of(
+                                                    "field", "_es_id"
+                                            )
+                                    )
+                            )
+                    )
+            );
+            q.put("aggs", reverse);
         }
 
         return castToStringObjectMap(q);
