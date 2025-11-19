@@ -49,7 +49,7 @@ public class AppParams {
         private final Slice subSlice;
         private Slice parentSlice = null;
         private final List<String> showIf;
-        private final boolean isReverseNested;
+        private final boolean shouldCountTopLevelDocs;
 
         private final Property property;
 
@@ -64,7 +64,7 @@ public class AppParams {
             this.showIf = getShowIf(settings);
             this.property = Property.getProperty(String.join(".", chain), jsonLd);
             this.propertyKey = property.toString();
-            this.isReverseNested = getReverseNested(settings);
+            this.shouldCountTopLevelDocs = getShouldCountTopLevelDocs(settings);
         }
 
         public Slice(Map<?, ?> settings, Slice parent, JsonLd jsonLd) {
@@ -108,8 +108,8 @@ public class AppParams {
             return property;
         }
 
-        public boolean isReverseNested() {
-            return isReverseNested;
+        public boolean shouldCountTopLevelDocs() {
+            return shouldCountTopLevelDocs;
         }
 
         private Sort.Order getSortOrder(Map<?, ?> settings) {
@@ -156,8 +156,8 @@ public class AppParams {
             return showIf;
         }
 
-        private boolean getReverseNested(Map<?, ?> settings) {
-            return Optional.ofNullable((Boolean) settings.get("reverseNested")).orElse(false);
+        private boolean getShouldCountTopLevelDocs(Map<?, ?> settings) {
+            return Optional.ofNullable((Boolean) settings.get("countTopLevelDocs")).orElse(false);
         }
     }
 

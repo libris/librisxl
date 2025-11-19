@@ -522,7 +522,7 @@ public class Query {
             addSliceToAggQuery(query, slice.subSlice(), ctx);
             q.put("aggs", query);
         }
-        else if (slice.isReverseNested()) {
+        else if (slice.shouldCountTopLevelDocs()) {
             // count the number of top-level documents instead of the number of nested docs
             // for example multiple holdings with the same organization (heldBy.isPartOf.@id)
             q = new LinkedHashMap<>(q);
