@@ -26,7 +26,7 @@ public class EmmImporter {
 
     public EmmImporter(Whelk whelk, String emmBaseUrl, boolean usingQuickCreate) {
         this.whelk = whelk;
-        this.emmBaseUrl = emmBaseUrl;
+        this.emmBaseUrl = emmBaseUrl.endsWith("/") ? emmBaseUrl : emmBaseUrl + "/";
         this.usingQuickCreate = usingQuickCreate;
     }
 
@@ -45,7 +45,7 @@ public class EmmImporter {
     }
 
     private boolean importStream(HttpClient client, String type) throws URISyntaxException, IOException, InterruptedException {
-        URI next = new URI(emmBaseUrl).resolve("/full?selection=type:" + type + "&offset=0");
+        URI next = new URI(emmBaseUrl).resolve("full?selection=type:" + type + "&offset=0");
         String dumpTimeStamp = null;
         int importCount = 0;
         int percentProgress = 0;
