@@ -13,7 +13,8 @@ public class FeatureFlags {
     
     public enum Flag {
         INDEX_BLANK_WORKS,
-        EXPERIMENTAL_CATEGORY_COLLECTION
+        EXPERIMENTAL_CATEGORY_COLLECTION,
+        EXPERIMENTAL_INDEX_HOLDING_ORGS
     }
 
     private final Set<Flag> enabled = new HashSet<>();
