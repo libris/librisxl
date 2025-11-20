@@ -63,7 +63,7 @@ public class VocabMappings {
         var vocab = jsonLd.vocabIndex;
 
         vocab.forEach((termKey, termDefinition) -> {
-            if (isSystemVocabTerm(termDefinition, jsonLd)) {
+            if (isSystemVocabTerm(termDefinition, jsonLd) || isBibDb(termKey) || isBulk(termKey)) {
                 if (isClass(termDefinition, jsonLd)) {
                     addAllMappings(termKey, classAliasMappings, ambiguousClassAliases, whelk);
                 } else if (isProperty(termDefinition)) {
@@ -163,9 +163,20 @@ public class VocabMappings {
                 .equals(jsonLd.context.get(VOCAB_KEY));
     }
 
+    // FIXME: don't hardcode these namespaces
+
     private static boolean isMarc(String termKey) {
         return termKey.startsWith("marc:");
     }
+
+    private static boolean isBibDb(String termKey) {
+        return termKey.startsWith("bibdb:");
+    }
+
+    private static boolean isBulk(String termKey) {
+        return termKey.startsWith("bulk:");
+    }
+
 
     private static boolean isClass(Map<String, Object> termDefinition, JsonLd jsonLd) {
         return getTypes(termDefinition).stream().anyMatch(type -> jsonLd.isSubClassOf((String) type, "Class"));
