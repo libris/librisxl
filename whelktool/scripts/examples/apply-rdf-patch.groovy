@@ -2,6 +2,8 @@ import whelk.Whelk
 import whelk.JsonLd
 import whelk.converter.TrigToJsonLdParser
 
+import java.util.concurrent.ConcurrentHashMap
+
 List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
     Map data = new File(rdfSourcePath).withInputStream { TrigToJsonLdParser.parse(it) }
     contextDocData = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
@@ -159,7 +161,8 @@ for (var desc : graph) {
     }
 }
 
-Set<String> existingIds = new HashSet()
+int setSize = (int) ((descriptionMap.size() + deletionMap.size()) * 1.4)
+Set<String> existingIds = Collections.newSetFromMap(new ConcurrentHashMap(setSize))
 
 selectByIds(descriptionMap.keySet() + deletionMap.keySet()) { dataItem ->
     def mainEntity = dataItem.graph[1]
