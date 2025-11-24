@@ -207,8 +207,6 @@ class Whelk {
 
         setJsonld(new JsonLd(contextData, displayData, vocabData, locales))
 
-        jsonld.restrictions.init( { type -> storage.loadAllByType(type) }, jsonld)
-
         completeCore = true
 
         log.info("Loaded with core data")

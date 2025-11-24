@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.LD_KEYS;
-import static whelk.JsonLd.Rdfs.RDF_TYPE;
 import static whelk.JsonLd.VOCAB_KEY;
 import static whelk.JsonLd.looksLikeIri;
 import static whelk.search2.QueryUtil.encodeUri;
@@ -29,7 +28,7 @@ public class Disambiguate {
         this.vocabMappings = vocabMappings;
         this.filterAliasMappings = getFilterAliasMappings(appFilterAliases, queryFilterAliases);
         this.jsonLd = jsonLd;
-        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "marc"); // FIXME
+        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "bulk", "marc"); // FIXME
     }
 
     // For test only
@@ -38,44 +37,19 @@ public class Disambiguate {
         this.vocabMappings = vocabMappings;
         this.filterAliasMappings = getFilterAliasMappings(filterAliasMappings, List.of());
         this.jsonLd = jsonLd;
-        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "marc"); // FIXME
+        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "bulk", "marc"); // FIXME
     }
 
-    public Subpath mapKey(String key, int offset) {
-        for (String ns : nsPrecedenceOrder) {
-            Set<String> mappedProperties = vocabMappings.properties()
-                    .getOrDefault(key.toLowerCase(), Map.of())
-                    .getOrDefault(ns, Set.of());
-            if (mappedProperties.size() == 1) {
-                String p = getUnambiguous(mappedProperties);
-                if (RDF_TYPE.equals(p)) {
-                    return new Property.RdfType(jsonLd, new Key.RecognizedKey(key, offset));
-                }
-                return new Property(getUnambiguous(mappedProperties), jsonLd, new Key.RecognizedKey(key, offset));
-            }
-            if (mappedProperties.size() > 1) {
-                // Ambiguous
-                Optional<String> equalPropertyKey = mappedProperties.stream().filter(key::equalsIgnoreCase).findFirst();
-                if (equalPropertyKey.isPresent()) {
-                    return new Property(equalPropertyKey.get(), jsonLd, new Key.RecognizedKey(key, offset));
-                }
-                Optional<Property> propertyWithCode = mappedProperties.stream()
-                        .map(pKey -> new Property(pKey, jsonLd, new Key.RecognizedKey(key, offset)))
-                        .filter(property -> property.definition().containsKey("librisQueryCode"))
-                        .findFirst();
-                if (propertyWithCode.isPresent()) {
-                    return propertyWithCode.get();
-                }
-                return new Key.AmbiguousKey(key, offset);
-            }
-        }
+    public Property mapPropertyKey(String propertyKey) {
+        return Property.getProperty(propertyKey, jsonLd);
+    }
 
-        // TODO: Get valid keys from ES index?
-        if (LD_KEYS.contains(key) || key.startsWith("_")) {
-            return new Key.RecognizedKey(key, offset);
+    public Subpath mapQueryKey(String queryKey, int offset) {
+        var mapped = _mapQueryKey(queryKey, offset);
+        if (mapped instanceof Property p && !p.hasIndexKey()) {
+            p.loadRestrictions(this);
         }
-
-        return new Key.UnrecognizedKey(key, offset);
+        return mapped;
     }
 
     public Optional<Value> mapValueForProperty(Property property, String value) {
@@ -86,12 +60,67 @@ public class Disambiguate {
         return mapValueForProperty(property, token.value(), token);
     }
 
-    public Restrictions.Narrowed tryNarrow(String property, Value value) {
-        if (value instanceof Link link) {
-            return jsonLd.restrictions.tryNarrow(whelk.Link.of(property, link.iri()));
+    public boolean isRestrictedByValue(String propertyKey) {
+        return vocabMappings.propertiesRestrictedByValue().containsKey(propertyKey);
+    }
+
+    public Property restrictByValue(Property property, String value) {
+        var narrowed = tryNarrow(property.name(), value);
+        if (narrowed != null) {
+            return new Property.NarrowedRestrictedProperty(property, narrowed, jsonLd);
+        }
+        return property;
+    }
+
+    private String tryNarrow(String property, String value) {
+        var narrowedByValue = vocabMappings.propertiesRestrictedByValue()
+                .getOrDefault(property, Map.of())
+                .get(value);
+        if (narrowedByValue != null) {
+            return narrowedByValue.getFirst();
+        } else if (property.equals(Restrictions.CATEGORY)) {
+            // FIXME: Don't hardcode
+            return Restrictions.NONE_CATEGORY;
+        }
+        return null;
+    }
+
+    private Subpath _mapQueryKey(String queryKey, int offset) {
+        for (String ns : nsPrecedenceOrder) {
+            Set<String> mappedProperties = vocabMappings.properties()
+                    .getOrDefault(queryKey.toLowerCase(), Map.of())
+                    .getOrDefault(ns, Set.of());
+            if (mappedProperties.size() == 1) {
+                String p = getUnambiguous(mappedProperties);
+                return getProperty(p, queryKey, offset);
+            }
+            if (mappedProperties.size() > 1) {
+                // Ambiguous
+                Optional<String> equalPropertyKey = mappedProperties.stream().filter(queryKey::equalsIgnoreCase).findFirst();
+                if (equalPropertyKey.isPresent()) {
+                    return getProperty(equalPropertyKey.get(), queryKey, offset);
+                }
+                Optional<Property> propertyWithCode = mappedProperties.stream()
+                        .map(pKey -> getProperty(pKey, queryKey, offset))
+                        .filter(property -> property.definition().containsKey("librisQueryCode"))
+                        .findFirst();
+                if (propertyWithCode.isPresent()) {
+                    return propertyWithCode.get();
+                }
+                return new Key.AmbiguousKey(queryKey, offset);
+            }
         }
 
-        return null;
+        // TODO: Get valid keys from ES index?
+        if (LD_KEYS.contains(queryKey) || queryKey.startsWith("_")) {
+            return new Key.RecognizedKey(queryKey, offset);
+        }
+
+        return new Key.UnrecognizedKey(queryKey, offset);
+    }
+
+    private Property getProperty(String propertyKey, String queryKey, int offset) {
+        return Property.getProperty(propertyKey, jsonLd, new Key.RecognizedKey(queryKey, offset));
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {

@@ -107,7 +107,7 @@ public class QueryTreeBuilder {
         List<Subpath> subpaths = new ArrayList<>();
         int currentOffset = c.code().offset();
         for (String key : c.code().value().split("\\.")) {
-            Subpath subpath = disambiguate.mapKey(key, currentOffset);
+            Subpath subpath = disambiguate.mapQueryKey(key, currentOffset);
             subpaths.add(subpath);
             currentOffset += key.length() + 1;
         }
@@ -118,18 +118,18 @@ public class QueryTreeBuilder {
     }
 
     private static PathValue buildPathValue(Path path, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
-        Token token = getToken(leaf.value());
-        Value value = path.lastProperty()
-                .flatMap(p -> disambiguate.mapValueForProperty(p, token))
-                .orElse(new FreeText(token));
-
-        if (path.last() instanceof Property p && p.hasSubPropertyWithRestrictedRange()) {
-            var narrowed = p.narrowToSubProperty(value, disambiguate);
+        if (path.last() instanceof Property p && disambiguate.isRestrictedByValue(p.name())) {
+            var narrowed = disambiguate.restrictByValue(p, leaf.value().value());
             var newPath = new ArrayList<>(path.path());
             newPath.removeLast();
             newPath.add(narrowed);
             path = new Path(newPath);
         }
+
+        Token token = getToken(leaf.value());
+        Value value = path.lastProperty()
+                .flatMap(p -> disambiguate.mapValueForProperty(p, token))
+                .orElse(new FreeText(token));
 
         PathValue pathValue = new PathValue(path, operator, value);
         return pathValue.isTypeNode() ? pathValue.asTypeNode() : pathValue;

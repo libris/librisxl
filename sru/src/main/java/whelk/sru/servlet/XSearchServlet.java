@@ -140,7 +140,7 @@ public class XSearchServlet extends WhelkHttpServlet {
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
-        vocabMappings = new VocabMappings(whelk);
+        vocabMappings = VocabMappings.load(whelk);
         esSettings = new ESSettings(whelk);
 
         try {

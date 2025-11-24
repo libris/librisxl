@@ -15,27 +15,31 @@ class TestData {
 
     static def getDisambiguate() {
         def propertyMappings = [
-                'p1'         : ['p1'] as Set,
-                'p1label'    : ['p1'] as Set,
-                'p2'         : ['p2'] as Set,
-                'p3'         : ['p3'] as Set,
-                'p4'         : ['p4'] as Set,
-                'p5'         : ['p5'] as Set,
-                'p6'         : ['p6'] as Set,
-                'p7'         : ['p7'] as Set,
-                'p8'         : ['p8'] as Set,
-                'p9'         : ['p9'] as Set,
-                'p10'        : ['p10'] as Set,
-                'p11'        : ['p11'] as Set,
-                'p12'        : ['p12'] as Set,
-                'p13'        : ['p13'] as Set,
-                'type'       : ['rdf:type'] as Set,
-                'rdf:type'   : ['rdf:type'] as Set,
-                'instanceof' : ['instanceOf'] as Set,
-                'hasinstance': ['hasInstance'] as Set,
-                'p'          : ['p', 'p1'] as Set,
-                'plabel'     : ['p2', 'p3'] as Set,
-                'pp'         : ['p3', 'p4'] as Set
+                'p1'              : ['p1'] as Set,
+                'p1label'         : ['p1'] as Set,
+                'p2'              : ['p2'] as Set,
+                'p3'              : ['p3'] as Set,
+                'p4'              : ['p4'] as Set,
+                'p5'              : ['p5'] as Set,
+                'p6'              : ['p6'] as Set,
+                'p7'              : ['p7'] as Set,
+                'p8'              : ['p8'] as Set,
+                'p9'              : ['p9'] as Set,
+                'p10'             : ['p10'] as Set,
+                'p11'             : ['p11'] as Set,
+                'p12'             : ['p12'] as Set,
+                'p13'             : ['p13'] as Set,
+                'type'            : ['rdf:type'] as Set,
+                'rdf:type'        : ['rdf:type'] as Set,
+                'instanceof'      : ['instanceOf'] as Set,
+                'hasinstance'     : ['hasInstance'] as Set,
+                'p'               : ['p', 'p1'] as Set,
+                'plabel'          : ['p2', 'p3'] as Set,
+                'pp'              : ['p3', 'p4'] as Set,
+                'category'        : ['category'] as Set,
+                'findcategory'    : ['librissearch:findCategory'] as Set,
+                'identifycategory': ['librissearch:identifyCategory'] as Set,
+                'nonecategory'    : ['librissearch:noneCategory'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -55,7 +59,14 @@ class TestData {
         def insertNamespace = m -> m.keySet().each { k -> m.put(k, ['https://id.kb.se/vocab/': m[k]]) }
         Stream.of(propertyMappings, classMappings, enumMappings).forEach(insertNamespace)
 
-        def vocabMappings = new VocabMappings(propertyMappings, classMappings, enumMappings)
+        def propertiesRestrictedByValue = [
+                'category': [
+                        'https://id.kb.se/term/ktg/X': ['librissearch:findCategory'],
+                        'https://id.kb.se/term/ktg/Y': ['librissearch:identifyCategory']
+                ]
+        ]
+
+        def vocabMappings = new VocabMappings(propertyMappings, classMappings, enumMappings, propertiesRestrictedByValue)
 
         def filterAliases = [
                 excludeFilter,
@@ -165,6 +176,28 @@ class TestData {
                         'range'    : ['@id': 'T1'],
                         'inverseOf': ['@id': 'instanceOf']
                 ],
+                [
+                        '@id'  : 'category',
+                        '@type': 'ObjectProperty'
+                ],
+                [
+                        '@id'          : 'librissearch:findCategory',
+                        '@type'        : 'ObjectProperty',
+                        'subPropertyOf': [['@id': 'category']],
+                        'ls:indexKey'  : '_categoryByCollection.find'
+                ],
+                [
+                        '@id'          : 'librissearch:identifyCategory',
+                        '@type'        : 'ObjectProperty',
+                        'subPropertyOf': [['@id': 'category']],
+                        'ls:indexKey'  : '_categoryByCollection.identify'
+                ],
+                [
+                        '@id'          : 'librissearch:noneCategory',
+                        '@type'        : 'ObjectProperty',
+                        'subPropertyOf': [['@id': 'category']],
+                        'ls:indexKey'  : '_categoryByCollection.@none'
+                ],
                 ['@id': 'textQuery', '@type': 'DatatypeProperty'],
                 ['@id': 'rdf:type', '@type': 'ObjectProperty'],
                 ['@id': 'meta', '@type': 'ObjectProperty'],
@@ -194,19 +227,5 @@ class TestData {
                 ]
         ]
         return new EsMappings(mappings)
-    }
-
-    static def getAppParams() {
-        def appConfig = [
-                'statistics': [
-                        'sliceList': [
-                                ['dimensionChain': ['rdf:type']],
-                                ['dimensionChain': ['p2']],
-                                ['dimensionChain': ['p6']],
-                        ]
-                ]
-        ]
-
-        return new AppParams(appConfig, getJsonLd())
     }
 }

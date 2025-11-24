@@ -5,10 +5,14 @@ import whelk.search2.Disambiguate;
 import whelk.search2.QueryUtil;
 import whelk.util.Restrictions;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
@@ -31,71 +35,94 @@ import static whelk.JsonLd.isLink;
 
 public non-sealed class Property implements Subpath {
     protected String name;
-    protected Map<String, Object> definition;
-    protected Key.RecognizedKey mappedKey;
+    protected Key.RecognizedKey queryKey;
+    protected String indexKey;
 
+    protected Map<String, Object> definition;
     protected List<String> domain;
     protected List<String> range;
     protected String inverseOf;
-
     protected boolean isVocabTerm;
-
-    public record Restriction(Property property, Value value) {
-    }
-
     protected List<Property> propertyChain;
 
-    //TODO consolidate restriction stuff
-    protected List<Restriction> restrictions;
-    protected Restrictions.Restriction rangeRestrictionDefinition = null;
+    protected Property superProperty;
+    protected List<Restrictions.OnProperty> objectOnPropertyRestrictions;
 
-    public Property(String name, JsonLd jsonLd, Key.RecognizedKey mappedKey) {
-        this(name, jsonLd);
-        this.mappedKey = mappedKey;
-    }
+    private static final String LIBRIS_SEARCH_NS = "librissearch:";
 
     public Property(String name, JsonLd jsonLd) {
+        this(jsonLd.vocabIndex.get(name), jsonLd);
         this.name = name;
-        this.definition = jsonLd.vocabIndex.get(name);
+        this.isVocabTerm = jsonLd.isVocabTerm(name);
+    }
+
+    protected Property(Map<String, Object> definition, JsonLd jsonLd) {
+        this.definition = definition;
         this.domain = getDomain(jsonLd);
         this.range = getRange(jsonLd);
         this.inverseOf = getInverseOf(jsonLd);
         this.propertyChain = getPropertyChain(jsonLd);
-        this.restrictions = getOnPropertyRestrictions(jsonLd);
-        this.isVocabTerm = jsonLd.isVocabTerm(name);
-        this.rangeRestrictionDefinition = jsonLd.restrictions.tryFindRestriction(name);
-    }
-
-    public static Property getProperty(String name, JsonLd jsonLd) {
-        var narrowed = jsonLd.restrictions.tryFindNarrowByNarrowName(name);
-        if (narrowed != null) {
-            Property p = new Property(narrowed.restriction().parentProperty(), jsonLd);
-            //p.valueRestriction = narrowed.restriction();
-            return new NarrowedRestrictedProperty(p, narrowed);
-        } else {
-            return new Property(name, jsonLd);
-        }
+        this.indexKey = (String) definition.get("ls:indexKey"); // FIXME: This shouldn't have a different prefix (ls: vs librissearch:)
     }
 
     // For test only
-    public Property(String name, Map<String, Object> definition, String mappedKey) {
+    public Property(String name, Map<String, Object> definition, String queryKey) {
         this.name = name;
         this.definition = definition;
-        this.mappedKey = new Key.RecognizedKey(mappedKey);
+        this.queryKey = new Key.RecognizedKey(queryKey);
     }
 
-    private Property(Map<String, Object> anonymousPropertyDef, JsonLd jsonLd) {
-        this.definition = anonymousPropertyDef;
-        this.name = getSuperKey(jsonLd);
-        this.domain = getDomain(jsonLd);
-        this.range = getRange(jsonLd);
-        this.inverseOf = getInverseOf(jsonLd);
-        this.propertyChain = getPropertyChain(jsonLd);
-        this.restrictions = getAllRangeRestrictions(jsonLd);
+    private Property(String name, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+        this(name, jsonLd);
+        this.queryKey = queryKey;
     }
 
     protected Property() {
+    }
 
+    public static Property getProperty(String propertyKey, JsonLd jsonLd) {
+        return getProperty(propertyKey, jsonLd, null);
+    }
+
+    public static Property getProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+        if (jsonLd.vocabIndex.containsKey(LIBRIS_SEARCH_NS + propertyKey)) {
+            // FIXME: This is only temporary to avoid having to include the prefix for terms in the libris search namespace
+            return getProperty(LIBRIS_SEARCH_NS + propertyKey, jsonLd, new Key.RecognizedKey(propertyKey));
+        }
+        var propDef = jsonLd.vocabIndex.get(propertyKey);
+        if (propDef == null) {
+            throw new IllegalArgumentException("No such property: " + propertyKey);
+        }
+        if (Restrictions.isNarrowingProperty(propertyKey)) {
+            return new NarrowedRestrictedProperty(propertyKey, jsonLd);
+        }
+        return RDF_TYPE.equals(propertyKey)
+                ? new Property.RdfType(jsonLd, queryKey)
+                : new Property(propertyKey, jsonLd, queryKey);
+    }
+
+    protected Property getSuperProperty(JsonLd jsonLd) {
+        return getProperty(getSuperKey(definition, jsonLd), jsonLd);
+    }
+
+    public boolean isRestrictedSubProperty() {
+        return definition.containsKey(SUB_PROPERTY_OF) && !objectOnPropertyRestrictions().isEmpty();
+    }
+
+    public boolean hasIndexKey() {
+        return indexKey != null;
+    }
+
+    public void loadRestrictions(Disambiguate disambiguate) {
+        propertyChain.forEach(p -> p.loadRestrictions(disambiguate));
+        List<Restrictions.OnProperty> restrictions = new ArrayList<>();
+        getObjectHasValueRestrictions(definition).forEach((onProperty, hasValues) ->
+                hasValues.forEach(hv -> {
+                    Property p = disambiguate.mapPropertyKey(onProperty);
+                    Value v = disambiguate.mapValueForProperty(p, hv).orElseThrow();
+                    restrictions.add(new Restrictions.HasValue(p, v));
+                }));
+        this.objectOnPropertyRestrictions = restrictions;
     }
 
     public String name() {
@@ -114,13 +141,9 @@ public non-sealed class Property implements Subpath {
         return range != null ? range : List.of();
     }
 
-    public List<Restriction> restrictions() {
-        return restrictions != null ? restrictions : List.of();
-    }
-
     @Override
-    public String queryForm() {
-        return mappedKey != null ? mappedKey.value() : name;
+    public String queryKey() {
+        return queryKey != null ? queryKey.value() : name;
     }
 
     @Override
@@ -131,6 +154,11 @@ public non-sealed class Property implements Subpath {
     @Override
     public boolean isValid() {
         return true;
+    }
+
+    @Override
+    public String indexKey() {
+        return indexKey != null ? indexKey : name;
     }
 
     public boolean isRdfType() {
@@ -194,7 +222,7 @@ public non-sealed class Property implements Subpath {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Property p && toString().equals(p.toString());
+        return obj instanceof Property p && name().equals(p.name());
     }
 
     @Override
@@ -202,27 +230,31 @@ public non-sealed class Property implements Subpath {
         return Objects.hash(toString());
     }
 
-    public boolean hasSubPropertyWithRestrictedRange() {
-        return rangeRestrictionDefinition != null;
+    public List<Restrictions.OnProperty> objectOnPropertyRestrictions() {
+        return objectOnPropertyRestrictions != null ? objectOnPropertyRestrictions : List.of();
     }
 
-    public Property narrowToSubProperty(Value value, Disambiguate disambiguate) {
-        if (!this.hasSubPropertyWithRestrictedRange()) {
-            throw new IllegalStateException("Not a value restriction term");
-        }
+    public static Map<String, Set<String>> getObjectHasValueRestrictions(Map<String, Object> definition) {
+        Map<String, Set<String>> restrictions = new HashMap<>();
 
-        var r = disambiguate.tryNarrow(name, value);
-        if (r != null) {
-            return new NarrowedRestrictedProperty(this, r);
-        } else {
-            return this;
-        }
-    }
+        ((List<?>) asList(definition.get(RANGE))).stream()
+                .map(Map.class::cast)
+                .map(m -> (List<?>) m.get(SUBCLASS_OF))
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .map(Map.class::cast)
+                .filter(superClass -> RESTRICTION.equals(superClass.get(TYPE_KEY)))
+                .forEach(restriction -> {
+                    var onPropertyIri = Optional.ofNullable(restriction.get(ON_PROPERTY)).map(Property::getIri);
+                    var hasValueIri = Optional.ofNullable(restriction.get(HAS_VALUE)).map(Property::getIri);
+                    // TODO: Accept literal values?
+                    if (onPropertyIri.isPresent() && hasValueIri.isPresent()) {
+                        restrictions.computeIfAbsent(onPropertyIri.get(), k -> new HashSet<>())
+                                .add(hasValueIri.get());
+                    }
+                });
 
-    private String getSuperKey(JsonLd jsonLd) {
-        return getSuperKeys(definition, jsonLd)
-                .findFirst()
-                .orElseThrow();
+        return restrictions;
     }
 
     private List<String> getDomain(JsonLd jsonLd) {
@@ -250,50 +282,14 @@ public non-sealed class Property implements Subpath {
                 .stream()
                 .map(QueryUtil::castToStringObjectMap)
                 .map(prop -> isLink(prop)
-                        ? new Property(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
-                        : new Property(prop, jsonLd))
+                        ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
+                        : new AnonymousProperty(prop, jsonLd))
                 .toList();
     }
 
     private boolean isShorthand() {
         return ((List<?>) asList(definition.get("category"))).stream()
                 .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/shorthand").equals(c));
-    }
-
-    private List<Restriction> getAllRangeRestrictions(JsonLd jsonLd) {
-        return Stream.concat(getTypeRestriction(jsonLd).stream(), getOnPropertyRestrictions(jsonLd).stream()).toList();
-    }
-
-    private List<Restriction> getTypeRestriction(JsonLd jsonLd) {
-        return getTermKeys(asList(definition.get(RANGE)), jsonLd)
-                .map(type -> new Restriction(new Property(RDF_TYPE, jsonLd), new VocabTerm(type, jsonLd.vocabIndex.get(type))))
-                .toList();
-    }
-
-    private List<Restriction> getOnPropertyRestrictions(JsonLd jsonLd) {
-        return ((List<?>) asList(definition.get(RANGE))).stream()
-                .map(Map.class::cast)
-                .map(m -> (List<?>) m.get(SUBCLASS_OF))
-                .filter(Objects::nonNull)
-                .flatMap(List::stream)
-                .map(Map.class::cast)
-                .filter(superClass -> RESTRICTION.equals(superClass.get(TYPE_KEY)))
-                .map(superClass -> {
-                    var onPropertyIri = Optional.ofNullable(superClass.get(ON_PROPERTY)).map(Property::getIri);
-                    var hasValueIri = Optional.ofNullable(superClass.get(HAS_VALUE)).map(Property::getIri);
-                    if (onPropertyIri.isPresent() && hasValueIri.isPresent()) {
-                        var onPropertyKey = jsonLd.toTermKey(onPropertyIri.get());
-                        var hasValueKey = jsonLd.toTermKey(hasValueIri.get());
-                        return new Restriction(new Property(onPropertyKey, jsonLd),
-                                jsonLd.vocabIndex.containsKey(hasValueKey)
-                                        ? new VocabTerm(hasValueKey, jsonLd.vocabIndex.get(hasValueKey))
-                                        : new Link(hasValueIri.get()));
-                    } else {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .toList();
     }
 
     private List<String> findDomainOrRange(String domainOrRange, JsonLd jsonLd) {
@@ -312,6 +308,10 @@ public non-sealed class Property implements Subpath {
                 .filter(Objects::nonNull)
                 .flatMap(superDef -> findDomainOrRange(superDef, domainOrRange, jsonLd).stream())
                 .toList();
+    }
+
+    private static String getSuperKey(Map<String, Object> definition, JsonLd jsonLd) {
+        return getSuperKeys(definition, jsonLd).findFirst().orElse(null);
     }
 
     private static Stream<String> getSuperKeys(Map<String, Object> definition, JsonLd jsonLd) {
@@ -336,32 +336,110 @@ public non-sealed class Property implements Subpath {
     }
 
     public static final class RdfType extends Property {
+        public RdfType(JsonLd jsonLd) {
+            this(jsonLd, null);
+        }
+
         public RdfType(JsonLd jsonLd, Key.RecognizedKey key) {
             super(RDF_TYPE, jsonLd, key);
+            this.indexKey = TYPE_KEY;
         }
     }
 
-    public static class NarrowedRestrictedProperty extends Property {
-        protected Restrictions.Narrowed narrowedToRestriction;
-
-        NarrowedRestrictedProperty(Property property, Restrictions.Narrowed narrowedToRestriction) {
-            this.name = property.name;
-            this.definition = property.definition;
-            this.domain = property.domain;
-            this.range = property.range;
-            this.inverseOf = property.inverseOf;
-            this.propertyChain = property.propertyChain;
-            this.restrictions = property.restrictions;
-            this.isVocabTerm = property.isVocabTerm;
-
-            this.rangeRestrictionDefinition = property.rangeRestrictionDefinition;
-            this.narrowedToRestriction = narrowedToRestriction;
+    public static final class NarrowedRestrictedProperty extends Property {
+        public NarrowedRestrictedProperty(Property superProperty, String subPropertyKey, JsonLd jsonLd) {
+            super(subPropertyKey, jsonLd);
+            this.superProperty = superProperty;
         }
 
-        // FIXME Path::jsonForm should not use toString
+        public NarrowedRestrictedProperty(String subPropertyKey, JsonLd jsonLd) {
+            super(subPropertyKey, jsonLd);
+            this.superProperty = getSuperProperty(jsonLd);
+        }
+
+        @Override
+        public String queryKey() {
+            return superProperty.queryKey();
+        }
+
+        @Override
+        public String indexKey() {
+            if (hasIndexKey()) {
+                return indexKey;
+            }
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public boolean isRestrictedSubProperty() {
+            return true;
+        }
+    }
+
+    private static final class AnonymousProperty extends Property {
+        public AnonymousProperty(Map<String, Object> definition, JsonLd jsonLd) {
+            super(definition, jsonLd);
+            if (definition.containsKey(SUB_PROPERTY_OF)) {
+                this.superProperty = getSuperProperty(jsonLd);
+            }
+        }
+
+        @Override
+        public String queryKey() {
+            if (superProperty != null) {
+                return superProperty.queryKey();
+            }
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public String indexKey() {
+            if (hasIndexKey()) {
+                return indexKey;
+            }
+            if (superProperty != null) {
+                return superProperty.indexKey();
+            }
+            throw new IllegalStateException();
+        }
+
+        @Override
+        public void loadRestrictions(Disambiguate disambiguate) {
+            if (hasNarrowedRange()) {
+                /*
+                We interpret the range of an anonymous sub-property as a restriction.
+
+                For example
+
+                :isbn owl:propertyChainAxiom (
+                    [ rdfs:subPropertyOf :identifiedBy ; rdfs:range :ISBN ]
+                    :value ) .
+
+                is interpreted as
+
+                :isbn owl:propertyChainAxiom (
+                    [ rdfs:subPropertyOf :identifiedBy ;
+                        rdfs:range [ rdfs:subClassOf [ a owl:Restriction ; owl:onProperty rdf:type ; owl:hasValue :ISBN ] ] ]
+                    :value ) .
+                 */
+                RdfType rdfType = (RdfType) disambiguate.mapPropertyKey(RDF_TYPE);
+                VocabTerm value = (VocabTerm) disambiguate.mapValueForProperty(rdfType, range.getFirst()).orElseThrow();
+                this.objectOnPropertyRestrictions = List.of(new Restrictions.HasValue(rdfType, value));
+            } else {
+                super.loadRestrictions(disambiguate);
+            }
+        }
+
         @Override
         public String toString() {
-            return narrowedToRestriction.propertyKey();
+            if (superProperty != null) {
+                return superProperty.toString();
+            }
+            return "AnonymousProperty";
+        }
+
+        private boolean hasNarrowedRange() {
+            return range.size() == 1;
         }
     }
 }

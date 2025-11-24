@@ -3,12 +3,17 @@ package whelk.search2;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.search2.querytree.Property;
+import whelk.util.DocumentUtil;
+import whelk.util.Restrictions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
@@ -22,10 +27,47 @@ import static whelk.JsonLd.asList;
 import static whelk.search2.QueryUtil.loadThing;
 import static whelk.util.DocumentUtil.getAtPath;
 
-
-public record VocabMappings(Map<String, Map<String, Set<String>>> properties, // Map<Namespace, Map<Code, Set<VocabTerm>>>
-                            Map<String, Map<String, Set<String>>> classes,
-                            Map<String, Map<String, Set<String>>> enums)  {
+public record VocabMappings(
+        /*
+        Map<Code, Map<Namespace, Set<TermKey>>>
+        for example:
+            [
+                "språk"    : ["https://id.kb.se/vocab/": ["language", "associatedLanguage"]],
+                "bibliotek": ["librissearch": ["librissearch:itemHeldBy"]],
+                "format"   : ["librissearch": ["librissearch:hasInstanceType"], "https://id.kb.se/vocab/": ["hasFormat", "format"]]
+            ]
+         */
+        Map<String, Map<String, Set<String>>> properties,
+        /*
+        Map<Code, Map<Namespace, Set<TermKey>>>
+        for example:
+            [
+                "person"         : ["https://id.kb.se/vocab/": ["Person"]],
+                "digitalresource": ["https://id.kb.se/vocab/": ["DigitalResource"]]
+            ]
+         */
+        Map<String, Map<String, Set<String>>> classes,
+        /*
+        Map<Code, Map<Namespace, Set<TermKey>>>
+        for example:
+            [
+                "biblioteksnivå": ["marc": ["marc:MinimalLevel"]]
+            ]
+         */
+        Map<String, Map<String, Set<String>>> enums,
+        /*
+        Map<BaseProperty, Map<Value, List<NarrowerProperty>>>
+        for example:
+        [
+            "category": [
+                    "https://id.kb.se/term/ktg/Literature": ["findCategory", "identifyCategory"],
+                    "https://id.kb.se/term/ktg/Software"  : ["findCategory"],
+                    "https://id.kb.se/term/saogf/Poesi"   : ["identifyCategory"]
+            ]
+        ]
+         */
+        Map<String, Map<String, List<String>>> propertiesRestrictedByValue
+) {
     // :category :heuristicIdentifier too broad...?
     private static final Set<String> notatingProps = Set.of("label", "prefLabel", "altLabel", "code", "librisQueryCode");
 
@@ -53,9 +95,9 @@ public record VocabMappings(Map<String, Map<String, Set<String>>> properties, //
             }
         });
 
-        addMapping(JsonLd.TYPE_KEY, RDF_TYPE, "rdf:", properties);
+        addMapping(JsonLd.TYPE_KEY, RDF_TYPE, "rdf", properties);
 
-        return new VocabMappings(properties, classes, enums);
+        return new VocabMappings(properties, classes, enums, getPropertiesRestrictedByValue(whelk));
     }
 
     private static String getNs(String termKey, String systemVocabNs) {
@@ -85,10 +127,12 @@ public record VocabMappings(Map<String, Map<String, Set<String>>> properties, //
 
         addMapping(termId, termKey, ns, mappings);
         addMapping(toPrefixed(termId), termKey, ns, mappings);
+        addMapping(dropNs(termId), termKey, ns, mappings);
 
         for (String prop : notatingProps) {
             if (termDefinition.containsKey(prop)) {
-                addMapping((String) termDefinition.get(prop), termKey, ns, mappings);
+                getAsList(termDefinition, List.of(prop))
+                        .forEach(value -> addMapping((String) value, termKey, ns, mappings));
             }
 
             String alias = (String) jsonLd.langContainerAlias.get(prop);
@@ -99,6 +143,10 @@ public record VocabMappings(Map<String, Map<String, Set<String>>> properties, //
                 }
             }
         }
+    }
+
+    private static String dropNs(String termIri) {
+        return termIri.substring(termIri.lastIndexOf("/") + 1);
     }
 
     private static void addEquivTermMappings(String termKey, String ns, Map<String, Map<String, Set<String>>> mappings, Whelk whelk) {
@@ -152,6 +200,50 @@ public record VocabMappings(Map<String, Map<String, Set<String>>> properties, //
 
     private static List<?> getTypes(Map<?, ?> termDefinition) {
         return asList(termDefinition.get(JsonLd.TYPE_KEY));
+    }
+
+    private static Map<String, Map<String, List<String>>> getPropertiesRestrictedByValue(Whelk whelk) {
+        JsonLd ld = whelk.getJsonld();
+
+        Map<String, List<String>> groupedBySuperProp = new HashMap<>();
+        Restrictions.NARROWS.forEach((narrowerProp, superProp) ->
+                groupedBySuperProp.computeIfAbsent(superProp, x -> new ArrayList<>())
+                        .add(narrowerProp));
+
+        Map<String, Map<String, List<String>>> propertiesRestrictedByValue = new HashMap<>();
+
+        groupedBySuperProp.forEach((superProp, narrowerProps) -> {
+            var types = new HashSet<String>();
+
+            ld.getRange(superProp).forEach(type -> {
+                types.add(type);
+                types.addAll(ld.getSubClasses(type));
+            });
+
+            for (String type : types) {
+                for (var doc : whelk.getStorage().loadAllByType(type)) {
+                    var iri = doc.getThingIdentifiers().stream().findFirst().orElseThrow();
+                    for (var n : narrowerProps) {
+                        var propDef = ld.vocabIndex.getOrDefault(n, Map.of());
+                        Property.getObjectHasValueRestrictions(propDef).forEach((onProperty, values) -> {
+                            var path = List.of(JsonLd.GRAPH_KEY, 1, ld.toTermKey(onProperty));
+                            @SuppressWarnings("unchecked")
+                            var things = ((List<Map<?, ?>>) JsonLd.asList(DocumentUtil.getAtPath(doc.data, path, List.of())));
+                            boolean matches = things.stream()
+                                    .map(m -> (String) m.get(JsonLd.ID_KEY))
+                                    .anyMatch(values::contains);
+                            if (matches) {
+                                propertiesRestrictedByValue.computeIfAbsent(superProp, k -> new HashMap<>())
+                                        .computeIfAbsent(iri, k -> new ArrayList<>())
+                                        .add(n);
+                            }
+                        });
+                    }
+                }
+            }
+        });
+
+        return propertiesRestrictedByValue;
     }
 
     @SuppressWarnings("unchecked")

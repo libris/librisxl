@@ -26,10 +26,10 @@ public class SuggestQuery extends Query {
 
     private static final Map<String, List<String>> suggestPredicatesForType = new LinkedHashMap<>() {{
         put("Bibliography", List.of("bibliography"));
-        put("Library", List.of("librissearch:itemHeldBy"));
+        put("Library", List.of("itemHeldBy"));
         put("Subject", List.of("subject"));
         put("GenreForm", List.of("category"));
-        put("Language", List.of("language", "librissearch:originalLanguage"));
+        put("Language", List.of("language", "originalLanguage"));
         put("BibliographicAgent", List.of("contributor", "subject"));
     }};
 
@@ -108,7 +108,7 @@ public class SuggestQuery extends Query {
                     .findFirst()
                     .map(Map.Entry::getValue)
                     .map(predicates -> predicates.stream()
-                            .map(p -> propertyByKey.computeIfAbsent(p, x -> new Property(p, whelk.getJsonld())))
+                            .map(p -> propertyByKey.computeIfAbsent(p, x -> Property.getProperty(p, whelk.getJsonld())))
                             .map(Path::new)
                             .toList())
                     .orElse(List.of());
