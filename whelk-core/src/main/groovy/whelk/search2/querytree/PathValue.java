@@ -4,16 +4,9 @@ import whelk.JsonLd;
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
+import whelk.util.Restrictions;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -264,11 +257,11 @@ public sealed class PathValue implements Node permits Type {
         for (int i = path.path().size() - 1; i >= 0; i--) {
             Subpath sp = path.path().get(i);
             if (!sp.isValid()) {
-                propertyChainAxiom.push(Map.of(TYPE_KEY, "_Invalid", "label", sp.queryForm()));
+                propertyChainAxiom.push(Map.of(TYPE_KEY, "_Invalid", "label", sp.queryKey()));
                 continue;
             }
             if (sp instanceof Property p) {
-                propertyChainAxiom.push(i > 0 && path.path().get(i - 1).queryForm().equals(JsonLd.REVERSE_KEY)
+                propertyChainAxiom.push(i > 0 && path.path().get(i - 1).queryKey().equals(JsonLd.REVERSE_KEY)
                         ? Map.of(INVERSE_OF, p.definition())
                         : p.definition());
             }
@@ -289,8 +282,7 @@ public sealed class PathValue implements Node permits Type {
     }
 
     private Node _expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        Path.ExpandedPath expandedPath = path.expand(jsonLd, value);
-
+        Path.ExpandedPath expandedPath = path.expand(jsonLd);
 
         if (!rdfSubjectTypes.isEmpty()) {
             List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, rdfSubjectTypes);
@@ -302,24 +294,25 @@ public sealed class PathValue implements Node permits Type {
             return altPaths.size() > 1 ? new Or(altPvNodes) : altPvNodes.getFirst();
         }
 
-        List<Node> prefilledFields = getPrefilledFields(expandedPath.path(), jsonLd);
+        List<Node> expanded = Stream.concat(Stream.of(withPath(expandedPath)), getPrefilledFields(expandedPath.path()).stream())
+                .map(pv -> pv.expandType(jsonLd))
+                .toList();
 
-        // When querying type, match any subclass by default (TODO: make this optional)
-        Node expanded = withPath(expandedPath).expandType(jsonLd);
-
-        return prefilledFields.isEmpty() ? expanded : new And(Stream.concat(Stream.of(expanded), prefilledFields.stream()).toList());
+        return expanded.size() > 1 ? new And(expanded) : expanded.getFirst();
     }
 
-    private List<Node> getPrefilledFields(List<Subpath> path, JsonLd jsonLd) {
-        List<Node> prefilledFields = new ArrayList<>();
+    private List<PathValue> getPrefilledFields(List<Subpath> path) {
+        List<PathValue> prefilledFields = new ArrayList<>();
         List<Subpath> currentPath = new ArrayList<>();
         for (Subpath sp : path) {
             currentPath.add(sp);
-            if (sp instanceof Property p) {
-                for (Property.Restriction r : p.restrictions()) {
-                    List<Subpath> restrictedPath = Stream.concat(currentPath.stream(), Stream.of(r.property())).toList();
-                    Node expanded = new PathValue(new Path(restrictedPath).expand(jsonLd, r.value()), EQUALS, r.value()).expandType(jsonLd);
-                    prefilledFields.add(expanded);
+            if (sp instanceof Property p && p.isRestrictedSubProperty() && !p.hasIndexKey()) {
+                for (Restrictions.OnProperty r : p.objectOnPropertyRestrictions()) {
+                    // Support only HasValue restriction for now
+                    if (r instanceof Restrictions.HasValue(Property property, Value v)) {
+                        var restrictedPath = new Path.ExpandedPath(Stream.concat(currentPath.stream(), property.expand().stream()).toList());
+                        prefilledFields.add(new PathValue(restrictedPath, EQUALS, v));
+                    }
                 }
             }
         }

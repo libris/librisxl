@@ -63,7 +63,7 @@ public class AppParams {
             this.subSlice = getSubSlice(settings, jsonLd);
             this.showIf = getShowIf(settings);
             this.property = Property.getProperty(String.join(".", chain), jsonLd);
-            this.propertyKey = property.toString();
+            this.propertyKey = property.name();
             this.shouldCountTopLevelDocs = getShouldCountTopLevelDocs(settings);
         }
 
