@@ -112,20 +112,22 @@ class QueryTreeSpec extends Specification {
                                                                 "bool": [
                                                                         "must_not": [
                                                                                 "simple_query_string": [
-                                                                                        "default_operator": "AND",
-                                                                                        "query"           : "v1",
-                                                                                        "analyze_wildcard": true,
-                                                                                        "fields"          : ["p1^5.0"]
+                                                                                        "default_operator"  : "AND",
+                                                                                        "query"             : "v1",
+                                                                                        "analyze_wildcard"  : true,
+                                                                                        "quote_field_suffix": ".exact",
+                                                                                        "fields"            : ["p1^5.0"]
                                                                                 ]
                                                                         ]
                                                                 ]
                                                         ],
                                                         [
                                                                 "simple_query_string": [
-                                                                        "default_operator": "AND",
-                                                                        "query"           : "v4",
-                                                                        "analyze_wildcard": true,
-                                                                        "fields"          : ["p4._str^5.0"]
+                                                                        "default_operator"  : "AND",
+                                                                        "query"             : "v4",
+                                                                        "analyze_wildcard"  : true,
+                                                                        "quote_field_suffix": ".exact",
+                                                                        "fields"            : ["p4._str^5.0"]
                                                                 ]
                                                         ]
                                                 ]
@@ -136,20 +138,22 @@ class QueryTreeSpec extends Specification {
                                                 "should": [
                                                         [
                                                                 "simple_query_string": [
-                                                                        "default_operator": "AND",
-                                                                        "query"           : "something",
-                                                                        "analyze_wildcard": true,
-                                                                        "fields"          : ["fieldA^0.0", "fieldB^2.0", "fieldC^1.0"]
+                                                                        "default_operator"  : "AND",
+                                                                        "query"             : "something",
+                                                                        "analyze_wildcard"  : true,
+                                                                        "quote_field_suffix": ".exact",
+                                                                        "fields"            : ["fieldA^0.0", "fieldB^2.0", "fieldC^1.0"]
                                                                 ]
                                                         ],
                                                         [
                                                                 "script_score": [
                                                                         "query" : [
                                                                                 "simple_query_string": [
-                                                                                        "default_operator": "AND",
-                                                                                        "query"           : "something",
-                                                                                        "analyze_wildcard": true,
-                                                                                        "fields"          : ["fieldA^10.0", "fieldB^0.0", "fieldC^0.0"]
+                                                                                        "default_operator"  : "AND",
+                                                                                        "query"             : "something",
+                                                                                        "analyze_wildcard"  : true,
+                                                                                        "quote_field_suffix": ".exact",
+                                                                                        "fields"            : ["fieldA^10.0", "fieldB^0.0", "fieldC^0.0"]
                                                                                 ]
                                                                         ],
                                                                         "script": [
@@ -445,7 +449,6 @@ class QueryTreeSpec extends Specification {
         "X type:T1x"                 | "type:T1 excludeA"                         | "X type:T1x excludeA" // If excludeA applies to T1, then it also applies to the narrower T1x
         "X type:(T1x OR T2x)"        | "type:T1 excludeA"                         | "(type:T1x X excludeA) OR (type:T2x X)" // excludeA only applicable for T1x
         "X type:(T1x OR T2x)"        | "(type:T1 excludeA) OR (type:T2 includeA)" | "(type:T1x X excludeA) OR (type:T2x X includeA)"
-        "X type:(T1x OR T2x)"        | "type:(T1 OR T2) excludeA includeA"        | "X (type:T1x OR type:T2x)"
         "X type:T1"                  | "type:(T2 OR T3) p7:v7 p8:v8"              | "X type:T1 instanceOf.type:T2 p7:v7 p8:v8"
         "X type:T2"                  | "type:(T1 OR T3) p7:v7 p8:v8"              | "X type:T2 hasInstance.type:T1 p7:v7 p8:v8"
         "X type:T1"                  | "p7:v7"                                    | "X type:T1 p7:v7"

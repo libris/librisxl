@@ -175,6 +175,22 @@ public class Path {
                     altPaths.add(this);
                 }
 
+                /*
+                FIXME:
+                 Integral relations are generally not applied to records.
+                 Bibliography is an exception: we need to search both meta.bibliography and hasInstance.meta.bibliography.
+                */
+                if (altPaths.size() == 1) {
+                    var path = altPaths.getFirst();
+                    if (path.jsonForm().startsWith("meta.bibliography")) {
+                        integralRelations.stream().filter(ir -> ir.name().equals("hasInstance"))
+                                .map(hasInstance -> Stream.concat(Stream.of(hasInstance), path.path().stream()).toList())
+                                .map(ExpandedPath::new)
+                                .findFirst()
+                                .ifPresent(altPaths::add);
+                    }
+                }
+
                 return altPaths;
             }
 
