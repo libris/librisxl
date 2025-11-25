@@ -60,7 +60,7 @@ public record VocabMappings(
         for example:
         [
             "category": [
-                    "https://id.kb.se/term/ktg/Literature": ["findCategory", "identifyCategory"],
+                    "https://id.kb.se/term/ktg/Literature": ["findCategory"],
                     "https://id.kb.se/term/ktg/Software"  : ["findCategory"],
                     "https://id.kb.se/term/saogf/Poesi"   : ["identifyCategory"]
             ]
