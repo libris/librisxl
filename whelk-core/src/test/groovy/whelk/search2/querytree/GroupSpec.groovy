@@ -45,32 +45,32 @@ class GroupSpec extends Specification {
         reduced.toString() == result
 
         where:
-        group                                                                  | result
-        'p1:v1 p2:v2'                                                          | 'p1:v1 p2:v2'
-        'p1:v1 (p1:v1 OR p2:v2)'                                               | 'p1:v1'
-        'p1:v1 OR (p1:v1 p2:v2)'                                               | 'p1:v1'
-        'p1:v1 (p1:v1 OR p3:v3)'                                               | 'p1:v1'
-        'p1:v1 (p2:v2 OR p3:v3)'                                               | 'p1:v1 (p2:v2 OR p3:v3)'
-        'p1:v1 OR (p2:v2 p3:v3)'                                               | 'p1:v1 OR (p2:v2 p3:v3)'
-        'p1:v1 (p1:v1 OR p2:v2 OR (p2:v2 p3:v3))'                              | 'p1:v1'
-        'p1:v1 OR (p1:v1 2:v2 (p2:v2 OR p3:v3))'                               | 'p1:v1'
-        'p1:v1 (p2:v2 OR p3:v3 (p3:v3 OR p4:v4))'                              | 'p1:v1 (p2:v2 OR p3:v3)'
-        'p1:v1 OR (p2:v2 p3:v3 (p3:v3 OR p4:v4))'                              | 'p1:v1 OR (p2:v2 p3:v3)'
-        'p1:v1 (p2:v2 OR p3:v3 OR (p1:v1 p4:v4))'                              | 'p1:v1 (p2:v2 OR p3:v3 OR (p1:v1 p4:v4))'
-        'p1:v1 OR (p2:v2 p3:v3 (p1:v1 OR p4:v4))'                              | 'p1:v1 OR (p2:v2 p3:v3 (p1:v1 OR p4:v4))'
-        'p1:v1 p2:v2 (p2:v2 OR p3:v3)'                                         | 'p1:v1 p2:v2'
-        'p1:v1 OR p2:v2 OR (p2:v2 p3:v3)'                                      | 'p1:v1 OR p2:v2'
-        '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4)'                                    | '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4)'
-        '(p1:v1 p2:v2) OR (p3:v3 p4:v4)'                                       | '(p1:v1 p2:v2) OR (p3:v3 p4:v4)'
-        '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4) p1:v1'                              | 'p1:v1 (p3:v3 OR p4:v4)'
-        '(p1:v1 p2:v2) OR (p3:v3 p4:v4) OR p1:v1'                              | 'p1:v1 OR (p3:v3 p4:v4)'
-        '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'                                    | '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'
-        '(p1:v1 p2:v2) OR (p1:v1 p2:v2)'                                       | 'p1:v1 p2:v2'
-        '(p1:v1 p2:v2) OR (p2:v2 p3:v3)'                                       | '(p1:v1 p2:v2) OR (p2:v2 p3:v3)'
-        'type:T1x type:T1'                                                     | 'type:T1x'
-        '(type:T1x OR p1:v1) (type:T1 OR p1:v1)'                               | 'type:T1x OR p1:v1'
-        'type:T1x OR type:T1'                                                  | 'type:T1'
-        '(type:T1x p1:v1) OR (type:T1 p1:v1)'                                  | 'type:T1 p1:v1'
+        group                                     | result
+        'p1:v1 p2:v2'                             | 'p1:v1 p2:v2'
+        'p1:v1 (p1:v1 OR p2:v2)'                  | 'p1:v1'
+        'p1:v1 OR (p1:v1 p2:v2)'                  | 'p1:v1'
+        'p1:v1 (p1:v1 OR p3:v3)'                  | 'p1:v1'
+        'p1:v1 (p2:v2 OR p3:v3)'                  | 'p1:v1 (p2:v2 OR p3:v3)'
+        'p1:v1 OR (p2:v2 p3:v3)'                  | 'p1:v1 OR (p2:v2 p3:v3)'
+        'p1:v1 (p1:v1 OR p2:v2 OR (p2:v2 p3:v3))' | 'p1:v1'
+        'p1:v1 OR (p1:v1 2:v2 (p2:v2 OR p3:v3))'  | 'p1:v1'
+        'p1:v1 (p2:v2 OR p3:v3 (p3:v3 OR p4:v4))' | 'p1:v1 (p2:v2 OR p3:v3)'
+        'p1:v1 OR (p2:v2 p3:v3 (p3:v3 OR p4:v4))' | 'p1:v1 OR (p2:v2 p3:v3)'
+        'p1:v1 (p2:v2 OR p3:v3 OR (p1:v1 p4:v4))' | 'p1:v1 (p2:v2 OR p3:v3 OR (p1:v1 p4:v4))'
+        'p1:v1 OR (p2:v2 p3:v3 (p1:v1 OR p4:v4))' | 'p1:v1 OR (p2:v2 p3:v3 (p1:v1 OR p4:v4))'
+        'p1:v1 p2:v2 (p2:v2 OR p3:v3)'            | 'p1:v1 p2:v2'
+        'p1:v1 OR p2:v2 OR (p2:v2 p3:v3)'         | 'p1:v1 OR p2:v2'
+        '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4)'       | '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4)'
+        '(p1:v1 p2:v2) OR (p3:v3 p4:v4)'          | '(p1:v1 p2:v2) OR (p3:v3 p4:v4)'
+        '(p1:v1 OR p2:v2) (p3:v3 OR p4:v4) p1:v1' | 'p1:v1 (p3:v3 OR p4:v4)'
+        '(p1:v1 p2:v2) OR (p3:v3 p4:v4) OR p1:v1' | 'p1:v1 OR (p3:v3 p4:v4)'
+        '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'       | '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'
+        '(p1:v1 p2:v2) OR (p1:v1 p2:v2)'          | 'p1:v1 p2:v2'
+        '(p1:v1 p2:v2) OR (p2:v2 p3:v3)'          | '(p1:v1 p2:v2) OR (p2:v2 p3:v3)'
+        'type:T1x type:T1'                        | 'type:T1x'
+        '(type:T1x OR p1:v1) (type:T1 OR p1:v1)'  | 'type:T1x OR p1:v1'
+        'type:T1x OR type:T1'                     | 'type:T1'
+        '(type:T1x p1:v1) OR (type:T1 p1:v1)'     | 'type:T1 p1:v1'
     }
 
     def "To ES query: group nested"() {
@@ -86,17 +86,19 @@ class GroupSpec extends Specification {
                                 "bool": [
                                         "must": [[
                                                          "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "x",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "x",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p1^1.0"]
                                                          ]
                                                  ], [
                                                          "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "y",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4._str^1.0"]
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "y",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p4._str^1.0"]
                                                          ]
                                                  ]]
                                 ]
@@ -118,17 +120,19 @@ class GroupSpec extends Specification {
                                 "bool": [
                                         "must": [[
                                                          "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "x",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "x",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p1^1.0"]
                                                          ]
                                                  ], [
                                                          "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "y",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4._str^1.0"]
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "y",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p4._str^1.0"]
                                                          ]
                                                  ]]
                                 ]
@@ -151,17 +155,19 @@ class GroupSpec extends Specification {
                                                          "bool": [
                                                                  "must": [[
                                                                                   "simple_query_string": [
-                                                                                          "default_operator": "AND",
-                                                                                          "query"           : "x",
-                                                                                          "analyze_wildcard": false,
-                                                                                          "fields"          : ["p3.p1^1.0"]
+                                                                                          "default_operator"  : "AND",
+                                                                                          "query"             : "x",
+                                                                                          "analyze_wildcard"  : false,
+                                                                                          "quote_field_suffix": ".exact",
+                                                                                          "fields"            : ["p3.p1^1.0"]
                                                                                   ]
                                                                           ], [
                                                                                   "simple_query_string": [
-                                                                                          "default_operator": "AND",
-                                                                                          "query"           : "y",
-                                                                                          "analyze_wildcard": false,
-                                                                                          "fields"          : ["p3.p4._str^1.0"]
+                                                                                          "default_operator"  : "AND",
+                                                                                          "query"             : "y",
+                                                                                          "analyze_wildcard"  : false,
+                                                                                          "quote_field_suffix": ".exact",
+                                                                                          "fields"            : ["p3.p4._str^1.0"]
                                                                                   ]
                                                                           ]]
                                                          ]
@@ -194,26 +200,29 @@ class GroupSpec extends Specification {
                                 "bool": [
                                         "must": [[
                                                          "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "x",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "x",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p1^1.0"]
                                                          ]
                                                  ], [
                                                          "bool": [
                                                                  "should": [[
                                                                                     "simple_query_string": [
-                                                                                            "default_operator": "AND",
-                                                                                            "query"           : "y",
-                                                                                            "analyze_wildcard": false,
-                                                                                            "fields"          : ["p3.p4._str^1.0"]
+                                                                                            "default_operator"  : "AND",
+                                                                                            "query"             : "y",
+                                                                                            "analyze_wildcard"  : false,
+                                                                                            "quote_field_suffix": ".exact",
+                                                                                            "fields"            : ["p3.p4._str^1.0"]
                                                                                     ]
                                                                             ], [
                                                                                     "simple_query_string": [
-                                                                                            "default_operator": "AND",
-                                                                                            "query"           : "z",
-                                                                                            "analyze_wildcard": false,
-                                                                                            "fields"          : ["p3.p4._str^1.0"]
+                                                                                            "default_operator"  : "AND",
+                                                                                            "query"             : "z",
+                                                                                            "analyze_wildcard"  : false,
+                                                                                            "quote_field_suffix": ".exact",
+                                                                                            "fields"            : ["p3.p4._str^1.0"]
                                                                                     ]
                                                                             ]]
                                                          ]
@@ -237,31 +246,35 @@ class GroupSpec extends Specification {
                                 "bool": [
                                         "must": [[
                                                          "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "x",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "x",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p1^1.0"]
                                                          ]
                                                  ], [
                                                          "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "y",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4._str^1.0"]
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "y",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p4._str^1.0"]
                                                          ]
                                                  ], [
                                                          "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "a",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "a",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p1^1.0"]
                                                          ]
                                                  ], [
                                                          "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "b",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4._str^1.0"]
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "b",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p4._str^1.0"]
                                                          ]
                                                  ]]
                                 ]
