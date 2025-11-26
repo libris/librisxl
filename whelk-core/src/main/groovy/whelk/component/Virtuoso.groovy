@@ -2,18 +2,17 @@ package whelk.component
 
 import com.google.common.base.Preconditions
 import groovy.util.logging.Log4j2 as Log
-import org.apache.http.HttpResponse
-import org.apache.http.StatusLine
-import org.apache.http.client.config.RequestConfig
-import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.client.methods.HttpDelete
-import org.apache.http.client.methods.HttpPut
-import org.apache.http.client.methods.HttpRequestBase
-import org.apache.http.conn.HttpClientConnectionManager
-import org.apache.http.entity.StringEntity
-import org.apache.http.impl.client.CloseableHttpClient
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.util.EntityUtils
+import org.apache.hc.core5.http.ClassicHttpResponse
+import org.apache.hc.client5.http.config.RequestConfig
+import org.apache.hc.client5.http.classic.methods.HttpDelete
+import org.apache.hc.client5.http.classic.methods.HttpPut
+import org.apache.hc.core5.http.ClassicHttpRequest
+import org.apache.hc.client5.http.io.HttpClientConnectionManager
+import org.apache.hc.core5.http.io.entity.StringEntity
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
+import org.apache.hc.client5.http.impl.classic.HttpClients
+import org.apache.hc.core5.http.io.entity.EntityUtils
+import org.apache.hc.core5.util.Timeout
 import whelk.Document
 import whelk.converter.JsonLdToTrigSerializer
 import whelk.exception.UnexpectedHttpStatusException
@@ -60,17 +59,14 @@ class Virtuoso {
     }
 
     private void updateNamedGraph(Method method, Document doc) {
-        HttpRequestBase request = buildRequest(method, doc)
+        ClassicHttpRequest request = buildRequest(method, doc)
         try {
             Metrics.clientTimer.labels(Virtuoso.class.getSimpleName(), method.toString()).time {
                 String credentials = "${this.sparqlUser}:${this.sparqlPass}".bytes.encodeBase64().toString()
                 request.setHeader("Authorization", "Basic " + credentials)
-                CloseableHttpResponse response = httpClient.execute(request)
-                try {
+                httpClient.execute(request) { response ->
                     handleResponse(response, method, doc)
-                }
-                finally {
-                    response.close()
+                    return null
                 }
             }
         }
@@ -80,16 +76,13 @@ class Virtuoso {
             }
             throw e
         }
-        finally {
-            request.releaseConnection()
-        }
     }
 
     private String createGraphCrudURI(String docURI) {
         return sparqlCrudEndpoint + "?graph=" + docURI
     }
 
-    private HttpRequestBase buildRequest(Method method, Document doc) {
+    private ClassicHttpRequest buildRequest(Method method, Document doc) {
         String graphCrudURI = createGraphCrudURI(doc.getCompleteId())
 
         if (method == DELETE) {
@@ -105,21 +98,21 @@ class Virtuoso {
         }
     }
 
-    private void handleResponse(HttpResponse response, Method method, Document doc) {
-        StatusLine statusLine = response.getStatusLine()
-        int statusCode = statusLine.getStatusCode()
+    private void handleResponse(ClassicHttpResponse response, Method method, Document doc) {
+        int statusCode = response.getCode()
+        String reasonPhrase = response.getReasonPhrase()
         Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method.toString(), "$statusCode").inc()
 
         if ((statusCode >= 200 && statusCode < 300) || (method == DELETE && statusCode == 404)) {
             if (log.isDebugEnabled()) {
-                log.debug("Succeeded to $method ${doc.getCompleteId()}, got: $statusLine")
+                log.debug("Succeeded to $method ${doc.getCompleteId()}, got: $statusCode $reasonPhrase")
             }
             EntityUtils.consume(response.getEntity())
         }
         else {
             String body = EntityUtils.toString(response.getEntity())
             String ttl = convertToTurtle(doc)
-            String msg = "Failed to $method ${doc.getCompleteId()}, got: $statusLine\n$body\nsent:\n$ttl"
+            String msg = "Failed to $method ${doc.getCompleteId()}, got: $statusCode $reasonPhrase\n$body\nsent:\n$ttl"
 
             // 401 should be retried (can be fixed by correcting credentials in configuration)
             // From experiments:
@@ -143,9 +136,8 @@ class Virtuoso {
     
     private static CloseableHttpClient buildHttpClient(HttpClientConnectionManager cm) {
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(CONNECT_TIMEOUT_MS)
-                .setConnectionRequestTimeout(CONNECT_TIMEOUT_MS)
-                .setSocketTimeout(READ_TIMEOUT_MS)
+                .setConnectionRequestTimeout(Timeout.ofMilliseconds(CONNECT_TIMEOUT_MS))
+                .setResponseTimeout(Timeout.ofMilliseconds(READ_TIMEOUT_MS))
                 .build()
 
         CloseableHttpClient httpClient = HttpClients.custom()

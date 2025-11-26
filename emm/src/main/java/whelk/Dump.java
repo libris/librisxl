@@ -265,6 +265,13 @@ public class Dump {
         }
 
         var docs = whelk.bulkLoad(recordIdsOnPage).values();
+
+        // add meta/controlNumber
+        for (Document doc : docs) {
+            String controlNumber = doc.getControlNumber();
+            Document._set(List.of("@graph",1,"meta","controlNumber"), controlNumber, doc.data);
+        }
+
         docs.removeIf(Document::getDeleted);
 
         if (selection.startsWith("itemAndInstance:")) {
@@ -332,7 +339,11 @@ public class Dump {
                 res.flushBuffer();
             }
         } catch (Exception e) {
-            logger.info("Error sending dump download: {}", e.getMessage());
+            if (e.getMessage() != null) {
+                logger.info("Error sending dump download: {}", e.getMessage());
+            } else {
+                logger.info("Error sending dump download:", e);
+            }
         }
     }
 

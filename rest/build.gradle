@@ -74,12 +74,12 @@ dependencies {
 
     // Common tools
     implementation "com.google.guava:guava:${guavaVersion}"
-    implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
-    implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
+    implementation "org.apache.httpcomponents.client5:httpclient5:${httpComponentsClientVersion}"
+    implementation "org.apache.httpcomponents.core5:httpcore5:${httpComponentsCoreVersion}"
     implementation 'commons-cli:commons-cli:1.2'
-    implementation 'commons-io:commons-io:2.11.0'
-    implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
-    implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+    implementation 'commons-io:commons-io:2.20.0'
+    implementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation 'xml-apis:xml-apis:1.4.01'
 
     // metrics
@@ -96,6 +96,7 @@ dependencies {
 }
 
 shadowJar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
     archiveClassifier = null // removes `-all` in the filename of the created .jar
 }

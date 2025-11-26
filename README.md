@@ -44,6 +44,8 @@ Related external repositories:
 * Also see [LXLViewer](https://github.com/libris/lxlviewer), our application
   for viewing and editing the datasets through the REST API.
 
+* API documentation is available at https://libris.kb.se/api/docs/ (generated from the [libris-api-docs](https://github.com/libris/libris-api-docs) repository).
+
 ## Dependencies
 
 The instructions below assume an Ubuntu 22.04 system (Debian should be identical), but should work

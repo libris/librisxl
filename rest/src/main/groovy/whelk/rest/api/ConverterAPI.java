@@ -1,9 +1,9 @@
 package whelk.rest.api;
 
-import org.apache.http.entity.ContentType;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import whelk.Document;
 import whelk.Whelk;
 import whelk.converter.marc.MarcFrameConverter;

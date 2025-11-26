@@ -25,10 +25,11 @@ class ESQuery {
     private Whelk whelk
     private JsonLd jsonld
     private Set keywordFields
+    private Set fourDigitShortFields
+    private Set fourDigitKeywordFields
     private Set dateFields
     private Set<String> nestedFields
     private Set<String> nestedNotInParentFields
-    private Set<String> numericExtractorFields
 
     private static final int DEFAULT_PAGE_SIZE = 50
     private static final List RESERVED_PARAMS = [
@@ -87,10 +88,11 @@ class ESQuery {
         if (whelk.elastic) {
             Map mappings = whelk.elastic.getMappings()
             this.keywordFields = getKeywordFields(mappings)
+            this.fourDigitShortFields = getFourDigitShortFields(mappings)
+            this.fourDigitKeywordFields = getFourDigitKeywordFields(mappings)
             this.dateFields = getFieldsOfType('date', mappings)
             this.nestedFields = getFieldsOfType('nested', mappings)
             this.nestedNotInParentFields = nestedFields - getFieldsWithSetting('include_in_parent', true, mappings)
-            this.numericExtractorFields = getFieldsWithAnalyzer('numeric_extractor', mappings)
 
             if (DocumentUtil.getAtPath(mappings, ['properties', '_sortKeyByLang', 'properties', 'sv', 'fields', 'trigram'], null)) {
                 ENABLE_SPELL_CHECK = true
@@ -568,7 +570,10 @@ class ESQuery {
 
     private String getInferredSortTermPath(String termPath) {
         termPath = expandLangMapKeys(termPath)
-        if (termPath in keywordFields && termPath !in numericExtractorFields) {
+
+        if ("${termPath}_4_digits_short" as String in fourDigitShortFields) {
+            return "${termPath}_4_digits_short"
+        } else if (termPath in keywordFields) {
             return "${termPath}.keyword"
         } else {
             return termPath
@@ -1054,9 +1059,14 @@ class ESQuery {
                 // each value is under its own unique key in parameterToRanges (hence the index)
                 String parameterMapKey = parameter in andParameters ? "${parameterNoPrefix}-${idx}" : parameterNoPrefix
                 Ranges r = parameterToRanges.computeIfAbsent(parameterMapKey, { p ->
-                    parameterNoPrefix in dateFields
-                            ? Ranges.date(parameterNoPrefix, whelk.getTimezone(), whelk)
-                            : Ranges.nonDate(parameterNoPrefix, whelk)
+                    if (parameterNoPrefix in dateFields) {
+                        return Ranges.date(parameterNoPrefix, whelk.getTimezone(), whelk)
+                    }
+                    def fourDigitsFieldName = parameterNoPrefix + '_4_digits_short'
+                    if (fourDigitsFieldName in fourDigitShortFields) {
+                        return Ranges.fourDigits(parameterNoPrefix, fourDigitsFieldName, whelk)
+                    }
+                    return Ranges.nonDate(parameterNoPrefix, whelk)
                 })
 
                 values.each { it.tokenize(',').each { r.add(prefix, it.trim()) } }
@@ -1078,23 +1088,12 @@ class ESQuery {
         }
     }
 
-    static Set getFieldsOfType(String type, Map mappings) {
+    private static Set getFieldsOfType(String type, Map mappings) {
         getFieldsWithSetting('type', type, mappings)
     }
 
-    static Set getFieldsWithAnalyzer(String analyzer, Map mappings) {
-        getFieldsWithSetting('analyzer', analyzer, mappings)
-    }
-
-    static Set getFieldsWithSetting(String setting, value, Map mappings) {
-        Set fields = [] as Set
-        DocumentUtil.findKey(mappings['properties'], setting) { v, path ->
-            if (v == value) {
-                fields.add(path.dropRight(1).findAll { it != 'properties' }.join('.'))
-            }
-            DocumentUtil.NOP
-        }
-        return fields
+    private static Set getFieldsWithSetting(String setting, value, Map mappings) {
+        return getFieldsByCondition(mappings, { _, Map fieldData -> fieldData[setting] == value }, '')
     }
 
     /**
@@ -1108,26 +1107,29 @@ class ESQuery {
      * Public for test only - don't call outside this class!
      *
      */
-    Set getKeywordFields(Map mappings) {
-        Set keywordFields = [] as Set
+    private static Set getKeywordFields(Map mappings) {
+        return getFieldsByCondition(mappings, { _, Map fieldData -> ((Map) fieldData.get('fields'))?.containsKey('keyword') }, '')
+    }
+
+    private static Set getFourDigitShortFields(Map mappings) {
+        return getFieldsByCondition(mappings, { String fieldName, _ -> fieldName.endsWith('_4_digits_short') }, '')
+    }
+
+    private static Set getFourDigitKeywordFields(Map mappings) {
+        return getFieldsByCondition(mappings, { String fieldName, _ -> fieldName.endsWith('_4_digits_keyword') }, '')
+    }
+
+    private static Set getFieldsByCondition(Map mappings, Closure cond, String parentName) {
+        Set fields = [] as Set
         if (mappings) {
-            keywordFields = getKeywordFieldsFromProperties(mappings['properties'] as Map)
+            (mappings['properties'] as Map)?.each { fieldName, fieldSettings ->
+                fields += getFieldsByCondition(fieldName as String, fieldSettings as Map, cond, parentName)
+            }
         }
-
-        return keywordFields
+        return fields
     }
 
-    private Set getKeywordFieldsFromProperties(Map properties, String parentName = '') {
-        Set result = [] as Set
-        properties.each { fieldName, fieldSettings ->
-            result += getKeywordFieldsFromProperty(fieldName as String,
-                    fieldSettings as Map, parentName)
-        }
-
-        return result
-    }
-
-    private Set getKeywordFieldsFromProperty(String fieldName, Map fieldSettings, String parentName) {
+    private static Set getFieldsByCondition(String fieldName, Map fieldSettings, Closure cond, String parentName) {
         Set result = [] as Set
         String currentField
         if (parentName == '') {
@@ -1135,14 +1137,10 @@ class ESQuery {
         } else {
             currentField = "${parentName}.${fieldName}"
         }
-        Map fields = (Map) fieldSettings.get('fields')
-        if (fields && fields.get('keyword')) {
+        if (cond(currentField, fieldSettings)) {
             result.add(currentField)
         }
-        Map properties = (Map) fieldSettings.get('properties')
-        if (properties) {
-            result += getKeywordFieldsFromProperties(properties, currentField)
-        }
+        result += getFieldsByCondition(fieldSettings, cond, currentField)
         return result
     }
 

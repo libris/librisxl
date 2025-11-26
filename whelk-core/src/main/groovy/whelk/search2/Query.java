@@ -15,6 +15,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
+import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
+import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
+import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeViewFindUrl;
 import static whelk.search2.QueryUtil.mustWrap;
@@ -183,7 +186,7 @@ public class Query {
         view.put("totalItems", getQueryResult().numHits);
 
         // TODO: Include _o search representation in search mapping?
-        view.put("search", Map.of("mapping", List.of(queryTree.toSearchMapping(queryParams))));
+        view.put("search", Map.of("mapping", getSearchMapping()));
 
         view.putAll(Pagination.makeLinks(getQueryResult().numHits, esSettings.maxItems(), queryTree, queryParams));
 
@@ -208,6 +211,28 @@ public class Query {
         linkLoader.loadChips();
 
         return view;
+    }
+
+    // FIXME
+    private List<Map<String, Object>> getSearchMapping() {
+        List<Map<String, Object>> mappings = new ArrayList<>();
+        var q = new LinkedHashMap<>(queryTree.toSearchMapping(queryParams));
+        q.put("variable", QueryParams.ApiParams.QUERY);
+        mappings.add(q);
+        appParams.siteFilters.defaultFilters()
+                .stream()
+                .map(AppParams.DefaultSiteFilter::filter)
+                .filter(f -> f.getRaw().equals(queryParams.r))
+                .map(Filter::getParsed)
+                .map(QueryTree::new)
+                .peek(qt -> linkLoader.queue(qt.collectLinks()))
+                .map(qt -> qt.toSearchMapping(queryParams))
+                .map(LinkedHashMap::new)
+                .peek(m -> DocumentUtil.findKey(m, "up", ((value, path) -> new DocumentUtil.Remove())))
+                .peek(m -> m.put("variable", QueryParams.ApiParams.CUSTOM_SITE_FILTER))
+                .findFirst()
+                .ifPresent(mappings::add);
+        return mappings;
     }
 
     private Map<?, ?> doQuery(Object dsl) {
@@ -257,8 +282,11 @@ public class Query {
 
     private String getSortField(String termPath) {
         var path = expandLangMapKeys(termPath);
-        if (esSettings.mappings().isKeywordField(path) && !esSettings.mappings().isFourDigitField(path)) {
-            return String.format("%s.keyword", path);
+        if (esSettings.mappings().hasFourDigitsShortField(path)) {
+            return String.format("%s%s", path, FOUR_DIGITS_SHORT_SUFFIX);
+        }
+        else if (esSettings.mappings().hasKeywordSubfield(path)) {
+            return String.format("%s.%s", path, KEYWORD);
         } else {
             return termPath;
         }
@@ -310,6 +338,8 @@ public class Query {
                             Map.of("field", JsonLd.TYPE_KEY)));
         }
 
+        EsMappings esMappings = esSettings.mappings();
+
         Map<String, List<Node>> multiSelected = selectedFilters.getAllMultiSelected();
 
         Map<String, Object> query = new LinkedHashMap<>();
@@ -331,30 +361,34 @@ public class Query {
             new Path(property).expand(jsonLd)
                     .getAltPaths(jsonLd, rulingTypes)
                     .forEach(path -> {
+                        String jsonPath = path.jsonForm();
+                        String field = esMappings.hasFourDigitsKeywordField(jsonPath)
+                                ? String.format("%s%s", jsonPath, FOUR_DIGITS_KEYWORD_SUFFIX)
+                                : (esMappings.hasKeywordSubfield(jsonPath) ? String.format("%s.%s", jsonPath, KEYWORD) : jsonPath);
                         Map<String, Object> aggs = path.getEsNestedStem(esSettings.mappings())
-                                .map(nestedStem -> buildNestedAggQuery(path, slice, nestedStem))
-                                .orElse(buildCoreAqqQuery(path, slice));
+                                .map(nestedStem -> buildNestedAggQuery(field, slice, nestedStem))
+                                .orElse(buildCoreAqqQuery(field, slice));
                         Map<String, List<Node>> mSelected = selectedFilters.isMultiSelectable(pKey)
                                 ? new HashMap<>(multiSelected) {{ remove(pKey); }}
                                 : multiSelected;
                         Map<String, Object> filter = getEsMultiSelectedFilters(mSelected, rulingTypes, jsonLd, esSettings);
-                        query.put(path.jsonForm(), filterWrap(aggs, property.name(), filter));
+                        query.put(field, filterWrap(aggs, property.name(), filter));
                     });
         }
 
         return query;
     }
 
-    private static Map<String, Object> buildCoreAqqQuery(Path path, AppParams.Slice slice) {
+    private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice) {
         return Map.of("terms",
-                Map.of("field", path.jsonForm(),
+                Map.of("field", field,
                         "size", slice.size(),
                         "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
     }
 
-    private static Map<String, Object> buildNestedAggQuery(Path path, AppParams.Slice slice, String nestedStem) {
+    private static Map<String, Object> buildNestedAggQuery(String field, AppParams.Slice slice, String nestedStem) {
         return Map.of("nested", Map.of("path", nestedStem),
-                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(path, slice)));
+                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(field, slice)));
     }
 
     private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
@@ -597,7 +631,8 @@ public class Query {
                 } else {
                     alteredTree = (selectedFilters.isExplicitlyDeactivated(f)
                             ? queryTree.remove(selectedFilters.getDeactivatingNodes(f))
-                            : queryTree).add(f.getActive());
+                            : queryTree)
+                            .add(f);
                 }
 
                 Map<String, Object> res = new LinkedHashMap<>();

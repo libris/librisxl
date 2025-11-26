@@ -115,7 +115,8 @@ public class EmmChangeSet {
                         Timestamp creationTime = resultSet.getTimestamp(4);
                         String type = resultSet.getString(5);
                         String library = resultSet.getString(6);
-                        result.add(new EmmActivity(uri, type, creationTime, modificationTime, deleted, library));
+                        if (type != null && uri != null && modificationTime != null)
+                            result.add(new EmmActivity(uri, type, creationTime, modificationTime, deleted, library));
                         if (modificationTime.before(earliestSeenTimeStamp))
                             earliestSeenTimeStamp = modificationTime;
                     }

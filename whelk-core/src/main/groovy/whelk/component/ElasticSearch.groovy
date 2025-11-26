@@ -126,7 +126,7 @@ class ElasticSearch {
             try {
                 indexSettings = getSettings()
             } catch (Exception e) {
-                log.warn("Could not get settings from ES, retying in 10 seconds (cannot proceed without them)..", e)
+                log.warn("Could not get settings from ES, retrying in 10 seconds (cannot proceed without them)..", e)
                 Thread.sleep(10000)
             }
         }
@@ -166,7 +166,7 @@ class ElasticSearch {
 	Map getMappings() {
         Map response
         try {
-            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_mappings", ''), Map)
+            response = client.performRequest('GET', "/${indexName}/_mappings", '')
         } catch (UnexpectedHttpStatusException e) {
             log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings: ${e.message}", e)
             return [:]
@@ -190,10 +190,19 @@ class ElasticSearch {
     Map getSettings() {
         Map response
         try {
-            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_settings", ''), Map)
+            response = client.performRequest('GET', "/${indexName}/_settings", '')
         } catch (UnexpectedHttpStatusException e) {
-            log.warn("Got unexpected status code ${e.statusCode} when getting ES settings: ${e.message}", e)
-            return [:]
+            // When ES is starting up there is a time when it accepts connections but cannot yet authenticate
+            // users because the security index is unavailable. This results in a 401 Unauthorized (with the
+            // exact same JSON response body as when the security index *IS* available but the credentials are
+            // incorrect). Meaning: when initSettings() is executed while ES is starting up, it can get a 401
+            // even with correct credentials.
+            if (e.getStatusCode() == 401) {
+                log.warn("Got unexpected status code ${e.statusCode} when getting ES settings. Either the ES credentials are wrong, or ES has not finished starting up. ${e.message}", e)
+            } else {
+                log.warn("Got unexpected status code ${e.statusCode} when getting ES settings: ${e.message}", e)
+            }
+            throw e
         }
 
         List<String> keys = response.keySet() as List
@@ -201,15 +210,14 @@ class ElasticSearch {
         if (keys.size() == 1 && response[(keys[0])].containsKey('settings')) {
             return response[(keys[0])]['settings']
         } else {
-            log.warn("Couldn't get settings from ES index ${indexName}, response was ${response}.")
-            return [:]
+            throw new RuntimeException("Couldn't get settings from ES index ${indexName}, response was ${response}.")
         }
     }
     
     int getFieldCount() {
         Map response
         try {
-            response = mapper.readValue(client.performRequest('GET', "/${indexName}/_field_caps?fields=*", ''), Map)
+            response = client.performRequest('GET', "/${indexName}/_field_caps?fields=*", '')
         } catch (Exception e) {
             log.warn("Error getting fields from ES: $e", e)
             return -1
@@ -263,8 +271,7 @@ class ElasticSearch {
             }
 
             if (bulkString) {
-                String response = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
-                Map responseMap = mapper.readValue(response, Map)
+                Map responseMap = bulkClient.performRequest('POST', '/_bulk', bulkString, BULK_CONTENT_TYPE)
                 int numFailedDueToDocError = 0
                 int numFailedDueToESError = 0
                 if (responseMap.errors) {
@@ -321,12 +328,11 @@ class ElasticSearch {
         // The justification for this uncomfortable catch-all, is that an index-failure must raise an alert (log entry)
         // _internally_ but be otherwise invisible to clients (If postgres writing was ok, the save is considered ok).
         try {
-            String response = client.performRequest(
+            Map responseMap = client.performRequest(
                     'PUT',
                     "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
                     getShapeForIndex(doc, whelk))
             if (log.isDebugEnabled()) {
-                Map responseMap = mapper.readValue(response, Map)
                 log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
             }
         } catch (Exception e) {
@@ -391,11 +397,10 @@ class ElasticSearch {
         }
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
         try {
-            def response = client.performRequest('POST',
+            Map responseMap = client.performRequest('POST',
                     "/${indexName}/_delete_by_query",
                     JsonOutput.toJson(dsl))
 
-            Map responseMap = mapper.readValue(response, Map)
             if (log.isDebugEnabled()) {
                 log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
             }
@@ -492,6 +497,11 @@ class ElasticSearch {
         } catch (Exception e) {
             log.error(e, e)
         }
+
+        searchCard['_ids'] = (thingIds + document.getRecordIdentifiers())
+                .collect { stripHash(lastPathSegment(it)) }
+                .unique()
+                .plus(whelk.fresnelUtil.fslSelect(framedFull, "meta/*/identifiedBy/*/value") as Collection<String>)
 
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
@@ -596,8 +606,12 @@ class ElasticSearch {
         }
     }
 
+    private static lastPathSegment(String uri) {
+        uri.contains('/') ? uri.substring(uri.lastIndexOf('/') + 1) : uri
+    }
+
     private static String stripHash(String s) {
-        s.contains('#') ?s .substring(0, s.indexOf('#')) : s
+        s.contains('#') ? s.substring(0, s.indexOf('#')) : s
     }
 
     private static void addIdentifierForms(
@@ -698,12 +712,10 @@ class ElasticSearch {
     private Map performQuery(String json, String queryUrl) {
         try {
             def start = System.currentTimeMillis()
-            String responseBody = client.performRequest('POST',
+            Map responseMap = client.performRequest('POST',
                     queryUrl,
                     json)
-
             def duration = System.currentTimeMillis() - start
-            Map responseMap = mapper.readValue(responseBody, Map)
 
             if (duration >= ES_LOG_MIN_DURATION) {
                 log.info("ES query took ${duration} (${responseMap.took} server-side)")
@@ -749,7 +761,7 @@ class ElasticSearch {
     
     private Map performRequest(String method, String path, Map body = null) {
         try {
-            return mapper.readValue(client.performRequest(method, path, body ? JsonOutput.toJson(body) : null), Map)    
+            return client.performRequest(method, path, body ? JsonOutput.toJson(body) : null)
         }
         catch (UnexpectedHttpStatusException e) {
             tryMapAndThrow(e)
@@ -951,7 +963,7 @@ class ElasticSearch {
             }
         }
         catch (Exception e) {
-            log.warn("Failed to create Point In Time: $e")
+            log.warn("Failed to delete Point In Time: $e")
             throw e
         }
     }

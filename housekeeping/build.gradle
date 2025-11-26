@@ -71,6 +71,7 @@ test.testLogging {
 }
 
 shadowJar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
     archiveClassifier = null // removes `-all` in the filename of the created .jar
 }

@@ -2,6 +2,7 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.querytree.Filter;
 import whelk.search2.querytree.Property;
 
 import java.util.*;
@@ -66,7 +67,7 @@ public class AppParams {
         public DefaultSiteFilter(String rawFilter, String application, Map<String, Filter.AliasedFilter> filterByAlias) {
             this(getFilter(rawFilter, filterByAlias), switch (application) {
                 case "standardSearch" -> Set.of(STANDARD_SEARCH, SUGGEST);
-                case "objectSearch" -> Set.of(OBJECT_SEARCH, PREDICATE_OBJECT_SEARCH);
+                case "objectSearch" -> Set.of(OBJECT_SEARCH);
                 case null, default -> Query.SearchMode.asSet();
             });
         }
@@ -173,6 +174,10 @@ public class AppParams {
     private SiteFilters getSiteFilters(Map<String, Object> appConfig, QueryParams queryParams) {
         Map<String, Filter.AliasedFilter> filterByAlias = getFilterByAlias(appConfig, queryParams.aliased);
         List<DefaultSiteFilter> defaultSiteFilters = getDefaultSiteFilters(appConfig, filterByAlias);
+        if (!queryParams.r.isEmpty()) {
+            defaultSiteFilters = new ArrayList<>(defaultSiteFilters);
+            defaultSiteFilters.add(new DefaultSiteFilter(new Filter(queryParams.r), Query.SearchMode.asSet()));
+        }
         List<OptionalSiteFilter> optionalSiteFilters = getOptionalSiteFilters(appConfig, filterByAlias);
         List<OptionalSiteFilter> queryDefinedSiteFilters = getQueryDefinedSiteFilters(queryParams, filterByAlias);
         return new SiteFilters(defaultSiteFilters, Stream.concat(optionalSiteFilters.stream(), queryDefinedSiteFilters.stream()).toList());

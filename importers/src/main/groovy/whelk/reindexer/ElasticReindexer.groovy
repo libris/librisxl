@@ -7,10 +7,10 @@ import whelk.util.BlockingThreadPool
 
 @Log
 class ElasticReindexer {
-
     static final int BATCH_SIZE = 300
     static final int MAX_RETRIES = 5
-    static final int RETRY_WAIT_MS = 3000
+    static final int INITIAL_RETRY_WAIT_MS = 3000
+    static final int MAX_RETRY_WAIT_MS = 60000
 
     Whelk whelk
 
@@ -106,12 +106,14 @@ class ElasticReindexer {
 
     private void bulkIndexWithRetries(List<Document> docs, Whelk whelk) {
         int retriesLeft = MAX_RETRIES
+        int retryCount = 0
 
         Exception error
         while(error = tryBulkIndex(docs, whelk)) {
             if (retriesLeft-- > 0) {
-                log.warn("Failed to index batch: [${error}], retrying after ${RETRY_WAIT_MS} ms")
-                sleep()
+                int waitMs = calculateBackoffMs(retryCount++)
+                log.warn("Failed to index batch: [${error}], retrying after ${waitMs} ms")
+                sleep(waitMs)
             } else {
                 log.warn("Failed to index batch: [${error}], max retries exceeded")
                 throw error
@@ -129,9 +131,16 @@ class ElasticReindexer {
         }
     }
 
-    private void sleep() {
+    private int calculateBackoffMs(int retryCount) {
+        int backoffMs = (int) (Math.pow(2, retryCount) * INITIAL_RETRY_WAIT_MS)
+        int cappedBackoffMs = Math.min(backoffMs, MAX_RETRY_WAIT_MS)
+        int jitter = (int) (Math.random() * cappedBackoffMs * 0.2)
+        return cappedBackoffMs + jitter
+    }
+
+    private void sleep(int ms) {
         try {
-            Thread.sleep(RETRY_WAIT_MS)
+            Thread.sleep(ms)
         }
         catch (InterruptedException e) {
             log.warn("Woke up early", e)

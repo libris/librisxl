@@ -1,7 +1,7 @@
 package whelk.search2.querytree;
 
-public record Numeric(int value, Token token) implements Value {
-    public Numeric(int value) {
+public record Numeric(long value, Token token) implements Value {
+    public Numeric(long value) {
         this(value, null);
     }
 
@@ -13,6 +13,10 @@ public record Numeric(int value, Token token) implements Value {
     @Override
     public String toString() {
         return "" + value;
+    }
+
+    public boolean isFourDigits() {
+        return value >= 1000 && value <= 9999;
     }
 
     public Numeric increment() {
@@ -30,6 +34,6 @@ public record Numeric(int value, Token token) implements Value {
 
     @Override
     public int hashCode() {
-        return value;
+        return Long.hashCode(value);
     }
 }

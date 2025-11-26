@@ -75,6 +75,12 @@ class MarcExport {
                 li.remove()
 
         try {
+            profile.maybeAdd956Images(bibRecord, rootDocument);
+        } catch (Exception e) {
+            log.warn("Failed to insert images for: " + rootDocument.getShortId(), e)
+        }
+
+        try {
             return profile.mergeRecord(bibRecord, holdings, auths)
         } catch (Exception e) {
             log.warn("Failed to mangle marc record through profile: " + rootDocument.getShortId(), e)

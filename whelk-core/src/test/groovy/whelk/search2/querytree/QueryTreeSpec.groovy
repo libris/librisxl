@@ -5,7 +5,6 @@ import whelk.JsonLd
 import whelk.search2.AppParams
 import whelk.search2.Disambiguate
 import whelk.search2.ESSettings
-import whelk.search2.Filter
 import whelk.search2.Query
 import whelk.search2.QueryParams
 import whelk.search2.SelectedFilters
@@ -138,7 +137,7 @@ class QueryTreeSpec extends Specification {
                                                                                         "default_operator": "AND",
                                                                                         "query"           : "v1",
                                                                                         "analyze_wildcard": true,
-                                                                                        "fields"          : ["p1^0.0"]
+                                                                                        "fields"          : ["p1^5.0"]
                                                                                 ]
                                                                         ]
                                                                 ]
@@ -176,29 +175,37 @@ class QueryTreeSpec extends Specification {
                                                 "@id": "/find?_q=%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                         ]
                                 ], [
-                                        "or": [[
-                                                       "property" : [
-                                                               "@id"  : "p3",
-                                                               "@type": "ObjectProperty"
-                                                       ],
-                                                       "notEquals": "v3",
-                                                       "up"       : [
-                                                               "@id": "/find?_q=something+p4:%22v:4%22+includeA"
-                                                       ],
-                                                       "_key"     : "p3",
-                                                       "_value"   : "v3"
-                                               ], [
-                                                       "property": [
-                                                               "@id"  : "p4",
-                                                               "@type": "ObjectProperty"
-                                                       ],
-                                                       "equals"  : "\"v:4\"",
-                                                       "up"      : [
-                                                               "@id": "/find?_q=something+NOT+p3:v3+includeA"
-                                                       ],
-                                                       "_key"    : "p4",
-                                                       "_value"  : "\"v:4\""
-                                               ]],
+                                        "or": [
+                                                [
+                                                        "not": [
+                                                            "property" : [
+                                                                    "@id"  : "p3",
+                                                                    "@type": "ObjectProperty"
+                                                            ],
+                                                            "equals": "v3",
+                                                            "up"       : [
+                                                                    "@id": "/find?_q=something+p4:%22v:4%22+includeA"
+                                                            ],
+                                                            "_key"     : "p3",
+                                                            "_value"   : "v3"
+                                                        ],
+                                                        "up": [
+                                                                "@id": "/find?_q=something+p4:%22v:4%22+includeA"
+                                                        ]
+
+                                                ],
+                                                [
+                                                        "property": [
+                                                                "@id"  : "p4",
+                                                                "@type": "ObjectProperty"
+                                                        ],
+                                                        "equals"  : "\"v:4\"",
+                                                        "up"      : [
+                                                                "@id": "/find?_q=something+NOT+p3:v3+includeA"
+                                                        ],
+                                                        "_key"    : "p4",
+                                                        "_value"  : "\"v:4\""
+                                                ]],
                                         "up": [
                                                 "@id": "/find?_q=something+includeA"
                                         ]
@@ -216,22 +223,30 @@ class QueryTreeSpec extends Specification {
                                                                         "raw"            : "NOT p1:A",
                                                                         "@type"          : "Resource",
                                                                         "parsedFilter"   : [
-                                                                                "property" : [
-                                                                                        "@id"  : "p1",
-                                                                                        "@type": "DatatypeProperty"
+                                                                                "not":  [
+                                                                                        "property" : [
+                                                                                                "@id"  : "p1",
+                                                                                                "@type": "DatatypeProperty"
+                                                                                        ],
+                                                                                        "equals": "A",
+                                                                                        "up"       : [
+                                                                                                "@id": "/find?_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
+                                                                                        ],
+                                                                                        "_key"     : "p1",
+                                                                                        "_value"   : "A"
                                                                                 ],
-                                                                                "notEquals": "A",
-                                                                                "up"       : [
+                                                                                "up": [
                                                                                         "@id": "/find?_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
-                                                                                ],
-                                                                                "_key"     : "p1",
-                                                                                "_value"   : "A"
+                                                                                ]
                                                                         ]
                                                                 ],
                                                                 "value" : "excludeA",
                                                                 "up"    : [
                                                                         "@id": "/find?_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                                                 ]
+                                                        ],
+                                                        "up"    : [
+                                                                "@id": "/find?_q=something+%28NOT+p3:v3+OR+p4:%22v:4%22%29+includeA"
                                                         ]
                                                 ]
                                         ],
@@ -249,9 +264,9 @@ class QueryTreeSpec extends Specification {
     def "concat simple free text on instantiation"() {
         given:
         QueryTree qt = new QueryTree("x y (x OR y) \"a b c\" d \"e:f\" NOT g h i", disambiguate)
-        var ft1 = (FreeText) new QueryTree("x y \"a b c\" d \"e:f\" h i", disambiguate).tree
-        var ft2 = (FreeText) QueryTreeBuilder.buildTree("x OR y", disambiguate)
-        var ft3 = (FreeText) QueryTreeBuilder.buildTree("NOT g", disambiguate)
+        var ft1 = new QueryTree("x y \"a b c\" d \"e:f\" h i", disambiguate).tree
+        var ft2 = QueryTreeBuilder.buildTree("x OR y", disambiguate)
+        var ft3 = QueryTreeBuilder.buildTree("NOT g", disambiguate)
 
         expect:
         qt.tree == new And([ft1, ft2, ft3])
