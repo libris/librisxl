@@ -12,7 +12,7 @@ class Embellisher {
     static final List<String> DEFAULT_EMBELLISH_LEVELS = ['cards', 'chips']
     static final List<String> DEFAULT_INTEGRAL_RELATIONS = ['instanceOf', 'translationOf']
 
-    static final int MAX_REVERSE_LINKS = 512
+    static final int MAX_REVERSE_LINKS = 1024
 
     JsonLd jsonld
     Collection<String> embellishLevels = DEFAULT_EMBELLISH_LEVELS
