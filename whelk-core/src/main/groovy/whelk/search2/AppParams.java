@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 
 public class AppParams {
+    public static final String DEFAULT_SITE_FILTERS = "defaultSiteFilters";
+
     public final List<Slice> sliceList;
     public final List<FilterAlias> filterAliases;
     public final Filters filters;
@@ -47,6 +49,7 @@ public class AppParams {
         private final Slice subSlice;
         private Slice parentSlice = null;
         private final List<String> showIf;
+        private final boolean shouldCountTopLevelDocs;
 
         private final Property property;
 
@@ -60,7 +63,8 @@ public class AppParams {
             this.subSlice = getSubSlice(settings, jsonLd);
             this.showIf = getShowIf(settings);
             this.property = Property.getProperty(String.join(".", chain), jsonLd);
-            this.propertyKey = property.toString();
+            this.propertyKey = property.name();
+            this.shouldCountTopLevelDocs = getShouldCountTopLevelDocs(settings);
         }
 
         public Slice(Map<?, ?> settings, Slice parent, JsonLd jsonLd) {
@@ -102,6 +106,10 @@ public class AppParams {
 
         public Property getProperty() {
             return property;
+        }
+
+        public boolean shouldCountTopLevelDocs() {
+            return shouldCountTopLevelDocs;
         }
 
         private Sort.Order getSortOrder(Map<?, ?> settings) {
@@ -147,6 +155,10 @@ public class AppParams {
         public List<String> getShowIf() {
             return showIf;
         }
+
+        private boolean getShouldCountTopLevelDocs(Map<?, ?> settings) {
+            return Optional.ofNullable((Boolean) settings.get("countTopLevelDocs")).orElse(false);
+        }
     }
 
 
@@ -171,7 +183,7 @@ public class AppParams {
     }
 
     private static Filters getFilters(Map<String, Object> appConfig) {
-        return new Filters(getFilter(appConfig, "defaultSiteFilters"),
+        return new Filters(getFilter(appConfig, DEFAULT_SITE_FILTERS),
                 getFilter(appConfig, "optionalSiteFilters"),
                 getRelationFilters(appConfig)
         );

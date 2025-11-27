@@ -74,20 +74,9 @@ class SiteSearch {
     }
 
     protected Map<?, ?> getAndIndexDescription(String id) {
-        Map<?, ?> data;
+        Map<?, ?> data = localDevAppsJsonLd();
 
-        var appsOverride = System.getProperty("xl.test.apps.jsonld");
-        if (appsOverride != null && !appsOverride.isEmpty()) {
-            log.info("Using {} for {}", appsOverride, id);
-            try {
-                data = mapper.readValue(
-                        Files.asCharSource(new File(appsOverride), StandardCharsets.UTF_8).read(),
-                        Map.class
-                );
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
+        if (data == null) {
             data = whelk.loadData(id);
         }
 
@@ -106,9 +95,9 @@ class SiteSearch {
                path.equals("/data") || path.startsWith("/data.");
     }
 
-    protected String determineActiveSite(Map queryParameters, String baseUri) {
+    protected String determineActiveSite(Map<String, String[]>  queryParameters, String baseUri) {
         // If ?_site=<foo> has been specified (and <foo> is a valid site) it takes precedence
-        String paramSite = (String) queryParameters.get("_site");
+        String paramSite = queryParameters.containsKey("_site") ? queryParameters.get("_site")[0] : "";
         if (searchStatsReprs.containsKey(paramSite)) {
             log.debug("Active site set by _site request parameter: {}", paramSite);
             return paramSite;
@@ -121,7 +110,7 @@ class SiteSearch {
         return activeSite;
     }
 
-    Map findData(Map queryParameters, String baseUri, String path) throws InvalidQueryException, IOException {
+    Map findData(Map<String, String[]> queryParameters, String baseUri, String path) throws InvalidQueryException, IOException {
         String activeSite = determineActiveSite(queryParameters, baseUri);
 
         Map searchSettings = searchStatsReprs.get(activeSite);
@@ -140,7 +129,7 @@ class SiteSearch {
             }
             return toDataIndexDescription(appsIndex.get(activeSite + "data"), queryParameters);
         } else if (queryParameters.containsKey("_q") || queryParameters.containsKey("_o") || queryParameters.containsKey("_r")) {
-            String appId = "https://beta.libris.kb.se/";
+            String appId = activeSite.equals(getDefaultSite()) ? "https://beta.libris.kb.se/" : activeSite;
             Map appDesc = getAndIndexDescription(appId);
             if (appDesc != null) {
                 Map findDesc = getAndIndexDescription(appId + "find");
@@ -155,7 +144,7 @@ class SiteSearch {
         }
     }
 
-    Map toDataIndexDescription(Map appDesc, Map queryParameters) throws InvalidQueryException, IOException {
+    Map toDataIndexDescription(Map appDesc, Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
         queryParameters.computeIfAbsent("_limit", k -> new String[]{"0"});
         queryParameters.computeIfAbsent("q", k -> new String[]{"*"});
         Map searchResults = search.doSearch(queryParameters);
@@ -176,5 +165,22 @@ class SiteSearch {
         }
         List sliceList = (List) stats.get("sliceList");
         return sliceList != null ? search.buildStatsReprFromSliceSpec(sliceList) : null;
+    }
+
+    public static Map<?, ?> localDevAppsJsonLd() {
+        var appsOverride = System.getProperty("xl.test.apps.jsonld");
+        if (appsOverride == null || appsOverride.isEmpty()) {
+            return null;
+        }
+
+        log.info("Using {}", appsOverride);
+        try {
+            return mapper.readValue(
+                    Files.asCharSource(new File(appsOverride), StandardCharsets.UTF_8).read(),
+                    Map.class
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

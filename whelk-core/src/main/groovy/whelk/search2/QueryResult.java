@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.search2.Query.NESTED_AGG_NAME;
+import static whelk.search2.Query.REVERSE_NESTED_AGG_NAME;
 import static whelk.search2.QueryParams.ApiParams.PREDICATES;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.util.DocumentUtil.getAtPath;
@@ -110,10 +111,16 @@ public class QueryResult {
 
             var buckets = ((List<?>) agg.get("buckets")).stream()
                     .map(Map.class::cast)
-                    .map(b -> new Bucket(
-                            String.valueOf(b.get("key")),
-                            (Integer) b.get("doc_count"),
-                            subAggs(b)))
+                    .map(b -> b.containsKey(REVERSE_NESTED_AGG_NAME)
+                                ? new Bucket(
+                                        String.valueOf(b.get("key")),
+                                        (Integer) castToStringObjectMap(b.get(REVERSE_NESTED_AGG_NAME)).get("doc_count"),
+                                        null)
+                                : new Bucket(
+                                        String.valueOf(b.get("key")),
+                                        (Integer) b.get("doc_count"),
+                                        subAggs(b))
+                            )
                     .toList();
             aggregations.add(new Aggregation(property, path, buckets));
         }

@@ -169,8 +169,12 @@ public class QueryTree {
         return new QueryTree(tree);
     }
 
-    private Node expand(JsonLd jsonLd) {
-        return tree.expand(jsonLd, List.of());
+    private QueryTree expand(JsonLd jsonLd) {
+        return isEmpty() ? this : new QueryTree(tree.expand(jsonLd, List.of()));
+    }
+
+    private Map<String, Object> toEs(ESSettings esSettings) {
+        return isEmpty() ? Map.of() : tree.toEs(esSettings);
     }
 
     private void normalizeTree() {

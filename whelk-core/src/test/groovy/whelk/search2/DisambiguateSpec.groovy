@@ -2,6 +2,7 @@ package whelk.search2
 
 import spock.lang.Specification
 import whelk.JsonLd
+import whelk.Whelk
 import whelk.search.QueryDateTime
 import whelk.search2.querytree.DateTime
 import whelk.search2.querytree.InvalidValue
@@ -19,7 +20,7 @@ class DisambiguateSpec extends Specification {
 
     def "try map string to property or other recognized key"() {
         expect:
-        disambiguate.mapKey(s, -1) == result
+        disambiguate.mapQueryKey(s, -1) == result
 
         where:
         s                   | result

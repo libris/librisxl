@@ -750,9 +750,9 @@ public class ExportProfile {
         return false;
     }
 
-    // https://id.kb.se/vocab/ImageObject -> 9xx
-    public void insert9xxImages(MarcRecord record, Document document) {
-        if (!getProperty("image9xx", "off").equalsIgnoreCase("ON")) {
+    // https://id.kb.se/vocab/ImageObject -> bib 956
+    public void maybeAdd956Images(MarcRecord record, Document document) {
+        if (!getProperty("add956images", "off").equalsIgnoreCase("ON")) {
             return;
         }
 
@@ -771,14 +771,14 @@ public class ExportProfile {
                 continue;
             }
 
-            insert9xxImage(record,
+            add956Image(record,
                     imageIx,
                     uri,
                     (String) DocumentUtil.getAtPath(imageObject, List.of("width")),
                     (String) DocumentUtil.getAtPath(imageObject, List.of("height")));
 
             for (var thumbnail : JsonLd.asList(DocumentUtil.getAtPath(imageObject, List.of("thumbnail")))) {
-                insert9xxImage(record,
+                add956Image(record,
                         imageIx,
                         (String) DocumentUtil.getAtPath(thumbnail, List.of(JsonLd.JSONLD_ALT_ID_KEY, 0, JsonLd.ID_KEY)),
                         (String) DocumentUtil.getAtPath(thumbnail, List.of("width")),
@@ -789,12 +789,12 @@ public class ExportProfile {
         }
     }
 
-    private static void insert9xxImage(MarcRecord record, int ix, String url, String width, String height) {
+    private static void add956Image(MarcRecord record, int ix, String url, String width, String height) {
         if (url == null) {
             return;
         }
 
-        var field = record.createDatafield("956"); // TODO TBD which field number to use
+        var field = record.createDatafield("956");
         field.addSubfield('i', String.valueOf(ix));
         field.addSubfield('u', url);
         if (width != null) {

@@ -19,6 +19,7 @@ import whelk.search2.querytree.Resource;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
 import whelk.util.DocumentUtil;
+import whelk.util.Restrictions;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -78,6 +79,7 @@ public class Query {
     }
 
     public static final String NESTED_AGG_NAME = "n";
+    public static final String REVERSE_NESTED_AGG_NAME = "r";
 
     public Query(QueryParams queryParams,
                  AppParams appParams,
@@ -216,12 +218,17 @@ public class Query {
         view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
         view.put(JsonLd.ID_KEY, findUrl());
 
+        // TODO: Include _o search representation in search mapping?
+        view.put("search", Map.of("mapping", getSearchMapping()));
+
+        if (queryParams.mappingOnly) {
+            linkLoader.loadChips();
+            return view;
+        }
+
         view.put("itemOffset", queryParams.offset);
         view.put("itemsPerPage", queryParams.limit);
         view.put("totalItems", getQueryResult().numHits);
-
-        // TODO: Include _o search representation in search mapping?
-        view.put("search", Map.of("mapping", getSearchMapping()));
 
         view.putAll(Pagination.makeLinks(getQueryResult().numHits, esSettings.maxItems(), qTree, queryParams));
 
@@ -261,6 +268,7 @@ public class Query {
 
         addMapping.accept(qTree, QueryParams.ApiParams.QUERY);
         addMapping.accept(rTree, QueryParams.ApiParams.CUSTOM_SITE_FILTER);
+        addMapping.accept(sTree, AppParams.DEFAULT_SITE_FILTERS);
 
         return mappings;
     }
@@ -446,20 +454,20 @@ public class Query {
         if (!slice.getShowIf().isEmpty()) {
             // Enable @none facet if find/identify/@none in query
             // TODO don't hardcode this if we decide it is what we want
-            if (ctx.selectedFacets().getSelected("_categoryByCollection.find").isEmpty()
-                && ctx.selectedFacets().getSelected("_categoryByCollection.identify").isEmpty()
-                && ctx.selectedFacets().getSelected("_categoryByCollection.@none").isEmpty()) {
+            if (ctx.selectedFacets().getSelected(Restrictions.FIND_CATEGORY).isEmpty()
+                && ctx.selectedFacets().getSelected(Restrictions.IDENTIFY_CATEGORY).isEmpty()
+                && ctx.selectedFacets().getSelected(Restrictions.NONE_CATEGORY).isEmpty()) {
                 return;
             }
         }
 
-        if (!property.restrictions().isEmpty()) {
+        if (property.isRestrictedSubProperty() && !property.hasIndexKey()) {
             // TODO: E.g. author (combining contribution.role and contribution.agent)
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
         var p = new Path(property).expand(ctx.jsonLd);
-        var paths = property.hasSubPropertyWithRestrictedRange() // TODO for now exclude altPaths for _categoryByCollection
+        var paths = property instanceof Property.NarrowedRestrictedProperty // TODO for now exclude altPaths for _categoryByCollection
                 ? List.of(p)
                 : p.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes);
 
@@ -487,8 +495,8 @@ public class Query {
                                 m.remove(slice.subSlice().propertyKey());
                             }
                             // TODO don't hardcode this if we decide it is what we want
-                            if ("_categoryByCollection.find".equals(pKey) || "_categoryByCollection.identify".equals(pKey)) {
-                                m.remove("_categoryByCollection.@none");
+                            if (Restrictions.FIND_CATEGORY.equals(pKey) || Restrictions.IDENTIFY_CATEGORY.equals(pKey)) {
+                                m.remove(Restrictions.NONE_CATEGORY);
                             }
                             //if ("_categoryByCollection.@none".equals(pKey)) {
                             //    m.remove("_categoryByCollection.find");
@@ -497,7 +505,7 @@ public class Query {
                         })
                     : ctx.mmSelected;
             Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
-            query.put(field, filterWrap(aggs, property.toString(), filter));
+            query.put(field, filterWrap(aggs, property.name(), filter));
         });
     }
     
@@ -514,6 +522,24 @@ public class Query {
             Map<String, Object> query = new LinkedHashMap<>();
             addSliceToAggQuery(query, slice.subSlice(), ctx);
             q.put("aggs", query);
+        }
+        else if (slice.shouldCountTopLevelDocs()) {
+            // count the number of top-level documents instead of the number of nested docs
+            // for example multiple holdings with the same organization (heldBy.isPartOf.@id)
+            q = new LinkedHashMap<>(q);
+            Map<String, Object> reverse = Map.of(
+                    REVERSE_NESTED_AGG_NAME, Map.of(
+                            "reverse_nested", Collections.emptyMap(),
+                            "aggs", Map.of(
+                                    REVERSE_NESTED_AGG_NAME, Map.of(
+                                            "cardinality", Map.of(
+                                                    "field", "_es_id"
+                                            )
+                                    )
+                            )
+                    )
+            );
+            q.put("aggs", reverse);
         }
 
         return castToStringObjectMap(q);
@@ -689,7 +715,10 @@ public class Query {
                                     observation.put("_selected", true);
                                 }
                                 if (o.subSlices != null && slice.subSlice() != null) {
-                                    observation.put("sliceByDimension", o.subSlices.getSliceByDimension(List.of(slice.subSlice()), selectedFacets, v, selectedValue));
+                                    var s = o.subSlices.getSliceByDimension(List.of(slice.subSlice()), selectedFacets, v, selectedValue);
+                                    if (!s.isEmpty()) {
+                                        observation.put("sliceByDimension", s);
+                                    }
                                 }
 
                                 observations.add(observation);
@@ -783,14 +812,14 @@ public class Query {
 
                 // Move @none to under selected find/identify
                 // TODO don't hardcode this if we decide it is what we want
-                var none = s.remove("_categoryByCollection.@none");
+                var none = s.remove(Restrictions.NONE_CATEGORY);
                 if (none != null) {
-                    var find =  s.get("_categoryByCollection.find");
+                    var find =  s.get(Restrictions.FIND_CATEGORY);
                     if (find != null) {
                         DocumentUtil.traverse(find, (value, path) -> {
                             if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true)) {
                                 var newV = new HashMap<>(m);
-                                ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put("_categoryByCollection.@none", none);
+                                ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put(Restrictions.NONE_CATEGORY, none);
                                 return new DocumentUtil.Replace(newV);
                             }
                             return DocumentUtil.NOP;
@@ -841,13 +870,12 @@ public class Query {
                         if (selectedFacets.isRangeFilter(propertyKey)) {
                             sliceNode.put("search", getRangeTemplate(propertyKey));
                         }
-                        sliceNode.put("dimension", propertyKey);
+                        sliceNode.put("dimension", property.queryKey());
                         sliceNode.put("observation", observations);
                         sliceNode.put("maxItems", slice.size());
                         sliceNode.put("_connective", selectedFacets.getConnective(propertyKey).name());
-                        result.put(propertyKey, sliceNode);
+                        result.put(property.queryKey(), sliceNode);
                     }
-
                 });
 
                 return result;

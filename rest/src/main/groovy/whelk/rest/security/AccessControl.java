@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.datatool.bulkchange.BulkAccessControl;
+import whelk.datatool.bulkchange.BulkJobDocument;
 import whelk.exception.ModelValidationException;
 import whelk.util.LegacyIntegrationTools;
 
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
+import static whelk.datatool.bulkchange.BulkJobDocument.SpecType.Merge;
 
 public class AccessControl {
     private static final Logger log = LogManager.getLogger(AccessControl.class);
@@ -86,7 +88,13 @@ public class AccessControl {
         else if ((document.getThingType().equals(JOB_TYPE))) {
             // TODO step 1, new specific sigel instead
             // TODO step 2, configure as permission on user instead (in libris login)
-            return hasPermissionForSigel("SEK", userPrivileges);
+
+            var bulkDoc = new BulkJobDocument(document);
+            if (bulkDoc.getSpecificationType().equals(Merge)) {
+                return hasPermissionForSigel("S", userPrivileges) || hasPermissionForSigel("SEK", userPrivileges);
+            } else {
+                return hasPermissionForSigel("SEK", userPrivileges);
+            }
         }
         else if (document.isInReadOnlyDataset()) {
             return false;

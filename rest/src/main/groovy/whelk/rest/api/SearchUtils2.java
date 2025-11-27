@@ -25,7 +25,7 @@ public class SearchUtils2 {
     SearchUtils2(Whelk whelk) {
         this.whelk = whelk;
         this.esSettings = new ESSettings(whelk);
-        this.vocabMappings = new VocabMappings(whelk);
+        this.vocabMappings = VocabMappings.load(whelk);
     }
 
     Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {

@@ -5,6 +5,7 @@ import whelk.search2.querytree.Or;
 import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.YearRange;
+import whelk.util.Restrictions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,10 +22,9 @@ public class SelectedFacets {
 
     // TODO: don't hardcode
     private final Set<String> radioProps = Set.of(
-            "_categoryByCollection.find",
-            "_categoryByCollection.identify"
+            Restrictions.FIND_CATEGORY,
+            Restrictions.IDENTIFY_CATEGORY
     );
-
 
     public SelectedFacets(QueryTree queryTree, List<AppParams.Slice> sliceList) {
         //FIXME
@@ -52,7 +52,7 @@ public class SelectedFacets {
     }
 
     public List<Node> getSelected(String propertyKey) {
-        return selectedByPropertyKey.get(propertyKey);
+        return isSelectable(propertyKey) ? selectedByPropertyKey.get(propertyKey) : List.of();
     }
 
     public boolean isSelected(PathValue pathValue, String propertyKey) {

@@ -34,6 +34,7 @@ public class QueryParams {
         public static final String SUGGEST = "_suggest";
         public static final String CURSOR = "cursor";
         public static final String BOOST = "_boost";
+        public static final String MAPPING_ONLY = "_mappingOnly";
     }
 
     public static class Debug {
@@ -59,6 +60,7 @@ public class QueryParams {
 
     public final boolean skipStats;
     public final boolean suggest;
+    public final boolean mappingOnly;
 
     public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
@@ -77,6 +79,7 @@ public class QueryParams {
         this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.aliased = getAliased(apiParameters);
         this.boost = getOptionalSingle(ApiParams.BOOST, apiParameters).map(ESSettings::loadBoostSettings).orElse(null);
+        this.mappingOnly = getOptionalSingle(ApiParams.MAPPING_ONLY, apiParameters).map("true"::equalsIgnoreCase).isPresent();
     }
 
     public Map<String, String> getFullParamsMap() {
@@ -90,6 +93,7 @@ public class QueryParams {
                 ApiParams.OBJECT,
                 ApiParams.DEBUG,
                 ApiParams.STATS,
+                ApiParams.MAPPING_ONLY,
                 JsonLd.Platform.COMPUTED_LABEL));
     }
 
@@ -148,6 +152,11 @@ public class QueryParams {
                 case ApiParams.STATS -> {
                     if (skipStats && !suggest) {
                         params.put(ApiParams.STATS, "false");
+                    }
+                }
+                case ApiParams.MAPPING_ONLY -> {
+                    if (mappingOnly) {
+                        params.put(ApiParams.MAPPING_ONLY, "true");
                     }
                 }
             }

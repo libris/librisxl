@@ -2,94 +2,104 @@ package whelk.search2.querytree
 
 import spock.lang.Specification
 import whelk.JsonLd
+import whelk.search2.AppParams
 import whelk.search2.Disambiguate
 import whelk.search2.ESSettings
+import whelk.search2.Query
 import whelk.search2.QueryParams
+import whelk.search2.SelectedFacets
 
 class QueryTreeSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
+
+    Map boostSettings = [
+            "field_boost": [
+                    "fields"              : [
+                            [
+                                    "name"        : "fieldA",
+                                    "boost"       : 10,
+                                    "script_score": [
+                                            "name"    : "a function",
+                                            "function": "f(_score)",
+                                            "apply_if": "condition"
+                                    ]
+                            ],
+                            [
+                                    "name" : "fieldB",
+                                    "boost": 2
+                            ],
+                            [
+                                    "name" : "fieldC",
+                                    "boost": 1
+                            ]
+                    ],
+                    "default_boost_factor": 5,
+                    "analyze_wildcard"    : true
+            ]
+    ]
+    ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost(boostSettings))
 
     def "back to query string"() {
         expect:
         new QueryTree(input, disambiguate).toQueryString() == back
 
         where:
-        input                                       | back
-        null                                        | "*"
-        "*"                                         | "*"
-        "* p1:x"                                    | "p1:x"
-        "x y"                                       | "x y"
-        "\"x y\""                                   | "\"x y\""
-        "\"x y\" z"                                 | "\"x y\" z"
-        "x OR y z"                                  | "x OR y z"
-        "x OR \"y z\""                              | "x OR \"y z\""
-        "NOT x y"                                   | "NOT x y"
-        "NOT (x y)"                                 | "NOT (x y)"
-        "NOT (x OR y)"                              | "NOT (x OR y)"
-        "p1:x"                                      | "p1:x"
-        "p1:\"x y\""                                | "p1:\"x y\""
-        "p1:\"x OR y\""                             | "p1:\"x OR y\""
-        "p1:(x y)"                                  | "p1:(x y)"
-        "p1:(x OR y)"                               | "p1:(x OR y)"
-        "NOT p1:(x OR y)"                           | "NOT p1:(x OR y)"
-        "NOT p1:(NOT x)"                            | "p1:x"
-        "p2:e1"                                     | "p2:e1"
-        "p2:(e1 e2)"                                | "p2:e1 p2:e2"
-        "p2:(e1 OR e2)"                             | "p2:e1 OR p2:e2"
-        "NOT p2:(e1 e2)"                            | "NOT p2:e1 OR NOT p2:e2"
-        "NOT p2:(e1 OR e2)"                         | "NOT p2:e1 NOT p2:e2"
-        "type:(t1 OR t2)"                           | "type:t1 OR type:t2"
-        "p3:x"                                      | "p3:x"
-        "p3:\"https://id.kb.se/x\""                 | "p3:\"https://id.kb.se/x\""
-        "p3:\"sao:x\""                              | "p3:\"sao:x\""
-        "p3:(\"sao:x\" \"sao:y\")"                  | "p3:\"sao:x\" p3:\"sao:y\""
-        "p3:(\"x y\" z \"sao:x\" \"sao:y\")"        | "p3:(\"x y\" z) p3:\"sao:x\" p3:\"sao:y\""
-        "p3:(x (\"sao:x\" OR \"sao:y\"))"           | "p3:x (p3:\"sao:x\" OR p3:\"sao:y\")"
-        "NOT p3:(NOT x)"                            | "p3:x"
-        "NOT p3:(x y (\"sao:x\" OR NOT \"sao:y\"))" | "NOT p3:(x y) OR (NOT p3:\"sao:x\" p3:\"sao:y\")"
-        "_x._y:z"                                   | "_x._y:z"
-        "x p1:y includeA"                           | "x p1:y includeA"
-        "p1>1990"                                   | "p1>1990"
-        "NOT p1>1990"                               | "p1<=1990"
-        "p1=1990"                                   | "p1:1990"
-        "p12:1990-01-01"                            | "p12:1990-01-01"
-        "NOT p12<=1990-01-01"                       | "p12>1990-01-01"
-        "p12:\"1990-01-01T01:01\""                  | "p12:\"1990-01-01T01:01\""
-        "(x OR y) p1:x"                             | "(x OR y) p1:x"
-        "x OR y"                                    | "x OR y"
-        "(x OR y) z"                                | "(x OR y) z"
+        input                                              | back
+        null                                               | "*"
+        "*"                                                | "*"
+        "* p1:x"                                           | "p1:x"
+        "x y"                                              | "x y"
+        "\"x y\""                                          | "\"x y\""
+        "\"x y\" z"                                        | "\"x y\" z"
+        "x OR y z"                                         | "x OR y z"
+        "x OR \"y z\""                                     | "x OR \"y z\""
+        "NOT x y"                                          | "NOT x y"
+        "NOT (x y)"                                        | "NOT (x y)"
+        "NOT (x OR y)"                                     | "NOT (x OR y)"
+        "p1:x"                                             | "p1:x"
+        "p1:\"x y\""                                       | "p1:\"x y\""
+        "p1:\"x OR y\""                                    | "p1:\"x OR y\""
+        "p1:(x y)"                                         | "p1:(x y)"
+        "p1:(x OR y)"                                      | "p1:(x OR y)"
+        "NOT p1:(x OR y)"                                  | "NOT p1:(x OR y)"
+        "NOT p1:(NOT x)"                                   | "p1:x"
+        "p2:e1"                                            | "p2:e1"
+        "p2:(e1 e2)"                                       | "p2:e1 p2:e2"
+        "p2:(e1 OR e2)"                                    | "p2:e1 OR p2:e2"
+        "NOT p2:(e1 e2)"                                   | "NOT p2:e1 OR NOT p2:e2"
+        "NOT p2:(e1 OR e2)"                                | "NOT p2:e1 NOT p2:e2"
+        "type:(t1 OR t2)"                                  | "type:t1 OR type:t2"
+        "p3:x"                                             | "p3:x"
+        "p3:\"https://id.kb.se/x\""                        | "p3:\"https://id.kb.se/x\""
+        "p3:\"sao:x\""                                     | "p3:\"sao:x\""
+        "p3:(\"sao:x\" \"sao:y\")"                         | "p3:\"sao:x\" p3:\"sao:y\""
+        "p3:(\"x y\" z \"sao:x\" \"sao:y\")"               | "p3:(\"x y\" z) p3:\"sao:x\" p3:\"sao:y\""
+        "p3:(x (\"sao:x\" OR \"sao:y\"))"                  | "p3:x (p3:\"sao:x\" OR p3:\"sao:y\")"
+        "NOT p3:(NOT x)"                                   | "p3:x"
+        "NOT p3:(x y (\"sao:x\" OR NOT \"sao:y\"))"        | "NOT p3:(x y) OR (NOT p3:\"sao:x\" p3:\"sao:y\")"
+        "_x._y:z"                                          | "_x._y:z"
+        "x p1:y includeA"                                  | "x p1:y includeA"
+        "p1>1990"                                          | "p1>1990"
+        "NOT p1>1990"                                      | "p1<=1990"
+        "p1=1990"                                          | "p1:1990"
+        "p12:1990-01-01"                                   | "p12:1990-01-01"
+        "NOT p12<=1990-01-01"                              | "p12>1990-01-01"
+        "p12:\"1990-01-01T01:01\""                         | "p12:\"1990-01-01T01:01\""
+        "(x OR y) p1:x"                                    | "(x OR y) p1:x"
+        "x OR y"                                           | "x OR y"
+        "(x OR y) z"                                       | "(x OR y) z"
+        "findcategory:\"https://id.kb.se/term/ktg/X\""     | "findcategory:\"https://id.kb.se/term/ktg/X\""
+        "identifycategory:\"https://id.kb.se/term/ktg/Y\"" | "identifycategory:\"https://id.kb.se/term/ktg/Y\""
+        "nonecategory:\"https://id.kb.se/term/ktg/Z\""     | "nonecategory:\"https://id.kb.se/term/ktg/Z\""
+        "category:\"https://id.kb.se/term/ktg/X\""         | "category:\"https://id.kb.se/term/ktg/X\""
+        "category:\"https://id.kb.se/term/ktg/Y\""         | "category:\"https://id.kb.se/term/ktg/Y\""
+        "category:\"https://id.kb.se/term/ktg/Z\""         | "category:\"https://id.kb.se/term/ktg/Z\""
     }
 
     def "convert to ES query"() {
         given:
         QueryTree tree = new QueryTree('(NOT p1:v1 OR p4:v4) something', disambiguate)
-        Map boostSettings = [
-                "field_boost": [
-                        "fields"              : [
-                                [
-                                        "name"        : "fieldA",
-                                        "boost"       : 10,
-                                        "script_score": [
-                                                "name"    : "a function",
-                                                "function": "f(_score)",
-                                                "apply_if": "condition"
-                                        ]
-                                ],
-                                [
-                                        "name" : "fieldB",
-                                        "boost": 2
-                                ],
-                                [
-                                        "name" : "fieldC",
-                                        "boost": 1
-                                ]
-                        ],
-                        "default_boost_factor": 5,
-                        "analyze_wildcard"    : true
-                ]
-        ]
-        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost(boostSettings))
 
         expect:
         tree.toEs(jsonLd, esSettings, []) == [
@@ -102,20 +112,22 @@ class QueryTreeSpec extends Specification {
                                                                 "bool": [
                                                                         "must_not": [
                                                                                 "simple_query_string": [
-                                                                                        "default_operator": "AND",
-                                                                                        "query"           : "v1",
-                                                                                        "analyze_wildcard": true,
-                                                                                        "fields"          : ["p1^5.0"]
+                                                                                        "default_operator"  : "AND",
+                                                                                        "query"             : "v1",
+                                                                                        "analyze_wildcard"  : true,
+                                                                                        "quote_field_suffix": ".exact",
+                                                                                        "fields"            : ["p1^5.0"]
                                                                                 ]
                                                                         ]
                                                                 ]
                                                         ],
                                                         [
                                                                 "simple_query_string": [
-                                                                        "default_operator": "AND",
-                                                                        "query"           : "v4",
-                                                                        "analyze_wildcard": true,
-                                                                        "fields"          : ["p4._str^5.0"]
+                                                                        "default_operator"  : "AND",
+                                                                        "query"             : "v4",
+                                                                        "analyze_wildcard"  : true,
+                                                                        "quote_field_suffix": ".exact",
+                                                                        "fields"            : ["p4._str^5.0"]
                                                                 ]
                                                         ]
                                                 ]
@@ -126,20 +138,22 @@ class QueryTreeSpec extends Specification {
                                                 "should": [
                                                         [
                                                                 "simple_query_string": [
-                                                                        "default_operator": "AND",
-                                                                        "query"           : "something",
-                                                                        "analyze_wildcard": true,
-                                                                        "fields"          : ["fieldA^0.0", "fieldB^2.0", "fieldC^1.0"]
+                                                                        "default_operator"  : "AND",
+                                                                        "query"             : "something",
+                                                                        "analyze_wildcard"  : true,
+                                                                        "quote_field_suffix": ".exact",
+                                                                        "fields"            : ["fieldA^0.0", "fieldB^2.0", "fieldC^1.0"]
                                                                 ]
                                                         ],
                                                         [
                                                                 "script_score": [
                                                                         "query" : [
                                                                                 "simple_query_string": [
-                                                                                        "default_operator": "AND",
-                                                                                        "query"           : "something",
-                                                                                        "analyze_wildcard": true,
-                                                                                        "fields"          : ["fieldA^10.0", "fieldB^0.0", "fieldC^0.0"]
+                                                                                        "default_operator"  : "AND",
+                                                                                        "query"             : "something",
+                                                                                        "analyze_wildcard"  : true,
+                                                                                        "quote_field_suffix": ".exact",
+                                                                                        "fields"            : ["fieldA^10.0", "fieldB^0.0", "fieldC^0.0"]
                                                                                 ]
                                                                         ],
                                                                         "script": [
@@ -151,6 +165,71 @@ class QueryTreeSpec extends Specification {
                                         ]
                                 ]
                         ]
+                ]
+        ]
+    }
+
+    def "category ES query"() {
+        given:
+        def q = 'type:T1x category:"https://id.kb.se/term/ktg/Y" category:("https://id.kb.se/term/ktg/A" OR "https://id.kb.se/term/ktg/B")'
+        def tree = new QueryTree(q, disambiguate)
+        def appConfig = [
+                "statistics": [
+                        "sliceList": [
+                                ["dimensionChain": ["findCategory"], "slice": ["dimensionChain": ["identifyCategory"]]],
+                                ["dimensionChain": ["noneCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]]
+                        ]
+                ]
+        ]
+        def appParams = new AppParams(appConfig, jsonLd)
+        def multiOrRadioSelected = new SelectedFacets(tree, appParams.sliceList).getAllMultiOrRadioSelected()
+        def mmSelectedFacets = multiOrRadioSelected.values().stream().flatMap(List::stream).toList()
+
+        def mainQuery = tree.toEs(jsonLd, esSettings, mmSelectedFacets)
+        def postFilter = Query.getEsMmSelectedFacets(multiOrRadioSelected, ["T1x"], jsonLd, esSettings)
+
+
+        expect:
+        mainQuery == [
+                "bool": [
+                        "filter": [
+                                "term": [
+                                        "@type": "T1x"
+                                ]
+                        ]
+                ]
+        ]
+        postFilter == [
+                "bool": [
+                        "must": [[
+                                         "bool": [
+                                                 "should": [[
+                                                                    "bool": [
+                                                                            "filter": [
+                                                                                    "term": [
+                                                                                            "_categoryByCollection.@none.@id": "https://id.kb.se/term/ktg/A"
+                                                                                    ]
+                                                                            ]
+                                                                    ]
+                                                            ], [
+                                                                    "bool": [
+                                                                            "filter": [
+                                                                                    "term": [
+                                                                                            "_categoryByCollection.@none.@id": "https://id.kb.se/term/ktg/B"
+                                                                                    ]
+                                                                            ]
+                                                                    ]
+                                                            ]]
+                                         ]
+                                 ], [
+                                         "bool": [
+                                                 "filter": [
+                                                         "term": [
+                                                                 "_categoryByCollection.identify.@id": "https://id.kb.se/term/ktg/Y"
+                                                         ]
+                                                 ]
+                                         ]
+                                 ]]
                 ]
         ]
     }
@@ -370,7 +449,6 @@ class QueryTreeSpec extends Specification {
         "X type:T1x"                 | "type:T1 excludeA"                         | "X type:T1x excludeA" // If excludeA applies to T1, then it also applies to the narrower T1x
         "X type:(T1x OR T2x)"        | "type:T1 excludeA"                         | "(type:T1x X excludeA) OR (type:T2x X)" // excludeA only applicable for T1x
         "X type:(T1x OR T2x)"        | "(type:T1 excludeA) OR (type:T2 includeA)" | "(type:T1x X excludeA) OR (type:T2x X includeA)"
-        "X type:(T1x OR T2x)"        | "type:(T1 OR T2) excludeA includeA"        | "X (type:T1x OR type:T2x)"
         "X type:T1"                  | "type:(T2 OR T3) p7:v7 p8:v8"              | "X type:T1 instanceOf.type:T2 p7:v7 p8:v8"
         "X type:T2"                  | "type:(T1 OR T3) p7:v7 p8:v8"              | "X type:T2 hasInstance.type:T1 p7:v7 p8:v8"
         "X type:T1"                  | "p7:v7"                                    | "X type:T1 p7:v7"

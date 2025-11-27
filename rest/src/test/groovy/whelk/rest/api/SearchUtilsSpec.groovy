@@ -141,13 +141,15 @@ class SearchUtilsSpec extends Specification {
         where:
         params                                        | result
         [:]                                           | new Tuple2(SearchUtils.DEFAULT_LIMIT, SearchUtils.DEFAULT_OFFSET)
-        ['_limit': '5']                               | new Tuple2(5, SearchUtils.DEFAULT_OFFSET)
-        ['_limit': ['5']]                             | new Tuple2(5, SearchUtils.DEFAULT_OFFSET)
         ['_limit': ['5'] as String[]]                 | new Tuple2(5, SearchUtils.DEFAULT_OFFSET)
-        ['_limit': '100000000']                       | new Tuple2(SearchUtils.DEFAULT_LIMIT, SearchUtils.DEFAULT_OFFSET)
-        ['_offset': '5']                              | new Tuple2(SearchUtils.DEFAULT_LIMIT, 5)
-        ['_limit': '5', 'foo': 'bar', '_offset': '5'] | new Tuple2(5, 5)
-        ['_limit': 'foo']                             | new Tuple2(SearchUtils.DEFAULT_LIMIT, SearchUtils.DEFAULT_OFFSET)
+        ['_limit': ['100000000'] as String[]]         | new Tuple2(SearchUtils.DEFAULT_LIMIT, SearchUtils.DEFAULT_OFFSET)
+        ['_offset': ['5'] as String[]]                | new Tuple2(SearchUtils.DEFAULT_LIMIT, 5)
+        [
+                '_limit': ['5'] as String[],
+                'foo': ['bar'] as String[],
+                '_offset': ['5'] as String[]
+        ]                                             | new Tuple2(5, 5)
+        ['_limit': ['foo'] as String []]              | new Tuple2(SearchUtils.DEFAULT_LIMIT, SearchUtils.DEFAULT_OFFSET)
 
     }
 
@@ -155,7 +157,7 @@ class SearchUtilsSpec extends Specification {
         given:
 
         when:
-        search.getLimitAndOffset(['_limit': '-1'])
+        search.getLimitAndOffset(['_limit': ['-1'] as String[]])
 
         then:
         thrown InvalidQueryException
@@ -165,7 +167,7 @@ class SearchUtilsSpec extends Specification {
         given:
 
         when:
-        search.getLimitAndOffset(['_offset': '-1'])
+        search.getLimitAndOffset(['_offset': ['-1'] as String[]])
 
         then:
         thrown InvalidQueryException

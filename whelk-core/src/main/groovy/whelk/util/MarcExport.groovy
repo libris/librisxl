@@ -75,7 +75,7 @@ class MarcExport {
                 li.remove()
 
         try {
-            profile.insert9xxImages(bibRecord, rootDocument);
+            profile.maybeAdd956Images(bibRecord, rootDocument);
         } catch (Exception e) {
             log.warn("Failed to insert images for: " + rootDocument.getShortId(), e)
         }

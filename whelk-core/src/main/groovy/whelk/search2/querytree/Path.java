@@ -17,13 +17,10 @@ import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.RECORD_KEY;
-import static whelk.JsonLd.Rdfs.RDF_TYPE;
-import static whelk.JsonLd.SEARCH_KEY;
 
 public class Path {
     // TODO: Get substitutions from context instead?
     private static final Map<String, String> substitutions = Map.of(
-            RDF_TYPE, JsonLd.TYPE_KEY,
             "hasItem", String.format("%s.itemOf", JsonLd.REVERSE_KEY),
             "hasInstance", String.format("%s.instanceOf", JsonLd.REVERSE_KEY)
     );
@@ -86,7 +83,7 @@ public class Path {
     // As represented in indexed docs
     public String jsonForm() {
         return path.stream()
-                .map(Subpath::toString)
+                .map(Subpath::indexKey)
                 .map(Path::substitute)
                 .collect(Collectors.joining("."));
     }
@@ -96,15 +93,11 @@ public class Path {
         if (token != null) {
             return token.formatted();
         }
-        String s = path.stream().map(Subpath::queryForm).collect(Collectors.joining("."));
+        String s = path.stream().map(Subpath::queryKey).collect(Collectors.joining("."));
         return s.contains(":") ? QueryUtil.quote(s) : s;
     }
 
     public ExpandedPath expand(JsonLd jsonLd) {
-        return expand(jsonLd, null);
-    }
-
-    public ExpandedPath expand(JsonLd jsonLd, Value value) {
         List<Subpath> expandedPath = expandShortHand(path);
 
         firstProperty().ifPresent(property -> {
@@ -161,7 +154,7 @@ public class Path {
         }
 
         @Override
-        public ExpandedPath expand(JsonLd jsonLd, Value value) {
+        public ExpandedPath expand(JsonLd jsonLd) {
             return this;
         }
 
@@ -180,6 +173,22 @@ public class Path {
 
                 if (altPaths.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> p.mayAppearOnType(t, jsonLd))) {
                     altPaths.add(this);
+                }
+
+                /*
+                FIXME:
+                 Integral relations are generally not applied to records.
+                 Bibliography is an exception: we need to search both meta.bibliography and hasInstance.meta.bibliography.
+                */
+                if (altPaths.size() == 1) {
+                    var path = altPaths.getFirst();
+                    if (path.jsonForm().startsWith("meta.bibliography")) {
+                        integralRelations.stream().filter(ir -> ir.name().equals("hasInstance"))
+                                .map(hasInstance -> Stream.concat(Stream.of(hasInstance), path.path().stream()).toList())
+                                .map(ExpandedPath::new)
+                                .findFirst()
+                                .ifPresent(altPaths::add);
+                    }
                 }
 
                 return altPaths;

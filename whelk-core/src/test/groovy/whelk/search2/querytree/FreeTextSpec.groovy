@@ -8,7 +8,7 @@ class FreeTextSpec extends Specification {
         given:
         Map boostSettings = [
                 "field_boost": [
-                        "fields": [
+                        "fields"          : [
                                 [
                                         "name" : "field1",
                                         "boost": 10
@@ -18,7 +18,7 @@ class FreeTextSpec extends Specification {
                                         "boost": 20
                                 ]
                         ],
-                        "analyze_wildcard": true
+                        "analyze_wildcard": true,
                 ]
         ]
         Map esQuery = new FreeText("something").toEs(new ESSettings.Boost(boostSettings).fieldBoost())
@@ -26,10 +26,11 @@ class FreeTextSpec extends Specification {
         expect:
         esQuery == [
                 "simple_query_string": [
-                        "default_operator": "AND",
-                        "query"           : "something",
-                        "analyze_wildcard": true,
-                        "fields"          : [
+                        "default_operator"  : "AND",
+                        "query"             : "something",
+                        "analyze_wildcard"  : true,
+                        "quote_field_suffix": ".exact",
+                        "fields"            : [
                                 "field1^10.0",
                                 "field2^20.0"
                         ]
@@ -41,26 +42,26 @@ class FreeTextSpec extends Specification {
         given:
         Map boostSettings = [
                 "field_boost": [
-                        "fields": [
+                        "fields"            : [
                                 [
-                                        "name" : "field1",
-                                        "boost": 10,
+                                        "name"        : "field1",
+                                        "boost"       : 10,
                                         "script_score": [
                                                 "name"    : "a function",
                                                 "function": "f1(_score)"
                                         ]
                                 ],
                                 [
-                                        "name" : "field2",
-                                        "boost": 20,
+                                        "name"        : "field2",
+                                        "boost"       : 20,
                                         "script_score": [
                                                 "name"    : "a function",
                                                 "function": "f1(_score)"
                                         ]
                                 ],
                                 [
-                                        "name" : "field3",
-                                        "boost": 10,
+                                        "name"        : "field3",
+                                        "boost"       : 10,
                                         "script_score": [
                                                 "name"    : "another function",
                                                 "function": "f2(_score)",
@@ -68,7 +69,8 @@ class FreeTextSpec extends Specification {
                                         ]
                                 ]
                         ],
-                        "analyze_wildcard": true
+                        "analyze_wildcard"  : true,
+                        "quote_field_suffix": ".exact"
                 ]
         ]
         Map esQuery = new FreeText("something").toEs(new ESSettings.Boost(boostSettings).fieldBoost())
@@ -84,10 +86,11 @@ class FreeTextSpec extends Specification {
                                                 ],
                                                 "query" : [
                                                         "simple_query_string": [
-                                                                "default_operator": "AND",
-                                                                "query"           : "something",
-                                                                "analyze_wildcard": true,
-                                                                "fields"          : [
+                                                                "default_operator"  : "AND",
+                                                                "query"             : "something",
+                                                                "analyze_wildcard"  : true,
+                                                                "quote_field_suffix": ".exact",
+                                                                "fields"            : [
                                                                         "field1^10.0",
                                                                         "field2^20.0",
                                                                         "field3^0.0"
@@ -103,10 +106,11 @@ class FreeTextSpec extends Specification {
                                                 ],
                                                 "query" : [
                                                         "simple_query_string": [
-                                                                "default_operator": "AND",
-                                                                "query"           : "something",
-                                                                "analyze_wildcard": true,
-                                                                "fields"          : [
+                                                                "default_operator"  : "AND",
+                                                                "query"             : "something",
+                                                                "analyze_wildcard"  : true,
+                                                                "quote_field_suffix": ".exact",
+                                                                "fields"            : [
                                                                         "field1^0.0",
                                                                         "field2^0.0",
                                                                         "field3^10.0"
@@ -124,7 +128,7 @@ class FreeTextSpec extends Specification {
         given:
         Map boostSettings = [
                 "field_boost": [
-                        "fields": [
+                        "fields"          : [
                                 [
                                         "name" : "field1",
                                         "boost": 10
@@ -134,8 +138,8 @@ class FreeTextSpec extends Specification {
                                         "boost": 20
                                 ],
                                 [
-                                        "name" : "field3",
-                                        "boost": 10,
+                                        "name"        : "field3",
+                                        "boost"       : 10,
                                         "script_score": [
                                                 "name"    : "a function",
                                                 "function": "f(_score)"
@@ -153,10 +157,11 @@ class FreeTextSpec extends Specification {
                         'should': [
                                 [
                                         "simple_query_string": [
-                                                "default_operator": "AND",
-                                                "query"           : "something",
-                                                "analyze_wildcard": true,
-                                                "fields"          : [
+                                                "default_operator"  : "AND",
+                                                "query"             : "something",
+                                                "analyze_wildcard"  : true,
+                                                "quote_field_suffix": ".exact",
+                                                "fields"            : [
                                                         "field1^10.0",
                                                         "field2^20.0",
                                                         "field3^0.0"
@@ -170,10 +175,11 @@ class FreeTextSpec extends Specification {
                                                 ],
                                                 "query" : [
                                                         "simple_query_string": [
-                                                                "default_operator": "AND",
-                                                                "query"           : "something",
-                                                                "analyze_wildcard": true,
-                                                                "fields"          : [
+                                                                "default_operator"  : "AND",
+                                                                "query"             : "something",
+                                                                "analyze_wildcard"  : true,
+                                                                "quote_field_suffix": ".exact",
+                                                                "fields"            : [
                                                                         "field1^0.0",
                                                                         "field2^0.0",
                                                                         "field3^10.0"

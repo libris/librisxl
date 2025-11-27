@@ -246,6 +246,7 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
         query.put("query", queryString);
         query.put("analyze_wildcard", boostSettings.analyzeWildcard());
         query.put("default_operator", connective.name());
+        query.put("quote_field_suffix", ESSettings.Boost.EXACT_SUFFIX);
         if (!fields.isEmpty()) {
             query.put("fields", fields);
             if (queryMode.equals("query_string") && fields.size() > 1 && boostSettings.multiMatchType() != null) {
