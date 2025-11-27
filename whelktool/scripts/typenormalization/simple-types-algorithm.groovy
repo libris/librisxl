@@ -143,8 +143,10 @@ class TypeMappings implements UsingJsonKeys {
     boolean convertIssuanceType(Map instance, Map work) {
         // TODO: check genres and heuristics (some Serial are mistyped!)
         var issuancetype = (String) instance.remove("issuanceType")
+
+        // If there is no issuanceType, set type to the generic Work
         if (!issuancetype) {
-            return false
+            issuancetype = 'Work'
         }
 
         // Already new type of value == already normalized:
@@ -221,6 +223,29 @@ class TypeNormalizer implements UsingJsonKeys {
         changed |= mappings.convertIssuanceType(instance, work)
 
         // FIXME: recursively normalize all subnodes (hasPart, relatedTo, etc.)!
+        // Normalize hasPart on instance
+        if ('hasPart' in instance) {
+            for (part in instance.hasPart) {
+                changed |= normalize(part, [:])
+
+                if ((part.get(TYPE) == "PhysicalResource") & (instance.get(TYPE) == "DigitalResource")) {
+                    part.put(TYPE, "DigitalResource")
+                    part.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
+                    if (part.category.size() == 0) {
+                        part.remove("category")
+                    }
+                    changed = true
+                }
+            }
+            println instance.hasPart
+        }
+        // Normalize hasPart on work
+        if ('hasPart' in work) {
+            for (part in work.hasPart) {
+                changed |= normalize([:], part)
+            }
+            println work.hasPart
+        }
 
         if (changed) {
             reorderForReadability(work)
@@ -336,7 +361,6 @@ class TypeNormalizer implements UsingJsonKeys {
          */
         // If the resource is electronic and has at least on carrierType that contains "Online"
         if ((isElectronic && mappings.matches(carrierTypes, "Online"))) {
-            // TODO Understand what is going on here - can we move to cleanup section?
             // Is the purpose of this to make sure that 1) there is minimal duplication between instanceType and carrierType,
             // but that there is always a carrier type (even if this means duplication)?
             carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
@@ -345,8 +369,6 @@ class TypeNormalizer implements UsingJsonKeys {
             }
 
             // Apply new instance types DigitalResource and PhysicalResource
-            // TODO For readability, could this happen before the carrier/media type cleanup?
-            //  Old instancetype is already stored in itype
             instance.put(TYPE, "DigitalResource")
             changed = true
         } else {
@@ -597,6 +619,7 @@ process { def doc, Closure loadWorkItem ->
     def (record, instance) = doc.graph
 
     if ('instanceOf' in instance) {
+        // Instances and local works
         if (ID !in instance.instanceOf) {
             def work = instance.instanceOf
             if (work instanceof List && work.size() == 1) {
@@ -606,7 +629,9 @@ process { def doc, Closure loadWorkItem ->
             var changed = typeNormalizer.normalize(instance, work)
 
             if (changed) doc.scheduleSave()
+
         } else {
+            // Instances and linked works
             def loadedWorkId = instance.instanceOf[ID]
             // TODO: refactor very hacky solution...
             loadWorkItem(loadedWorkId) { workIt ->
