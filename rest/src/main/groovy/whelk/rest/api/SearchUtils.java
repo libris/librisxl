@@ -278,7 +278,7 @@ public class SearchUtils {
                                                             items, mappings, pageParams,
                                                             limit, offset, total);
 
-        if (stats != null && !stats.isEmpty() && (suggest == null || !spell.equals("only"))) {
+        if (stats != null && !stats.isEmpty() && (suggest == null || (spell != null && !spell.equals("only")))) {
             stats.put(JsonLd.ID_KEY, "#stats");
             result.put("stats", stats);
         }
