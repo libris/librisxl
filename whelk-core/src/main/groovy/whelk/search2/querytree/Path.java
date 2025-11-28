@@ -1,112 +1,155 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.EsMappings;
 import whelk.search2.QueryUtil;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static whelk.JsonLd.ID_KEY;
-import static whelk.JsonLd.RECORD_KEY;
+import static whelk.JsonLd.Owl.INVERSE_OF;
+import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 
-public class Path {
-    // TODO: Get substitutions from context instead?
-    private static final Map<String, String> substitutions = Map.of(
-            "hasItem", String.format("%s.itemOf", JsonLd.REVERSE_KEY),
-            "hasInstance", String.format("%s.instanceOf", JsonLd.REVERSE_KEY)
-    );
-
-    private final List<Subpath> path;
-
+public final class Path implements Selector {
+    private final List<Selector> path;
     private Token token;
 
-    public Path(List<Subpath> path, Token token) {
+    public Path(List<Selector> path, Token token) {
         this.path = path;
         this.token = token;
     }
 
-    public Path(List<Subpath> path) {
+    public Path(List<Selector> path) {
         this.path = path;
     }
 
-    public Path(Subpath subpath) {
-        this.path = List.of(subpath);
+    public Path(Selector s) {
+        this.path = List.of(s);
     }
 
-    public List<Subpath> path() {
+    @Override
+    public String queryKey() {
+        if (token != null) {
+            return token.formatted();
+        }
+        String s = path.stream().map(Selector::queryKey).collect(Collectors.joining("."));
+        return s.contains(":") ? QueryUtil.quote(s) : s;
+    }
+
+    @Override
+    public String esField() {
+        return path.stream().map(Selector::esField).collect(Collectors.joining("."));
+    }
+
+    @Override
+    public List<Selector> path() {
         return path;
     }
 
-    public Subpath first() {
-        return path.getFirst();
+    @Override
+    public Selector expand(JsonLd jsonLd) {
+        List<Selector> expandedPath = path.stream()
+                .flatMap(s -> s.expand(jsonLd).path().stream())
+                .toList();
+        // TODO: Explanation + example
+        if (expandedPath.size() > 2
+                && expandedPath.get(0) instanceof Property p1
+                && expandedPath.get(1) instanceof Property p2
+                && p1.isInverseOf(p2)) {
+            expandedPath = expandedPath.subList(2, expandedPath.size());
+        }
+        return new Path(expandedPath);
     }
 
-    public Subpath last() {
-        return path.getLast();
-    }
-
-    public Optional<Property> lastProperty() {
-        return getPropertyPath().reversed().stream().findFirst();
-    }
-
-    public Optional<Property> firstProperty() {
-        return getPropertyPath().stream().findFirst();
-    }
-
-    public List<Property> getPropertyPath() {
-        return path.stream()
-                .filter(Property.class::isInstance)
-                .map(Property.class::cast)
+    @Override
+    public List<Selector> getAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return first().getAltPaths(jsonLd, rdfSubjectTypes).stream()
+                .map(s -> Stream.concat(s.path().stream(), tail().stream()).toList())
+                .map(Path::new)
+                .map(Selector.class::cast)
                 .toList();
     }
 
+    @Override
     public boolean isValid() {
-        return path.stream().allMatch(Subpath::isValid);
+        return path.stream().allMatch(Selector::isValid);
+    }
+
+    @Override
+    public boolean isType() {
+        return last().isType();
+    }
+
+    @Override
+    public boolean valueIsObject() {
+        return last().valueIsObject();
+    }
+
+    @Override
+    public boolean mayAppearOnType(String type, JsonLd jsonLd) {
+        return first().mayAppearOnType(type, jsonLd);
+    }
+
+    @Override
+    public boolean appearsOnType(String type, JsonLd jsonLd) {
+        return first().appearsOnType(type, jsonLd);
+    }
+
+    @Override
+    public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
+        return first().indirectlyAppearsOnType(type, jsonLd);
+    }
+
+    @Override
+    public boolean appearsOnlyOnRecord(JsonLd jsonLd) {
+        return first().appearsOnlyOnRecord(jsonLd);
+    }
+
+    @Override
+    public int offset() {
+        return token != null ? token.offset() : -1;
+    }
+
+    @Override
+    public Map<String, Object> definition() {
+        LinkedList<Map<String, Object>> propertyChainAxiom = new LinkedList<>();
+        for (int i = path.size() - 1; i >= 0; i--) {
+            var step = path.get(i);
+            if (step instanceof Property p && i > 0 && path.get(i - 1).queryKey().equals(JsonLd.REVERSE_KEY)) {
+                propertyChainAxiom.push(Map.of(INVERSE_OF, p.definition()));
+                i--;
+            } else {
+                propertyChainAxiom.push(step.definition());
+            }
+        }
+        return propertyChainAxiom.size() > 1
+                ? Map.of(PROPERTY_CHAIN_AXIOM, propertyChainAxiom)
+                : propertyChainAxiom.getFirst();
+    }
+
+    @Override
+    public List<String> domain() {
+        return first().domain();
+    }
+
+    @Override
+    public List<String> range() {
+        return last().range();
+    }
+
+    public Token token() {
+        return token;
     }
 
     @Override
     public String toString() {
         return path.stream()
-                .map(Subpath::toString)
+                .map(Selector::toString)
                 .collect(Collectors.joining("."));
-    }
-
-    // As represented in indexed docs
-    public String jsonForm() {
-        return path.stream()
-                .map(Subpath::indexKey)
-                .map(Path::substitute)
-                .collect(Collectors.joining("."));
-    }
-
-    // As represented in query string
-    public String queryForm() {
-        if (token != null) {
-            return token.formatted();
-        }
-        String s = path.stream().map(Subpath::queryKey).collect(Collectors.joining("."));
-        return s.contains(":") ? QueryUtil.quote(s) : s;
-    }
-
-    public ExpandedPath expand(JsonLd jsonLd) {
-        List<Subpath> expandedPath = expandShortHand(path);
-
-        firstProperty().ifPresent(property -> {
-            if (property.hasDomainAdminMetadata(jsonLd)) {
-                expandedPath.addFirst(new Property(RECORD_KEY, jsonLd));
-            }
-        });
-
-        return new ExpandedPath(expandedPath, this);
     }
 
     @Override
@@ -119,123 +162,15 @@ public class Path {
         return Objects.hash(path);
     }
 
-    public Optional<String> getEsNestedStem(EsMappings esMappings) {
-        String esPath = jsonForm();
-        if (esMappings.isNestedTypeField(esPath)) {
-            return Optional.of(esPath);
-        }
-        return esMappings.getNestedTypeFields().stream().filter(esPath::startsWith).findFirst();
+    private Selector first() {
+        return path.getFirst();
     }
 
-    private static List<Subpath> expandShortHand(List<Subpath> path) {
-        return path.stream()
-                .flatMap(sp -> sp instanceof Property p ? p.expand().stream() : Stream.of(sp))
-                .collect(Collectors.toList());
+    public Selector last() {
+        return path.getLast();
     }
 
-    private static String substitute(String property) {
-        return Optional.ofNullable(substitutions.get(property)).orElse(property);
-    }
-
-    public static class ExpandedPath extends Path {
-        private Path origPath;
-
-        ExpandedPath(List<Subpath> path, Path origPath) {
-            super(path);
-            this.origPath = origPath;
-        }
-
-        ExpandedPath(List<Subpath> path) {
-            super(path);
-        }
-
-        ExpandedPath(Key key) {
-            super(key);
-        }
-
-        @Override
-        public ExpandedPath expand(JsonLd jsonLd) {
-            return this;
-        }
-
-        public List<ExpandedPath> getAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-            if (origPath != null && origPath.first() instanceof Property p && !p.isPlatformTerm() && !p.isRdfType()) {
-                Set<Property> integralRelations = rdfSubjectTypes.stream()
-                        .map(t -> QueryUtil.getIntegralRelationsForType(t, jsonLd))
-                        .flatMap(List::stream)
-                        .collect(Collectors.toSet());
-
-                List<ExpandedPath> altPaths = new ArrayList<>();
-
-                integralRelations.stream()
-                        .map(ir -> applyIntegralRelation(ir, jsonLd))
-                        .forEach(path -> path.ifPresent(altPaths::add));
-
-                if (altPaths.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> p.mayAppearOnType(t, jsonLd))) {
-                    altPaths.add(this);
-                }
-
-                /*
-                FIXME:
-                 Integral relations are generally not applied to records.
-                 Bibliography is an exception: we need to search both meta.bibliography and hasInstance.meta.bibliography.
-                */
-                if (altPaths.size() == 1) {
-                    var path = altPaths.getFirst();
-                    if (path.jsonForm().startsWith("meta.bibliography")) {
-                        integralRelations.stream().filter(ir -> ir.name().equals("hasInstance"))
-                                .map(hasInstance -> Stream.concat(Stream.of(hasInstance), path.path().stream()).toList())
-                                .map(ExpandedPath::new)
-                                .findFirst()
-                                .ifPresent(altPaths::add);
-                    }
-                }
-
-                return altPaths;
-            }
-
-            return List.of(this);
-        }
-
-        private Optional<ExpandedPath> applyIntegralRelation(Property integral, JsonLd jsonLd) {
-            if (first() instanceof Property p) {
-                if (integral.isInverseOf(p)) {
-                    List<Subpath> adjustedPath = new ArrayList<>(path());
-                    adjustedPath.removeFirst();
-                    return Optional.of(new ExpandedPath(adjustedPath));
-                } else {
-                    boolean followIntegralRelation = integral.range().stream().anyMatch(irRangeType -> p.mayAppearOnType(irRangeType, jsonLd));
-                    if (followIntegralRelation && !p.name().equals(RECORD_KEY)) {
-                        List<Subpath> adjustedPath = new ArrayList<>(path()) {{
-                            addFirst(integral);
-                        }};
-                        return Optional.of(new ExpandedPath(adjustedPath));
-                    }
-                }
-            }
-            return Optional.empty();
-        }
-
-        public List<ExpandedPath> getAlt2Paths(JsonLd jsonLd) {
-            // TODO this should be the responsibility of Property?
-            if (origPath != null && origPath.first() instanceof Property p && jsonLd.indexMapTermsOf.containsKey(p.name())) {
-                List<ExpandedPath> altPaths = new ArrayList<>();
-                if (jsonLd.indexMapTermsOf.containsKey(p.name())) {
-                    for (String indexMap : jsonLd.indexMapTermsOf.get(p.name)) {
-                        for (String ix : List.of("find", "identify")) { // FIXME where should we get these?
-                            altPaths.add(new ExpandedPath(List.of(
-                                    new Key.RecognizedKey(indexMap),
-                                    new Key.RecognizedKey(ix),
-                                    new Key.RecognizedKey(ID_KEY)
-                            )));
-                        }
-                    }
-                }
-
-                return altPaths;
-            }
-
-            return Collections.emptyList();
-        }
+    private List<Selector> tail() {
+        return path.subList(1, path.size());
     }
 }

@@ -6,7 +6,7 @@ import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
-import whelk.search2.querytree.PathValue;
+import whelk.search2.querytree.Statement;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.Type;
@@ -69,7 +69,7 @@ public class PredicateObjectQuery extends ObjectQuery {
 
     private Node predicateObjectFilter(Collection<Property> predicates) {
         var preds = predicates.stream()
-                .map(p -> (Node) new PathValue(p, Operator.EQUALS, object))
+                .map(p -> (Node) new Statement(p, Operator.EQUALS, object))
                 .toList();
         return preds.size() == 1 ? preds.getFirst() : new Or(preds);
     }

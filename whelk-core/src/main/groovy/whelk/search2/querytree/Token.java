@@ -2,7 +2,7 @@ package whelk.search2.querytree;
 
 import whelk.search2.QueryUtil;
 
-public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey, Token.Quoted, Token.Raw {
+public sealed interface Token permits Key, Token.Quoted, Token.Raw {
     String value();
     int offset();
 
