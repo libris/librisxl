@@ -6,8 +6,6 @@ and deleted = 'false'
 and data#>>'{@graph,0,descriptionCreator,@id}' = 'https://libris.kb.se/library/BOKR'
 """
 
-def count = 0
-
 selectBySqlWhere(qry) { b ->
 
 	def item = b.getGraph()[1]
@@ -17,7 +15,7 @@ selectBySqlWhere(qry) { b ->
 				//decode xml/html entities
 				if ( summary.label =~ /&[^ ]+;/ ) { 
 					if (summary.label instanceof List) {
-						summary.label = StringEscapeUtils.unescapeXml(StringEscapeUtils.unescapeHtml4(summary.label.join("\n")))
+						summary.label = summary.label.collect { li -> StringEscapeUtils.unescapeXml(StringEscapeUtils.unescapeHtml4(li)) }
 					} else {
 						summary.label = StringEscapeUtils.unescapeXml(StringEscapeUtils.unescapeHtml4(summary.label))
 					}
@@ -26,12 +24,7 @@ selectBySqlWhere(qry) { b ->
 					b.scheduleSave(loud: true)
 
 					//println(b.getGraph()[1])
-					count++
 				}
 			}
 	}
 }
-
-println('Changed:')
-println(count)
-
