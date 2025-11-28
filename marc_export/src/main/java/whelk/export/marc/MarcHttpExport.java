@@ -198,6 +198,11 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
             failedRequests.labels("Export failed",
                     Integer.toString(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)).inc();
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+            if (isFatalError(e)) {
+                logger.fatal("FATAL ERROR detected in export request {}, exiting to allow systemd restart", requestId, e);
+                System.exit(1);
+            }
         }
         finally
         {
@@ -237,5 +242,19 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
             return false;
         }
         return true;
+    }
+
+    private boolean isFatalError(Throwable e)
+    {
+        Throwable current = e;
+        while (current != null)
+        {
+            // Maybe also consider IllegalStateException to be a fatal error?
+            if (current instanceof OutOfMemoryError) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }
