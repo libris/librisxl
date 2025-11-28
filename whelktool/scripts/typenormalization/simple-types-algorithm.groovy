@@ -225,25 +225,12 @@ class TypeNormalizer implements UsingJsonKeys {
         // FIXME: recursively normalize all subnodes (hasPart, relatedTo, etc.)!
         // Normalize hasPart on instance
         if ('hasPart' in instance) {
-            for (part in instance.hasPart) {
-                changed |= normalize(part, [:])
-
-                if ((part.get(TYPE) == "PhysicalResource") & (instance.get(TYPE) == "DigitalResource")) {
-                    part.put(TYPE, "DigitalResource")
-                    part.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
-                    if (part.category.size() == 0) {
-                        part.remove("category")
-                    }
-                    changed = true
-                }
-            }
+            normalizeHasPart(work, mappings)
             println instance.hasPart
         }
         // Normalize hasPart on work
         if ('hasPart' in work) {
-            for (part in work.hasPart) {
-                changed |= normalize([:], part)
-            }
+            normalizeHasPart(work, mappings)
             println work.hasPart
         }
 
@@ -553,6 +540,31 @@ class TypeNormalizer implements UsingJsonKeys {
             changed = true
         }
 
+        return changed
+    }
+
+    static boolean normalizeHasPart(Map parentEntity, TypeMappings mappings) {
+        var changed = false
+        for (part in parentEntity.hasPart) {
+            // If the part is a Work or subclass thereof
+            if (mappings.whelk.jsonLd.isSubclassOf("Work")) {
+                changed |= normalize([:], part)
+            }
+            // If the part is an instance or subclass thereof
+            else if (mappings.whelk.jsonLd.isSubclassOf("Instance")) {
+                changed |= normalize(part, [:])
+
+                // Special handling for when the part is Electronic
+                if ((part.get(TYPE) == "PhysicalResource") & (parentEntity.get(TYPE) == "DigitalResource")) {
+                    part.put(TYPE, "DigitalResource")
+                    part.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
+                    if (part.category.size() == 0) {
+                        part.remove("category")
+                    }
+                    changed = true
+                }
+            }
+        }
         return changed
     }
 
