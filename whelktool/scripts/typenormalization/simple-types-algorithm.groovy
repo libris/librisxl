@@ -228,7 +228,7 @@ class TypeNormalizer implements UsingJsonKeys {
         // FIXME: recursively normalize all subnodes (hasPart, relatedTo, etc.)!
         // Normalize hasPart on instance
         if ('hasPart' in instance) {
-            normalizeHasPart(work, mappings)
+            normalizeHasPart(instance, mappings)
             println instance.hasPart
         }
         // Normalize hasPart on work
