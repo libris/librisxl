@@ -13,7 +13,7 @@ class ObjectQuerySpec extends Specification {
     def "build agg query with curated predicates"() {
         given:
         Link object = new Link("https://libris.kb.se/fcrtpljz1qp2bdv#it")
-        Map<Property, List> predicates = ['p4', 'p6'].collectEntries { [new Property(it, jsonLd), []] }
+        Map<Property, List> predicates = ['p4', 'p6'].collectEntries { [Property.getProperty(it, jsonLd), []] }
         Map aggQuery = ObjectQuery.buildPAggQuery(object, predicates, jsonLd, esMappings)
 
         expect:
