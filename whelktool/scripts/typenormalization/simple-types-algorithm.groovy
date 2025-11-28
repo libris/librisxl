@@ -41,6 +41,9 @@ class TypeMappings implements UsingJsonKeys {
     Map<String, List<String>> categoryMatches = [:]
 
     TypeMappings(Whelk whelk, File scriptDir) {
+        // Store reference to Whelk so other helpers can use it
+        this.whelk = whelk
+
         // TODO: Replace this generated json (see makemappings.groovy) by runtime that logic on startup!
         var f = new File(scriptDir, "mappings.json")
         Map mappings = mapper.readValue(f, Map)
@@ -520,6 +523,31 @@ class TypeNormalizer implements UsingJsonKeys {
         return changed
     }
 
+    boolean normalizeHasPart(Map parentEntity, TypeMappings mappings) {
+        var changed = false
+        for (part in parentEntity.hasPart) {
+            // If the part is a Work or subclass thereof
+            println part.get(TYPE)
+            if (mappings.whelk.jsonld.isSubClassOf(part.get(TYPE), "Work")) {
+                changed |= normalize([:], part)
+            }
+            // If the part is an instance or subclass thereof
+            else if (mappings.whelk.jsonld.isSubClassOf(part.get(TYPE), "Instance")) {
+                changed |= normalize(part, [:])
+
+                // Special handling for when the part is Electronic
+                if ((part.get(TYPE) == "PhysicalResource") & (parentEntity.get(TYPE) == "DigitalResource")) {
+                    part.put(TYPE, "DigitalResource")
+                    part.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
+                    if (part.category.size() == 0) {
+                        part.remove("category")
+                    }
+                    changed = true
+                }
+            }
+        }
+        return changed
+    }
 
     // ----- Typenormalizer helper methods -----
     static boolean moveInstanceGenreFormsToWork (Map instance, Map work) {
@@ -543,30 +571,6 @@ class TypeNormalizer implements UsingJsonKeys {
         return changed
     }
 
-    static boolean normalizeHasPart(Map parentEntity, TypeMappings mappings) {
-        var changed = false
-        for (part in parentEntity.hasPart) {
-            // If the part is a Work or subclass thereof
-            if (mappings.whelk.jsonLd.isSubclassOf("Work")) {
-                changed |= normalize([:], part)
-            }
-            // If the part is an instance or subclass thereof
-            else if (mappings.whelk.jsonLd.isSubclassOf("Instance")) {
-                changed |= normalize(part, [:])
-
-                // Special handling for when the part is Electronic
-                if ((part.get(TYPE) == "PhysicalResource") & (parentEntity.get(TYPE) == "DigitalResource")) {
-                    part.put(TYPE, "DigitalResource")
-                    part.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
-                    if (part.category.size() == 0) {
-                        part.remove("category")
-                    }
-                    changed = true
-                }
-            }
-        }
-        return changed
-    }
 
     static boolean assumedToBePrint(Map instance) {
         // TODO: carrierType == marc:RegularPrint || marc:RegularPrintReproduction
