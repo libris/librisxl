@@ -4,19 +4,19 @@ import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.Disambiguate
 
-class PathSpec extends Specification {
+class SelectorSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
 
     def "expand"() {
         given:
-        Path path = ((PathValue) QueryTreeBuilder.buildTree("$_path:v", disambiguate)).path()
+        Selector p = ((Statement) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
 
         expect:
-        path.expand(jsonLd).toString() == result
+        p.expand(jsonLd).toString() == result
 
         where:
-        _path   | result
+        _p      | result
         "p1"    | "p1"
         "p5"    | "meta.p5"
         "p6"    | "p3.p4"
@@ -25,13 +25,13 @@ class PathSpec extends Specification {
 
     def "get alternative paths for integral relations"() {
         given:
-        Path.ExpandedPath path = ((PathValue) QueryTreeBuilder.buildTree("$_path:v", disambiguate)).path().expand(jsonLd)
+        Selector p = ((Statement) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
 
         expect:
-        path.getAltPaths(jsonLd, types).collect { it.toString() } == result
+        p.getAltPaths(jsonLd, types).collect { it.expand(jsonLd).toString() } == result
 
         where:
-        _path            | types        | result
+        _p | types | result
         "p1"             | []           | ["p1"]
         "p1"             | ["T1"]       | ["instanceOf.p1", "p1"]
         "p1"             | ["T2"]       | ["hasInstance.p1", "p1"]

@@ -7,9 +7,9 @@ import whelk.search2.querytree.And;
 import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
-import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.Statement;
 import whelk.search2.querytree.Term;
 import whelk.search2.querytree.Type;
 
@@ -122,8 +122,8 @@ public class ObjectQuery extends Query {
         return result;
     }
 
-    private PathValue objectFilter() {
-        return new PathValue("_links", Operator.EQUALS, new Term(object.iri()));
+    private Statement objectFilter() {
+        return new Statement("_links", Operator.EQUALS, new Term(object.iri()));
     }
 
     private Map<String, Object> getPAggQuery(Map<Property, List<String>> predicateToSubjectTypes) {
@@ -140,7 +140,7 @@ public class ObjectQuery extends Query {
         var filters = new HashMap<>();
 
         predicateToSubjectTypes.forEach((p, subjects) -> {
-            var filter = new PathValue(p, Operator.EQUALS, object)
+            var filter = new Statement(p, Operator.EQUALS, object)
                     .expand(jsonLd, subjects)
                     .toEs(esSettings);
             filters.put(p.name(), filter);

@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,11 +58,10 @@ public class SuggestQuery extends Query {
                 .map(Map.class::cast)
                 .peek(item -> {
                     var qualifiers = getApplicablePredicates(item, propertyByKey).stream()
-                            .map(predicate -> {
-                                var predicateDefinition = predicate.lastProperty().map(Property::definition).orElse(Map.of());// TODO: Handle property paths?
+                            .map(selector -> {
                                 String formattedLink = new Link((String) item.get(ID_KEY)).queryForm();
                                 Link placeholderLink = new Link("http://PLACEHOLDER_LINK");
-                                PathValue placeholderNode = new PathValue(predicate, Operator.EQUALS, placeholderLink);
+                                Statement placeholderNode = new Statement(selector, Operator.EQUALS, placeholderLink);
                                 String template = qTree.replace(edited.node(), placeholderNode).toQueryString();
                                 int placeholderLinkStart = template.indexOf(placeholderLink.queryForm());
                                 int placeholderLinkEnd = placeholderLinkStart + placeholderLink.queryForm().length();
@@ -74,7 +71,7 @@ public class SuggestQuery extends Query {
                                     q += " ";
                                     newCursorPos += 1;
                                 }
-                                return Map.of("_predicate", predicateDefinition,
+                                return Map.of("_predicate", selector.definition(),
                                         "_q", QueryUtil.makeViewFindUrl(q, queryParams),
                                         "_cursor", newCursorPos);
                             })
@@ -95,10 +92,10 @@ public class SuggestQuery extends Query {
         return queryDsl;
     }
 
-    private List<Path> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {
-        List<Path> applicablePredicates = new ArrayList<>();
-        if (edited.node() instanceof PathValue editedPv && propertySearch) {
-            applicablePredicates.add(editedPv.path());
+    private List<Selector> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {
+        List<Selector> applicablePredicates = new ArrayList<>();
+        if (edited.node() instanceof Statement statement && propertySearch) {
+            applicablePredicates.add(statement.selector());
         } else if (edited.node() instanceof FreeText) {
             var types = asList(item.get(TYPE_KEY));
             applicablePredicates = suggestPredicatesForType.entrySet()
@@ -109,7 +106,7 @@ public class SuggestQuery extends Query {
                     .map(Map.Entry::getValue)
                     .map(predicates -> predicates.stream()
                             .map(p -> propertyByKey.computeIfAbsent(p, x -> Property.getProperty(p, whelk.getJsonld())))
-                            .map(Path::new)
+                            .map(Selector.class::cast)
                             .toList())
                     .orElse(List.of());
         }
@@ -122,7 +119,7 @@ public class SuggestQuery extends Query {
                             case FreeText ft -> ft.getCurrentlyEditedToken(queryParams.cursor)
                                     .map(token -> new Edited(ft, token))
                                     .stream();
-                            case PathValue pv -> pv.value() instanceof FreeText ft
+                            case Statement s -> s.value() instanceof FreeText ft
                                     ? ft.getCurrentlyEditedToken(queryParams.cursor)
                                     .map(token -> new Edited(node, token))
                                     .stream()
@@ -134,32 +131,29 @@ public class SuggestQuery extends Query {
     }
 
     private QueryTree getSuggestQueryTree() throws InvalidQueryException {
-        if (edited.node() instanceof PathValue pv && pv.operator().equals(Operator.EQUALS)) {
-            Optional<Property> property = pv.path().lastProperty();
-            if (property.isPresent()) {
-                Property p = property.get();
-                String searchableTypes = p.range().stream()
-                        .filter(type -> defaultBaseTypes.stream()
-                                .filter(Predicate.not("Work"::equals))
-                                .anyMatch(baseType -> baseType.equals(type) || whelk.getJsonld().getSubClasses(baseType).contains(type)))
-                        .collect(Collectors.joining(" OR "));
+        if (edited.node() instanceof Statement stmt && stmt.operator().equals(Operator.EQUALS)) {
+            Selector selector = stmt.selector();
+            String searchableTypes = selector.range().stream()
+                    .filter(type -> defaultBaseTypes.stream()
+                            .filter(Predicate.not("Work"::equals))
+                            .anyMatch(baseType -> whelk.getJsonld().isSubClassOf(type, baseType)))
+                    .collect(Collectors.joining(" OR "));
 
-                FreeText ft = (FreeText) pv.value();
-                FreeText prefixFt = editedTokenAsPrefix(ft);
+            FreeText ft = (FreeText) stmt.value();
+            FreeText prefixFt = editedTokenAsPrefix(ft);
 
-                if (searchableTypes.isEmpty()) {
-                    // Make a query with the currently edited token treated as prefix to get suggestions
-                    // Also make a non-prefix query to get a higher relevancy score for exact matches
-                    Or or = new Or(List.of(pv.withValue(prefixFt), pv));
-                    return qTree.replace(pv, or);
-                }
-
-                this.propertySearch = true;
-                Or or = new Or(List.of(prefixFt, ft));
-                Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
-                Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
-                return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
+            if (searchableTypes.isEmpty()) {
+                // Make a query with the currently edited token treated as prefix to get suggestions
+                // Also make a non-prefix query to get a higher relevancy score for exact matches
+                Or or = new Or(List.of(stmt.withValue(prefixFt), stmt));
+                return qTree.replace(stmt, or);
             }
+
+            this.propertySearch = true;
+            Or or = new Or(List.of(prefixFt, ft));
+            Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
+            Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
+            return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
         } else if (edited.node() instanceof FreeText ft && qTree.isSimpleFreeText()) {
             String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);

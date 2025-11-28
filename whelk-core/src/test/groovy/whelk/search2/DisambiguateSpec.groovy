@@ -9,8 +9,10 @@ import whelk.search2.querytree.InvalidValue
 import whelk.search2.querytree.Key
 import whelk.search2.querytree.Link
 import whelk.search2.querytree.Numeric
+import whelk.search2.querytree.Path
 import whelk.search2.querytree.Property
 import whelk.search2.querytree.TestData
+import whelk.search2.querytree.Token
 import whelk.search2.querytree.VocabTerm
 import whelk.search2.querytree.YearRange
 
@@ -20,7 +22,7 @@ class DisambiguateSpec extends Specification {
 
     def "try map string to property or other recognized key"() {
         expect:
-        disambiguate.mapQueryKey(s, -1) == result
+        disambiguate.mapQueryKey(new Token.Raw(s)) == result
 
         where:
         s                   | result
@@ -32,6 +34,7 @@ class DisambiguateSpec extends Specification {
         'p'                 | new Property('p', jsonLd)
         'pLabel'            | new Property('p2', jsonLd)
         'pp'                | new Key.AmbiguousKey('pp')
+        'p3.p4'             | new Path(List.of(new Property('p3', jsonLd), new Property('p4', jsonLd)))
     }
 
     def "try map string to a recognized value type for the associated property"() {

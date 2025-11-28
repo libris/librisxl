@@ -114,7 +114,7 @@ public class QueryTree {
     public List<Link> collectLinks() {
         return allDescendants()
                 .flatMap(n -> n instanceof FilterAlias fa ? allDescendants(fa.getParsed()) : Stream.of(n))
-                .map(n -> n instanceof PathValue pv && pv.value() instanceof Link l ? l : null)
+                .map(n -> n instanceof Statement s && s.value() instanceof Link l ? l : null)
                 .filter(Objects::nonNull)
                 .toList();
     }
@@ -330,7 +330,7 @@ public class QueryTree {
         if (aToBIntegralRelation.isPresent()) {
             // Also compatible types, indirectly via integral relation
             Property relation = aToBIntegralRelation.get();
-            PathValue integralType = bSubjectType.withPath(new Path(List.of(relation, bSubjectType.rdfTypeProperty())));
+            Statement integralType = bSubjectType.withSelector(new Path(List.of(relation, bSubjectType.rdfTypeProperty())));
             return _replace(bTree, bSubjectType, integralType);
         }
 
@@ -359,13 +359,13 @@ public class QueryTree {
     }
 
     private static Node compatibleByDomain(String rdfSubjectType, Node tree, JsonLd jsonLd) {
-        Predicate<PathValue> isCompatibleByDomain = pv -> pv.path().firstProperty()
-                .filter(p -> p.hasDomainAdminMetadata(jsonLd) || p.appearsOnType(rdfSubjectType, jsonLd) || p.indirectlyAppearsOnType(rdfSubjectType, jsonLd))
-                .isPresent();
+        Predicate<Statement> isCompatibleByDomain = s -> s.selector().appearsOnlyOnRecord(jsonLd)
+                || s.selector().appearsOnType(rdfSubjectType, jsonLd)
+                || s.selector().indirectlyAppearsOnType(rdfSubjectType, jsonLd);
 
         Predicate<Node> isIncompatible = node -> switch (node) {
-            case PathValue pv -> !isCompatibleByDomain.test(pv);
-            case Not(PathValue pv) -> !isCompatibleByDomain.test(pv);
+            case Statement s -> !isCompatibleByDomain.test(s);
+            case Not(Statement s) -> !isCompatibleByDomain.test(s);
             case FilterAlias ignored -> false; // TODO?
             default -> false;
         };

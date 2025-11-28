@@ -40,31 +40,53 @@ public class Disambiguate {
         this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "bulk", "marc"); // FIXME
     }
 
+    public Selector mapQueryKey(Token token) {
+        return _mapQueryKey(token);
+    }
+
     public Property mapPropertyKey(String propertyKey) {
         return Property.getProperty(propertyKey, jsonLd);
     }
 
-    public Subpath mapQueryKey(String queryKey, int offset) {
-        var mapped = _mapQueryKey(queryKey, offset);
-        if (mapped instanceof Property p && !p.hasIndexKey()) {
-            p.loadRestrictions(this);
-        }
-        return mapped;
+    public Optional<Value> mapValueForSelector(Selector selector, Token token) {
+        return switch (selector) {
+            case Property p -> mapValueForProperty(p, token.value(), token);
+            case Path path -> mapValueForSelector(path.last(), token);
+            case Key ignored -> Optional.empty();
+        };
     }
 
     public Optional<Value> mapValueForProperty(Property property, String value) {
         return mapValueForProperty(property, value, null);
     }
 
-    public Optional<Value> mapValueForProperty(Property property, Token token) {
-        return mapValueForProperty(property, token.value(), token);
+    public boolean isRestrictedByValue(Selector selector) {
+        return switch (selector) {
+            case Property p -> isRestrictedByValue(p.name());
+            case Path path -> isRestrictedByValue(path.last());
+            case Key ignored -> false;
+        };
     }
 
-    public boolean isRestrictedByValue(String propertyKey) {
+    public Selector restrictByValue(Selector selector, String value) {
+        return switch (selector) {
+            case Property p -> restrictByValue(p, value);
+            case Path path -> {
+                var narrowed = restrictByValue(path.last(), value);
+                var newPath = new ArrayList<>(path.path());
+                newPath.removeLast();
+                newPath.add(narrowed);
+                yield new Path(newPath, path.token());
+            }
+            case Key k -> k;
+        };
+    }
+
+    private boolean isRestrictedByValue(String propertyKey) {
         return vocabMappings.propertiesRestrictedByValue().containsKey(propertyKey);
     }
 
-    public Property restrictByValue(Property property, String value) {
+    private Property restrictByValue(Property property, String value) {
         var narrowed = tryNarrow(property.name(), value);
         if (narrowed != null) {
             return new Property.NarrowedRestrictedProperty(property, narrowed, jsonLd);
@@ -85,7 +107,25 @@ public class Disambiguate {
         return null;
     }
 
-    private Subpath _mapQueryKey(String queryKey, int offset) {
+    private Selector _mapQueryKey(Token token) {
+        List<Selector> path = new ArrayList<>();
+        int currentOffset = token.offset();
+        for (String key : token.value().split("\\.")) {
+            path.add(mapSingleKey(key, currentOffset));
+            currentOffset += key.length() + 1;
+        }
+        return path.size() > 1 ? new Path(path, token) : path.getFirst();
+    }
+
+    private Selector mapSingleKey(String queryKey, int offset) {
+        var mapped = _mapSingleKey(queryKey, offset);
+        if (mapped instanceof Property p && !p.hasIndexKey()) {
+            p.loadRestrictions(this);
+        }
+        return mapped;
+    }
+
+    private Selector _mapSingleKey(String queryKey, int offset) {
         for (String ns : nsPrecedenceOrder) {
             Set<String> mappedProperties = vocabMappings.properties()
                     .getOrDefault(queryKey.toLowerCase(), Map.of())
