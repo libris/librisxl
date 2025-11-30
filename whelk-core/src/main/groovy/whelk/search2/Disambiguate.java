@@ -75,7 +75,7 @@ public class Disambiguate {
     private String tryNarrow(String property, String value) {
         var narrowedByValue = vocabMappings.propertiesRestrictedByValue()
                 .getOrDefault(property, Map.of())
-                .get(value);
+                .get(expandPrefixed(value));
         if (narrowedByValue != null) {
             return narrowedByValue.getFirst();
         } else if (property.equals(Restrictions.CATEGORY)) {
