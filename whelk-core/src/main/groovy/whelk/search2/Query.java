@@ -736,7 +736,7 @@ public class Query {
                                 //addObservation.accept(qt.remove(selected).add(pv));
                                 Predicate<Node> f = (Node n) -> n instanceof PathValue pv2
                                         && pv2.path().path().getLast() instanceof Property p
-                                        && "category".equals(p.name());
+                                        && "category".equals(p.queryKey());
                                 //
                                 var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
                                 if (selectedValue == null || !selectedValue.contains(pv)) {
