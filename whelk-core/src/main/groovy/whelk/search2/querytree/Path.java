@@ -56,11 +56,12 @@ public final class Path implements Selector {
                 .flatMap(s -> s.expand(jsonLd).path().stream())
                 .toList();
         // TODO: Explanation + example
-        if (expandedPath.size() > 2
-                && expandedPath.get(0) instanceof Property p1
-                && expandedPath.get(1) instanceof Property p2
-                && p1.isInverseOf(p2)) {
-            expandedPath = expandedPath.subList(2, expandedPath.size());
+        if (expandedPath.size() > 2 && expandedPath.get(0) instanceof Property p1 && expandedPath.get(1) instanceof Property p2) {
+            if (p1.isInverseOf(p2)) {
+                expandedPath = expandedPath.subList(2, expandedPath.size());
+            } else if (JsonLd.RECORD_KEY.equals(p1.name()) && JsonLd.RECORD_KEY.equals(p2.name())) {
+                expandedPath = expandedPath.subList(1, expandedPath.size());
+            }
         }
         return new Path(expandedPath);
     }
