@@ -363,6 +363,11 @@ public non-sealed class Property implements Subpath {
         }
 
         @Override
+        public Map<String, Object> definition() {
+            return superProperty.definition();
+        }
+
+        @Override
         public String indexKey() {
             if (hasIndexKey()) {
                 return indexKey;
