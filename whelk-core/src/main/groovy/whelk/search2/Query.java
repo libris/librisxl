@@ -870,7 +870,7 @@ public class Query {
                         if (selectedFacets.isRangeFilter(propertyKey)) {
                             sliceNode.put("search", getRangeTemplate(propertyKey));
                         }
-                        sliceNode.put("dimension", property.queryKey());
+                        sliceNode.put("dimension", property.name());
                         sliceNode.put("observation", observations);
                         sliceNode.put("maxItems", slice.size());
                         sliceNode.put("_connective", selectedFacets.getConnective(propertyKey).name());
