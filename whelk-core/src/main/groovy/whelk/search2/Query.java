@@ -454,11 +454,7 @@ public class Query {
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
-        List<Selector> paths = property instanceof Property.NarrowedRestrictedProperty // TODO for now exclude altPaths for _categoryByCollection
-                ? List.of(property)
-                : property.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes);
-
-        paths.stream()
+        property.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes).stream()
                 .map(s -> s.expand(ctx.jsonLd))
                 .forEach(path -> {
                     String field = path.esField();
