@@ -874,7 +874,7 @@ public class Query {
                         sliceNode.put("observation", observations);
                         sliceNode.put("maxItems", slice.size());
                         sliceNode.put("_connective", selectedFacets.getConnective(propertyKey).name());
-                        result.put(property.queryKey(), sliceNode);
+                        result.put(property.name(), sliceNode);
                     }
                 });
 
