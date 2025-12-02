@@ -55,11 +55,14 @@ public final class Path implements Selector {
         List<Selector> expandedPath = path.stream()
                 .flatMap(s -> s.expand(jsonLd).path().stream())
                 .toList();
-        // TODO: Explanation + example
         if (expandedPath.size() > 2 && expandedPath.get(0) instanceof Property p1 && expandedPath.get(1) instanceof Property p2) {
             if (p1.isInverseOf(p2)) {
+                // e.g. when the original path is instanceOf.x and x expands to hasInstance.y
+                // then we need to adjust the expanded path instanceOf.hasInstance.y -> y
                 expandedPath = expandedPath.subList(2, expandedPath.size());
             } else if (JsonLd.RECORD_KEY.equals(p1.name()) && JsonLd.RECORD_KEY.equals(p2.name())) {
+                // when the original path is meta.x and x expands to meta.x
+                // then we need to adjust the expanded path meta.meta.x -> meta.x
                 expandedPath = expandedPath.subList(1, expandedPath.size());
             }
         }
@@ -108,11 +111,6 @@ public final class Path implements Selector {
     @Override
     public boolean appearsOnlyOnRecord(JsonLd jsonLd) {
         return first().appearsOnlyOnRecord(jsonLd);
-    }
-
-    @Override
-    public int offset() {
-        return token != null ? token.offset() : -1;
     }
 
     @Override

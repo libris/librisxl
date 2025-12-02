@@ -12,8 +12,6 @@ public sealed interface Selector permits Key, Path, Property {
     String queryKey();
     String esField();
 
-    int offset();
-
     List<Selector> path();
 
     Selector expand(JsonLd jsonLd);
