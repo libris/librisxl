@@ -5,7 +5,19 @@ import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.*;
+import whelk.search2.querytree.And;
+import whelk.search2.querytree.FilterAlias;
+import whelk.search2.querytree.FreeText;
+import whelk.search2.querytree.Link;
+import whelk.search2.querytree.Node;
+import whelk.search2.querytree.Or;
+import whelk.search2.querytree.Property;
+import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.Resource;
+import whelk.search2.querytree.Statement;
+import whelk.search2.querytree.Value;
+import whelk.search2.querytree.YearRange;
+
 import whelk.util.DocumentUtil;
 import whelk.util.Restrictions;
 
