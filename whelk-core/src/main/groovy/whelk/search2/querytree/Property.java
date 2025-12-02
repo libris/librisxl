@@ -352,6 +352,7 @@ public non-sealed class Property implements Selector {
     }
 
     private static boolean isShorthand(Map<String, Object> definition) {
+        // FIXME: don't hardcode
         return isCategory("https://id.kb.se/vocab/shorthand", definition);
     }
 
