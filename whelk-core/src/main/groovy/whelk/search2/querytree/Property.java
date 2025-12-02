@@ -343,6 +343,7 @@ public non-sealed class Property implements Selector {
     }
 
     private boolean isPlatformTerm() {
+        // FIXME: don't hardcode
         return isCategory("https://id.kb.se/vocab/platform", definition);
     }
 
