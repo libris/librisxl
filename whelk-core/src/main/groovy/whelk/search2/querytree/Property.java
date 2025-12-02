@@ -540,22 +540,24 @@ public non-sealed class Property implements Selector {
             When multiple chain axioms are defined on the same property, the generated Json-LD ends up with an odd structure.
 
             For example:
-            :p :propertyChain (:a :b), (:c, :d), (:e, :f) .
+            :p :propertyChainAxiom (:a :b), (:c, :d), (:e, :f) .
 
             -->
-
-            "propertyChainAxiom": [
-                { "@id": "https://id.kb.se/vocab/a },
-                { "@id": "https://id.kb.se/vocab/b },
-                [
-                  { "@id": "https://id.kb.se/vocab/c" },
-                  { "@id": "https://id.kb.se/vocab/d" }
-                ],
-                [
-                  { "@id": "https://id.kb.se/vocab/e" },
-                  { "@id": "https://id.kb.se/vocab/f" }
+            
+            {
+                "propertyChainAxiom": [
+                    { "@id": "https://id.kb.se/vocab/a },
+                    { "@id": "https://id.kb.se/vocab/b },
+                    [
+                      { "@id": "https://id.kb.se/vocab/c" },
+                      { "@id": "https://id.kb.se/vocab/d" }
+                    ],
+                    [
+                      { "@id": "https://id.kb.se/vocab/e" },
+                      { "@id": "https://id.kb.se/vocab/f" }
+                    ]
                 ]
-            ]
+            }
 
             The first chain is flattened into the top-level array, while subsequent chains are nested inside their own arrays.
             Probably a bug in definitions but for now we work around it here.
