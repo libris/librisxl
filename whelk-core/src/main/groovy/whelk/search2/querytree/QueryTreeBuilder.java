@@ -49,7 +49,7 @@ public class QueryTreeBuilder {
                 Node node = buildFromLeaf(leaf, disambiguate, selector, operator);
                 switch (node) {
                     case FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
-                    case Condition s when s.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
+                    case Condition c when c.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
                     default -> children.add(node);
                 }
                 if (!freeTextTokens.isEmpty() && freeTextStartIdx == -1) {
