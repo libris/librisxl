@@ -66,7 +66,7 @@ public sealed class Condition implements Node permits Type {
 
     @Override
     public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return selector.isValid() ? expandWithAltPaths(jsonLd, rdfSubjectTypes) : this;
+        return selector.isValid() ? expandWithAltSelectors(jsonLd, rdfSubjectTypes) : this;
     }
 
     public Node expand(JsonLd jsonLd) {
@@ -138,12 +138,12 @@ public sealed class Condition implements Node permits Type {
         return new Type((Property.RdfType) selector, (VocabTerm) value);
     }
 
-    private Node expandWithAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        List<Node> withAltPaths = selector.getAltPaths(jsonLd, rdfSubjectTypes).stream()
+    private Node expandWithAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        List<Node> withAltSelectors = selector.getAltSelectors(jsonLd, rdfSubjectTypes).stream()
                 .map(this::withSelector)
                 .map(s -> s._expand(jsonLd))
                 .toList();
-        return withAltPaths.size() > 1 ? new Or(withAltPaths) : withAltPaths.getFirst();
+        return withAltSelectors.size() > 1 ? new Or(withAltSelectors) : withAltSelectors.getFirst();
     }
 
     private Node _expand(JsonLd jsonLd) {

@@ -36,7 +36,7 @@ public sealed abstract class Key implements Selector permits Key.AmbiguousKey, K
     }
 
     @Override
-    public List<Selector> getAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         return List.of(this);
     }
 

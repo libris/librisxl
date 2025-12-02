@@ -466,10 +466,10 @@ public class Query {
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
-        property.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes).stream()
-                .map(s -> s.expand(ctx.jsonLd))
-                .forEach(path -> {
-                    String field = path.esField();
+        property.getAltSelectors(ctx.jsonLd, ctx.rdfSubjectTypes).stream()
+                .map(selector -> selector.expand(ctx.jsonLd))
+                .forEach(selector -> {
+                    String field = selector.esField();
                     if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
                         field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
                     } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
@@ -477,7 +477,7 @@ public class Query {
                     } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
                         field = String.format("%s.%s", field, JsonLd.ID_KEY);
                     }
-                    Optional<String> nestedStem = path.getEsNestedStem(ctx.esSettings.mappings());
+                    Optional<String> nestedStem = selector.getEsNestedStem(ctx.esSettings.mappings());
                     Map<String, Object> aggs = nestedStem.isPresent()
                             ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
                             : buildCoreAqqQuery(field, slice, ctx);

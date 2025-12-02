@@ -138,8 +138,8 @@ public non-sealed class Property implements Selector {
     }
 
     @Override
-    public List<Selector> getAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return _getAltPaths(jsonLd, rdfSubjectTypes);
+    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return _getAltSelectors(jsonLd, rdfSubjectTypes);
     }
 
     @Override
@@ -288,7 +288,7 @@ public non-sealed class Property implements Selector {
         return Objects.hash(toString());
     }
 
-    private List<Selector> _getAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+    private List<Selector> _getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         if (rdfSubjectTypes.isEmpty() || isPlatformTerm() || isRdfType()) {
             return List.of(this);
         }
@@ -303,13 +303,13 @@ public non-sealed class Property implements Selector {
                         .stream()
                         .anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
 
-        List<Selector> altPaths = integralRelations.stream()
+        List<Selector> altSelectors = integralRelations.stream()
                 .filter(followIntegralRelation)
                 .map(ir -> new Path(List.of(ir, this)))
                 .collect(Collectors.toList());
 
-        if (altPaths.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
-            altPaths.add(this);
+        if (altSelectors.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+            altSelectors.add(this);
         }
 
         /*
@@ -321,10 +321,10 @@ public non-sealed class Property implements Selector {
             integralRelations.stream().filter(ir -> "hasInstance".equals(ir.name()))
                     .findFirst()
                     .map(hasInstance -> new Path(List.of(hasInstance, this)))
-                    .ifPresent(altPaths::add);
+                    .ifPresent(altSelectors::add);
         }
 
-        return altPaths;
+        return altSelectors;
     }
 
     private boolean hasDomainAdminMetadata(JsonLd jsonLd) {
@@ -527,9 +527,9 @@ public non-sealed class Property implements Selector {
         }
 
         @Override
-        public List<Selector> getAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
             return getComponents(jsonLd).stream()
-                    .flatMap(s -> s.getAltPaths(jsonLd, rdfSubjectTypes).stream())
+                    .flatMap(s -> s.getAltSelectors(jsonLd, rdfSubjectTypes).stream())
                     .toList();
         }
 

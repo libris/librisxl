@@ -28,7 +28,7 @@ class SelectorSpec extends Specification {
         Selector p = ((Condition) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
 
         expect:
-        p.getAltPaths(jsonLd, types).collect { it.expand(jsonLd).toString() } == result
+        p.getAltSelectors(jsonLd, types).collect { it.expand(jsonLd).toString() } == result
 
         where:
         _p | types | result

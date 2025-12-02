@@ -51,7 +51,7 @@ public final class Path implements Selector {
     }
 
     @Override
-    public Selector expand(JsonLd jsonLd) {
+    public Path expand(JsonLd jsonLd) {
         List<Selector> expandedPath = path.stream()
                 .flatMap(s -> s.expand(jsonLd).path().stream())
                 .toList();
@@ -70,8 +70,8 @@ public final class Path implements Selector {
     }
 
     @Override
-    public List<Selector> getAltPaths(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return first().getAltPaths(jsonLd, rdfSubjectTypes).stream()
+    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return first().getAltSelectors(jsonLd, rdfSubjectTypes).stream()
                 .map(s -> Stream.concat(s.path().stream(), tail().stream()).toList())
                 .map(Path::new)
                 .map(Selector.class::cast)
