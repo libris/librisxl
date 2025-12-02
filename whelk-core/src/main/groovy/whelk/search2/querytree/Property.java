@@ -73,13 +73,6 @@ public non-sealed class Property implements Selector {
         this.indexKey = (String) definition.get("ls:indexKey"); // FIXME: This shouldn't have a different prefix (ls: vs librissearch:)
     }
 
-    // For test only
-    public Property(String name, Map<String, Object> definition, String queryKey) {
-        this.name = name;
-        this.definition = definition;
-        this.queryKey = new Key.RecognizedKey(new Token.Raw(queryKey));
-    }
-
     private Property(String name, JsonLd jsonLd, Key.RecognizedKey queryKey) {
         this(name, jsonLd);
         this.queryKey = queryKey;
