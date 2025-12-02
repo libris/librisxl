@@ -46,7 +46,7 @@ public sealed abstract class Key implements Selector permits Key.AmbiguousKey, K
     }
 
     @Override
-    public boolean valueIsObject() {
+    public boolean isObjectProperty() {
         return false;
     }
 

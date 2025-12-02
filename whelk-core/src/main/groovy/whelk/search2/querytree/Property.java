@@ -146,8 +146,8 @@ public non-sealed class Property implements Selector {
     }
 
     @Override
-    public boolean valueIsObject() {
-        return isObjectProperty();
+    public boolean isObjectProperty() {
+        return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
     }
 
     @Override
@@ -202,10 +202,6 @@ public non-sealed class Property implements Selector {
 
     public boolean isXsdDate() {
         return range.contains("xsd:dateTime") || range.contains("xsd:date");
-    }
-
-    public boolean isObjectProperty() {
-        return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
     }
 
     public boolean isDatatypeProperty() {

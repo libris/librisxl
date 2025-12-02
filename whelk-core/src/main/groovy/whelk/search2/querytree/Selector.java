@@ -20,7 +20,7 @@ public sealed interface Selector permits Key, Path, Property {
     boolean isValid();
     boolean isType();
 
-    boolean valueIsObject();
+    boolean isObjectProperty();
 
     boolean mayAppearOnType(String type, JsonLd jsonLd);
     boolean appearsOnType(String type, JsonLd jsonLd);

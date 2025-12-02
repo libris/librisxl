@@ -89,8 +89,8 @@ public final class Path implements Selector {
     }
 
     @Override
-    public boolean valueIsObject() {
-        return last().valueIsObject();
+    public boolean isObjectProperty() {
+        return last().isObjectProperty();
     }
 
     @Override
