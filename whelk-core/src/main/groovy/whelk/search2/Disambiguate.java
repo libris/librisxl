@@ -108,59 +108,62 @@ public class Disambiguate {
     }
 
     private Selector _mapQueryKey(Token token) {
-        List<Selector> path = new ArrayList<>();
-        int currentOffset = token.offset();
-        for (String key : token.value().split("\\.")) {
-            path.add(mapSingleKey(key, currentOffset));
-            currentOffset += key.length() + 1;
+        if (token.value().contains(".")) {
+            List<Selector> path = new ArrayList<>();
+            int currentOffset = token.offset();
+            for (String key : token.value().split("\\.")) {
+                path.add(mapSingleKey(new Token.Raw(key, currentOffset)));
+                currentOffset += key.length() + 1;
+            }
+            return new Path(path, token);
         }
-        return path.size() > 1 ? new Path(path, token) : path.getFirst();
+        return mapSingleKey(token);
     }
 
-    private Selector mapSingleKey(String queryKey, int offset) {
-        var mapped = _mapSingleKey(queryKey, offset);
+    private Selector mapSingleKey(Token token) {
+        var mapped = _mapSingleKey(token);
         if (mapped instanceof Property p && !p.hasIndexKey()) {
             p.loadRestrictions(this);
         }
         return mapped;
     }
 
-    private Selector _mapSingleKey(String queryKey, int offset) {
+    private Selector _mapSingleKey(Token token) {
         for (String ns : nsPrecedenceOrder) {
             Set<String> mappedProperties = vocabMappings.properties()
-                    .getOrDefault(queryKey.toLowerCase(), Map.of())
+                    .getOrDefault(token.value().toLowerCase(), Map.of())
                     .getOrDefault(ns, Set.of());
             if (mappedProperties.size() == 1) {
                 String p = getUnambiguous(mappedProperties);
-                return getProperty(p, queryKey, offset);
+                return getProperty(p, token);
             }
             if (mappedProperties.size() > 1) {
                 // Ambiguous
-                Optional<String> equalPropertyKey = mappedProperties.stream().filter(queryKey::equalsIgnoreCase).findFirst();
+                Optional<String> equalPropertyKey = mappedProperties.stream().filter(token.value()::equalsIgnoreCase).findFirst();
                 if (equalPropertyKey.isPresent()) {
-                    return getProperty(equalPropertyKey.get(), queryKey, offset);
+                    return getProperty(equalPropertyKey.get(), token);
                 }
                 Optional<Property> propertyWithCode = mappedProperties.stream()
-                        .map(pKey -> getProperty(pKey, queryKey, offset))
+                        .map(pKey -> getProperty(pKey, token))
                         .filter(property -> property.definition().containsKey("librisQueryCode"))
                         .findFirst();
                 if (propertyWithCode.isPresent()) {
                     return propertyWithCode.get();
                 }
-                return new Key.AmbiguousKey(queryKey, offset);
+                return new Key.AmbiguousKey(token);
             }
         }
 
         // TODO: Get valid keys from ES index?
-        if (LD_KEYS.contains(queryKey) || queryKey.startsWith("_")) {
-            return new Key.RecognizedKey(queryKey, offset);
+        if (LD_KEYS.contains(token.value()) || token.value().startsWith("_")) {
+            return new Key.RecognizedKey(token);
         }
 
-        return new Key.UnrecognizedKey(queryKey, offset);
+        return new Key.UnrecognizedKey(token);
     }
 
-    private Property getProperty(String propertyKey, String queryKey, int offset) {
-        return Property.getProperty(propertyKey, jsonLd, new Key.RecognizedKey(queryKey, offset));
+    private Property getProperty(String propertyKey, Token token) {
+        return Property.getProperty(propertyKey, jsonLd, new Key.RecognizedKey(token));
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {

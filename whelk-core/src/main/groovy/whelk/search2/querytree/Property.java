@@ -77,7 +77,7 @@ public non-sealed class Property implements Selector {
     public Property(String name, Map<String, Object> definition, String queryKey) {
         this.name = name;
         this.definition = definition;
-        this.queryKey = new Key.RecognizedKey(queryKey);
+        this.queryKey = new Key.RecognizedKey(new Token.Raw(queryKey));
     }
 
     private Property(String name, JsonLd jsonLd, Key.RecognizedKey queryKey) {
@@ -95,7 +95,7 @@ public non-sealed class Property implements Selector {
     public static Property getProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
         if (jsonLd.vocabIndex.containsKey(LIBRIS_SEARCH_NS + propertyKey)) {
             // FIXME: This is only temporary to avoid having to include the prefix for terms in the libris search namespace
-            return getProperty(LIBRIS_SEARCH_NS + propertyKey, jsonLd, new Key.RecognizedKey(propertyKey));
+            return getProperty(LIBRIS_SEARCH_NS + propertyKey, jsonLd, new Key.RecognizedKey(new Token.Raw(propertyKey)));
         }
         var propDef = jsonLd.vocabIndex.get(propertyKey);
         if (propDef == null) {
@@ -117,7 +117,7 @@ public non-sealed class Property implements Selector {
 
     @Override
     public String queryKey() {
-        return queryKey != null ? queryKey.value() : name;
+        return queryKey != null ? queryKey.queryKey() : name;
     }
 
     @Override

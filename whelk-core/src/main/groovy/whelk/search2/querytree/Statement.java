@@ -40,7 +40,7 @@ public sealed class Statement implements Node permits Type {
     }
 
     public Statement(String key, Operator operator, Value value) {
-        this(new Key.RecognizedKey(key), operator, value);
+        this(new Key.RecognizedKey(new Token.Raw(key)), operator, value);
     }
 
     public Selector selector() {

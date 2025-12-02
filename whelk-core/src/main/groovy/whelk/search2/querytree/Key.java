@@ -8,33 +8,21 @@ import java.util.Map;
 
 import static whelk.JsonLd.TYPE_KEY;
 
-public sealed abstract class Key implements Selector, Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey {
-    private final String value;
-    private final int offset;
+public sealed abstract class Key implements Selector permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey {
+    protected final Token token;
 
-    public Key(String value, int offset) {
-        this.value = value;
-        this.offset = offset;
-    }
-
-    @Override
-    public String value() {
-        return value;
-    }
-
-    @Override
-    public int offset() {
-        return offset;
+    public Key(Token token) {
+        this.token = token;
     }
 
     @Override
     public String queryKey() {
-        return value;
+        return token.formatted();
     }
 
     @Override
     public String esField() {
-        return value;
+        return token.value();
     }
 
     @Override
@@ -54,7 +42,7 @@ public sealed abstract class Key implements Selector, Token permits Key.Ambiguou
 
     @Override
     public boolean isType() {
-        return value().equals(TYPE_KEY);
+        return token.value().equals(TYPE_KEY);
     }
 
     @Override
@@ -94,26 +82,22 @@ public sealed abstract class Key implements Selector, Token permits Key.Ambiguou
 
     @Override
     public String toString() {
-        return value;
+        return token.formatted();
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Key other && other.value().equals(value());
+        return o instanceof Key other && other.token.equals(this.token);
     }
 
     @Override
     public int hashCode() {
-        return value().hashCode();
+        return token.hashCode();
     }
 
     public static final class RecognizedKey extends Key {
-        public RecognizedKey(String value, int offset) {
-            super(value, offset);
-        }
-
-        public RecognizedKey(String value) {
-            this(value, -1);
+        public RecognizedKey(Token token) {
+            super(token);
         }
 
         @Override
@@ -124,17 +108,13 @@ public sealed abstract class Key implements Selector, Token permits Key.Ambiguou
         @Override
         public Map<String, Object> definition() {
             // TODO
-            return Map.of("ls:indexKey", value());
+            return Map.of("ls:indexKey", token.value());
         }
     }
 
     public static final class UnrecognizedKey extends Key {
-        public UnrecognizedKey(String value, int offset) {
-            super(value, offset);
-        }
-
-        public UnrecognizedKey(String value) {
-            this(value, -1);
+        public UnrecognizedKey(Token token) {
+            super(token);
         }
 
         @Override
@@ -144,17 +124,13 @@ public sealed abstract class Key implements Selector, Token permits Key.Ambiguou
 
         @Override
         public Map<String, Object> definition() {
-            return Map.of(TYPE_KEY, "_Invalid", "label", value());
+            return Map.of(TYPE_KEY, "_Invalid", "label", token.value());
         }
     }
 
     public static final class AmbiguousKey extends Key {
-        public AmbiguousKey(String value, int offset) {
-            super(value, offset);
-        }
-
-        public AmbiguousKey(String value) {
-            this(value, -1);
+        public AmbiguousKey(Token token) {
+            super(token);
         }
 
         @Override
@@ -164,7 +140,7 @@ public sealed abstract class Key implements Selector, Token permits Key.Ambiguou
 
         @Override
         public Map<String, Object> definition() {
-            return Map.of(TYPE_KEY, "_Invalid", "label", value());
+            return Map.of(TYPE_KEY, "_Invalid", "label", token.value());
         }
     }
 }
