@@ -1,8 +1,8 @@
 package whelk.search2;
 
+import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
-import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.YearRange;
 import whelk.util.Restrictions;
@@ -55,8 +55,8 @@ public class SelectedFacets {
         return isSelectable(propertyKey) ? selectedByPropertyKey.get(propertyKey) : List.of();
     }
 
-    public boolean isSelected(PathValue pathValue, String propertyKey) {
-        return isSelectable(propertyKey) && selectedByPropertyKey.get(propertyKey).contains(pathValue);
+    public boolean isSelected(Condition condition, String propertyKey) {
+        return isSelectable(propertyKey) && selectedByPropertyKey.get(propertyKey).contains(condition);
     }
 
     public Map<String, List<Node>> getAllMultiOrRadioSelected() {
@@ -71,7 +71,7 @@ public class SelectedFacets {
 
     public List<Node> getRangeSelected(String propertyKey) {
         return getSelected(propertyKey).stream()
-                .filter(n -> ((PathValue) n).operator().isRange() || ((PathValue) n).value() instanceof YearRange)
+                .filter(n -> ((Condition) n).operator().isRange() || ((Condition) n).value() instanceof YearRange)
                 .toList();
     }
 
@@ -93,11 +93,11 @@ public class SelectedFacets {
 
             var property = slice.getProperty();
 
-            Predicate<Node> isProperty = n -> n instanceof PathValue pv && pv.hasEqualProperty(property);
-            Predicate<Node> hasEqualsOp = n -> ((PathValue) n).operator().equals(Operator.EQUALS);
+            Predicate<Node> isProperty = n -> n instanceof Condition c && c.selector().equals(property);
+            Predicate<Node> hasEqualsOp = n -> ((Condition) n).operator().equals(Operator.EQUALS);
             Predicate<Node> isPropertyEquals = n -> isProperty.test(n) && hasEqualsOp.test(n);
 
-            List<PathValue> allNodesWithProperty = queryTree.allDescendants().filter(isProperty).map(PathValue.class::cast).toList();
+            List<Condition> allNodesWithProperty = queryTree.allDescendants().filter(isProperty).map(Condition.class::cast).toList();
 
             if (slice.subSlice() != null) {
                 addSlice(slice.subSlice(), queryTree);

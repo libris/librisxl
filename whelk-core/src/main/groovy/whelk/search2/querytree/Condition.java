@@ -6,45 +6,45 @@ import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.util.Restrictions;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static java.util.Objects.hash;
 import static whelk.JsonLd.ID_KEY;
-import static whelk.JsonLd.Owl.INVERSE_OF;
-import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.SEARCH_KEY;
-import static whelk.JsonLd.TYPE_KEY;
-import static whelk.search2.EsMappings.KEYWORD;
-import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
+import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
+import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.Operator.EQUALS;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
 
-public sealed class PathValue implements Node permits Type {
-    private final Path path;
+public sealed class Condition implements Node permits Type {
+    private final Selector selector;
     private final Operator operator;
     private final Value value;
 
-    public PathValue(Path path, Operator operator, Value value) {
-        this.path = path;
+    public Condition(Selector selector, Operator operator, Value value) {
+        this.selector = selector;
         this.operator = operator;
         this.value = value;
     }
 
-    public PathValue(Property property, Operator operator, Value value) {
-        this(new Path(property), operator, value);
+    public Condition(String key, Operator operator, Value value) {
+        this(new Key.RecognizedKey(new Token.Raw(key)), operator, value);
     }
 
-    public PathValue(String key, Operator operator, Value value) {
-        this(new Path.ExpandedPath(new Key.RecognizedKey(key)), operator, value);
-    }
-
-    public Path path() {
-        return path;
+    public Selector selector() {
+        return selector;
     }
 
     public Operator operator() {
@@ -61,16 +61,16 @@ public sealed class PathValue implements Node permits Type {
     }
 
     public Map<String, Object> getCoreEsQuery(ESSettings esSettings) {
-        return _getCoreEsQuery(path.jsonForm(), value, esSettings);
+        return _getCoreEsQuery(selector.esField(), value, esSettings);
     }
 
     @Override
     public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return path.isValid() ? _expand(jsonLd, rdfSubjectTypes) : this;
+        return selector.isValid() ? expandWithAltSelectors(jsonLd, rdfSubjectTypes) : this;
     }
 
     public Node expand(JsonLd jsonLd) {
-        return _expand(jsonLd, List.of());
+        return _expand(jsonLd);
     }
 
     @Override
@@ -80,12 +80,7 @@ public sealed class PathValue implements Node permits Type {
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return operator.format(path.queryForm(), value.isMultiToken() ? parenthesize(value.queryForm()) : value.queryForm());
-    }
-
-    @Override
-    public String toString() {
-        return toQueryString(true);
+        return operator.format(selector.queryKey(), value.isMultiToken() ? parenthesize(value.queryForm()) : value.queryForm());
     }
 
     @Override
@@ -109,54 +104,108 @@ public sealed class PathValue implements Node permits Type {
     }
 
     @Override
+    public String toString() {
+        return toQueryString(true);
+    }
+
+    @Override
     public boolean equals(Object o) {
-        return o instanceof PathValue other && hashCode() == other.hashCode();
+        return o instanceof Condition other && hashCode() == other.hashCode();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(path, operator, value);
+        return hash(selector, operator, value);
+    }
+
+    public Condition withSelector(Selector s) {
+        return new Condition(s, operator, value);
+    }
+
+    public Condition withOperator(Operator op) {
+        return new Condition(selector, op, value);
+    }
+
+    public Condition withValue(Value v) {
+        return new Condition(selector, operator, v);
     }
 
     public boolean isTypeNode() {
-        return getSoleProperty().filter(Property::isRdfType).isPresent() && operator.equals(EQUALS) && value instanceof VocabTerm;
+        return selector instanceof Property.RdfType && operator.equals(EQUALS) && value instanceof VocabTerm;
     }
 
     public Type asTypeNode() {
-        return new Type((Property.RdfType) getSoleProperty().get(), (VocabTerm) value());
+        return new Type((Property.RdfType) selector, (VocabTerm) value);
     }
 
-    public boolean hasEqualProperty(Property property) {
-        return getSoleProperty().filter(property::equals).isPresent();
+    private Node expandWithAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        List<Node> withAltSelectors = selector.getAltSelectors(jsonLd, rdfSubjectTypes).stream()
+                .map(this::withSelector)
+                .map(s -> s._expand(jsonLd))
+                .toList();
+        return withAltSelectors.size() > 1 ? new Or(withAltSelectors) : withAltSelectors.getFirst();
     }
 
-    public PathValue withOperator(Operator replacement) {
-        return new PathValue(path, replacement, value);
+    private Node _expand(JsonLd jsonLd) {
+        Selector expandedSelector = selector.expand(jsonLd);
+
+        List<Node> expanded = Stream.concat(Stream.of(withSelector(expandedSelector)), getPrefilledFields(expandedSelector.path(), jsonLd).stream())
+                .map(s -> s.expandType(jsonLd))
+                .toList();
+
+        return expanded.size() > 1 ? new And(expanded) : expanded.getFirst();
     }
 
-    public PathValue withValue(Value replacement) {
-        return new PathValue(path, operator, replacement);
+    private List<Condition> getPrefilledFields(List<Selector> path, JsonLd jsonLd) {
+        List<Condition> prefilledFields = new ArrayList<>();
+        List<Selector> currentPath = new ArrayList<>();
+        for (Selector s : path) {
+            currentPath.add(s);
+            if (s instanceof Property p && p.isRestrictedSubProperty() && !p.hasIndexKey()) {
+                for (Restrictions.OnProperty r : p.objectOnPropertyRestrictions()) {
+                    // Support only HasValue restriction for now
+                    if (r instanceof Restrictions.HasValue(Property property, Value v)) {
+                        var restrictedPath = new Path(Stream.concat(currentPath.stream(), property.expand(jsonLd).path().stream()).toList());
+                        prefilledFields.add(new Condition(restrictedPath, EQUALS, v));
+                    }
+                }
+            }
+        }
+        return prefilledFields;
     }
 
-    public PathValue withPath(Path path) {
-        return new PathValue(path, operator, value);
+    // When querying type, match any subclass by default (TODO: make this optional)
+    private Node expandType(JsonLd jsonLd) {
+        if (!(selector.isType() && value instanceof VocabTerm v)) {
+            return this;
+        }
+
+        String baseType = v.key();
+
+        Set<String> subtypes = jsonLd.getSubClasses(baseType);
+        if (subtypes.isEmpty()) {
+            return this;
+        }
+
+        List<Node> altFields = Stream.concat(Stream.of(baseType), subtypes.stream())
+                .sorted()
+                .map(t -> (Node) withValue(new VocabTerm(t, jsonLd.vocabIndex.get(t))))
+                .toList();
+
+        return new Or(altFields);
     }
 
-    public Optional<Property> getSoleProperty() {
-        return path.path().size() == 1 && path.first() instanceof Property p
-                ? Optional.of(p)
-                : Optional.empty();
-    }
+    private Map<String, Object> _toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
+        Map<String, Object> m = new LinkedHashMap<>();
 
-    private Optional<Key> getSoleKey() {
-        return path.path().size() == 1 && path.first() instanceof Key k
-                ? Optional.of(k)
-                : Optional.empty();
-    }
+        m.put("property", selector.definition());
+        m.put(operator.termKey, value instanceof Resource r ? r.description() : value.queryForm());
+        m.put("up", makeUpLink.apply(this));
 
-    private Optional<Map<String, Object>> getEsNestedQuery(ESSettings esSettings) {
-        return path.getEsNestedStem(esSettings.mappings())
-                .map(nestedStem -> nestedWrap(nestedStem, getCoreEsQuery(esSettings)));
+        m.put("_key", selector.queryKey());
+        m.put("_value", value.queryForm());
+
+        return m;
     }
 
     private Map<String, Object> _getCoreEsQuery(String f, Value v, ESSettings esSettings) {
@@ -164,19 +213,23 @@ public sealed class PathValue implements Node permits Type {
             // FIXME
             return nonsenseFilter();
         }
-        boolean valueIsObject = path.last() instanceof Property p && p.isObjectProperty();
         return switch (v) {
             case DateTime dateTime -> esDateFilter(f, dateTime, esSettings);
             case FreeText ft -> ft.isWild()
                     ? existsFilter(f)
-                    : esFreeTextFilter(valueIsObject ? f + "." + SEARCH_KEY : f, ft, esSettings);
+                    : esFreeTextFilter(selector.isObjectProperty() ? f + "." + SEARCH_KEY : f, ft, esSettings);
             case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
             case Numeric numeric -> esNumFilter(f, numeric, esSettings);
-            case Link link -> esResourceFilter(valueIsObject ? f + "." + ID_KEY : f, link);
+            case Link link -> esResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link);
             case VocabTerm vocabTerm -> esResourceFilter(f, vocabTerm);
             case Term term -> esTermFilter(f, term);
             case YearRange yearRange -> esYearRangeFilter(f, yearRange, esSettings);
         };
+    }
+
+    private Optional<Map<String, Object>> getEsNestedQuery(ESSettings esSettings) {
+        return selector.getEsNestedStem(esSettings.mappings())
+                .map(nestedStem -> nestedWrap(nestedStem, getCoreEsQuery(esSettings)));
     }
 
     private Map<String, Object> esDateFilter(String field, DateTime d, ESSettings esSettings) {
@@ -248,96 +301,6 @@ public sealed class PathValue implements Node permits Type {
 
     private Map<String, Object> esTermFilter(String f, Term t) {
         return esTermQueryFilter(f, t.term());
-    }
-
-    private Map<String, Object> _toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
-        Map<String, Object> m = new LinkedHashMap<>();
-
-        var propertyChainAxiom = new LinkedList<>();
-        for (int i = path.path().size() - 1; i >= 0; i--) {
-            Subpath sp = path.path().get(i);
-            if (!sp.isValid()) {
-                propertyChainAxiom.push(Map.of(TYPE_KEY, "_Invalid", "label", sp.queryKey()));
-                continue;
-            }
-            if (sp instanceof Property p) {
-                propertyChainAxiom.push(i > 0 && path.path().get(i - 1).queryKey().equals(JsonLd.REVERSE_KEY)
-                        ? Map.of(INVERSE_OF, p.definition())
-                        : p.definition());
-            }
-        }
-        var property = switch (propertyChainAxiom.size()) {
-            case 0 -> Map.of();
-            case 1 -> propertyChainAxiom.pop();
-            default -> Map.of(PROPERTY_CHAIN_AXIOM, propertyChainAxiom);
-        };
-        m.put("property", property);
-        m.put(operator.termKey, value instanceof Resource r ? r.description() : value.queryForm());
-        m.put("up", makeUpLink.apply(this));
-
-        m.put("_key", path.queryForm());
-        m.put("_value", value.queryForm());
-
-        return m;
-    }
-
-    private Node _expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        Path.ExpandedPath expandedPath = path.expand(jsonLd);
-
-        if (!rdfSubjectTypes.isEmpty()) {
-            List<Path.ExpandedPath> altPaths = expandedPath.getAltPaths(jsonLd, rdfSubjectTypes);
-            List<Path.ExpandedPath> alt2Paths = expandedPath.getAlt2Paths(jsonLd);
-            var altPvNodes = Stream.concat(altPaths.stream(), alt2Paths.stream())
-                    .map(this::withPath)
-                    .map(pv -> pv.expand(jsonLd))
-                    .toList();
-            return altPaths.size() > 1 ? new Or(altPvNodes) : altPvNodes.getFirst();
-        }
-
-        List<Node> expanded = Stream.concat(Stream.of(withPath(expandedPath)), getPrefilledFields(expandedPath.path()).stream())
-                .map(pv -> pv.expandType(jsonLd))
-                .toList();
-
-        return expanded.size() > 1 ? new And(expanded) : expanded.getFirst();
-    }
-
-    private List<PathValue> getPrefilledFields(List<Subpath> path) {
-        List<PathValue> prefilledFields = new ArrayList<>();
-        List<Subpath> currentPath = new ArrayList<>();
-        for (Subpath sp : path) {
-            currentPath.add(sp);
-            if (sp instanceof Property p && p.isRestrictedSubProperty() && !p.hasIndexKey()) {
-                for (Restrictions.OnProperty r : p.objectOnPropertyRestrictions()) {
-                    // Support only HasValue restriction for now
-                    if (r instanceof Restrictions.HasValue(Property property, Value v)) {
-                        var restrictedPath = new Path.ExpandedPath(Stream.concat(currentPath.stream(), property.expand().stream()).toList());
-                        prefilledFields.add(new PathValue(restrictedPath, EQUALS, v));
-                    }
-                }
-            }
-        }
-        return prefilledFields;
-    }
-
-    // When querying type, match any subclass by default (TODO: make this optional)
-    private Node expandType(JsonLd jsonLd) {
-        if (!path.last().isType() || !(value instanceof VocabTerm)) {
-            return this;
-        }
-
-        String baseType = ((VocabTerm) value).key();
-
-        Set<String> subtypes = jsonLd.getSubClasses(baseType);
-        if (subtypes.isEmpty()) {
-            return this;
-        }
-
-        List<Node> altFields = Stream.concat(Stream.of(baseType), subtypes.stream())
-                .sorted()
-                .map(t -> (Node) withValue(new VocabTerm(t, jsonLd.vocabIndex.get(t))))
-                .toList();
-
-        return new Or(altFields);
     }
 
     private static Map<String, Object> esRangeFilter(String field, String esRangeOp, Object value) {

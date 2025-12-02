@@ -6,18 +6,18 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
+import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.FilterAlias;
 import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
-import whelk.search2.querytree.Path;
-import whelk.search2.querytree.PathValue;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.Resource;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
+
 import whelk.util.DocumentUtil;
 import whelk.util.Restrictions;
 
@@ -466,47 +466,44 @@ public class Query {
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
-        var p = new Path(property).expand(ctx.jsonLd);
-        var paths = property instanceof Property.NarrowedRestrictedProperty // TODO for now exclude altPaths for _categoryByCollection
-                ? List.of(p)
-                : p.getAltPaths(ctx.jsonLd, ctx.rdfSubjectTypes);
-
-        paths.forEach(path -> {
-            String field = path.jsonForm();
-            if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
-                field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
-            } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
-                field = String.format("%s.%s", field, KEYWORD);
-            } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
-                field = String.format("%s.%s", field, JsonLd.ID_KEY);
-            }
-            Optional<String> nestedStem = path.getEsNestedStem(ctx.esSettings.mappings());
-            Map<String, Object> aggs = nestedStem.isPresent()
-                    ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
-                    : buildCoreAqqQuery(field, slice, ctx);
-            Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
-                    ? with(new HashMap<>(ctx.mmSelected), m -> {
-                            m.remove(pKey);
-                            // FIXME
-                            if (slice.parentSlice() != null) {
-                                m.remove(slice.parentSlice().propertyKey());
-                            }
-                            if (slice.subSlice() != null) {
-                                m.remove(slice.subSlice().propertyKey());
-                            }
-                            // TODO don't hardcode this if we decide it is what we want
-                            if (Restrictions.FIND_CATEGORY.equals(pKey) || Restrictions.IDENTIFY_CATEGORY.equals(pKey)) {
-                                m.remove(Restrictions.NONE_CATEGORY);
-                            }
-                            //if ("_categoryByCollection.@none".equals(pKey)) {
-                            //    m.remove("_categoryByCollection.find");
-                            //    m.remove("_categoryByCollection.identify");
-                            //}
-                        })
-                    : ctx.mmSelected;
-            Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
-            query.put(field, filterWrap(aggs, property.name(), filter));
-        });
+        property.getAltSelectors(ctx.jsonLd, ctx.rdfSubjectTypes).stream()
+                .map(selector -> selector.expand(ctx.jsonLd))
+                .forEach(selector -> {
+                    String field = selector.esField();
+                    if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
+                        field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
+                    } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
+                        field = String.format("%s.%s", field, KEYWORD);
+                    } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
+                        field = String.format("%s.%s", field, JsonLd.ID_KEY);
+                    }
+                    Optional<String> nestedStem = selector.getEsNestedStem(ctx.esSettings.mappings());
+                    Map<String, Object> aggs = nestedStem.isPresent()
+                            ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
+                            : buildCoreAqqQuery(field, slice, ctx);
+                    Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
+                            ? with(new HashMap<>(ctx.mmSelected), m -> {
+                        m.remove(pKey);
+                        // FIXME
+                        if (slice.parentSlice() != null) {
+                            m.remove(slice.parentSlice().propertyKey());
+                        }
+                        if (slice.subSlice() != null) {
+                            m.remove(slice.subSlice().propertyKey());
+                        }
+                        // TODO don't hardcode this if we decide it is what we want
+                        if (Restrictions.FIND_CATEGORY.equals(pKey) || Restrictions.IDENTIFY_CATEGORY.equals(pKey)) {
+                            m.remove(Restrictions.NONE_CATEGORY);
+                        }
+                        //if ("_categoryByCollection.@none".equals(pKey)) {
+                        //    m.remove("_categoryByCollection.find");
+                        //    m.remove("_categoryByCollection.identify");
+                        //}
+                    })
+                            : ctx.mmSelected;
+                    Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
+                    query.put(field, filterWrap(aggs, property.name(), filter));
+                });
     }
     
     private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {
@@ -606,7 +603,7 @@ public class Query {
         }
 
         private class Observation {
-            PathValue object;
+            Condition object;
             int count = 0;
             int largestCount = 0;
             SliceListResult subSlices;
@@ -691,17 +688,17 @@ public class Query {
                             var o = entry.getValue();
                             int count = entry.getValue().count();
                             Value v = disambiguate.mapValueForProperty(property, bucketKey).orElse(new FreeText(bucketKey));
-                            var pv = new PathValue(property, Operator.EQUALS, v);
+                            var c = new Condition(property, Operator.EQUALS, v);
 
-                            if (pv.value() instanceof Link l && l.iri().equals(queryParams.object)) {
+                            if (c.value() instanceof Link l && l.iri().equals(queryParams.object)) {
                                 // TODO: This check won't be needed if/when we remove facets from resource page.
                                 return;
                             }
 
                             // TODO
-                            boolean isSelected = selectedValue!=null && !selectedValue.isEmpty()
-                                    ? selectedValue.stream().anyMatch(n -> n instanceof PathValue pv2 && pv2.value() instanceof Link l && v instanceof Link l2 && l.iri().equals(l2.iri()))
-                                    : selectedFacets.isSelected(pv, propertyKey);
+                            boolean isSelected = selectedValue != null && !selectedValue.isEmpty()
+                                    ? selectedValue.stream().anyMatch(n -> n instanceof Condition c2 && c2.value() instanceof Link l && v instanceof Link l2 && l.iri().equals(l2.iri()))
+                                    : selectedFacets.isSelected(c, propertyKey);
 
                             Consumer<QueryTree> addObservation = alteredTree -> {
                                 Map<String, Object> observation = new LinkedHashMap<>();
@@ -715,15 +712,15 @@ public class Query {
                                     observation.put("_selected", true);
                                 }
                                 if (o.subSlices != null && slice.subSlice() != null) {
-                                    var s = o.subSlices.getSliceByDimension(List.of(slice.subSlice()), selectedFacets, v, selectedValue);
-                                    if (!s.isEmpty()) {
-                                        observation.put("sliceByDimension", s);
+                                    var sliceByDimension = o.subSlices.getSliceByDimension(List.of(slice.subSlice()), selectedFacets, v, selectedValue);
+                                    if (!sliceByDimension.isEmpty()) {
+                                        observation.put("sliceByDimension", sliceByDimension);
                                     }
                                 }
 
                                 observations.add(observation);
 
-                                if (pv.value() instanceof Link l) {
+                                if (c.value() instanceof Link l) {
                                     links.add(l);
                                 }
                             };
@@ -734,13 +731,13 @@ public class Query {
                                 // FIXME
                                 //List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
                                 //addObservation.accept(qt.remove(selected).add(pv));
-                                Predicate<Node> f = (Node n) -> n instanceof PathValue pv2
-                                        && pv2.path().path().getLast() instanceof Property p
+                                Predicate<Node> f = (Node n) -> n instanceof Condition c2
+                                        && c2.selector().path().getLast() instanceof Property p
                                         && "category".equals(p.queryKey());
-                                //
+
                                 var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
-                                if (selectedValue == null || !selectedValue.contains(pv)) {
-                                    qt2 = qt2.add(pv);
+                                if (selectedValue == null || !selectedValue.contains(c)) {
+                                    qt2 = qt2.add(c);
                                 }
 
                                 addObservation.accept(qt2);
@@ -750,15 +747,15 @@ public class Query {
                             var selected = selectedFacets.getSelected(propertyKey);
                             if (isSelected) {
                                 selected.stream()
-                                        .filter(pv::equals)
+                                        .filter(c::equals)
                                         .findFirst()
                                         .map(qt::remove)
                                         .ifPresent(addObservation);
                             } else {
                                 if (selected.isEmpty()) {
-                                    addObservation.accept(qt.add(pv));
+                                    addObservation.accept(qt.add(c));
                                 } else {
-                                    var newSelected = with(new ArrayList<>(selected), l -> l.add(pv));
+                                    var newSelected = with(new ArrayList<>(selected), l -> l.add(c));
                                     var alteredTree = qt.remove(selected)
                                             .add(switch (connective) {
                                                 case AND -> new And(newSelected);
@@ -855,7 +852,7 @@ public class Query {
 
                         // TODO
                         mySelectedValue = qTree.findTopNodesByCondition(node ->
-                                (node instanceof PathValue pv && pv.value() instanceof Link link && values.contains(link.iri()))
+                                (node instanceof Condition c && c.value() instanceof Link link && values.contains(link.iri()))
 
                         );
 
@@ -914,7 +911,7 @@ public class Query {
 
             String selectedMin = "";
             String selectedMax = "";
-            if (selected.size() == 1 && ((PathValue) selected.getFirst()).value() instanceof YearRange yr) {
+            if (selected.size() == 1 && ((Condition) selected.getFirst()).value() instanceof YearRange yr) {
                 selectedMin = yr.min();
                 selectedMax = yr.max();
             }

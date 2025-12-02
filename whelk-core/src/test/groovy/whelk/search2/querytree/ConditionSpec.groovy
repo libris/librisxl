@@ -6,14 +6,14 @@ import whelk.search2.Disambiguate
 import whelk.search2.ESSettings
 import whelk.search2.EsMappings
 
-class PathValueSpec extends Specification {
+class ConditionSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
     EsMappings esMappings = TestData.getEsMappings()
 
     def "convert to search mapping 1"() {
         given:
-        def searchMapping = QueryTreeBuilder.buildTree('p1.@id:v1', disambiguate)
+        def searchMapping = QueryTreeBuilder.buildTree('p1:v1', disambiguate)
                 .toSearchMapping {n -> ['@id': '/find?_q=*'] }
 
         expect:
@@ -21,7 +21,7 @@ class PathValueSpec extends Specification {
                 'property': ['@id': 'p1', '@type': 'DatatypeProperty'],
                 'equals'  : 'v1',
                 'up'      : ['@id': '/find?_q=*'],
-                '_key'    : 'p1.@id',
+                '_key'    : 'p1',
                 '_value'  : 'v1'
         ]
     }
@@ -71,10 +71,10 @@ class PathValueSpec extends Specification {
 
     def "expand"() {
         given:
-        PathValue pathValue = (PathValue) QueryTreeBuilder.buildTree(query, disambiguate)
+        Condition statement = (Condition) QueryTreeBuilder.buildTree(query, disambiguate)
 
         expect:
-        pathValue.expand(jsonLd).toString() == result
+        statement.expand(jsonLd).toString() == result
 
         where:
         query                        | result
