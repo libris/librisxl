@@ -3,7 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.Operator;
 
-public final class Type extends Statement {
+public final class Type extends Condition {
     private final Property.RdfType rdfTypeProperty;
     private final String type;
 

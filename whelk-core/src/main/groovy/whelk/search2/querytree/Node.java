@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public sealed interface Node permits FilterAlias, FreeText, Group, Not, Statement {
+public sealed interface Node permits FilterAlias, FreeText, Group, Not, Condition {
     Map<String, Object> toEs(ESSettings esSettings);
 
     Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes);

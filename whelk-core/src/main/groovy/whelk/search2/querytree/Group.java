@@ -139,8 +139,8 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     private Optional<String> getEsNestedStem(Node node, EsMappings esMappings) {
-        if (node instanceof Statement s) {
-            return s.selector().getEsNestedStem(esMappings);
+        if (node instanceof Condition c) {
+            return c.selector().getEsNestedStem(esMappings);
         }
         if (node instanceof Group g) {
             var groupedByNestedStem = g.children().stream().collect(Collectors.groupingBy(n -> getEsNestedStem(n, esMappings)));
@@ -153,7 +153,7 @@ public sealed abstract class Group implements Node permits And, Or {
 
     private Map<String, Object> toCoreEsQuery(Node node, ESSettings esSettings) {
         return switch (node) {
-            case Statement s -> s.getCoreEsQuery(esSettings);
+            case Condition c -> c.getCoreEsQuery(esSettings);
             case Group g -> g.wrap(g.childrenToCoreEs(esSettings));
             default -> node.toEs(esSettings);
         };

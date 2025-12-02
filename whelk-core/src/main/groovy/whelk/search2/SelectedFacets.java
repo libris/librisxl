@@ -1,9 +1,9 @@
 package whelk.search2;
 
+import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.Statement;
 import whelk.search2.querytree.YearRange;
 import whelk.util.Restrictions;
 
@@ -55,8 +55,8 @@ public class SelectedFacets {
         return isSelectable(propertyKey) ? selectedByPropertyKey.get(propertyKey) : List.of();
     }
 
-    public boolean isSelected(Statement statement, String propertyKey) {
-        return isSelectable(propertyKey) && selectedByPropertyKey.get(propertyKey).contains(statement);
+    public boolean isSelected(Condition condition, String propertyKey) {
+        return isSelectable(propertyKey) && selectedByPropertyKey.get(propertyKey).contains(condition);
     }
 
     public Map<String, List<Node>> getAllMultiOrRadioSelected() {
@@ -71,7 +71,7 @@ public class SelectedFacets {
 
     public List<Node> getRangeSelected(String propertyKey) {
         return getSelected(propertyKey).stream()
-                .filter(n -> ((Statement) n).operator().isRange() || ((Statement) n).value() instanceof YearRange)
+                .filter(n -> ((Condition) n).operator().isRange() || ((Condition) n).value() instanceof YearRange)
                 .toList();
     }
 
@@ -93,11 +93,11 @@ public class SelectedFacets {
 
             var property = slice.getProperty();
 
-            Predicate<Node> isProperty = n -> n instanceof Statement s && s.selector().equals(property);
-            Predicate<Node> hasEqualsOp = n -> ((Statement) n).operator().equals(Operator.EQUALS);
+            Predicate<Node> isProperty = n -> n instanceof Condition c && c.selector().equals(property);
+            Predicate<Node> hasEqualsOp = n -> ((Condition) n).operator().equals(Operator.EQUALS);
             Predicate<Node> isPropertyEquals = n -> isProperty.test(n) && hasEqualsOp.test(n);
 
-            List<Statement> allNodesWithProperty = queryTree.allDescendants().filter(isProperty).map(Statement.class::cast).toList();
+            List<Condition> allNodesWithProperty = queryTree.allDescendants().filter(isProperty).map(Condition.class::cast).toList();
 
             if (slice.subSlice() != null) {
                 addSlice(slice.subSlice(), queryTree);

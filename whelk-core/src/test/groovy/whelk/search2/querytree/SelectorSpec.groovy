@@ -10,7 +10,7 @@ class SelectorSpec extends Specification {
 
     def "expand"() {
         given:
-        Selector p = ((Statement) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
+        Selector p = ((Condition) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
 
         expect:
         p.expand(jsonLd).toString() == result
@@ -25,7 +25,7 @@ class SelectorSpec extends Specification {
 
     def "get alternative paths for integral relations"() {
         given:
-        Selector p = ((Statement) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
+        Selector p = ((Condition) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
 
         expect:
         p.getAltPaths(jsonLd, types).collect { it.expand(jsonLd).toString() } == result

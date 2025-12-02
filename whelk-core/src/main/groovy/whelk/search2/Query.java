@@ -6,6 +6,7 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
+import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.FilterAlias;
 import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Link;
@@ -14,7 +15,6 @@ import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.Resource;
-import whelk.search2.querytree.Statement;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
 
@@ -603,7 +603,7 @@ public class Query {
         }
 
         private class Observation {
-            Statement object;
+            Condition object;
             int count = 0;
             int largestCount = 0;
             SliceListResult subSlices;
@@ -688,17 +688,17 @@ public class Query {
                             var o = entry.getValue();
                             int count = entry.getValue().count();
                             Value v = disambiguate.mapValueForProperty(property, bucketKey).orElse(new FreeText(bucketKey));
-                            var s = new Statement(property, Operator.EQUALS, v);
+                            var c = new Condition(property, Operator.EQUALS, v);
 
-                            if (s.value() instanceof Link l && l.iri().equals(queryParams.object)) {
+                            if (c.value() instanceof Link l && l.iri().equals(queryParams.object)) {
                                 // TODO: This check won't be needed if/when we remove facets from resource page.
                                 return;
                             }
 
                             // TODO
                             boolean isSelected = selectedValue != null && !selectedValue.isEmpty()
-                                    ? selectedValue.stream().anyMatch(n -> n instanceof Statement s2 && s2.value() instanceof Link l && v instanceof Link l2 && l.iri().equals(l2.iri()))
-                                    : selectedFacets.isSelected(s, propertyKey);
+                                    ? selectedValue.stream().anyMatch(n -> n instanceof Condition c2 && c2.value() instanceof Link l && v instanceof Link l2 && l.iri().equals(l2.iri()))
+                                    : selectedFacets.isSelected(c, propertyKey);
 
                             Consumer<QueryTree> addObservation = alteredTree -> {
                                 Map<String, Object> observation = new LinkedHashMap<>();
@@ -720,7 +720,7 @@ public class Query {
 
                                 observations.add(observation);
 
-                                if (s.value() instanceof Link l) {
+                                if (c.value() instanceof Link l) {
                                     links.add(l);
                                 }
                             };
@@ -731,13 +731,13 @@ public class Query {
                                 // FIXME
                                 //List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
                                 //addObservation.accept(qt.remove(selected).add(pv));
-                                Predicate<Node> f = (Node n) -> n instanceof Statement s2
-                                        && s2.selector().path().getLast() instanceof Property p
+                                Predicate<Node> f = (Node n) -> n instanceof Condition c2
+                                        && c2.selector().path().getLast() instanceof Property p
                                         && "category".equals(p.queryKey());
 
                                 var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
-                                if (selectedValue == null || !selectedValue.contains(s)) {
-                                    qt2 = qt2.add(s);
+                                if (selectedValue == null || !selectedValue.contains(c)) {
+                                    qt2 = qt2.add(c);
                                 }
 
                                 addObservation.accept(qt2);
@@ -747,15 +747,15 @@ public class Query {
                             var selected = selectedFacets.getSelected(propertyKey);
                             if (isSelected) {
                                 selected.stream()
-                                        .filter(s::equals)
+                                        .filter(c::equals)
                                         .findFirst()
                                         .map(qt::remove)
                                         .ifPresent(addObservation);
                             } else {
                                 if (selected.isEmpty()) {
-                                    addObservation.accept(qt.add(s));
+                                    addObservation.accept(qt.add(c));
                                 } else {
-                                    var newSelected = with(new ArrayList<>(selected), l -> l.add(s));
+                                    var newSelected = with(new ArrayList<>(selected), l -> l.add(c));
                                     var alteredTree = qt.remove(selected)
                                             .add(switch (connective) {
                                                 case AND -> new And(newSelected);
@@ -852,7 +852,7 @@ public class Query {
 
                         // TODO
                         mySelectedValue = qTree.findTopNodesByCondition(node ->
-                                (node instanceof Statement s && s.value() instanceof Link link && values.contains(link.iri()))
+                                (node instanceof Condition c && c.value() instanceof Link link && values.contains(link.iri()))
 
                         );
 
@@ -911,7 +911,7 @@ public class Query {
 
             String selectedMin = "";
             String selectedMax = "";
-            if (selected.size() == 1 && ((Statement) selected.getFirst()).value() instanceof YearRange yr) {
+            if (selected.size() == 1 && ((Condition) selected.getFirst()).value() instanceof YearRange yr) {
                 selectedMin = yr.min();
                 selectedMax = yr.max();
             }

@@ -61,7 +61,7 @@ public class SuggestQuery extends Query {
                             .map(selector -> {
                                 String formattedLink = new Link((String) item.get(ID_KEY)).queryForm();
                                 Link placeholderLink = new Link("http://PLACEHOLDER_LINK");
-                                Statement placeholderNode = new Statement(selector, Operator.EQUALS, placeholderLink);
+                                Condition placeholderNode = new Condition(selector, Operator.EQUALS, placeholderLink);
                                 String template = qTree.replace(edited.node(), placeholderNode).toQueryString();
                                 int placeholderLinkStart = template.indexOf(placeholderLink.queryForm());
                                 int placeholderLinkEnd = placeholderLinkStart + placeholderLink.queryForm().length();
@@ -94,8 +94,8 @@ public class SuggestQuery extends Query {
 
     private List<Selector> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {
         List<Selector> applicablePredicates = new ArrayList<>();
-        if (edited.node() instanceof Statement statement && propertySearch) {
-            applicablePredicates.add(statement.selector());
+        if (edited.node() instanceof Condition condition && propertySearch) {
+            applicablePredicates.add(condition.selector());
         } else if (edited.node() instanceof FreeText) {
             var types = asList(item.get(TYPE_KEY));
             applicablePredicates = suggestPredicatesForType.entrySet()
@@ -119,7 +119,7 @@ public class SuggestQuery extends Query {
                             case FreeText ft -> ft.getCurrentlyEditedToken(queryParams.cursor)
                                     .map(token -> new Edited(ft, token))
                                     .stream();
-                            case Statement s -> s.value() instanceof FreeText ft
+                            case Condition c -> c.value() instanceof FreeText ft
                                     ? ft.getCurrentlyEditedToken(queryParams.cursor)
                                     .map(token -> new Edited(node, token))
                                     .stream()
@@ -131,22 +131,22 @@ public class SuggestQuery extends Query {
     }
 
     private QueryTree getSuggestQueryTree() throws InvalidQueryException {
-        if (edited.node() instanceof Statement stmt && stmt.operator().equals(Operator.EQUALS)) {
-            Selector selector = stmt.selector();
+        if (edited.node() instanceof Condition c && c.operator().equals(Operator.EQUALS)) {
+            Selector selector = c.selector();
             String searchableTypes = selector.range().stream()
                     .filter(type -> defaultBaseTypes.stream()
                             .filter(Predicate.not("Work"::equals))
                             .anyMatch(baseType -> whelk.getJsonld().isSubClassOf(type, baseType)))
                     .collect(Collectors.joining(" OR "));
 
-            FreeText ft = (FreeText) stmt.value();
+            FreeText ft = (FreeText) c.value();
             FreeText prefixFt = editedTokenAsPrefix(ft);
 
             if (searchableTypes.isEmpty()) {
                 // Make a query with the currently edited token treated as prefix to get suggestions
                 // Also make a non-prefix query to get a higher relevancy score for exact matches
-                Or or = new Or(List.of(stmt.withValue(prefixFt), stmt));
-                return qTree.replace(stmt, or);
+                Or or = new Or(List.of(c.withValue(prefixFt), c));
+                return qTree.replace(c, or);
             }
 
             this.propertySearch = true;

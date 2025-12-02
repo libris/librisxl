@@ -6,7 +6,7 @@ import whelk.search2.Disambiguate
 import whelk.search2.ESSettings
 import whelk.search2.EsMappings
 
-class StatementSpec extends Specification {
+class ConditionSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
     EsMappings esMappings = TestData.getEsMappings()
@@ -71,7 +71,7 @@ class StatementSpec extends Specification {
 
     def "expand"() {
         given:
-        Statement statement = (Statement) QueryTreeBuilder.buildTree(query, disambiguate)
+        Condition statement = (Condition) QueryTreeBuilder.buildTree(query, disambiguate)
 
         expect:
         statement.expand(jsonLd).toString() == result

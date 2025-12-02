@@ -49,7 +49,7 @@ public class QueryTreeBuilder {
                 Node node = buildFromLeaf(leaf, disambiguate, selector, operator);
                 switch (node) {
                     case FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
-                    case Statement s when s.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
+                    case Condition s when s.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
                     default -> children.add(node);
                 }
                 if (!freeTextTokens.isEmpty() && freeTextStartIdx == -1) {
@@ -67,7 +67,7 @@ public class QueryTreeBuilder {
             };
 
             FreeText freeText = new FreeText(disambiguate.getTextQueryProperty(), freeTextTokens, connective);
-            Node node = selector != null ? new Statement(selector, operator, freeText) : freeText;
+            Node node = selector != null ? new Condition(selector, operator, freeText) : freeText;
 
             if (children.isEmpty()) {
                 return node;
@@ -108,13 +108,13 @@ public class QueryTreeBuilder {
         return buildTree(c.operand(), disambiguate, selector, c.operator());
     }
 
-    private static Statement buildStatement(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
+    private static Condition buildStatement(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
         Token token = getToken(leaf.value());
         if (disambiguate.isRestrictedByValue(selector)) {
             selector = disambiguate.restrictByValue(selector, token.value());
         }
         Value value = disambiguate.mapValueForSelector(selector, token).orElse(new FreeText(token));
-        Statement statement = new Statement(selector, operator, value);
+        Condition statement = new Condition(selector, operator, value);
         return statement.isTypeNode() ? statement.asTypeNode() : statement;
     }
 

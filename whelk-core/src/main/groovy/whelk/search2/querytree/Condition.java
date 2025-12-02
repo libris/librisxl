@@ -28,18 +28,18 @@ import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
 
-public sealed class Statement implements Node permits Type {
+public sealed class Condition implements Node permits Type {
     private final Selector selector;
     private final Operator operator;
     private final Value value;
 
-    public Statement(Selector selector, Operator operator, Value value) {
+    public Condition(Selector selector, Operator operator, Value value) {
         this.selector = selector;
         this.operator = operator;
         this.value = value;
     }
 
-    public Statement(String key, Operator operator, Value value) {
+    public Condition(String key, Operator operator, Value value) {
         this(new Key.RecognizedKey(new Token.Raw(key)), operator, value);
     }
 
@@ -110,7 +110,7 @@ public sealed class Statement implements Node permits Type {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Statement other && hashCode() == other.hashCode();
+        return o instanceof Condition other && hashCode() == other.hashCode();
     }
 
     @Override
@@ -118,16 +118,16 @@ public sealed class Statement implements Node permits Type {
         return hash(selector, operator, value);
     }
 
-    public Statement withSelector(Selector s) {
-        return new Statement(s, operator, value);
+    public Condition withSelector(Selector s) {
+        return new Condition(s, operator, value);
     }
 
-    public Statement withOperator(Operator op) {
-        return new Statement(selector, op, value);
+    public Condition withOperator(Operator op) {
+        return new Condition(selector, op, value);
     }
 
-    public Statement withValue(Value v) {
-        return new Statement(selector, operator, v);
+    public Condition withValue(Value v) {
+        return new Condition(selector, operator, v);
     }
 
     public boolean isTypeNode() {
@@ -156,8 +156,8 @@ public sealed class Statement implements Node permits Type {
         return expanded.size() > 1 ? new And(expanded) : expanded.getFirst();
     }
 
-    private List<Statement> getPrefilledFields(List<Selector> path, JsonLd jsonLd) {
-        List<Statement> prefilledFields = new ArrayList<>();
+    private List<Condition> getPrefilledFields(List<Selector> path, JsonLd jsonLd) {
+        List<Condition> prefilledFields = new ArrayList<>();
         List<Selector> currentPath = new ArrayList<>();
         for (Selector s : path) {
             currentPath.add(s);
@@ -166,7 +166,7 @@ public sealed class Statement implements Node permits Type {
                     // Support only HasValue restriction for now
                     if (r instanceof Restrictions.HasValue(Property property, Value v)) {
                         var restrictedPath = new Path(Stream.concat(currentPath.stream(), property.expand(jsonLd).path().stream()).toList());
-                        prefilledFields.add(new Statement(restrictedPath, EQUALS, v));
+                        prefilledFields.add(new Condition(restrictedPath, EQUALS, v));
                     }
                 }
             }
