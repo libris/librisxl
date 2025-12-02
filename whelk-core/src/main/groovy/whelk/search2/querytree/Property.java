@@ -348,6 +348,7 @@ public non-sealed class Property implements Selector {
     }
 
     private static boolean isComposite(Map<String, Object> definition) {
+        // FIXME: don't hardcode
         return isCategory("https://id.kb.se/ns/librissearch/composite", definition);
     }
 
