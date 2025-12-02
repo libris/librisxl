@@ -721,8 +721,8 @@ public class Query {
                                 //addObservation.accept(qt.remove(selected).add(pv));
                                 Predicate<Node> f = (Node n) -> n instanceof Statement s2
                                         && s2.selector().path().getLast() instanceof Property p
-                                        && "category".equals(p.name()); // TODO: Funkar det här annorlunda mot tidigare?
-                                //
+                                        && "category".equals(p.queryKey());
+
                                 var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
                                 if (selectedValue == null || !selectedValue.contains(s)) {
                                     qt2 = qt2.add(s);
@@ -855,7 +855,7 @@ public class Query {
                         if (selectedFacets.isRangeFilter(propertyKey)) {
                             sliceNode.put("search", getRangeTemplate(propertyKey));
                         }
-                        sliceNode.put("dimension", property.queryKey());
+                        sliceNode.put("dimension", property.name());
                         sliceNode.put("observation", observations);
                         sliceNode.put("maxItems", slice.size());
                         sliceNode.put("_connective", selectedFacets.getConnective(propertyKey).name());
