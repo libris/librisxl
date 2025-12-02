@@ -163,7 +163,7 @@ public class Disambiguate {
     }
 
     private Property getProperty(String propertyKey, Token token) {
-        return Property.getProperty(propertyKey, jsonLd, new Key.RecognizedKey(token));
+        return Property.buildProperty(propertyKey, jsonLd, new Key.RecognizedKey(token));
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {
