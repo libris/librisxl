@@ -668,10 +668,9 @@ process { def doc, Closure loadWorkItem ->
         }
 
     }
-    // If mainEntity does not contain the property "instanceOf", it's a work
-     else {
+    // Else if it contains the property 'hasInstance', it's a Signe work that reuqires special handling
+     else if ('hasInstance' in mainEntity) {
         var changed = typeNormalizer.normalize([:], mainEntity)
-
         if (changed) {
             if (mainEntity[ID] !in convertedWorks) doc.scheduleSave()
         }
