@@ -229,12 +229,10 @@ class TypeNormalizer implements UsingJsonKeys {
         // Normalize hasPart on instance
         if ('hasPart' in instance) {
             normalizeHasPart(instance, mappings)
-            println instance.hasPart
         }
         // Normalize hasPart on work
         if ('hasPart' in work) {
             normalizeHasPart(work, mappings)
-            println work.hasPart
         }
 
         if (changed) {
@@ -527,7 +525,6 @@ class TypeNormalizer implements UsingJsonKeys {
         var changed = false
         for (part in parentEntity.hasPart) {
             // If the part is a Work or subclass thereof
-            println part.get(TYPE)
             if (mappings.whelk.jsonld.isSubClassOf(part.get(TYPE), "Work")) {
                 changed |= normalize([:], part)
             }
