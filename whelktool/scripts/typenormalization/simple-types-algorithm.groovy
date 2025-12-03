@@ -149,7 +149,13 @@ class TypeMappings implements UsingJsonKeys {
 
         // If there is no issuanceType, set type to the generic Work
         if (!issuancetype) {
-            issuancetype = 'Work'
+            // Special handling for Signe works with issuanceType as work property
+            var workIssuanceType = (String) work.remove("issuanceType")
+            if (workIssuanceType) {
+                issuancetype = workIssuanceType
+            } else {
+                issuancetype = 'Work'
+            }
         }
 
         // Already new type of value == already normalized:
@@ -629,28 +635,29 @@ if (typeNormalizer.addCategory) {
 }
 
 process { def doc, Closure loadWorkItem ->
-    def (record, instance) = doc.graph
+    def (record, mainEntity) = doc.graph
 
-    if ('instanceOf' in instance) {
-        // Instances and local works
-        if (ID !in instance.instanceOf) {
-            def work = instance.instanceOf
+    // If mainEntity contains "instanceOf", it's an instance
+    if ('instanceOf' in mainEntity) {
+        // Instances and locally embedded works
+        if (ID !in mainEntity.instanceOf) {
+            def work = mainEntity.instanceOf
             if (work instanceof List && work.size() == 1) {
                 work = work[0]
             }
 
-            var changed = typeNormalizer.normalize(instance, work)
+            var changed = typeNormalizer.normalize(mainEntity, work)
 
             if (changed) doc.scheduleSave()
 
         } else {
             // Instances and linked works
-            def loadedWorkId = instance.instanceOf[ID]
+            def loadedWorkId = mainEntity.instanceOf[ID]
             // TODO: refactor very hacky solution...
             loadWorkItem(loadedWorkId) { workIt ->
                 def (workRecord, work) = workIt.graph
 
-                var changed = typeNormalizer.normalize(instance, work)
+                var changed = typeNormalizer.normalize(mainEntity, work)
 
                 if (changed) {
                     doc.scheduleSave()
@@ -661,4 +668,13 @@ process { def doc, Closure loadWorkItem ->
         }
 
     }
+    // If mainEntity does not contain the property "instanceOf", it's a work
+     else {
+        var changed = typeNormalizer.normalize([:], mainEntity)
+
+        if (changed) {
+            if (mainEntity[ID] !in convertedWorks) doc.scheduleSave()
+        }
+        convertedWorks << mainEntity[ID]
+        }
 }
