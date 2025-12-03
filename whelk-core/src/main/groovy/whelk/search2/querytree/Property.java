@@ -6,6 +6,7 @@ import whelk.search2.QueryUtil;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,6 +14,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
@@ -23,6 +26,7 @@ import static whelk.JsonLd.Owl.OBJECT_PROPERTY;
 import static whelk.JsonLd.Owl.ON_PROPERTY;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.Owl.RESTRICTION;
+import static whelk.JsonLd.RECORD_KEY;
 import static whelk.JsonLd.Rdfs.DOMAIN;
 import static whelk.JsonLd.Rdfs.RANGE;
 import static whelk.JsonLd.Rdfs.RDF_TYPE;
@@ -33,7 +37,7 @@ import static whelk.JsonLd.asList;
 import static whelk.JsonLd.isLink;
 
 
-public non-sealed class Property implements Subpath {
+public non-sealed class Property implements Selector {
     protected String name;
     protected Key.RecognizedKey queryKey;
     protected String indexKey;
@@ -43,12 +47,17 @@ public non-sealed class Property implements Subpath {
     protected List<String> range;
     protected String inverseOf;
     protected boolean isVocabTerm;
-    protected List<Property> propertyChain;
 
     protected Property superProperty;
     protected List<Restrictions.OnProperty> objectOnPropertyRestrictions;
 
     private static final String LIBRIS_SEARCH_NS = "librissearch:";
+
+    // TODO: Get substitutions from context instead?
+    private static final Map<String, String> substitutions = Map.of(
+            "hasItem", String.format("%s.itemOf", JsonLd.REVERSE_KEY),
+            "hasInstance", String.format("%s.instanceOf", JsonLd.REVERSE_KEY)
+    );
 
     public Property(String name, JsonLd jsonLd) {
         this(jsonLd.vocabIndex.get(name), jsonLd);
@@ -61,15 +70,7 @@ public non-sealed class Property implements Subpath {
         this.domain = getDomain(jsonLd);
         this.range = getRange(jsonLd);
         this.inverseOf = getInverseOf(jsonLd);
-        this.propertyChain = getPropertyChain(jsonLd);
         this.indexKey = (String) definition.get("ls:indexKey"); // FIXME: This shouldn't have a different prefix (ls: vs librissearch:)
-    }
-
-    // For test only
-    public Property(String name, Map<String, Object> definition, String queryKey) {
-        this.name = name;
-        this.definition = definition;
-        this.queryKey = new Key.RecognizedKey(queryKey);
     }
 
     private Property(String name, JsonLd jsonLd, Key.RecognizedKey queryKey) {
@@ -81,28 +82,134 @@ public non-sealed class Property implements Subpath {
     }
 
     public static Property getProperty(String propertyKey, JsonLd jsonLd) {
-        return getProperty(propertyKey, jsonLd, null);
+        return buildProperty(propertyKey, jsonLd, null);
     }
 
-    public static Property getProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+    public static Property buildProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
         if (jsonLd.vocabIndex.containsKey(LIBRIS_SEARCH_NS + propertyKey)) {
             // FIXME: This is only temporary to avoid having to include the prefix for terms in the libris search namespace
-            return getProperty(LIBRIS_SEARCH_NS + propertyKey, jsonLd, new Key.RecognizedKey(propertyKey));
+            return buildProperty(LIBRIS_SEARCH_NS + propertyKey, jsonLd, new Key.RecognizedKey(new Token.Raw(propertyKey)));
         }
         var propDef = jsonLd.vocabIndex.get(propertyKey);
         if (propDef == null) {
             throw new IllegalArgumentException("No such property: " + propertyKey);
         }
+        if (isComposite(propDef)) {
+            return new CompositeProperty(propertyKey, jsonLd, queryKey);
+        }
+        if (isShorthand(propDef)) {
+            return new ShorthandProperty(propertyKey, jsonLd, queryKey);
+        }
         if (Restrictions.isNarrowingProperty(propertyKey)) {
-            return new NarrowedRestrictedProperty(propertyKey, jsonLd);
+            return new NarrowedRestrictedProperty(propertyKey, jsonLd, queryKey);
         }
         return RDF_TYPE.equals(propertyKey)
                 ? new Property.RdfType(jsonLd, queryKey)
                 : new Property(propertyKey, jsonLd, queryKey);
     }
 
-    protected Property getSuperProperty(JsonLd jsonLd) {
-        return getProperty(getSuperKey(definition, jsonLd), jsonLd);
+    @Override
+    public String queryKey() {
+        return queryKey != null ? queryKey.queryKey() : name;
+    }
+
+    @Override
+    public String esField() {
+        return indexKey != null ? indexKey : substitutions.getOrDefault(name, name);
+    }
+
+    @Override
+    public List<Selector> path() {
+        return List.of(this);
+    }
+
+    @Override
+    public Selector expand(JsonLd jsonLd) {
+        return hasDomainAdminMetadata(jsonLd)
+                ? new Path(List.of(new Property(RECORD_KEY, jsonLd), this))
+                : this;
+    }
+
+    @Override
+    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return _getAltSelectors(jsonLd, rdfSubjectTypes);
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
+    public boolean isType() {
+        return isRdfType();
+    }
+
+    @Override
+    public boolean isObjectProperty() {
+        return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
+    }
+
+    @Override
+    public boolean mayAppearOnType(String type, JsonLd jsonLd) {
+        return domain.isEmpty() || domain.stream().anyMatch(d -> jsonLd.directDescendants(d, type));
+    }
+
+    @Override
+    public boolean appearsOnType(String type, JsonLd jsonLd) {
+        // TODO: How strict should this be?
+//        return !domain.isEmpty() && domain.stream().anyMatch(d -> jsonLd.isSubClassOf(d, type));
+        return !domain.isEmpty() && domain.stream().anyMatch(d -> jsonLd.directDescendants(d, type));
+    }
+
+    @Override
+    public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
+        return QueryUtil.getIntegralRelationsForType(type, jsonLd).stream()
+                .anyMatch(relation -> relation.range().stream().anyMatch(t -> appearsOnType(t, jsonLd)));
+    }
+
+    @Override
+    public boolean appearsOnlyOnRecord(JsonLd jsonLd) {
+        return hasDomainAdminMetadata(jsonLd);
+    }
+
+    @Override
+    public List<String> domain() {
+        return domain != null ? domain : List.of();
+    }
+
+    @Override
+    public List<String> range() {
+        return range != null ? range : List.of();
+    }
+
+    @Override
+    public Map<String, Object> definition() {
+        return definition;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public boolean isRdfType() {
+        return RDF_TYPE.equals(name);
+    }
+
+    public boolean isVocabTerm() {
+        return isVocabTerm;
+    }
+
+    public boolean isXsdDate() {
+        return range.contains("xsd:dateTime") || range.contains("xsd:date");
+    }
+
+    public boolean isDatatypeProperty() {
+        return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(DATATYPE_PROPERTY::equals);
+    }
+
+    public boolean isInverseOf(Property property) {
+        return property.name().equals(inverseOf);
     }
 
     public boolean isRestrictedSubProperty() {
@@ -114,7 +221,6 @@ public non-sealed class Property implements Subpath {
     }
 
     public void loadRestrictions(Disambiguate disambiguate) {
-        propertyChain.forEach(p -> p.loadRestrictions(disambiguate));
         List<Restrictions.OnProperty> restrictions = new ArrayList<>();
         getObjectHasValueRestrictions(definition).forEach((onProperty, hasValues) ->
                 hasValues.forEach(hv -> {
@@ -123,111 +229,6 @@ public non-sealed class Property implements Subpath {
                     restrictions.add(new Restrictions.HasValue(p, v));
                 }));
         this.objectOnPropertyRestrictions = restrictions;
-    }
-
-    public String name() {
-        return name;
-    }
-
-    public Map<String, Object> definition() {
-        return definition;
-    }
-
-    public List<String> domain() {
-        return domain != null ? domain : List.of();
-    }
-
-    public List<String> range() {
-        return range != null ? range : List.of();
-    }
-
-    @Override
-    public String queryKey() {
-        return queryKey != null ? queryKey.value() : name;
-    }
-
-    @Override
-    public boolean isType() {
-        return isRdfType() || (!propertyChain.isEmpty() && propertyChain.getLast().isRdfType());
-    }
-
-    @Override
-    public boolean isValid() {
-        return true;
-    }
-
-    @Override
-    public String indexKey() {
-        return indexKey != null ? indexKey : name;
-    }
-
-    public boolean isRdfType() {
-        return name.equals(RDF_TYPE);
-    }
-
-    public boolean isVocabTerm() {
-        return isVocabTerm;
-    }
-
-    public boolean isPlatformTerm() {
-        return ((List<?>) asList(definition.get("category"))).stream()
-                .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/platform").equals(c));
-    }
-
-    public boolean isXsdDate() {
-        return range.contains("xsd:dateTime") || range.contains("xsd:date");
-    }
-
-    public boolean isObjectProperty() {
-        return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
-    }
-
-    public boolean isDatatypeProperty() {
-        return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(DATATYPE_PROPERTY::equals);
-    }
-
-    public boolean hasDomainAdminMetadata(JsonLd jsonLd) {
-        return !domain.isEmpty() && domain.stream()
-                .filter(d -> jsonLd.isSubClassOf(d, "AdminMetadata"))
-                .count() == domain.size();
-    }
-
-    public boolean mayAppearOnType(String type, JsonLd jsonLd) {
-        return domain.isEmpty() || domain.stream().anyMatch(d -> jsonLd.directDescendants(d, type));
-    }
-
-    public boolean appearsOnType(String type, JsonLd jsonLd) {
-        // TODO: How strict should this be?
-//        return !domain.isEmpty() && domain.stream().anyMatch(d -> jsonLd.isSubClassOf(d, type));
-        return !domain.isEmpty() && domain.stream().anyMatch(d -> jsonLd.directDescendants(d, type));
-    }
-
-    public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
-        return QueryUtil.getIntegralRelationsForType(type, jsonLd).stream()
-                .anyMatch(relation -> relation.range().stream().anyMatch(t -> appearsOnType(t, jsonLd)));
-    }
-
-    public boolean isInverseOf(Property property) {
-        return property.name().equals(inverseOf);
-    }
-
-    public List<Property> expand() {
-        return isShorthand() ? propertyChain : List.of(this);
-    }
-
-    @Override
-    public String toString() {
-        return name;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof Property p && name().equals(p.name());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(toString());
     }
 
     public List<Restrictions.OnProperty> objectOnPropertyRestrictions() {
@@ -257,6 +258,70 @@ public non-sealed class Property implements Subpath {
         return restrictions;
     }
 
+    protected Property getSuperProperty(JsonLd jsonLd) {
+        return getProperty(getSuperKey(definition, jsonLd), jsonLd);
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Property p && name().equals(p.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(toString());
+    }
+
+    private List<Selector> _getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        if (rdfSubjectTypes.isEmpty() || isPlatformTerm() || isRdfType()) {
+            return List.of(this);
+        }
+
+        Set<Property> integralRelations = rdfSubjectTypes.stream()
+                .map(t -> QueryUtil.getIntegralRelationsForType(t, jsonLd))
+                .flatMap(List::stream)
+                .collect(Collectors.toSet());
+
+        Predicate<Property> followIntegralRelation = integralProp ->
+                integralProp.range()
+                        .stream()
+                        .anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
+
+        List<Selector> altSelectors = integralRelations.stream()
+                .filter(followIntegralRelation)
+                .map(ir -> new Path(List.of(ir, this)))
+                .collect(Collectors.toList());
+
+        if (altSelectors.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+            altSelectors.add(this);
+        }
+
+        /*
+        FIXME:
+         Integral relations are generally not applied to records.
+         Bibliography is an exception: we need to search both meta.bibliography and hasInstance.meta.bibliography
+         */
+        if ("bibliography".equals(name)) {
+            integralRelations.stream().filter(ir -> "hasInstance".equals(ir.name()))
+                    .findFirst()
+                    .map(hasInstance -> new Path(List.of(hasInstance, this)))
+                    .ifPresent(altSelectors::add);
+        }
+
+        return altSelectors;
+    }
+
+    private boolean hasDomainAdminMetadata(JsonLd jsonLd) {
+        return !domain.isEmpty() && domain.stream()
+                .filter(d -> jsonLd.isSubClassOf(d, "AdminMetadata"))
+                .count() == domain.size();
+    }
+
     private List<String> getDomain(JsonLd jsonLd) {
         return findDomainOrRange(DOMAIN, jsonLd);
     }
@@ -273,23 +338,24 @@ public non-sealed class Property implements Subpath {
                 .orElse(null);
     }
 
-    private List<Property> getPropertyChain(JsonLd jsonLd) {
-        if (!isShorthand() || !definition.containsKey(PROPERTY_CHAIN_AXIOM)) {
-            return List.of();
-        }
-
-        return ((List<?>) definition.get(PROPERTY_CHAIN_AXIOM))
-                .stream()
-                .map(QueryUtil::castToStringObjectMap)
-                .map(prop -> isLink(prop)
-                        ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
-                        : new AnonymousProperty(prop, jsonLd))
-                .toList();
+    private boolean isPlatformTerm() {
+        // FIXME: don't hardcode
+        return isCategory("https://id.kb.se/vocab/platform", definition);
     }
 
-    private boolean isShorthand() {
+    private static boolean isComposite(Map<String, Object> definition) {
+        // FIXME: don't hardcode
+        return isCategory("https://id.kb.se/ns/librissearch/composite", definition);
+    }
+
+    private static boolean isShorthand(Map<String, Object> definition) {
+        // FIXME: don't hardcode
+        return isCategory("https://id.kb.se/vocab/shorthand", definition);
+    }
+
+    private static boolean isCategory(String categoryIri, Map<String, Object> definition) {
         return ((List<?>) asList(definition.get("category"))).stream()
-                .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/shorthand").equals(c));
+                .anyMatch(c -> Map.of(JsonLd.ID_KEY, categoryIri).equals(c));
     }
 
     private List<String> findDomainOrRange(String domainOrRange, JsonLd jsonLd) {
@@ -352,8 +418,8 @@ public non-sealed class Property implements Subpath {
             this.superProperty = superProperty;
         }
 
-        public NarrowedRestrictedProperty(String subPropertyKey, JsonLd jsonLd) {
-            super(subPropertyKey, jsonLd);
+        public NarrowedRestrictedProperty(String subPropertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+            super(subPropertyKey, jsonLd, queryKey);
             this.superProperty = getSuperProperty(jsonLd);
         }
 
@@ -363,7 +429,11 @@ public non-sealed class Property implements Subpath {
         }
 
         @Override
-        public String indexKey() {
+        public Map<String, Object> definition() {
+            return superProperty.definition();
+        }
+
+        public String esField() {
             if (hasIndexKey()) {
                 return indexKey;
             }
@@ -393,12 +463,12 @@ public non-sealed class Property implements Subpath {
         }
 
         @Override
-        public String indexKey() {
+        public String esField() {
             if (hasIndexKey()) {
                 return indexKey;
             }
             if (superProperty != null) {
-                return superProperty.indexKey();
+                return superProperty.esField();
             }
             throw new IllegalStateException();
         }
@@ -440,6 +510,120 @@ public non-sealed class Property implements Subpath {
 
         private boolean hasNarrowedRange() {
             return range.size() == 1;
+        }
+    }
+
+    private static class CompositeProperty extends Property {
+        public CompositeProperty(String name, JsonLd jsonLd, Key.RecognizedKey key) {
+            super(name, jsonLd, key);
+        }
+
+        @Override
+        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+            return getComponents(jsonLd).stream()
+                    .flatMap(s -> s.getAltSelectors(jsonLd, rdfSubjectTypes).stream())
+                    .toList();
+        }
+
+        private List<Selector> getComponents(JsonLd jsonLd) {
+            List<Selector> components = new ArrayList<>();
+
+            /*
+            When multiple chain axioms are defined on the same property, the generated Json-LD ends up with an odd structure.
+
+            For example:
+            :p :propertyChainAxiom (:a :b), (:c, :d), (:e, :f) .
+
+            -->
+            
+            {
+                "propertyChainAxiom": [
+                    { "@id": "https://id.kb.se/vocab/a },
+                    { "@id": "https://id.kb.se/vocab/b },
+                    [
+                      { "@id": "https://id.kb.se/vocab/c" },
+                      { "@id": "https://id.kb.se/vocab/d" }
+                    ],
+                    [
+                      { "@id": "https://id.kb.se/vocab/e" },
+                      { "@id": "https://id.kb.se/vocab/f" }
+                    ]
+                ]
+            }
+
+            The first chain is flattened into the top-level array, while subsequent chains are nested inside their own arrays.
+            Probably a bug in definitions but for now we work around it here.
+             */
+            var chainDef = ((List<?>) definition.get(PROPERTY_CHAIN_AXIOM));
+            var chain = getChain(chainDef, jsonLd);
+            if (!chain.isEmpty()) {
+                components.add(new Path(chain));
+            }
+            chainDef.stream().filter(List.class::isInstance)
+                    .map(l -> getChain((List<?>) l, jsonLd))
+                    .filter(Predicate.not(List::isEmpty))
+                    .map(Path::new)
+                    .forEach(components::add);
+
+            jsonLd.getSubProperties(name)
+                    .stream()
+                    .map(p -> getProperty(p, jsonLd))
+                    .forEach(components::add);
+
+            return components;
+        }
+
+        private List<Selector> getChain(List<?> chainDef, JsonLd jsonLd) {
+            return chainDef.stream()
+                    .filter(Map.class::isInstance)
+                    .map(QueryUtil::castToStringObjectMap)
+                    .map(prop -> isLink(prop)
+                            ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
+                            : new AnonymousProperty(prop, jsonLd))
+                    .map(Selector.class::cast)
+                    .toList();
+        }
+    }
+
+    private static class ShorthandProperty extends Property {
+        private final Path propertyChain;
+
+        public ShorthandProperty(String name, JsonLd jsonLd, Key.RecognizedKey key) {
+            super(name, jsonLd, key);
+            this.propertyChain = getPropertyChain(jsonLd);
+        }
+
+        @Override
+        public Selector expand(JsonLd jsonLd) {
+            return propertyChain.expand(jsonLd);
+        }
+
+        @Override
+        public boolean isType() {
+            return propertyChain.isType();
+        }
+
+        @Override
+        public void loadRestrictions(Disambiguate disambiguate) {
+            propertyChain.path().forEach(p -> ((Property) p).loadRestrictions(disambiguate));
+            super.loadRestrictions(disambiguate);
+        }
+
+        private Path getPropertyChain(JsonLd jsonLd) {
+            // Expect only a single chain
+            if (!(definition.get(PROPERTY_CHAIN_AXIOM) instanceof List<?> l && l.stream().allMatch(Map.class::isInstance))) {
+                throw new RuntimeException("Invalid property chain axiom for shorthand property '" + name + "'.");
+            }
+
+            var chain = l.stream()
+                    .map(QueryUtil::castToStringObjectMap)
+                    .map(prop -> isLink(prop)
+                            ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
+                            : new AnonymousProperty(prop, jsonLd))
+                    .map(Selector.class::cast)
+                    .toList();
+
+            return new Path(chain);
         }
     }
 }

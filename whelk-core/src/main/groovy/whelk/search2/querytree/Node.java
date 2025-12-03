@@ -2,17 +2,15 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.ESSettings;
-import whelk.search2.QueryParams;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public sealed interface Node permits FilterAlias, FreeText, Group, Not, PathValue {
+public sealed interface Node permits FilterAlias, FreeText, Group, Not, Condition {
     Map<String, Object> toEs(ESSettings esSettings);
 
     Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
