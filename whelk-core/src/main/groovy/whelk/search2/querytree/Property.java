@@ -209,7 +209,7 @@ public non-sealed class Property implements Selector {
     }
 
     public boolean isInverseOf(Property property) {
-        return property.name().equals(inverseOf);
+        return inverseOf != null && inverseOf.equals(property.name());
     }
 
     public boolean isRestrictedSubProperty() {
