@@ -1,7 +1,11 @@
+import whelk.util.DocumentUtil
+
 import java.util.stream.Collectors
 import java.util.regex.Pattern
 
 import whelk.Whelk
+
+import static whelk.JsonLd.TYPE_KEY
 import static whelk.util.Jackson.mapper
 import static whelk.JsonLd.isLink
 
@@ -216,7 +220,7 @@ class TypeNormalizer implements UsingJsonKeys {
     }
 
     /** Normalization action */
-    boolean normalize(Map instance, Map work) {
+    boolean normalize(Map instance, Map work, boolean recursive = true) {
         var changed = false
 
         var oldItype = instance.get(TYPE)
@@ -231,14 +235,9 @@ class TypeNormalizer implements UsingJsonKeys {
 
         changed |= mappings.convertIssuanceType(instance, work)
 
-        // FIXME: recursively normalize all subnodes (hasPart, relatedTo, etc.)!
-        // Normalize hasPart on instance
-        if ('hasPart' in instance) {
-            normalizeHasPart(instance, mappings)
-        }
-        // Normalize hasPart on work
-        if ('hasPart' in work) {
-            normalizeHasPart(work, mappings)
+        if (recursive) {
+            changed |= normalizeLocalEntity(instance)
+            changed |= normalizeLocalEntity(work)
         }
 
         if (changed) {
@@ -252,6 +251,38 @@ class TypeNormalizer implements UsingJsonKeys {
             missingCategoryLog.println("${instance[ID]}\tNo WORK categories after reducing work / instance types\t${oldWtype} / ${oldItype}")
         }
 
+        return changed
+    }
+
+    boolean normalizeLocalEntity(Map entity) {
+        boolean changed = false
+        DocumentUtil.traverse(entity) { value, path ->
+            if (!path.isEmpty() && !path.contains('instanceOf') && !path.contains('hasInstance')) {
+                // If the part is a Work or subclass thereof
+                if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(value.get(TYPE), "Work")) {
+                    changed |= normalize([:], value, false)
+                    println path
+                    println value
+                }
+                // If the part is an instance or subclass thereof
+                else if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(value.get(TYPE), "Instance")) {
+                    changed |= normalize(value, [:], false)
+                    println path
+                    println value
+
+                    // Special handling for when the part is Electronic
+                    if ((value.get(TYPE) == "PhysicalResource") && (entity.get(TYPE) == "DigitalResource")) {
+                        value.put(TYPE, "DigitalResource")
+                        value.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
+                        if (value.category.size() == 0) {
+                            value.remove("category")
+                        }
+                        changed = true
+                    }
+                }
+            }
+            return new DocumentUtil.Nop()
+        }
         return changed
     }
 
@@ -524,31 +555,6 @@ class TypeNormalizer implements UsingJsonKeys {
             }
           }
 
-        return changed
-    }
-
-    boolean normalizeHasPart(Map parentEntity, TypeMappings mappings) {
-        var changed = false
-        for (part in parentEntity.hasPart) {
-            // If the part is a Work or subclass thereof
-            if (mappings.whelk.jsonld.isSubClassOf(part.get(TYPE), "Work")) {
-                changed |= normalize([:], part)
-            }
-            // If the part is an instance or subclass thereof
-            else if (mappings.whelk.jsonld.isSubClassOf(part.get(TYPE), "Instance")) {
-                changed |= normalize(part, [:])
-
-                // Special handling for when the part is Electronic
-                if ((part.get(TYPE) == "PhysicalResource") & (parentEntity.get(TYPE) == "DigitalResource")) {
-                    part.put(TYPE, "DigitalResource")
-                    part.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
-                    if (part.category.size() == 0) {
-                        part.remove("category")
-                    }
-                    changed = true
-                }
-            }
-        }
         return changed
     }
 
