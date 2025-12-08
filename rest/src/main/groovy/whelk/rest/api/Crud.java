@@ -269,9 +269,8 @@ public class Crud extends WhelkHttpServlet {
 
     private Object getNegotiatedDataBody(CrudGetRequest request, Object contextData, Map<String, Object> data, String uri) {
         if (request.shouldComputeLabels()) {
-            if (!JsonLd.isFramed(data)) {
-                // TODO? should we support this? Requires more work in FresnelUtil
-                throw new BadRequestException("Cannot compute labels when not framed");
+            if (request.shouldEmbellish() && !JsonLd.isFramed(data)) {
+                throw new BadRequestException("Cannot compute labels when embellished but not framed");
             }
 
             // FIXME FresnelUtil can't handle the whole search response because of @container @index in stats
