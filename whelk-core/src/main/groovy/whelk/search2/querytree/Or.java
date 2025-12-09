@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.shouldWrap;
 
@@ -40,7 +42,23 @@ public final class Or extends Group {
 
     @Override
     public RdfSubjectType rdfSubjectType() {
-        return children.stream().allMatch(Type.class::isInstance) ? new RdfSubjectType(this) : RdfSubjectType.noType();
+        return children.stream()
+                .map(Node::rdfSubjectType)
+                .noneMatch(RdfSubjectType::isNoType)
+                    ? new RdfSubjectType(new Or(children.stream().flatMap(this::flattenDescendantTypeNodes).toList()))
+                    : RdfSubjectType.noType();
+    }
+
+    private Stream<Node> flattenDescendantTypeNodes(Node n) {
+        return switch(n) {
+            case Type t -> Stream.of(t);
+            case And and -> Stream.of(and.children().stream()
+                    .filter((n2) -> n2 instanceof Type)
+                    .findAny()
+                    .orElseThrow(() -> new RuntimeException("couldn't find a Type for rdfSubjectType")));
+            case Or or -> or.children().stream().flatMap(this::flattenDescendantTypeNodes).toList().stream();
+            default -> throw new RuntimeException("couldn't map Node to Type");
+        };
     }
 
     @Override

@@ -321,7 +321,6 @@ public class Query {
     }
 
     private QueryTree mergeTrees(QueryTree baseTree, List<QueryTree> other) {
-        // TODO: How to handle e.g. "X AND ((typ:Agent AND isPartOf:X) OR (typ:Verk AND year:1990))"?
         var baseTreeRdfSubjectType = baseTree.getRdfSubjectType();
         if (baseTreeRdfSubjectType.isNoType()) {
             for (QueryTree o : other) {
