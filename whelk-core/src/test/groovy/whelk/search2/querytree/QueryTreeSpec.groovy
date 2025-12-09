@@ -478,7 +478,7 @@ class QueryTreeSpec extends Specification {
         tree                                    | result
         'type:T1 p1:v1'                         | ["T1"]
         'type:(T1 T2) p1:v1'                    | ["T1"] // TODO?
-        '(type:T1 p1:v1) OR (type:T2 p2:v2)'    | [] // TODO?
+        '(type:T1 p1:v1) OR (type:T2 p2:v2)'    | ["T1", "T2"]
         'p1:v1 p2:v2'                           | []
         'type:(T1 OR T2) p1:v1'                 | ["T1", "T2"]
         '(type:T1 OR p1:v1) (type:T2 OR p2:v2)' | []
