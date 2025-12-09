@@ -44,10 +44,6 @@ public class Disambiguate {
         return _mapQueryKey(token);
     }
 
-    public Property mapPropertyKey(String propertyKey) {
-        return Property.getProperty(propertyKey, jsonLd);
-    }
-
     public Optional<Value> mapValueForSelector(Selector selector, Token token) {
         return switch (selector) {
             case Property p -> mapValueForProperty(p, token.value(), token);
@@ -121,14 +117,6 @@ public class Disambiguate {
     }
 
     private Selector mapSingleKey(Token token) {
-        var mapped = _mapSingleKey(token);
-        if (mapped instanceof Property p && !p.hasIndexKey()) {
-            p.loadRestrictions(this);
-        }
-        return mapped;
-    }
-
-    private Selector _mapSingleKey(Token token) {
         for (String ns : nsPrecedenceOrder) {
             Set<String> mappedProperties = vocabMappings.properties()
                     .getOrDefault(token.value().toLowerCase(), Map.of())
