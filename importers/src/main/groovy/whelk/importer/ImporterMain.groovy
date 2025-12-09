@@ -66,7 +66,10 @@ class ImporterMain {
 
     @Command(args='[COLLECTION] [-t NUMBEROFTHREADS]')
     void reindex(String... args) {
-        def cli = new CliBuilder(usage: 'reindex [collection] -[ht]')
+        def cli = new CliBuilder(
+                usage: 'reindex [collection] -[ht]',
+                header: '\n[collection] = auth|bib|hold|none|@type:<type>\n'
+        )
         // Create the list of options.
         cli.with {
             h longOpt: 'help', 'Show usage information'
