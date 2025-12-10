@@ -6,6 +6,7 @@ import whelk.search2.Disambiguate;
 import whelk.search2.ESSettings;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -32,8 +33,12 @@ public sealed class FilterAlias implements Node {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return getParsed().expand(jsonLd, rdfSubjectTypes);
+    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        ExpandedNode expanded = getParsed().expand(jsonLd, rdfSubjectTypes);
+        Map<Node, Node> nodeMap = new HashMap<>();
+        nodeMap.put(this, expanded.expandedRoot());
+        nodeMap.putAll(expanded.nodeMap());
+        return new ExpandedNode(expanded.expandedRoot(), nodeMap);
     }
 
     @Override

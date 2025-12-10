@@ -65,12 +65,10 @@ public sealed class Condition implements Node permits Type {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return selector.isValid() ? expandWithAltSelectors(jsonLd, rdfSubjectTypes) : this;
-    }
-
-    public Node expand(JsonLd jsonLd) {
-        return _expand(jsonLd);
+    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return selector.isValid()
+                ? expandWithAltSelectors(jsonLd, rdfSubjectTypes)
+                : ExpandedNode.identity(this);
     }
 
     @Override
@@ -138,12 +136,13 @@ public sealed class Condition implements Node permits Type {
         return new Type((Property.RdfType) selector, (VocabTerm) value);
     }
 
-    private Node expandWithAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+    private ExpandedNode expandWithAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         List<Node> withAltSelectors = selector.getAltSelectors(jsonLd, rdfSubjectTypes).stream()
                 .map(this::withSelector)
                 .map(s -> s._expand(jsonLd))
                 .toList();
-        return withAltSelectors.size() > 1 ? new Or(withAltSelectors) : withAltSelectors.getFirst();
+        Node expanded = withAltSelectors.size() > 1 ? new Or(withAltSelectors) : withAltSelectors.getFirst();
+        return new ExpandedNode(expanded, Map.of(this, expanded));
     }
 
     private Node _expand(JsonLd jsonLd) {
@@ -187,9 +186,9 @@ public sealed class Condition implements Node permits Type {
             return this;
         }
 
-        List<Node> altFields = Stream.concat(Stream.of(baseType), subtypes.stream())
+        List<Condition> altFields = Stream.concat(Stream.of(baseType), subtypes.stream())
                 .sorted()
-                .map(t -> (Node) withValue(new VocabTerm(t, jsonLd.vocabIndex.get(t))))
+                .map(t -> withValue(new VocabTerm(t, jsonLd.vocabIndex.get(t))))
                 .toList();
 
         return new Or(altFields);

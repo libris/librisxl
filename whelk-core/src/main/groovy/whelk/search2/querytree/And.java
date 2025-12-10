@@ -2,7 +2,9 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,19 +17,14 @@ import static whelk.search2.QueryUtil.mustWrap;
 public final class And extends Group {
     private final List<Node> children;
 
-    public And(List<Node> children) {
-        this(children, true);
-    }
-
-    // For test only
-    public And(List<Node> children, boolean flattenChildren) {
-        this.children = flattenChildren ? flattenChildren(children) : children;
+    public And(List<? extends Node> children) {
+        this.children = flattenChildren(children);
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         List<String> rdfSubjectTypesInGroup = rdfSubjectType().asList().stream().map(Type::type).toList();
-        return mapFilterAndReinstantiate(c -> c.expand(jsonLd, rdfSubjectTypesInGroup.isEmpty() ? rdfSubjectTypes : rdfSubjectTypesInGroup), Objects::nonNull);
+        return super.expand(jsonLd, rdfSubjectTypesInGroup.isEmpty() ? rdfSubjectTypes : rdfSubjectTypesInGroup);
     }
 
     @Override

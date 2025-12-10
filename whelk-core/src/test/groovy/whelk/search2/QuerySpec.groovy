@@ -33,7 +33,7 @@ class QuerySpec extends Specification {
 
     def "build agg query"() {
         given:
-        SelectedFacets selectedFacets = new SelectedFacets(QueryTree.empty(), appParams1.sliceList)
+        SelectedFacets selectedFacets = new SelectedFacets(QueryTree.newEmpty(), appParams1.sliceList)
         Map aggQuery = Query.buildAggQuery(appParams1.sliceList, jsonLd, [], esSettings, selectedFacets)
 
         expect:
@@ -247,7 +247,7 @@ class QuerySpec extends Specification {
 
     def "build agg query for categories"() {
         given:
-        SelectedFacets selectedFacets = new SelectedFacets(QueryTree.empty(), appParams2.sliceList)
+        SelectedFacets selectedFacets = new SelectedFacets(QueryTree.newEmpty(), appParams2.sliceList)
         Map aggQuery = Query.buildAggQuery(appParams2.sliceList, jsonLd, [], esSettings, selectedFacets)
 
         expect:

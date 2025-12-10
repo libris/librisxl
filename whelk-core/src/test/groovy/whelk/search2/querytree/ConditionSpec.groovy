@@ -74,7 +74,7 @@ class ConditionSpec extends Specification {
         Condition statement = (Condition) QueryTreeBuilder.buildTree(query, disambiguate)
 
         expect:
-        statement.expand(jsonLd).toString() == result
+        statement.expand(jsonLd, []).toString() == result
 
         where:
         query                        | result
@@ -85,10 +85,10 @@ class ConditionSpec extends Specification {
 
     def "expand 2"() {
         given:
-        Node tree = QueryTreeBuilder.buildTree(query, disambiguate)
+        Condition statement = (Condition) QueryTreeBuilder.buildTree(query, disambiguate)
 
         expect:
-        tree.expand(jsonLd, subjectTypes).toString() == result
+        statement.expand(jsonLd, subjectTypes).toString() == result
 
         where:
         query                                | subjectTypes | result

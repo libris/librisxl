@@ -102,7 +102,7 @@ class QueryTreeSpec extends Specification {
         QueryTree tree = new QueryTree('(NOT p1:v1 OR p4:v4) something', disambiguate)
 
         expect:
-        tree.toEs(jsonLd, esSettings, []) == [
+        tree.toEs(esSettings) == [
                 "bool": [
                         "must": [
                                 [
@@ -233,6 +233,30 @@ class QueryTreeSpec extends Specification {
                 ]
         ]
     }
+
+//    def "multi-selectable + nested ES query"() {
+//        given:
+//        def q = 'p3p1:x p3.p4:"https://id.kb.se/x"'
+//        def tree = new QueryTree(q, disambiguate)
+//        def appConfig = [
+//                "statistics": [
+//                        "sliceList": [
+//                                ["dimensionChain": ["p3p1"], "connective": "OR"]
+//                        ]
+//                ]
+//        ]
+//        def appParams = new AppParams(appConfig, jsonLd)
+//        def multiOrRadioSelected = new SelectedFacets(tree, appParams.sliceList).getAllMultiOrRadioSelected()
+//        def mmSelectedFacets = multiOrRadioSelected.values().stream().flatMap(List::stream).toList()
+//
+//        def mainQuery = tree.toEs(jsonLd, esSettings, mmSelectedFacets)
+//        def postFilter = Query.getEsMmSelectedFacets(multiOrRadioSelected, [], jsonLd, esSettings)
+//
+//
+//        expect:
+//        mainQuery == []
+//        postFilter == []
+//    }
 
     def "to search mapping"() {
         given:

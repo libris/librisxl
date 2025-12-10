@@ -13,7 +13,7 @@ import java.util.function.Predicate;
 public sealed interface Node permits FilterAlias, FreeText, Group, Not, Condition {
     Map<String, Object> toEs(ESSettings esSettings);
 
-    Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
+    ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
 
     Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink);
 

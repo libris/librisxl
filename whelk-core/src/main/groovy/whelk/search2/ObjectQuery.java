@@ -5,11 +5,13 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Term;
 import whelk.search2.querytree.Type;
 
@@ -41,17 +43,17 @@ public class ObjectQuery extends Query {
     }
 
     @Override
-    protected Object doGetEsQueryDsl() {
-        QueryTree queryTree = getFullQueryTree().add(objectFilter());
-
+    protected Map<String, Object> doGetEsQueryDsl() {
         JsonLd ld = whelk.getJsonld();
+
+        ReducedQueryTree queryTree = (ReducedQueryTree) getFullQueryTree().add(objectFilter());
 
         List<String> givenSubjectTypes = queryTree.getRdfSubjectTypesList();
 
         Set<String> inferredSubjectTypes = new HashSet<>();
         Map<Property, List<String>> predicateToSubjectTypes = new HashMap<>();
 
-        curatedPredicates.forEach(p -> {
+        for (Property p : curatedPredicates) {
             List<String> subjects = queryTree.getRdfSubjectTypesList().stream()
                     .filter(t -> p.appearsOnType(t, ld) || p.indirectlyAppearsOnType(t, ld))
                     .toList();
@@ -61,9 +63,7 @@ public class ObjectQuery extends Query {
                 inferredSubjectTypes.addAll(p.domain());
                 predicateToSubjectTypes.put(p, p.domain());
             }
-        });
-
-        Map<String, Object> mainQuery;
+        }
 
         if (!inferredSubjectTypes.isEmpty()) {
             List<Node> altTrees = new ArrayList<>();
@@ -74,21 +74,25 @@ public class ObjectQuery extends Query {
                     .map(this::getFullQueryTree)
                     .map(QueryTree::tree)
                     .forEach(altTrees::add);
-            mainQuery = getEsQuery(new QueryTree(new Or(altTrees)));
-        } else {
-            mainQuery = getEsQuery(queryTree);
+            queryTree = new ReducedQueryTree(new Or(altTrees));
         }
 
+        ExpandedQueryTree expanded = queryTree.expand(ld);
+
         if (queryParams.skipStats) {
-            return getEsQueryDsl(mainQuery, getPAggQuery(predicateToSubjectTypes));
+            var esQueryDsl = buildEsQueryDsl(expanded, false);
+            esQueryDsl.put("aggs", getPAggQuery(predicateToSubjectTypes));
+            return esQueryDsl;
         }
+
+        var esQueryDsl = buildEsQueryDsl(expanded, true);
 
         List<String> subjectTypes = Stream.concat(givenSubjectTypes.stream(), inferredSubjectTypes.stream()).toList();
         var aggQuery = getEsAggQuery(subjectTypes);
-        var postFilter = getPostFilter(subjectTypes);
         aggQuery.putAll(getPAggQuery(predicateToSubjectTypes));
+        esQueryDsl.put("aggs", aggQuery);
 
-        return getEsQueryDsl(mainQuery, aggQuery, postFilter);
+        return esQueryDsl;
     }
 
     @Override
@@ -142,6 +146,7 @@ public class ObjectQuery extends Query {
         predicateToSubjectTypes.forEach((p, subjects) -> {
             var filter = new Condition(p, Operator.EQUALS, object)
                     .expand(jsonLd, subjects)
+                    .expandedRoot()
                     .toEs(esSettings);
             filters.put(p.name(), filter);
         });

@@ -7,13 +7,16 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.FilterAlias;
 import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
+import whelk.search2.querytree.PostFilter;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
@@ -61,10 +64,10 @@ public class Query {
     private final Stats stats;
     private SelectedFacets selectedFacets;
 
-    protected Object esQueryDsl;
-    protected QueryResult queryResult;
+    private Map<String, Object> esQueryDsl;
+    private QueryResult queryResult;
 
-    protected QueryTree fullQueryTree;
+    private ReducedQueryTree fullQueryTree;
 
     public enum SearchMode {
         SUGGEST,
@@ -115,24 +118,39 @@ public class Query {
         return QueryUtil.makeFindUrl(qTree.toQueryString(), queryParams);
     }
 
-    protected Object doGetEsQueryDsl() {
+    protected Map<String, Object> doGetEsQueryDsl() {
+        JsonLd ld = whelk.getJsonld();
+        ExpandedQueryTree expandedQueryTree = getFullQueryTree().expand(ld);
         if (queryParams.skipStats) {
-            return getEsQueryDsl(getEsQuery());
-        } else {
-            List<String> subjectTypes = getFullQueryTree().getRdfSubjectTypesList();
-            return getEsQueryDsl(getEsQuery(), getEsAggQuery(subjectTypes), getPostFilter(subjectTypes));
+            return buildEsQueryDsl(expandedQueryTree, false);
         }
+        var esQueryDsl = buildEsQueryDsl(expandedQueryTree, true);
+        esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectTypesList()));
+        return esQueryDsl;
     }
 
-    protected QueryTree getFullQueryTree() {
+    protected Map<String, Object> buildEsQueryDsl(ExpandedQueryTree queryTree, boolean usePostFilter) {
+        if (!usePostFilter) {
+            return buildEsQueryDsl(queryTree);
+        }
+        PostFilter postFilter = PostFilter.extract(queryTree, getSelectedFacets());
+        if (postFilter.isEmpty()) {
+            return buildEsQueryDsl(queryTree);
+        }
+        Map<String, Object> esQueryDsl = buildEsQueryDsl(queryTree.remove(postFilter.flattenedConditions()));
+        esQueryDsl.put("post_filter", postFilter.qt().toEs(esSettings));
+        return esQueryDsl;
+    }
+
+    protected ReducedQueryTree getFullQueryTree() {
         if (fullQueryTree == null) {
             fullQueryTree = getFullQueryTree(qTree);
         }
         return fullQueryTree;
     }
 
-    protected QueryTree getFullQueryTree(QueryTree baseTree) {
-        return mergeTrees(baseTree.reduce(whelk.getJsonld()), List.of(rTree, sTree));
+    protected ReducedQueryTree getFullQueryTree(QueryTree baseTree) {
+        return (ReducedQueryTree) mergeTrees(baseTree.reduce(whelk.getJsonld()), List.of(rTree, sTree));
     }
 
     protected List<Map<String, Object>> predicateLinks() {
@@ -146,70 +164,8 @@ public class Query {
         return queryResult;
     }
 
-    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query) {
-        return getEsQueryDsl(query, Map.of(), Map.of());
-    }
-
-    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query, Map<String, Object> aggs) {
-        return getEsQueryDsl(query, aggs, Map.of());
-    }
-
-    protected Map<String, Object> getEsQueryDsl(Map<String, Object> query, Map<String, Object> aggs, Map<String, Object> postFilter) {
-        var queryDsl = new LinkedHashMap<String, Object>();
-
-        queryDsl.put("query", query);
-        queryDsl.put("size", queryParams.limit);
-        queryDsl.put("from", queryParams.offset);
-        queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
-
-        if (queryParams.spell.suggest) {
-            var spellQuery = Spell.getSpellQuery(qTree);
-            if (spellQuery.isPresent()) {
-                if (queryParams.spell.suggestOnly) {
-                    return Map.of("suggest", spellQuery.get());
-                } else {
-                    queryDsl.put("suggest", spellQuery.get());
-                }
-            }
-        }
-
-        if (!aggs.isEmpty()) {
-            queryDsl.put("aggs", aggs);
-        }
-
-        if (!postFilter.isEmpty()) {
-            queryDsl.put("post_filter", postFilter);
-        }
-
-        queryDsl.put("track_total_hits", true);
-
-        if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
-            queryDsl.put("explain", true);
-            // Scores won't be calculated when also using sort unless explicitly asked for
-            queryDsl.put("track_scores", true);
-            queryDsl.put("fields", List.of("*"));
-        }
-
-        return queryDsl;
-    }
-
-    protected Map<String, Object> getEsQuery(QueryTree queryTree) {
-        List<Node> mmSelectedFacets = queryParams.skipStats
-                ? List.of()
-                : getSelectedFacets().getAllMultiOrRadioSelected().values().stream().flatMap(List::stream).toList();
-        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
-        var mainQuery = queryTree.toEs(whelk.getJsonld(), currentEsSettings, mmSelectedFacets);
-        var functionScore = currentEsSettings.boost().functionScore().toEs();
-        var constantScore = currentEsSettings.boost().constantScore().toEs();
-        return mustWrap(Stream.of(mainQuery, functionScore, constantScore).filter(Predicate.not(Map::isEmpty)).toList());
-    }
-
     protected Map<String, Object> getEsAggQuery(Collection<String> rdfSubjectTypes) {
         return buildAggQuery(appParams.sliceList, whelk.getJsonld(), rdfSubjectTypes, esSettings, getSelectedFacets());
-    }
-
-    protected Map<String, Object> getPostFilter(Collection<String> rdfSubjectTypes) {
-        return getEsMmSelectedFacets(getSelectedFacets().getAllMultiOrRadioSelected(), rdfSubjectTypes, whelk.getJsonld(), esSettings);
     }
 
     protected Map<String, Object> getPartialCollectionView() {
@@ -252,6 +208,49 @@ public class Query {
         linkLoader.loadChips();
 
         return view;
+    }
+
+    private Map<String, Object> buildEsQueryDsl(QueryTree queryTree) {
+        return buildEsQueryDsl(getEsQuery(queryTree));
+    }
+
+    private Map<String, Object> buildEsQueryDsl(Map<String, Object> query) {
+        var queryDsl = new LinkedHashMap<String, Object>();
+
+        queryDsl.put("query", query);
+        queryDsl.put("size", queryParams.limit);
+        queryDsl.put("from", queryParams.offset);
+        queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
+
+        if (queryParams.spell.suggest) {
+            var spellQuery = Spell.getSpellQuery(qTree);
+            if (spellQuery.isPresent()) {
+                if (queryParams.spell.suggestOnly) {
+                    return Map.of("suggest", spellQuery.get());
+                } else {
+                    queryDsl.put("suggest", spellQuery.get());
+                }
+            }
+        }
+
+        queryDsl.put("track_total_hits", true);
+
+        if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
+            queryDsl.put("explain", true);
+            // Scores won't be calculated when also using sort unless explicitly asked for
+            queryDsl.put("track_scores", true);
+            queryDsl.put("fields", List.of("*"));
+        }
+
+        return queryDsl;
+    }
+
+    private Map<String, Object> getEsQuery(QueryTree queryTree) {
+        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
+        var mainQuery = queryTree.toEs(currentEsSettings);
+        var functionScore = currentEsSettings.boost().functionScore().toEs();
+        var constantScore = currentEsSettings.boost().constantScore().toEs();
+        return mustWrap(Stream.of(mainQuery, functionScore, constantScore).filter(Predicate.not(Map::isEmpty)).toList());
     }
 
     private List<Map<String, Object>> getSearchMapping() {
@@ -309,15 +308,11 @@ public class Query {
         throw new InvalidQueryException("Missing required query parameter: _q");
     }
 
-    private Object getEsQueryDsl() {
+    private Map<String, Object> getEsQueryDsl() {
         if (esQueryDsl == null) {
             this.esQueryDsl = doGetEsQueryDsl();
         }
         return esQueryDsl;
-    }
-
-    private Map<String, Object> getEsQuery() {
-        return getEsQuery(getFullQueryTree());
     }
 
     private QueryTree mergeTrees(QueryTree baseTree, List<QueryTree> other) {
@@ -344,22 +339,6 @@ public class Query {
             this.selectedFacets = new SelectedFacets(qTree, appParams.sliceList);
         }
         return selectedFacets;
-    }
-
-    private static Map<String, Object> getEsMmSelectedFacets(Map<String, List<Node>> mmSelected,
-                                                                Collection<String> rdfSubjectTypes,
-                                                                JsonLd jsonLd,
-                                                                ESSettings esSettings) {
-        if (mmSelected.isEmpty()) {
-            return Map.of();
-        }
-        List<Node> orGrouped = mmSelected.values()
-                .stream()
-                .map(selected -> selected.size() > 1 ? new Or(selected) : selected.getFirst())
-                .toList();
-        return (orGrouped.size() == 1 ? orGrouped.getFirst() : new And(orGrouped))
-                .expand(jsonLd, rdfSubjectTypes)
-                .toEs(esSettings);
     }
 
     private String getSortField(String termPath) {
@@ -410,7 +389,7 @@ public class Query {
     }
 
     private record AggContext(JsonLd jsonLd,
-                              Map<String, List<Node>> mmSelected,
+                              Map<String, List<Condition>> mmSelected,
                               Collection<String> rdfSubjectTypes,
                               ESSettings esSettings,
                               SelectedFacets selectedFacets) { }
@@ -426,7 +405,7 @@ public class Query {
                             Map.of("field", JsonLd.TYPE_KEY)));
         }
 
-        Map<String, List<Node>> mmSelected = selectedFacets.getAllMultiOrRadioSelected();
+        Map<String, List<Condition>> mmSelected = selectedFacets.getAllMultiOrRadioSelected();
 
         Map<String, Object> query = new LinkedHashMap<>();
 
@@ -480,7 +459,7 @@ public class Query {
                     Map<String, Object> aggs = nestedStem.isPresent()
                             ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
                             : buildCoreAqqQuery(field, slice, ctx);
-                    Map<String, List<Node>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
+                    Map<String, List<Condition>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
                             ? with(new HashMap<>(ctx.mmSelected), m -> {
                         m.remove(pKey);
                         // FIXME
@@ -500,7 +479,8 @@ public class Query {
                         //}
                     })
                             : ctx.mmSelected;
-                    Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
+                    Map<String, Object> filter = Map.of(); // TODO
+//                    Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
                     query.put(field, filterWrap(aggs, property.name(), filter));
                 });
     }
@@ -901,7 +881,7 @@ public class Query {
         }
 
         private Map<String, Object> getRangeTemplate(String propertyKey) {
-            List<Node> selected = selectedFacets.getSelected(propertyKey);
+            List<Condition> selected = getSelectedFacets().getSelected(propertyKey);
             FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
             String templateQueryString = qTree.remove(selected)
                     .add(placeholderNode)
@@ -910,7 +890,7 @@ public class Query {
 
             String selectedMin = "";
             String selectedMax = "";
-            if (selected.size() == 1 && ((Condition) selected.getFirst()).value() instanceof YearRange yr) {
+            if (selected.size() == 1 && selected.getFirst().value() instanceof YearRange yr) {
                 selectedMin = yr.min();
                 selectedMax = yr.max();
             }

@@ -43,6 +43,26 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
+    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        Map<Node, Node> nodeMap = new HashMap<>();
+        List<Node> newChildren = new ArrayList<>();
+        for (Node child : children()) {
+            ExpandedNode expandedChild = child.expand(jsonLd, rdfSubjectTypes);
+            if (!expandedChild.isEmpty()) {
+                newChildren.add(expandedChild.expandedRoot());
+                nodeMap.putAll(expandedChild.nodeMap());
+            }
+        }
+        Node expandedRoot = switch (newChildren.size()) {
+            case 0 -> null;
+            case 1 -> newChildren.getFirst();
+            default -> newInstance(newChildren);
+        };
+        nodeMap.put(this, expandedRoot);
+        return new ExpandedNode(expandedRoot, nodeMap);
+    }
+
+    @Override
     public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
         var m = new LinkedHashMap<String, Object>();
         m.put(key(), mapToMap(c -> c.toSearchMapping(makeUpLink)));
@@ -62,7 +82,7 @@ public sealed abstract class Group implements Node permits And, Or {
         return toQueryString(true);
     }
 
-    List<Node> flattenChildren(List<Node> children) {
+    List<Node> flattenChildren(List<? extends Node> children) {
         List<Node> flattened = new ArrayList<>();
         for (Node child : children) {
             if (child instanceof Group g && g.getClass() == this.getClass()) {

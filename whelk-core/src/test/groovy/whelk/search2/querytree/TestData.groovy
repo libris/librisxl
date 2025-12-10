@@ -38,7 +38,8 @@ class TestData {
                 'category'        : ['category'] as Set,
                 'findcategory'    : ['librissearch:findCategory'] as Set,
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
-                'nonecategory'    : ['librissearch:noneCategory'] as Set
+                'nonecategory'    : ['librissearch:noneCategory'] as Set,
+                'p3p1'            : ['p3p1'] as Set,
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -208,7 +209,16 @@ class TestData {
                 ['@id': 'T3x', '@type': 'Class', 'subClassOf': [['@id': 'T3']]],
                 ['@id': 'E1', '@type': 'Class'],
                 ['@id': 'E2', '@type': 'Class'],
-                ['@id': 'p', '@type': 'DatatypeProperty']
+                ['@id': 'p', '@type': 'DatatypeProperty'],
+                [
+                        '@id'               : 'p3p1',
+                        '@type'             : 'DatatypeProperty',
+                        'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
+                        'propertyChainAxiom': [
+                                ['@id': 'p3'],
+                                ['@id': 'p1']
+                        ]
+                ]
         ]]
         def ctx = [
                 '@context': [
