@@ -4,7 +4,6 @@ import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
-import whelk.search2.querytree.PostFilter;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.YearRange;
 import whelk.util.Restrictions;

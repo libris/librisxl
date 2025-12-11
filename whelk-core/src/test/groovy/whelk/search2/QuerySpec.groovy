@@ -3,7 +3,6 @@ package whelk.search2
 import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.querytree.ExpandedQueryTree
-import whelk.search2.querytree.PostFilter
 import whelk.search2.querytree.QueryTree
 import whelk.search2.querytree.TestData
 
@@ -32,30 +31,6 @@ class QuerySpec extends Specification {
 
     AppParams appParams1 = new AppParams(appConfig1, jsonLd)
     AppParams appParams2 = new AppParams(appConfig2, jsonLd)
-
-//    def "multi-selectable + nested ES query"() {
-//        given:
-//        def q = 'p3p1:x p3.p4:"https://id.kb.se/x"'
-//        def tree = new QueryTree(q, disambiguate)
-//        def appConfig = [
-//                "statistics": [
-//                        "sliceList": [
-//                                ["dimensionChain": ["p3p1"], "connective": "OR"]
-//                        ]
-//                ]
-//        ]
-//        def appParams = new AppParams(appConfig, jsonLd)
-//        def multiOrRadioSelected = new SelectedFacets(tree, appParams.sliceList).getAllMultiOrRadioSelected()
-//        def mmSelectedFacets = multiOrRadioSelected.values().stream().flatMap(List::stream).toList()
-//
-//        def mainQuery = tree.toEs(jsonLd, esSettings, mmSelectedFacets)
-//        def postFilter = Query.getEsMmSelectedFacets(multiOrRadioSelected, [], jsonLd, esSettings)
-//
-//
-//        expect:
-//        mainQuery == []
-//        postFilter == []
-//    }
 
     def "build agg query"() {
         given:
@@ -278,7 +253,7 @@ class QuerySpec extends Specification {
         AppParams appParams = new AppParams(appConfig2, jsonLd)
         SelectedFacets selectedFacets = new SelectedFacets(qt, appParams.sliceList)
         ExpandedQueryTree eqt = qt.expand(jsonLd)
-        PostFilter pf = PostFilter.extract(eqt, selectedFacets)
+        Query.PostFilter pf = Query.PostFilter.extract(eqt, selectedFacets, esSettings.mappings(), jsonLd)
 
         def mainQuery = eqt.remove(pf.flattenedConditions()).toEs(esSettings)
         def postFilter = pf.qt().toEs(esSettings)
@@ -441,6 +416,63 @@ class QuerySpec extends Specification {
                                                 "field": "_categoryByCollection.@none.@id",
                                                 "size" : 100
                                         ]
+                                ]
+                        ]
+                ]
+        ]
+    }
+
+    def "multi-selectable + nested ES query"() {
+        given:
+        String q = 'p2:E1 p3p1:y p3.p4:"https://id.kb.se/x"'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        Map appConfig = [
+                "statistics": [
+                        "sliceList": [
+                                ["dimensionChain": ["p3p1"], "connective": "OR"]
+                        ]
+                ]
+        ]
+        AppParams appParams = new AppParams(appConfig, jsonLd)
+        SelectedFacets selectedFacets = new SelectedFacets(qt, appParams.sliceList)
+        ExpandedQueryTree eqt = qt.expand(jsonLd)
+        Query.PostFilter pf = Query.PostFilter.extract(eqt, selectedFacets, esSettings.mappings(), jsonLd)
+
+        Map mainQuery = eqt.remove(pf.flattenedConditions()).toEs(esSettings)
+        Map postFilter = pf.qt().toEs(esSettings)
+
+        expect:
+        mainQuery == [
+                "bool": [
+                        "filter": [
+                                "term": [
+                                        "p2": "E1"
+                                ]
+                        ]
+                ]
+        ]
+        postFilter == [
+                "nested": [
+                        "path" : "p3",
+                        "query": [
+                                "bool": [
+                                        "must": [[
+                                                         "simple_query_string": [
+                                                                 "default_operator"  : "AND",
+                                                                 "query"             : "y",
+                                                                 "analyze_wildcard"  : false,
+                                                                 "quote_field_suffix": ".exact",
+                                                                 "fields"            : ["p3.p1^1.0"]
+                                                         ]
+                                                 ], [
+                                                         "bool": [
+                                                                 "filter": [
+                                                                         "term": [
+                                                                                 "p3.p4.@id": "https://id.kb.se/x"
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ]]
                                 ]
                         ]
                 ]

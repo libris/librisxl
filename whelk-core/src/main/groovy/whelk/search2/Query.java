@@ -13,7 +13,6 @@ import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
-import whelk.search2.querytree.PostFilter;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.ReducedQueryTree;
@@ -133,7 +132,7 @@ public class Query {
         if (!usePostFilter) {
             return buildEsQueryDsl(queryTree);
         }
-        PostFilter postFilter = PostFilter.extract(queryTree, getSelectedFacets());
+        PostFilter postFilter = PostFilter.extract(queryTree, getSelectedFacets(), esSettings.mappings(), whelk.getJsonld());
         if (postFilter.isEmpty()) {
             return buildEsQueryDsl(queryTree);
         }
@@ -530,6 +529,42 @@ public class Query {
     private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
         return Map.of("aggs", Map.of(property, aggs),
                 "filter", filter.isEmpty() ? QueryUtil.mustWrap(List.of()) : filter);
+    }
+
+    private record PostFilter(QueryTree qt) {
+        private static PostFilter extract(ExpandedQueryTree eqt, SelectedFacets selectedFacets, EsMappings esMappings, JsonLd jsonLd) {
+            List<List<Node>> multiSelected = selectedFacets.getAllMultiOrRadioSelected()
+                    .values()
+                    .stream()
+                    .map(origSelected -> origSelected.stream().map(eqt.nodeMap()::get).toList())
+                    .toList();
+            QueryTree multiSelectedTree = SelectedFacets.buildMultiSelectedTree(multiSelected);
+
+            if (!multiSelectedTree.isEmpty() && eqt.tree() instanceof And and) {
+                var nestedGroups = and.getNestedGroups(esMappings).values().stream().map(And::new).toList();
+                if (!nestedGroups.isEmpty()) {
+                    for (Node node : multiSelectedTree.getTopNodes()) {
+                        for (And group : nestedGroups) {
+                            if (group.implies(node, jsonLd)) {
+                                multiSelectedTree = multiSelectedTree.replace(node, group);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new PostFilter(multiSelectedTree);
+        }
+
+        private List<Node> flattenedConditions() {
+            return qt.allDescendants()
+                    .filter(Condition.class::isInstance)
+                    .toList();
+        }
+
+        private boolean isEmpty() {
+            return qt.isEmpty();
+        }
     }
 
     private class LinkLoader {

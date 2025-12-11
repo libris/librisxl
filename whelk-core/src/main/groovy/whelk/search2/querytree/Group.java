@@ -82,6 +82,20 @@ public sealed abstract class Group implements Node permits And, Or {
         return toQueryString(true);
     }
 
+    public Map<String, List<Node>> getNestedGroups(EsMappings esMappings) {
+        Map<String, List<Node>> nestedGroups = new HashMap<>();
+
+        children().stream().collect(Collectors.groupingBy(node -> getEsNestedStem(node, esMappings)))
+                .forEach((nestedStem, group) -> {
+                    // At least two different paths sharing the same nested stem
+                    if (nestedStem.isPresent() && group.size() > 1) {
+                        nestedGroups.put(nestedStem.get(), group);
+                    }
+                });
+
+        return nestedGroups;
+    }
+
     List<Node> flattenChildren(List<? extends Node> children) {
         List<Node> flattened = new ArrayList<>();
         for (Node child : children) {
@@ -142,20 +156,6 @@ public sealed abstract class Group implements Node permits And, Or {
         }
 
         return esChildren.size() == 1 ? esChildren.getFirst() : wrap(esChildren);
-    }
-
-    private Map<String, List<Node>> getNestedGroups(EsMappings esMappings) {
-        Map<String, List<Node>> nestedGroups = new HashMap<>();
-
-        children().stream().collect(Collectors.groupingBy(node -> getEsNestedStem(node, esMappings)))
-                .forEach((nestedStem, group) -> {
-                    // At least two different paths sharing the same nested stem
-                    if (nestedStem.isPresent() && group.size() > 1) {
-                        nestedGroups.put(nestedStem.get(), group);
-                    }
-                });
-
-        return nestedGroups;
     }
 
     private Optional<String> getEsNestedStem(Node node, EsMappings esMappings) {
