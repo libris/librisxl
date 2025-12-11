@@ -64,6 +64,9 @@ public class SuggestQuery extends Query {
                                 Condition placeholderNode = new Condition(selector, Operator.EQUALS, placeholderLink);
                                 String template = qTree.replace(edited.node(), placeholderNode).toQueryString();
                                 int placeholderLinkStart = template.indexOf(placeholderLink.queryForm());
+                                if (placeholderLinkStart == -1) {
+                                    return null;
+                                }
                                 int placeholderLinkEnd = placeholderLinkStart + placeholderLink.queryForm().length();
                                 String q = template.substring(0, placeholderLinkStart) + formattedLink + template.substring(placeholderLinkEnd);
                                 int newCursorPos = placeholderLinkStart + formattedLink.length();
@@ -75,6 +78,7 @@ public class SuggestQuery extends Query {
                                         "_q", QueryUtil.makeViewFindUrl(q, queryParams),
                                         "_cursor", newCursorPos);
                             })
+                            .filter(qualifier -> qualifier != null)
                             .toList();
                     item.put("_qualifiers", qualifiers);
                 })
