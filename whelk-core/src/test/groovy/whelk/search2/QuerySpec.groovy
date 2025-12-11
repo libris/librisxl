@@ -2,6 +2,8 @@ package whelk.search2
 
 import spock.lang.Specification
 import whelk.JsonLd
+import whelk.search2.querytree.ExpandedQueryTree
+import whelk.search2.querytree.PostFilter
 import whelk.search2.querytree.QueryTree
 import whelk.search2.querytree.TestData
 
@@ -30,6 +32,30 @@ class QuerySpec extends Specification {
 
     AppParams appParams1 = new AppParams(appConfig1, jsonLd)
     AppParams appParams2 = new AppParams(appConfig2, jsonLd)
+
+//    def "multi-selectable + nested ES query"() {
+//        given:
+//        def q = 'p3p1:x p3.p4:"https://id.kb.se/x"'
+//        def tree = new QueryTree(q, disambiguate)
+//        def appConfig = [
+//                "statistics": [
+//                        "sliceList": [
+//                                ["dimensionChain": ["p3p1"], "connective": "OR"]
+//                        ]
+//                ]
+//        ]
+//        def appParams = new AppParams(appConfig, jsonLd)
+//        def multiOrRadioSelected = new SelectedFacets(tree, appParams.sliceList).getAllMultiOrRadioSelected()
+//        def mmSelectedFacets = multiOrRadioSelected.values().stream().flatMap(List::stream).toList()
+//
+//        def mainQuery = tree.toEs(jsonLd, esSettings, mmSelectedFacets)
+//        def postFilter = Query.getEsMmSelectedFacets(multiOrRadioSelected, [], jsonLd, esSettings)
+//
+//
+//        expect:
+//        mainQuery == []
+//        postFilter == []
+//    }
 
     def "build agg query"() {
         given:
@@ -241,6 +267,64 @@ class QuerySpec extends Specification {
                                         "nested": ["path": "p3"]
                                 ]
                         ]
+                ]
+        ]
+    }
+
+    def "category ES query"() {
+        given:
+        def q = 'type:T1x category:"https://id.kb.se/term/ktg/Y" category:("https://id.kb.se/term/ktg/A" OR "https://id.kb.se/term/ktg/B")'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        AppParams appParams = new AppParams(appConfig2, jsonLd)
+        SelectedFacets selectedFacets = new SelectedFacets(qt, appParams.sliceList)
+        ExpandedQueryTree eqt = qt.expand(jsonLd)
+        PostFilter pf = PostFilter.extract(eqt, selectedFacets)
+
+        def mainQuery = eqt.remove(pf.flattenedConditions()).toEs(esSettings)
+        def postFilter = pf.qt().toEs(esSettings)
+
+
+        expect:
+        mainQuery == [
+                "bool": [
+                        "filter": [
+                                "term": [
+                                        "@type": "T1x"
+                                ]
+                        ]
+                ]
+        ]
+        postFilter == [
+                "bool": [
+                        "must": [[
+                                         "bool": [
+                                                 "should": [[
+                                                                    "bool": [
+                                                                            "filter": [
+                                                                                    "term": [
+                                                                                            "_categoryByCollection.@none.@id": "https://id.kb.se/term/ktg/A"
+                                                                                    ]
+                                                                            ]
+                                                                    ]
+                                                            ], [
+                                                                    "bool": [
+                                                                            "filter": [
+                                                                                    "term": [
+                                                                                            "_categoryByCollection.@none.@id": "https://id.kb.se/term/ktg/B"
+                                                                                    ]
+                                                                            ]
+                                                                    ]
+                                                            ]]
+                                         ]
+                                 ], [
+                                         "bool": [
+                                                 "filter": [
+                                                         "term": [
+                                                                 "_categoryByCollection.identify.@id": "https://id.kb.se/term/ktg/Y"
+                                                         ]
+                                                 ]
+                                         ]
+                                 ]]
                 ]
         ]
     }

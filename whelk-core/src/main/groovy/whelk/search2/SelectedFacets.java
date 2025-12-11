@@ -1,13 +1,16 @@
 package whelk.search2;
 
+import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
+import whelk.search2.querytree.PostFilter;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.YearRange;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -81,6 +84,19 @@ public class SelectedFacets {
 
     public boolean isRangeFilter(String propertyKey) {
         return rangeProps.contains(propertyKey);
+    }
+
+    public static QueryTree buildMultiSelectedTree(Collection<? extends List<? extends Node>> multiSelected) {
+        if (multiSelected.isEmpty()) {
+            return QueryTree.newEmpty();
+        }
+        List<Node> orGrouped = multiSelected.stream()
+                .map(selected -> selected.size() > 1
+                        ? new Or(selected)
+                        : selected.getFirst())
+                .toList();
+
+        return new QueryTree(orGrouped.size() == 1 ? orGrouped.getFirst() : new And(orGrouped));
     }
 
     private void addSlice(AppParams.Slice slice, QueryTree queryTree) {

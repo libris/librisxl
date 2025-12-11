@@ -479,8 +479,9 @@ public class Query {
                         //}
                     })
                             : ctx.mmSelected;
-                    Map<String, Object> filter = Map.of(); // TODO
-//                    Map<String, Object> filter = getEsMmSelectedFacets(mSelected, ctx.rdfSubjectTypes, ctx.jsonLd, ctx.esSettings);
+                    Map<String, Object> filter = SelectedFacets.buildMultiSelectedTree(mSelected.values())
+                            .expand(ctx.jsonLd)
+                            .toEs(ctx.esSettings);
                     query.put(field, filterWrap(aggs, property.name(), filter));
                 });
     }
