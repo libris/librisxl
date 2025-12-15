@@ -29,6 +29,11 @@ public class ExpandedQueryTree extends QueryTree {
         return this;
     }
 
+    @Override
+    public ExpandedQueryTree copy() {
+        return new ExpandedQueryTree(tree(), nodeMap);
+    }
+
     private ExpandedQueryTree(Node tree, Map<Node, Node> nodeMap) {
         super(tree);
         this.nodeMap = nodeMap;

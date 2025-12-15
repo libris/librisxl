@@ -15,4 +15,9 @@ public class ReducedQueryTree extends QueryTree {
     public ReducedQueryTree reduce(JsonLd jsonLd) {
         return this;
     }
+
+    @Override
+    public ReducedQueryTree copy() {
+        return new ReducedQueryTree(tree());
+    }
 }
