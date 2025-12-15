@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.QueryUtil;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,19 +53,23 @@ public final class Path implements Selector {
 
     @Override
     public Path expand(JsonLd jsonLd) {
-        List<Selector> expandedPath = path.stream()
-                .flatMap(s -> s.expand(jsonLd).path().stream())
-                .toList();
-        if (expandedPath.size() > 2 && expandedPath.get(0) instanceof Property p1 && expandedPath.get(1) instanceof Property p2) {
-            if (p1.isInverseOf(p2)) {
-                // e.g. when the original path is instanceOf.x and x expands to hasInstance.y
-                // then we need to adjust the expanded path instanceOf.hasInstance.y -> y
-                expandedPath = expandedPath.subList(2, expandedPath.size());
-            } else if (JsonLd.RECORD_KEY.equals(p1.name()) && JsonLd.RECORD_KEY.equals(p2.name())) {
-                // when the original path is meta.x and x expands to meta.x
-                // then we need to adjust the expanded path meta.meta.x -> meta.x
-                expandedPath = expandedPath.subList(1, expandedPath.size());
+        List<Selector> expandedPath = new ArrayList<>();
+
+        for (Selector step : path) {
+            List<Selector> expandedStep = new ArrayList<>(step.expand(jsonLd).path());
+            if (!expandedPath.isEmpty() && expandedPath.getLast() instanceof Property p1 && expandedStep.getFirst() instanceof Property p2) {
+                if (p1.isInverseOf(p2)) {
+                    // e.g. when the original path is instanceOf.x and x expands to hasInstance.y
+                    // then we need to adjust the expanded path instanceOf.hasInstance.y -> y
+                    expandedPath.removeLast();
+                    expandedStep.removeFirst();
+                } else if (JsonLd.RECORD_KEY.equals(p1.name()) && JsonLd.RECORD_KEY.equals(p2.name())) {
+                    // when the original path is meta.x and x expands to meta.x
+                    // then we need to adjust the expanded path meta.meta.x -> meta.x
+                    expandedStep.removeFirst();
+                }
             }
+            expandedPath.addAll(expandedStep);
         }
         return new Path(expandedPath);
     }
