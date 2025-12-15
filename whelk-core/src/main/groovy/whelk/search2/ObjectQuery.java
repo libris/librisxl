@@ -5,6 +5,7 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQueryTree;
 import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
@@ -78,14 +79,13 @@ public class ObjectQuery extends Query {
         }
 
         ExpandedQueryTree expanded = queryTree.expand(ld);
+        EsQueryTree esQueryTree = new EsQueryTree(expanded, esSettings);
+        Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
 
         if (queryParams.skipStats) {
-            var esQueryDsl = buildEsQueryDsl(expanded, false);
             esQueryDsl.put("aggs", getPAggQuery(predicateToSubjectTypes));
             return esQueryDsl;
         }
-
-        var esQueryDsl = buildEsQueryDsl(expanded, true);
 
         List<String> subjectTypes = Stream.concat(givenSubjectTypes.stream(), inferredSubjectTypes.stream()).toList();
         var aggQuery = getEsAggQuery(subjectTypes);

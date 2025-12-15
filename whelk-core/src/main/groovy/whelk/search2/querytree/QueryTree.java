@@ -34,10 +34,6 @@ public class QueryTree {
         return new QueryTree(null);
     }
 
-    public Map<String, Object> toEs(ESSettings esSettings) {
-        return isEmpty() ? Map.of() : tree.toEs(esSettings);
-    }
-
     public ReducedQueryTree reduce(JsonLd jsonLd) {
         return isEmpty() ? ReducedQueryTree.newEmpty() : new ReducedQueryTree(tree.reduce(jsonLd));
     }
@@ -67,10 +63,10 @@ public class QueryTree {
     }
 
     public QueryTree remove(Node node) {
-        return remove(List.of(node));
+        return removeAll(List.of(node));
     }
 
-    public QueryTree remove(Collection<? extends Node> nodes) {
+    public QueryTree removeAll(Collection<? extends Node> nodes) {
         QueryTree copy = copy();
         copy._remove(nodes);
         return copy;

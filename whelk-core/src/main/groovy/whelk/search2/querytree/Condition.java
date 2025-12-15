@@ -141,7 +141,7 @@ public sealed class Condition implements Node permits Type {
                 .map(this::withSelector)
                 .map(s -> s._expand(jsonLd))
                 .toList();
-        Node expanded = withAltSelectors.size() > 1 ? new Or(withAltSelectors) : withAltSelectors.getFirst();
+        Node expanded = withAltSelectors.size() > 1 ? new Or.AltSelectors(withAltSelectors, selector) : withAltSelectors.getFirst();
         return new ExpandedNode(expanded, Map.of(this, expanded));
     }
 

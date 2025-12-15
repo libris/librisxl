@@ -1,24 +1,32 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.ESSettings;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
 import static whelk.search2.QueryUtil.mustWrap;
+import static whelk.search2.QueryUtil.nestedWrap;
 
-public final class And extends Group {
+public sealed class And extends Group {
     private final List<Node> children;
 
     public And(List<? extends Node> children) {
         this.children = flattenChildren(children);
+    }
+
+    public And(List<Node> children, boolean flattenChildren) {
+        this.children = flattenChildren ? flattenChildren(children) : children;
+    }
+
+    @Override
+    public Map<String, Object> toEs(ESSettings esSettings) {
+        return mustWrap(childrenToEs(esSettings));
     }
 
     @Override
@@ -60,7 +68,7 @@ public final class And extends Group {
     }
 
     @Override
-    public Map<String, Object> wrap(List<Map<String, Object>> esChildren) {
+    Map<String, Object> wrap(List<Map<String, Object>> esChildren) {
         return mustWrap(esChildren);
     }
 
@@ -91,5 +99,19 @@ public final class And extends Group {
             return Optional.of(b);
         }
         return Optional.empty();
+    }
+
+    public static final class Nested extends And {
+        private final String stem;
+
+        public Nested(List<? extends Node> children, String stem) {
+            super(children);
+            this.stem = stem;
+        }
+
+        @Override
+        public Map<String, Object> toEs(ESSettings esSettings) {
+            return nestedWrap(stem, getCoreEsQuery(esSettings));
+        }
     }
 }

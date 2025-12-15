@@ -5,6 +5,7 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQueryTree;
 import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
@@ -58,12 +59,12 @@ public class PredicateObjectQuery extends ObjectQuery {
         }
 
         ExpandedQueryTree expanded = queryTree.expand(ld);
+        EsQueryTree esQueryTree = new EsQueryTree(expanded, esSettings);
+        Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
 
         if (queryParams.skipStats) {
-            return buildEsQueryDsl(expanded, false);
+            return esQueryDsl;
         }
-
-        var esQueryDsl = buildEsQueryDsl(expanded, true);
 
         Set<String> subjectTypes = Stream.concat(queryTree.getRdfSubjectTypesList().stream(), predicatesByInferredSubjectType.keySet().stream())
                 .collect(Collectors.toSet());

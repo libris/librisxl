@@ -13,33 +13,6 @@ class QueryTreeSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
 
-    Map boostSettings = [
-            "field_boost": [
-                    "fields"              : [
-                            [
-                                    "name"        : "fieldA",
-                                    "boost"       : 10,
-                                    "script_score": [
-                                            "name"    : "a function",
-                                            "function": "f(_score)",
-                                            "apply_if": "condition"
-                                    ]
-                            ],
-                            [
-                                    "name" : "fieldB",
-                                    "boost": 2
-                            ],
-                            [
-                                    "name" : "fieldC",
-                                    "boost": 1
-                            ]
-                    ],
-                    "default_boost_factor": 5,
-                    "analyze_wildcard"    : true
-            ]
-    ]
-    ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost(boostSettings))
-
     def "back to query string"() {
         expect:
         new QueryTree(input, disambiguate).toQueryString() == back
@@ -95,78 +68,6 @@ class QueryTreeSpec extends Specification {
         "category:\"https://id.kb.se/term/ktg/X\""         | "category:\"https://id.kb.se/term/ktg/X\""
         "category:\"https://id.kb.se/term/ktg/Y\""         | "category:\"https://id.kb.se/term/ktg/Y\""
         "category:\"https://id.kb.se/term/ktg/Z\""         | "category:\"https://id.kb.se/term/ktg/Z\""
-    }
-
-    def "convert to ES query"() {
-        given:
-        QueryTree tree = new QueryTree('(NOT p1:v1 OR p4:v4) something', disambiguate)
-
-        expect:
-        tree.toEs(esSettings) == [
-                "bool": [
-                        "must": [
-                                [
-                                        "bool": [
-                                                "should": [
-                                                        [
-                                                                "bool": [
-                                                                        "must_not": [
-                                                                                "simple_query_string": [
-                                                                                        "default_operator"  : "AND",
-                                                                                        "query"             : "v1",
-                                                                                        "analyze_wildcard"  : true,
-                                                                                        "quote_field_suffix": ".exact",
-                                                                                        "fields"            : ["p1^5.0"]
-                                                                                ]
-                                                                        ]
-                                                                ]
-                                                        ],
-                                                        [
-                                                                "simple_query_string": [
-                                                                        "default_operator"  : "AND",
-                                                                        "query"             : "v4",
-                                                                        "analyze_wildcard"  : true,
-                                                                        "quote_field_suffix": ".exact",
-                                                                        "fields"            : ["p4._str^5.0"]
-                                                                ]
-                                                        ]
-                                                ]
-                                        ]
-                                ],
-                                [
-                                        "bool": [
-                                                "should": [
-                                                        [
-                                                                "simple_query_string": [
-                                                                        "default_operator"  : "AND",
-                                                                        "query"             : "something",
-                                                                        "analyze_wildcard"  : true,
-                                                                        "quote_field_suffix": ".exact",
-                                                                        "fields"            : ["fieldA^0.0", "fieldB^2.0", "fieldC^1.0"]
-                                                                ]
-                                                        ],
-                                                        [
-                                                                "script_score": [
-                                                                        "query" : [
-                                                                                "simple_query_string": [
-                                                                                        "default_operator"  : "AND",
-                                                                                        "query"             : "something",
-                                                                                        "analyze_wildcard"  : true,
-                                                                                        "quote_field_suffix": ".exact",
-                                                                                        "fields"            : ["fieldA^10.0", "fieldB^0.0", "fieldC^0.0"]
-                                                                                ]
-                                                                        ],
-                                                                        "script": [
-                                                                                "source": "condition ? f(_score) : _score"
-                                                                        ]
-                                                                ]
-                                                        ]
-                                                ]
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
     }
 
     def "to search mapping"() {
@@ -304,14 +205,14 @@ class QueryTreeSpec extends Specification {
         'p1:v1 p2:v2'    | '((p1:v1 p2:v2) OR p3:v3) p2:v2 p3:v3' | 'p1:v1 p2:v2 ((p1:v1 p2:v2) OR p3:v3) p3:v3'
     }
 
-    def "remove node"() {
+    def "remove nodes"() {
         given:
         QueryTree queryTree = new QueryTree(q, disambiguate)
         List<Node> nodesToMatch = remove.collect { QueryTreeBuilder.buildTree(it, disambiguate) }
         List<Node> nodesToRemove = queryTree.allDescendants().filter(nodesToMatch::contains).toList()
 
         expect:
-        queryTree.remove(nodesToRemove).toQueryString() == result
+        queryTree.removeAll(nodesToRemove).toQueryString() == result
 
         where:
         q                              | remove                               | result

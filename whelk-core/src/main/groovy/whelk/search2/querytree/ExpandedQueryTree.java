@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.ESSettings;
 
 import java.util.Map;
 
@@ -9,6 +10,10 @@ public class ExpandedQueryTree extends QueryTree {
 
     public ExpandedQueryTree(ExpandedNode expandedNode) {
         this(expandedNode.expandedRoot(), expandedNode.nodeMap());
+    }
+
+    public Map<String, Object> toEs(ESSettings esSettings) {
+        return new EsQueryTree(this, esSettings).getMainQuery();
     }
 
     public Map<Node, Node> nodeMap() {
@@ -22,11 +27,6 @@ public class ExpandedQueryTree extends QueryTree {
     @Override
     public ExpandedQueryTree expand(JsonLd jsonLd) {
         return this;
-    }
-
-    @Override
-    public ExpandedQueryTree copy() {
-        return new ExpandedQueryTree(tree(), nodeMap);
     }
 
     private ExpandedQueryTree(Node tree, Map<Node, Node> nodeMap) {

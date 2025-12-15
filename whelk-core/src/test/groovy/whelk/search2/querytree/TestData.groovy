@@ -39,7 +39,7 @@ class TestData {
                 'findcategory'    : ['librissearch:findCategory'] as Set,
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
                 'nonecategory'    : ['librissearch:noneCategory'] as Set,
-                'p3p1'            : ['p3p1'] as Set,
+                'p3p1'            : ['p3p1'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -232,7 +232,8 @@ class TestData {
     static def getEsMappings() {
         def mappings = [
                 'properties': [
-                        'p3': ['type': 'nested']
+                        'p3': ['type': 'nested'],
+                        '@reverse.instanceOf.p3': ['type': 'nested']
                 ]
         ]
         return new EsMappings(mappings)

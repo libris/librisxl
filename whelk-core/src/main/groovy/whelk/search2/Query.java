@@ -7,6 +7,7 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQueryTree;
 import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.FilterAlias;
 import whelk.search2.querytree.FreeText;
@@ -120,25 +121,19 @@ public class Query {
     protected Map<String, Object> doGetEsQueryDsl() {
         JsonLd ld = whelk.getJsonld();
         ExpandedQueryTree expandedQueryTree = getFullQueryTree().expand(ld);
+        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
         if (queryParams.skipStats) {
-            return buildEsQueryDsl(expandedQueryTree, false);
+            EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings);
+            return buildEsQueryDsl(esQueryTree.getMainQuery());
         }
-        var esQueryDsl = buildEsQueryDsl(expandedQueryTree, true);
+        EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings, getSelectedFacets());
+        Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
         esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectTypesList()));
         return esQueryDsl;
     }
 
-    protected Map<String, Object> buildEsQueryDsl(ExpandedQueryTree queryTree, boolean usePostFilter) {
-        if (!usePostFilter) {
-            return buildEsQueryDsl(queryTree);
-        }
-        PostFilter postFilter = PostFilter.extract(queryTree, getSelectedFacets(), esSettings.mappings(), whelk.getJsonld());
-        if (postFilter.isEmpty()) {
-            return buildEsQueryDsl(queryTree);
-        }
-        Map<String, Object> esQueryDsl = buildEsQueryDsl(queryTree.remove(postFilter.flattenedConditions()));
-        esQueryDsl.put("post_filter", postFilter.qt().toEs(esSettings));
-        return esQueryDsl;
+    protected Map<String, Object> buildEsQueryDsl(Map<String, Object> mainQuery) {
+        return buildEsQueryDsl(mainQuery, Map.of());
     }
 
     protected ReducedQueryTree getFullQueryTree() {
@@ -209,14 +204,14 @@ public class Query {
         return view;
     }
 
-    private Map<String, Object> buildEsQueryDsl(QueryTree queryTree) {
-        return buildEsQueryDsl(getEsQuery(queryTree));
-    }
-
-    private Map<String, Object> buildEsQueryDsl(Map<String, Object> query) {
+    private Map<String, Object> buildEsQueryDsl(Map<String, Object> mainQuery, Map<String, Object> postFilter) {
         var queryDsl = new LinkedHashMap<String, Object>();
 
-        queryDsl.put("query", query);
+        queryDsl.put("query", getEsQuery(mainQuery));
+        if (!postFilter.isEmpty()) {
+            queryDsl.put("post_filter", postFilter);
+        }
+
         queryDsl.put("size", queryParams.limit);
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
@@ -244,11 +239,9 @@ public class Query {
         return queryDsl;
     }
 
-    private Map<String, Object> getEsQuery(QueryTree queryTree) {
-        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
-        var mainQuery = queryTree.toEs(currentEsSettings);
-        var functionScore = currentEsSettings.boost().functionScore().toEs();
-        var constantScore = currentEsSettings.boost().constantScore().toEs();
+    private Map<String, Object> getEsQuery(Map<String, Object> mainQuery) {
+        var functionScore = esSettings.boost().functionScore().toEs();
+        var constantScore = esSettings.boost().constantScore().toEs();
         return mustWrap(Stream.of(mainQuery, functionScore, constantScore).filter(Predicate.not(Map::isEmpty)).toList());
     }
 
@@ -488,7 +481,6 @@ public class Query {
     private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {
         var q = Map.of("terms",
                 Map.of("field", field,
-
                         "size", slice.size(),
                         "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
 
@@ -529,42 +521,6 @@ public class Query {
     private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
         return Map.of("aggs", Map.of(property, aggs),
                 "filter", filter.isEmpty() ? QueryUtil.mustWrap(List.of()) : filter);
-    }
-
-    private record PostFilter(QueryTree qt) {
-        private static PostFilter extract(ExpandedQueryTree eqt, SelectedFacets selectedFacets, EsMappings esMappings, JsonLd jsonLd) {
-            List<List<Node>> multiSelected = selectedFacets.getAllMultiOrRadioSelected()
-                    .values()
-                    .stream()
-                    .map(origSelected -> origSelected.stream().map(eqt.nodeMap()::get).toList())
-                    .toList();
-            QueryTree multiSelectedTree = SelectedFacets.buildMultiSelectedTree(multiSelected);
-
-            if (!multiSelectedTree.isEmpty() && eqt.tree() instanceof And and) {
-                var nestedGroups = and.getNestedGroups(esMappings).values().stream().map(And::new).toList();
-                if (!nestedGroups.isEmpty()) {
-                    for (Node node : multiSelectedTree.getTopNodes()) {
-                        for (And group : nestedGroups) {
-                            if (group.implies(node, jsonLd)) {
-                                multiSelectedTree = multiSelectedTree.replace(node, group);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return new PostFilter(multiSelectedTree);
-        }
-
-        private List<Node> flattenedConditions() {
-            return qt.allDescendants()
-                    .filter(Condition.class::isInstance)
-                    .toList();
-        }
-
-        private boolean isEmpty() {
-            return qt.isEmpty();
-        }
     }
 
     private class LinkLoader {
@@ -688,7 +644,7 @@ public class Query {
                 Connective connective = selectedFacets.getConnective(propertyKey);
 
                 QueryTree qt = selectedFacets.isRangeFilter(propertyKey)
-                        ? qTree.remove(selectedFacets.getRangeSelected(propertyKey))
+                        ? qTree.removeAll(selectedFacets.getRangeSelected(propertyKey))
                         : qTree;
 
                 this.buckets.entrySet()
@@ -750,7 +706,7 @@ public class Query {
                                         && c2.selector().path().getLast() instanceof Property p
                                         && "category".equals(p.queryKey());
 
-                                var qt2 = qt.remove(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
+                                var qt2 = qt.removeAll(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
                                 if (selectedValue == null || !selectedValue.contains(c)) {
                                     qt2 = qt2.add(c);
                                 }
@@ -771,7 +727,7 @@ public class Query {
                                     addObservation.accept(qt.add(c));
                                 } else {
                                     var newSelected = with(new ArrayList<>(selected), l -> l.add(c));
-                                    var alteredTree = qt.remove(selected)
+                                    var alteredTree = qt.removeAll(selected)
                                             .add(switch (connective) {
                                                 case AND -> new And(newSelected);
                                                 case OR -> new Or(newSelected);
@@ -919,7 +875,7 @@ public class Query {
         private Map<String, Object> getRangeTemplate(String propertyKey) {
             List<Condition> selected = getSelectedFacets().getSelected(propertyKey);
             FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
-            String templateQueryString = qTree.remove(selected)
+            String templateQueryString = qTree.removeAll(selected)
                     .add(placeholderNode)
                     .toQueryString();
             String templateUrl = QueryUtil.makeViewFindUrl(templateQueryString, queryParams);
@@ -968,9 +924,9 @@ public class Query {
                     default -> {
                         if (new And(implied).implies(fa.getParsed(), jsonLd)) {
                             isSelected = true;
-                            yield qTree.remove(implied);
+                            yield qTree.removeAll(implied);
                         } else {
-                            yield qTree.remove(implied).add(fa);
+                            yield qTree.removeAll(implied).add(fa);
                         }
                     }
                 };

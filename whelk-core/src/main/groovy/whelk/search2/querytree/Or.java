@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.ESSettings;
 
 import java.util.HashSet;
 import java.util.List;
@@ -10,11 +11,16 @@ import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.shouldWrap;
 
-public final class Or extends Group {
+public sealed class Or extends Group {
     private final List<Node> children;
 
     public Or(List<? extends Node> children) {
         this.children = flattenChildren(children);
+    }
+
+    @Override
+    public Map<String, Object> toEs(ESSettings esSettings) {
+        return shouldWrap(childrenToEs(esSettings));
     }
 
     @Override
@@ -54,22 +60,22 @@ public final class Or extends Group {
     }
 
     @Override
-    public Group newInstance(List<Node> children) {
+    Group newInstance(List<Node> children) {
         return new Or(children);
     }
 
     @Override
-    public String delimiter() {
+    String delimiter() {
         return " OR ";
     }
 
     @Override
-    public String key() {
+    String key() {
         return "or";
     }
 
     @Override
-    public Map<String, Object> wrap(List<Map<String, Object>> esChildren) {
+    Map<String, Object> wrap(List<Map<String, Object>> esChildren) {
         return shouldWrap(esChildren);
     }
 
@@ -91,6 +97,19 @@ public final class Or extends Group {
             return Optional.of(a);
         }
         return Optional.empty();
+    }
+
+    public static final class AltSelectors extends Or {
+        private final Selector origSelector;
+
+        public AltSelectors(List<? extends Node> children, Selector origSelector) {
+            super(children);
+            this.origSelector = origSelector;
+        }
+
+        public Selector origSelector() {
+            return origSelector;
+        }
     }
 }
 
