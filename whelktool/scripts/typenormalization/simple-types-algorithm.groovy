@@ -323,15 +323,10 @@ class TypeNormalizer implements UsingJsonKeys {
                     work.get('contentType', []) << [(ID): mappedCategory]
                 }
             }
-
         }
 
         var contentTypes = mappings.reduceSymbols(asList(work.get("contentType")))
         var workGenreForms = mappings.reduceSymbols(asList(work.get("genreForm")))
-
-        if (workGenreForms.removeIf { !it[ID] && it['prefLabel'] == 'DAISY' }) {
-            workGenreForms << [(ID): SAOGF + 'Ljudb%C3%B6cker']
-        }
 
         if (addCategory) {
             List<String> categories = []
@@ -422,7 +417,7 @@ class TypeNormalizer implements UsingJsonKeys {
             if (isVolume) {
                 carrierTypes << [(ID): KTG + 'BrailleVolume']
             } else {
-                carrierTypes << [(ID): KTG + 'BrailleResource']
+                carrierTypes << [(ID): KTG + 'BrailleForm']
             }
             changed = true
         }
