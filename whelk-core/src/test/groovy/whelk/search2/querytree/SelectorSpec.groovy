@@ -31,7 +31,7 @@ class SelectorSpec extends Specification {
         p.getAltSelectors(jsonLd, types).collect { it.expand(jsonLd).toString() } == result
 
         where:
-        _p | types | result
+        _p               | types        | result
         "p1"             | []           | ["p1"]
         "p1"             | ["T1"]       | ["instanceOf.p1", "p1"]
         "p1"             | ["T2"]       | ["hasInstance.p1", "p1"]
@@ -55,5 +55,6 @@ class SelectorSpec extends Specification {
         "hasInstance.p7" | ["T1"]       | ["p7"]
         "instanceOf.p8"  | ["T1"]       | ["instanceOf.p8"]
         "type"           | ["T1"]       | ["rdf:type"]
+        "p7.p14"         | ["T2"]       | ["hasInstance.p7.hasComponent.p14", "hasInstance.p7.p14"]
     }
 }

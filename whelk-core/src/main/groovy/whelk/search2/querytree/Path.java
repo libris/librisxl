@@ -76,10 +76,22 @@ public final class Path implements Selector {
 
     @Override
     public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return first().getAltSelectors(jsonLd, rdfSubjectTypes).stream()
-                .map(s -> Stream.concat(s.path().stream(), tail().stream()).toList())
+        return getAltPaths(path, jsonLd, rdfSubjectTypes).stream()
                 .map(Path::new)
                 .map(Selector.class::cast)
+                .toList();
+    }
+
+    private List<List<Selector>> getAltPaths(List<Selector> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        if (tail.isEmpty()) {
+            return List.of(List.of());
+        }
+        Selector next = tail.getFirst();
+        List<Selector> newTail = tail.subList(1, tail.size());
+        return next.getAltSelectors(jsonLd, rdfSubjectTypes).stream()
+                .flatMap(s -> getAltPaths(newTail, jsonLd, next.range()).stream()
+                        .map(altPath -> Stream.concat(s.path().stream(), altPath.stream())))
+                .map(Stream::toList)
                 .toList();
     }
 

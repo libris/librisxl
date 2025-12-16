@@ -609,6 +609,11 @@ public non-sealed class Property implements Selector {
         }
 
         @Override
+        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+            return propertyChain.getAltSelectors(jsonLd, rdfSubjectTypes);
+        }
+
+        @Override
         public boolean isType() {
             return propertyChain.isType();
         }
