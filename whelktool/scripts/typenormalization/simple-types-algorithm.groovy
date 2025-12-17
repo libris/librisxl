@@ -56,6 +56,7 @@ class TypeMappings implements UsingJsonKeys {
         preferredCategory = mappings.get('preferredCategory')
         categoryMatches = mappings.get('categoryMatches')
 
+        // TODO Adjust this logic to always add carrier types as separate terms?
         assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume'])
         assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Volume'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume'])
         assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume'])
@@ -261,14 +262,10 @@ class TypeNormalizer implements UsingJsonKeys {
                 // If the part is a Work or subclass thereof
                 if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(value.get(TYPE), "Work")) {
                     changed |= normalize([:], value, false)
-                    println path
-                    println value
                 }
                 // If the part is an instance or subclass thereof
                 else if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(value.get(TYPE), "Instance")) {
                     changed |= normalize(value, [:], false)
-                    println path
-                    println value
 
                     // Special handling for when the part is Electronic
                     if ((value.get(TYPE) == "PhysicalResource") && (entity.get(TYPE) == "DigitalResource")) {
@@ -413,6 +410,8 @@ class TypeNormalizer implements UsingJsonKeys {
             carrierTypes = nonBrailleCarrierTypes
         }
 
+        // TODO: Add Volume and Braille as separate terms?
+        // Why no else? There are very few, if any, Tactile instances in Libris that are not Braille.
         if (isTactile && isBraille) {
             if (isVolume) {
                 carrierTypes << [(ID): KTG + 'BrailleVolume']
@@ -470,6 +469,8 @@ class TypeNormalizer implements UsingJsonKeys {
         var probablyPrint = assumedToBePrint(instance)
         // TODO: instead, for Monograph, fold overlapping categories into common specific category...
         // e.g. [Print, Volume] => PrintedVolume
+        // TODO: Undo the above TODD and instead add Print, Volume as separate terms?
+
         if (!isElectronic) {
 
             if (itype == "Print") {
@@ -491,6 +492,7 @@ class TypeNormalizer implements UsingJsonKeys {
                     }
                 } else {
                     if (probablyPrint) {
+                        // TODO Add Print + Sheet as separate terms?
                         if (mappings.matches(carrierTypes, "Sheet")) {
                             carrierTypes << [(ID): KTG + 'PrintedSheet']
                         } else {
