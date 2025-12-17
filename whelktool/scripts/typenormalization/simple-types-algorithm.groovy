@@ -123,7 +123,7 @@ class TypeMappings implements UsingJsonKeys {
     /**
      * Replace complex legacy types with structures that this algorithm will subsequently normalize.
      */
-    boolean fixMarcLegacyType(Map instance, Map work) {
+    boolean fixMarcLegacyInstanceType(Map instance, Map work) {
         var changed = false
 
         var itype = (String) instance[TYPE]
@@ -227,9 +227,9 @@ class TypeNormalizer implements UsingJsonKeys {
         var oldItype = instance.get(TYPE)
         var oldWtype = work.get(TYPE)
 
+        changed |= mappings.fixMarcLegacyInstanceType(instance, work)
         changed |= simplifyInstanceType(instance)
         changed |= moveInstanceGenreFormsToWork(instance, work)
-        changed |= mappings.fixMarcLegacyType(instance, work)
         changed |= simplifyWorkType(work)
 
 
@@ -365,7 +365,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         // TODO: Remove *all* uses of itype here? See e.g. AbstractElectronic
         // below, which should already have been computed, making this check
-        // obsolete. OTOH, the fixMarcLegacyType does this, which might be a
+        // obsolete. OTOH, the fixMarcLegacyInstanceType does this, which might be a
         // step too far?
 
         // Store information about the old instanceType
