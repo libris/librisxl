@@ -29,10 +29,9 @@ if (perf) {
     System.err.println "Measuring performance of ${fpaths.size()} ${cmd} runs..."
 }
 
-def converter = new MarcFrameConverter()
-addSystemComponents(converter)
+var converter = newMarcFrameConverter()
 
-def start = new Date().time
+var start = new Date().time
 
 for (fpath in fpaths) {
     def source = converter.mapper.readValue(new File(fpath), Map)
@@ -43,14 +42,19 @@ for (fpath in fpaths) {
             reportValidation(converter, source)
         }
         result = converter.runRevert(source)
+    } else if (cmd == "pre-revert") {
+        source = converter.getRevertForm(source)
+        var marcRuleSet = converter.conversion.getRuleSetFromJsonLd(source)
+        converter.conversion.unmodifyData(marcRuleSet, source)
+        result = source
     } else {
-        def extraData = null
+        Map extraData = null
         if (source.oaipmhSetSpecs) {
             extraData = [oaipmhSetSpecs: source.remove('oaipmhSetSpecs')]
         }
         result = converter.runConvert(source, fpath, extraData)
         if (converter.linkFinder) {
-            def doc = new Document(result)
+            var doc = new Document(result)
             converter.linkFinder.normalizeIdentifiers(doc)
             result = doc.data
         }
@@ -77,13 +81,14 @@ if (perf) {
 }
 
 
-static void addSystemComponents(converter) {
+static MarcFrameConverter newMarcFrameConverter() {
     if (System.properties.getProperty('xl.secret.properties')) {
         def whelk = Whelk.createLoadedCoreWhelk()
-        converter.linkFinder = new LinkFinder(whelk.storage)
-        converter.ld = whelk.jsonld
+        return whelk.getMarcFrameConverter()
     } else {
-        addJsonLd(converter)
+      var converter = new MarcFrameConverter()
+      addJsonLd(converter)
+      return converter
     }
 }
 

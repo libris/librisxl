@@ -90,6 +90,11 @@ class MarcFrameConverter implements FormatConverter {
 
     Map runRevert(Map data) {
         initialize()
+        data = getRevertForm(data)
+        return conversion.revert(data)
+    }
+
+    Map getRevertForm(data) {
         if (data['@graph']) {
             def entryId = data['@graph'][0]['@id']
             data = JsonLd.frame(entryId, data, 3)
@@ -100,7 +105,7 @@ class MarcFrameConverter implements FormatConverter {
             record.mainEntity = thing
             data = record
         }
-        return conversion.revert(data)
+        return data
     }
 
     @Override
@@ -439,20 +444,14 @@ class MarcConversion {
         }
     }
 
-    Map revert(data) {
+    Map revert(Map data) {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
         if (doPostProcessing && !threadIsInsidePostProcessing.get()) {
             // Temporarily turn off to prevent recursive calls from postprocessing steps
             threadIsInsidePostProcessing.set(true)
             try {
-                applyInverses(data, data[marcRuleSet.thingLink])
-                marcRuleSet.postProcSteps.reverseEach {
-                    it.unmodify(data, data[marcRuleSet.thingLink])
-                }
-                sharedPostProcSteps.reverseEach {
-                    it.unmodify(data, data[marcRuleSet.thingLink])
-                }
+                unmodifyData(marcRuleSet, data)
             } finally {
                 threadIsInsidePostProcessing.set(false)
             }
@@ -507,6 +506,16 @@ class MarcConversion {
         }
 
         return marc
+    }
+
+    void unmodifyData(MarcRuleSet marcRuleSet, Map data) {
+        applyInverses(data, data[marcRuleSet.thingLink])
+        marcRuleSet.postProcSteps.reverseEach {
+            it.unmodify(data, data[marcRuleSet.thingLink])
+        }
+        sharedPostProcSteps.reverseEach {
+            it.unmodify(data, data[marcRuleSet.thingLink])
+        }
     }
 
     void applyInverses(Map record, Map thing) {
