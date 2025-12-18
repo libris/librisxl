@@ -297,6 +297,10 @@ public class ProfileExport
         {
             if (collection.equals("bib"))
             {
+                if (deleted) {
+                    // a deleted bib can never have a holding
+                    return false;
+                }
                 if (!isHeld(id, profile)) {
                     return false;
                 }
