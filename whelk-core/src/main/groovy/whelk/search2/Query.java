@@ -813,7 +813,7 @@ public class Query {
                     var find =  s.get(Restrictions.FIND_CATEGORY);
                     if (find != null) {
                         DocumentUtil.traverse(find, (value, path) -> {
-                            if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true)) {
+                            if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true) && !path.contains(Restrictions.NONE_CATEGORY)) {
                                 var newV = new HashMap<>(m);
                                 ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put(Restrictions.NONE_CATEGORY, none);
                                 return new DocumentUtil.Replace(newV);
