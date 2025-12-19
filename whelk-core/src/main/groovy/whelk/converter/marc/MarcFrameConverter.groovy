@@ -232,6 +232,9 @@ class MarcConversion {
             case 'NormalizeWorkTitles':
             procStep = new NormalizeWorkTitlesStep(props)
             break
+            case 'BibTypeNormalization':
+            procStep = new BibTypeNormalizationStep(props)
+            break
             case null:
             return null
             default:

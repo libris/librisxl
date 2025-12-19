@@ -1,5 +1,10 @@
 [
   {
+    "type": "BibTypeNormalization",
+    "_spec": [
+    ]
+  },
+  {
     "type": "RestructPropertyValuesAndFlag",
     "sourceLink": "marc:primaryProvisionActivity",
     "overwriteType": "PrimaryProvisionActivity",
