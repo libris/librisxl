@@ -4,6 +4,7 @@ import java.util.stream.Collectors
 import java.util.regex.Pattern
 
 import whelk.Whelk
+import whelk.TypeCategoryNormalizer
 
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.util.Jackson.mapper
@@ -48,13 +49,10 @@ class TypeMappings implements UsingJsonKeys {
         // Store reference to Whelk so other helpers can use it
         this.whelk = whelk
 
-        // TODO: Replace this generated json (see makemappings.groovy) by runtime that logic on startup!
-        var f = new File(scriptDir, "mappings.json")
-        Map mappings = mapper.readValue(f, Map)
-
-        typeToCategory = mappings.get('typeToCategory')
-        preferredCategory = mappings.get('preferredCategory')
-        categoryMatches = mappings.get('categoryMatches')
+        var catTypeNormalizer = new TypeCategoryNormalizer(whelk.resourceCache)
+        typeToCategory = catTypeNormalizer.typeToCategory
+        preferredCategory = catTypeNormalizer.preferredCategory
+        categoryMatches = catTypeNormalizer.categoryMatches
 
         // TODO Adjust this logic to always add carrier types as separate terms?
         assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume'])
@@ -65,6 +63,10 @@ class TypeMappings implements UsingJsonKeys {
         assert reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume']]) == [[(ID): 'https://id.kb.se/term/rda/Volume']]
         assert reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]) == [[(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]
         assert reduceSymbols([['@id':'https://id.kb.se/marc/Print'], ['@id':'https://id.kb.se/term/ktg/PrintedSheet'], ['@id':'https://id.kb.se/term/rda/Unmediated'], ['@id':'https://id.kb.se/term/rda/Sheet']]) == [['@id':'https://id.kb.se/term/ktg/PrintedSheet']]
+
+        assert isImpliedBy([(ID):'https://id.kb.se/term/rda/StillImage'], [(ID):'https://id.kb.se/term/saogf/Bilder'])
+        assert !isImpliedBy([(ID):'https://id.kb.se/term/saogf/Bilder'], [(ID):'https://id.kb.se/term/rda/StillImage'])
+        assert reduceSymbols([[(ID):'https://id.kb.se/term/rda/StillImage'], [(ID):'https://id.kb.se/term/saogf/Bilder']]) == [[(ID):'https://id.kb.se/term/saogf/Bilder']]
     }
 
     boolean matches(ArrayList<Map> typelikes, String value) {
@@ -80,6 +82,10 @@ class TypeMappings implements UsingJsonKeys {
     boolean isImpliedBy(Object x, Object y, Set visited = new HashSet()) {
         String xId = x instanceof Map ? x[ID] : x
         String yId = y instanceof Map ? y[ID] : y
+
+        if (xId == null || yId == null) {
+          return false
+        }
 
         if (xId == yId) {
             return true
@@ -101,7 +107,7 @@ class TypeMappings implements UsingJsonKeys {
 
     List reduceSymbols(List symbols) {
         symbols = symbols.stream()
-                .map(x -> preferredCategory.containsKey(x[ID]) ? [(ID): preferredCategory[x[ID]]] : x)
+                .map(x -> x.containsKey(ID) && preferredCategory.containsKey(x[ID]) ? [(ID): preferredCategory[x[ID]]] : x)
                 .collect(Collectors.toList())
 
         Set mostSpecific = symbols.stream()
@@ -127,7 +133,7 @@ class TypeMappings implements UsingJsonKeys {
         var changed = false
 
         var itype = (String) instance[TYPE]
-        def mappedCategory = typeToCategory[itype]
+        def mappedCategory = itype ? typeToCategory[itype] : null
         if (mappedCategory) {
             instance.get('carrierType', []) << [(ID): mappedCategory]
             changed = true
@@ -312,7 +318,7 @@ class TypeNormalizer implements UsingJsonKeys {
             }
         }
         else {
-            def mappedCategory = mappings.typeToCategory[wtype]
+            def mappedCategory = wtype ? mappings.typeToCategory[wtype] : null
             //assert mappedCategory, "Unable to map ${wtype} to contentType or genreForm"
             if (mappedCategory) {
                 assert mappedCategory instanceof String
