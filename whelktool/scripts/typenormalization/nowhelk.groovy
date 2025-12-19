@@ -91,4 +91,6 @@ try (
   }
 
   println "Normalized ${i} test records."
+} catch (Exception e) {
+  e.printStackTrace()
 }
