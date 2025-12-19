@@ -9,11 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public sealed interface Node permits FilterAlias, FreeText, Group, Not, Condition {
     Map<String, Object> toEs(ESSettings esSettings);
 
-    Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
+    ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
 
     Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink);
 
@@ -33,6 +34,10 @@ public sealed interface Node permits FilterAlias, FreeText, Group, Not, Conditio
             case Or or -> or.children().stream().anyMatch(cmp);
             default -> cmp.test(node);
         };
+    }
+
+    default Stream<Node> allDescendants() {
+        return QueryTree.allDescendants(this);
     }
 
     default List<Node> children() {

@@ -5,6 +5,7 @@ import whelk.search2.ESSettings;
 import whelk.search2.QueryUtil;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -18,10 +19,15 @@ public record Not(Node node) implements Node {
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return node instanceof FilterAlias
-                ? null
-                : new Not(node.expand(jsonLd, rdfSubjectTypes));
+    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        if (node instanceof FilterAlias) {
+            return ExpandedNode.newEmpty();
+        }
+        ExpandedNode expandedChild = node.expand(jsonLd, rdfSubjectTypes);
+        Node expandedRoot = new Not(expandedChild.expandedRoot());
+        Map<Node, Node> nodeMap = new HashMap<>(expandedChild.nodeMap());
+        nodeMap.put(this, expandedRoot);
+        return new ExpandedNode(expandedRoot, nodeMap);
     }
 
     @Override

@@ -51,8 +51,8 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     @Override
-    public Node expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return this;
+    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return ExpandedNode.identity(this);
     }
 
     @Override

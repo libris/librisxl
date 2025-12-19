@@ -3,7 +3,10 @@ package whelk.search2;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Property;
+import whelk.search2.querytree.Term;
+import whelk.search2.querytree.VocabTerm;
 import whelk.util.DocumentUtil;
 import whelk.util.Restrictions;
 
@@ -14,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
@@ -225,13 +229,18 @@ public record VocabMappings(
                     var iri = doc.getThingIdentifiers().stream().findFirst().orElseThrow();
                     for (var n : narrowerProps) {
                         var propDef = ld.vocabIndex.getOrDefault(n, Map.of());
-                        Property.getObjectHasValueRestrictions(propDef).forEach((onProperty, values) -> {
-                            var path = List.of(JsonLd.GRAPH_KEY, 1, ld.toTermKey(onProperty));
-                            @SuppressWarnings("unchecked")
-                            var things = ((List<Map<?, ?>>) JsonLd.asList(DocumentUtil.getAtPath(doc.data, path, List.of())));
-                            boolean matches = things.stream()
-                                    .map(m -> (String) m.get(JsonLd.ID_KEY))
-                                    .anyMatch(values::contains);
+                        Property.getObjectHasValueRestrictions(propDef, ld).forEach(hasValueRestriction -> {
+                            var onProperty = hasValueRestriction.property();
+                            var hasValue = hasValueRestriction.value();
+                            var path = List.of(JsonLd.GRAPH_KEY, 1, onProperty.name());
+                            Predicate<Object> hasMatchingValue = o -> switch (hasValue) {
+                                case Term term -> o instanceof String s && s.equals(term.term());
+                                case VocabTerm vocabTerm -> o instanceof String s && s.equals(vocabTerm.key());
+                                case Link link -> o instanceof Map<?,?> m && link.iri().equals(m.get(JsonLd.ID_KEY));
+                                default -> false;
+                            };
+                            var matches = ((List<?>) JsonLd.asList(DocumentUtil.getAtPath(doc.data, path, List.of()))).stream()
+                                    .anyMatch(hasMatchingValue);
                             if (matches) {
                                 propertiesRestrictedByValue.computeIfAbsent(superProp, k -> new HashMap<>())
                                         .computeIfAbsent(iri, k -> new ArrayList<>())

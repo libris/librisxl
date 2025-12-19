@@ -30,29 +30,21 @@ public class QueryTree {
         return tree;
     }
 
-    public static QueryTree empty() {
+    public static QueryTree newEmpty() {
         return new QueryTree(null);
     }
 
-    public Map<String, Object> toEs(JsonLd jsonLd, ESSettings esSettings, Collection<Node> exclude) {
-        return remove(exclude)
-                .reduce(jsonLd)
-                .expand(jsonLd)
-                .toEs(esSettings);
+    public ReducedQueryTree reduce(JsonLd jsonLd) {
+        return isEmpty() ? ReducedQueryTree.newEmpty() : new ReducedQueryTree(tree.reduce(jsonLd));
     }
 
-    public QueryTree reduce(JsonLd jsonLd) {
-        return isEmpty() ? this : new QueryTree(tree.reduce(jsonLd));
+    public ExpandedQueryTree expand(JsonLd jsonLd) {
+        return isEmpty() ? ExpandedQueryTree.newEmpty() : new ExpandedQueryTree(tree.expand(jsonLd, List.of()));
     }
 
-    public QueryTree merge(QueryTree other, JsonLd jsonLd) {
-        if (isEmpty()) {
-            return other;
-        }
-        if (other.isEmpty()) {
-            return this;
-        }
-        return new QueryTree(merge(tree, other.tree(), jsonLd)).reduce(jsonLd);
+    public ReducedQueryTree merge(QueryTree other, JsonLd jsonLd) {
+        Node mergedTree = isEmpty() ? other.tree() : (other.isEmpty() ? tree : merge(tree, other.tree(), jsonLd));
+        return mergedTree != null ? new ReducedQueryTree(mergedTree.reduce(jsonLd)) : ReducedQueryTree.newEmpty();
     }
 
     public List<String> getRdfSubjectTypesList() {
@@ -71,10 +63,10 @@ public class QueryTree {
     }
 
     public QueryTree remove(Node node) {
-        return remove(List.of(node));
+        return removeAll(List.of(node));
     }
 
-    public QueryTree remove(Collection<Node> nodes) {
+    public QueryTree removeAll(Collection<? extends Node> nodes) {
         QueryTree copy = copy();
         copy._remove(nodes);
         return copy;
@@ -165,23 +157,15 @@ public class QueryTree {
         return toQueryString();
     }
 
-    private QueryTree copy() {
+    protected QueryTree copy() {
         return new QueryTree(tree);
-    }
-
-    private QueryTree expand(JsonLd jsonLd) {
-        return isEmpty() ? this : new QueryTree(tree.expand(jsonLd, List.of()));
-    }
-
-    private Map<String, Object> toEs(ESSettings esSettings) {
-        return isEmpty() ? Map.of() : tree.toEs(esSettings);
     }
 
     private void normalizeTree() {
         removeFreeTextWildcard();
     }
 
-    private void _remove(Collection<Node> remove) {
+    private void _remove(Collection<? extends Node> remove) {
         this.tree = _remove(tree, remove);
     }
 
@@ -204,7 +188,7 @@ public class QueryTree {
         }
     }
 
-    private static Node _remove(Node tree, Collection<Node> remove) {
+    private static Node _remove(Node tree, Collection<? extends Node> remove) {
         if (remove.stream().anyMatch(n -> n == tree)) {
             return null;
         }
@@ -340,7 +324,7 @@ public class QueryTree {
 
     private static Or groupByType(Node n, RdfSubjectType nRdfSubjectType) {
         Node noTypeTree = noTypeTree(n, nRdfSubjectType.asNode());
-        return new Or(nRdfSubjectType.asList().stream().map(t -> (Node) new And(List.of(t, noTypeTree))).toList());
+        return new Or(nRdfSubjectType.asList().stream().map(t -> new And(List.of(t, noTypeTree))).toList());
     }
 
     // FIXME: Naming

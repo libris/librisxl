@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static whelk.search2.QueryParams.ApiParams.CUSTOM_SITE_FILTER;
 import static whelk.search2.QueryParams.ApiParams.OBJECT;
@@ -139,7 +140,9 @@ public class QueryUtil {
 //        List<Property> integralRelations = jsonLd.getCategoryMembers("integral").stream()
 //              .map(p -> new Property(p, jsonLd))
 //              .toList();
-        List<Property> integralRelations = List.of(new Property("hasInstance", jsonLd), new Property("instanceOf", jsonLd));
+        List<Property> integralRelations = Stream.of("hasInstance", "instanceOf", "hasComponent")
+                .map(p -> new Property(p, jsonLd))
+                .toList();
 
         return integralRelations.stream()
                 .filter(prop -> prop.domain().stream().anyMatch(d -> jsonLd.isSubClassOf(d, type)))

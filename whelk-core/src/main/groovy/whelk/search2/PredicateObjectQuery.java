@@ -5,6 +5,8 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQueryTree;
+import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
@@ -26,7 +28,9 @@ public class PredicateObjectQuery extends ObjectQuery {
     }
 
     @Override
-    protected Object doGetEsQueryDsl() {
+    protected Map<String, Object> doGetEsQueryDsl() {
+        JsonLd ld = whelk.getJsonld();
+
         Map<String, List<Property>> predicatesByInferredSubjectType = new HashMap<>();
         List<Property> noDomain = new ArrayList<>();
         predicates().forEach(property -> {
@@ -43,7 +47,6 @@ public class PredicateObjectQuery extends ObjectQuery {
         if (predicatesByInferredSubjectType.isEmpty()) {
             queryTree = getFullQueryTree().add(predicateObjectFilter(predicates()));
         } else {
-            JsonLd ld = whelk.getJsonld();
             List<Node> altTrees = new ArrayList<>();
             if (!noDomain.isEmpty()) {
                 altTrees.add(predicateObjectFilter(noDomain));
@@ -55,21 +58,25 @@ public class PredicateObjectQuery extends ObjectQuery {
                     .merge(getFullQueryTree(), ld);
         }
 
+        ExpandedQueryTree expanded = queryTree.expand(ld);
+        EsQueryTree esQueryTree = new EsQueryTree(expanded, esSettings);
+        Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
+
         if (queryParams.skipStats) {
-            return getEsQueryDsl(getEsQuery(queryTree));
+            return esQueryDsl;
         }
 
         Set<String> subjectTypes = Stream.concat(queryTree.getRdfSubjectTypesList().stream(), predicatesByInferredSubjectType.keySet().stream())
                 .collect(Collectors.toSet());
         var aggQuery = getEsAggQuery(subjectTypes);
-        var postFilter = getPostFilter(subjectTypes);
+        esQueryDsl.put("aggs", aggQuery);
 
-        return getEsQueryDsl(getEsQuery(queryTree), aggQuery, postFilter);
+        return esQueryDsl;
     }
 
     private Node predicateObjectFilter(Collection<Property> predicates) {
         var preds = predicates.stream()
-                .map(p -> (Node) new Condition(p, Operator.EQUALS, object))
+                .map(p -> new Condition(p, Operator.EQUALS, object))
                 .toList();
         return preds.size() == 1 ? preds.getFirst() : new Or(preds);
     }

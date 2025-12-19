@@ -90,8 +90,10 @@ public class SuggestQuery extends Query {
     }
 
     @Override
-    protected Object doGetEsQueryDsl() {
-        var queryDsl = getEsQueryDsl(getEsQuery(getFullQueryTree(suggestQueryTree)));
+    protected Map<String, Object> doGetEsQueryDsl() {
+        var queryTree = getFullQueryTree(suggestQueryTree).expand(whelk.getJsonld());
+        var esQueryTree = new EsQueryTree(queryTree, esSettings);
+        var queryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
         queryDsl.remove("sort");
         return queryDsl;
     }

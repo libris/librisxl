@@ -28,6 +28,7 @@ class TestData {
                 'p11'             : ['p11'] as Set,
                 'p12'             : ['p12'] as Set,
                 'p13'             : ['p13'] as Set,
+                'p14'             : ['p14'] as Set,
                 'type'            : ['rdf:type'] as Set,
                 'rdf:type'        : ['rdf:type'] as Set,
                 'instanceof'      : ['instanceOf'] as Set,
@@ -38,7 +39,8 @@ class TestData {
                 'category'        : ['category'] as Set,
                 'findcategory'    : ['librissearch:findCategory'] as Set,
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
-                'nonecategory'    : ['librissearch:noneCategory'] as Set
+                'nonecategory'    : ['librissearch:noneCategory'] as Set,
+                'p3p1'            : ['p3p1'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -95,7 +97,8 @@ class TestData {
                 [
                         '@id'   : 'p7',
                         '@type' : 'DatatypeProperty',
-                        'domain': [['@id': 'T1']]
+                        'domain': [['@id': 'T1']],
+                        'range' : [['@id': 'T4']]
                 ],
                 [
                         '@id'   : 'p8',
@@ -160,6 +163,11 @@ class TestData {
                         'range': ['@id': 'T1']
                 ],
                 [
+                        '@id'  : 'p14',
+                        '@type': 'DatatypeProperty',
+                        'domain': ['@id': 'T4']
+                ],
+                [
                         '@id'      : 'instanceOf',
                         '@type'    : 'ObjectProperty',
                         'category' : ['@id': 'integral'],
@@ -174,6 +182,13 @@ class TestData {
                         'domain'   : ['@id': 'T2'],
                         'range'    : ['@id': 'T1'],
                         'inverseOf': ['@id': 'instanceOf']
+                ],
+                [
+                        '@id'     : 'hasComponent',
+                        '@type'   : 'ObjectProperty',
+                        'category': ['@id': 'integral'],
+                        'domain'  : ['@id': 'T4'],
+                        'range'   : ['@id': 'T4']
                 ],
                 [
                         '@id'  : 'category',
@@ -206,9 +221,19 @@ class TestData {
                 ['@id': 'T1x', '@type': 'Class', 'subClassOf': [['@id': 'T1']]],
                 ['@id': 'T2x', '@type': 'Class', 'subClassOf': [['@id': 'T2']]],
                 ['@id': 'T3x', '@type': 'Class', 'subClassOf': [['@id': 'T3']]],
+                ['@id': 'T4', '@type': 'Class'],
                 ['@id': 'E1', '@type': 'Class'],
                 ['@id': 'E2', '@type': 'Class'],
-                ['@id': 'p', '@type': 'DatatypeProperty']
+                ['@id': 'p', '@type': 'DatatypeProperty'],
+                [
+                        '@id'               : 'p3p1',
+                        '@type'             : 'DatatypeProperty',
+                        'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
+                        'propertyChainAxiom': [
+                                ['@id': 'p3'],
+                                ['@id': 'p1']
+                        ]
+                ]
         ]]
         def ctx = [
                 '@context': [
@@ -222,7 +247,8 @@ class TestData {
     static def getEsMappings() {
         def mappings = [
                 'properties': [
-                        'p3': ['type': 'nested']
+                        'p3'                    : ['type': 'nested'],
+                        '@reverse.instanceOf.p3': ['type': 'nested']
                 ]
         ]
         return new EsMappings(mappings)

@@ -13,7 +13,7 @@ class NotSpec extends Specification {
         def filter = QueryTreeBuilder.buildTree("NOT excludeA", disambiguate)
 
         expect:
-        filter.expand(jsonLd, []) == null
+        filter.expand(jsonLd, []) == ExpandedNode.newEmpty()
     }
 
     def "implies"() {

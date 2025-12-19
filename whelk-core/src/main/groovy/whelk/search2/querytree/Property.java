@@ -1,14 +1,11 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.Disambiguate;
 import whelk.search2.QueryUtil;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,7 +32,6 @@ import static whelk.JsonLd.Rdfs.SUB_PROPERTY_OF;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.JsonLd.isLink;
-
 
 public non-sealed class Property implements Selector {
     protected String name;
@@ -71,6 +67,7 @@ public non-sealed class Property implements Selector {
         this.range = getRange(jsonLd);
         this.inverseOf = getInverseOf(jsonLd);
         this.indexKey = (String) definition.get("ls:indexKey"); // FIXME: This shouldn't have a different prefix (ls: vs librissearch:)
+        this.objectOnPropertyRestrictions = getObjectHasValueRestrictions(jsonLd);
     }
 
     private Property(String name, JsonLd jsonLd, Key.RecognizedKey queryKey) {
@@ -104,7 +101,7 @@ public non-sealed class Property implements Selector {
             return new NarrowedRestrictedProperty(propertyKey, jsonLd, queryKey);
         }
         return RDF_TYPE.equals(propertyKey)
-                ? new Property.RdfType(jsonLd, queryKey)
+                ? new RdfType(jsonLd, queryKey)
                 : new Property(propertyKey, jsonLd, queryKey);
     }
 
@@ -220,23 +217,18 @@ public non-sealed class Property implements Selector {
         return indexKey != null;
     }
 
-    public void loadRestrictions(Disambiguate disambiguate) {
-        List<Restrictions.OnProperty> restrictions = new ArrayList<>();
-        getObjectHasValueRestrictions(definition).forEach((onProperty, hasValues) ->
-                hasValues.forEach(hv -> {
-                    Property p = disambiguate.mapPropertyKey(onProperty);
-                    Value v = disambiguate.mapValueForProperty(p, hv).orElseThrow();
-                    restrictions.add(new Restrictions.HasValue(p, v));
-                }));
-        this.objectOnPropertyRestrictions = restrictions;
-    }
-
     public List<Restrictions.OnProperty> objectOnPropertyRestrictions() {
         return objectOnPropertyRestrictions != null ? objectOnPropertyRestrictions : List.of();
     }
 
-    public static Map<String, Set<String>> getObjectHasValueRestrictions(Map<String, Object> definition) {
-        Map<String, Set<String>> restrictions = new HashMap<>();
+    protected List<Restrictions.OnProperty> getObjectHasValueRestrictions(JsonLd jsonLd) {
+        return getObjectHasValueRestrictions(definition, jsonLd).stream()
+                .map(Restrictions.OnProperty.class::cast)
+                .toList();
+    }
+
+    public static List<Restrictions.HasValue> getObjectHasValueRestrictions(Map<String, Object> definition, JsonLd jsonLd) {
+        List<Restrictions.HasValue> restrictions = new ArrayList<>();
 
         ((List<?>) asList(definition.get(RANGE))).stream()
                 .map(Map.class::cast)
@@ -246,12 +238,29 @@ public non-sealed class Property implements Selector {
                 .map(Map.class::cast)
                 .filter(superClass -> RESTRICTION.equals(superClass.get(TYPE_KEY)))
                 .forEach(restriction -> {
-                    var onPropertyIri = Optional.ofNullable(restriction.get(ON_PROPERTY)).map(Property::getIri);
-                    var hasValueIri = Optional.ofNullable(restriction.get(HAS_VALUE)).map(Property::getIri);
-                    // TODO: Accept literal values?
-                    if (onPropertyIri.isPresent() && hasValueIri.isPresent()) {
-                        restrictions.computeIfAbsent(onPropertyIri.get(), k -> new HashSet<>())
-                                .add(hasValueIri.get());
+                    Optional<Property> onProperty = Optional.ofNullable(restriction.get(ON_PROPERTY))
+                            .map(Property::getIri)
+                            .map(jsonLd::toTermKey)
+                            .map(pKey -> getProperty(pKey, jsonLd));
+                    if (onProperty.isPresent()) {
+                        Property p = onProperty.get();
+                        Optional.ofNullable(restriction.get(HAS_VALUE))
+                                .map(v -> {
+                                    if (v instanceof String s) {
+                                        return new Term(s);
+                                    }
+                                    var iri = getIri(v);
+                                    if (iri != null) {
+                                        if (p.isVocabTerm()) {
+                                            var termKey = jsonLd.toTermKey(iri);
+                                            return new VocabTerm(termKey, jsonLd.vocabIndex.get(termKey));
+                                        }
+                                        return new Link(iri);
+                                    }
+                                    throw new IllegalStateException("Unexpected value: " + v);
+                                })
+                                .map(hv -> new Restrictions.HasValue(p, hv))
+                                .ifPresent(restrictions::add);
                     }
                 });
 
@@ -355,7 +364,7 @@ public non-sealed class Property implements Selector {
 
     private static boolean isCategory(String categoryIri, Map<String, Object> definition) {
         return ((List<?>) asList(definition.get("category"))).stream()
-                .anyMatch(c -> Map.of(JsonLd.ID_KEY, categoryIri).equals(c));
+                .anyMatch(c -> Map.of(ID_KEY, categoryIri).equals(c));
     }
 
     private List<String> findDomainOrRange(String domainOrRange, JsonLd jsonLd) {
@@ -384,7 +393,7 @@ public non-sealed class Property implements Selector {
         return getTermKeys(asList(definition.get(SUB_PROPERTY_OF)), jsonLd);
     }
 
-    private static Stream<String> getTermKeys(List<?> terms, JsonLd jsonLd) {
+    protected static Stream<String> getTermKeys(List<?> terms, JsonLd jsonLd) {
         return terms.stream()
                 .map(Property::getIri)
                 .filter(Objects::nonNull)
@@ -474,9 +483,10 @@ public non-sealed class Property implements Selector {
         }
 
         @Override
-        public void loadRestrictions(Disambiguate disambiguate) {
-            if (hasNarrowedRange()) {
-                /*
+        protected List<Restrictions.OnProperty> getObjectHasValueRestrictions(JsonLd jsonLd) {
+            var range = getUnambiguousRange(jsonLd);
+            if (range != null) {
+               /*
                 We interpret the range of an anonymous sub-property as a restriction.
 
                 For example
@@ -492,12 +502,11 @@ public non-sealed class Property implements Selector {
                         rdfs:range [ rdfs:subClassOf [ a owl:Restriction ; owl:onProperty rdf:type ; owl:hasValue :ISBN ] ] ]
                     :value ) .
                  */
-                RdfType rdfType = (RdfType) disambiguate.mapPropertyKey(RDF_TYPE);
-                VocabTerm value = (VocabTerm) disambiguate.mapValueForProperty(rdfType, range.getFirst()).orElseThrow();
-                this.objectOnPropertyRestrictions = List.of(new Restrictions.HasValue(rdfType, value));
-            } else {
-                super.loadRestrictions(disambiguate);
+                RdfType rdfType = new RdfType(jsonLd);
+                VocabTerm value = new VocabTerm(range, jsonLd.vocabIndex.get(range));
+                return List.of(new Restrictions.HasValue(rdfType, value));
             }
+            return super.getObjectHasValueRestrictions(jsonLd);
         }
 
         @Override
@@ -508,8 +517,9 @@ public non-sealed class Property implements Selector {
             return "AnonymousProperty";
         }
 
-        private boolean hasNarrowedRange() {
-            return range.size() == 1;
+        private String getUnambiguousRange(JsonLd jsonLd) {
+            List<String> range = getTermKeys(asList(definition.get(RANGE)), jsonLd).toList();
+            return range.size() == 1 ? range.getFirst() : null;
         }
     }
 
@@ -599,14 +609,13 @@ public non-sealed class Property implements Selector {
         }
 
         @Override
-        public boolean isType() {
-            return propertyChain.isType();
+        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+            return propertyChain.getAltSelectors(jsonLd, rdfSubjectTypes);
         }
 
         @Override
-        public void loadRestrictions(Disambiguate disambiguate) {
-            propertyChain.path().forEach(p -> ((Property) p).loadRestrictions(disambiguate));
-            super.loadRestrictions(disambiguate);
+        public boolean isType() {
+            return propertyChain.isType();
         }
 
         private Path getPropertyChain(JsonLd jsonLd) {
