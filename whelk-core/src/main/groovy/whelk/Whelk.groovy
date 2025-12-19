@@ -17,6 +17,7 @@ import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkException
 import whelk.filter.LanguageLinker
 import whelk.filter.LinkFinder
+import whelk.filter.BlankNodeLinker
 import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
@@ -238,13 +239,13 @@ class Whelk {
         storage.setJsonld(jsonld)
         if (elastic) {
             elasticFind = new ElasticFind(new ESQuery(this))
-            initDocumentNormalizers(elasticFind)
         }
+        initDocumentNormalizers()
         this.fresnelUtil = new FresnelUtil(jsonld)
     }
 
     // FIXME: de-KBV/Libris-ify: some of these are KBV specific, is that a problem?
-    private void initDocumentNormalizers(ElasticFind elasticFind) {
+    private void initDocumentNormalizers() {
         LanguageLinker languageLinker = new LanguageLinker()
         Normalizers.loadDefinitions(languageLinker, this)
         Collection<DocumentNormalizer> heuristicLinkers = Normalizers.heuristicLinkers(this, languageLinker.getTypes())
@@ -258,23 +259,8 @@ class Whelk {
                 ] + heuristicLinkers
         )
 
-        def idsToThings = { String type ->
-            bulkLoad(elasticFind.findIds([(JsonLd.TYPE_KEY): [type]]).collect())
-                    .collect { _, doc -> (doc.data[JsonLd.GRAPH_KEY] as List)[1] }
-                    .collectEntries { [it[JsonLd.ID_KEY], it] }
-        }
-
-        resourceCache = new ResourceCache(
-                relatorResources: new ResourceCache.RelatorResources(
-                        relatorLinker: heuristicLinkers.findResult { it.getLinker()?.types == ['Role'] ? it.getLinker() : null },
-                        relators: elasticFind.find(['@type': ['Role']])
-                ),
-                languageResources: new ResourceCache.LanguageResources(
-                        languageLinker: languageLinker,
-                        languages: idsToThings('Language'),
-                        transformedLanguageForms: idsToThings('TransformedLanguageForm')
-                )
-        )
+        def relatorLinker = heuristicLinkers.findResult { it.getLinker()?.types == ['Role'] ? it.getLinker() : null }
+        resourceCache = new ResourceCache(this, languageLinker, (BlankNodeLinker) relatorLinker)
     }
 
     Document getDocument(String id) {
