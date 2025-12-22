@@ -509,6 +509,10 @@ public class FresnelUtil {
                 return;
             }
 
+            if (jsonLd.isVocabTerm(key) && value instanceof Node n && n.id != null) {
+                value = jsonLd.toTermKey(n.id);
+            }
+
             if (value instanceof LanguageContainer) {
                 key = "__" + key;
             }
