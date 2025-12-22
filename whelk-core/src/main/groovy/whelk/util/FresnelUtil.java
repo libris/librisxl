@@ -65,12 +65,14 @@ public class FresnelUtil {
         public static String extends_ = "fresnel:extends";
         public static String fslselector = "fresnel:fslselector";
         public static String group = "fresnel:group";
+        public static String mergeProperties = "fresnel:mergeProperties";
         public static String propertyFormat = "fresnel:propertyFormat";
         public static String propertyFormatDomain = "fresnel:propertyFormatDomain";
         public static String propertyStyle = "fresnel:propertyStyle";
         public static String resourceFormat = "fresnel:resourceFormat";
         public static String resourceStyle = "fresnel:resourceStyle";
         public static String super_ = "fresnel:super";
+        public static String use = "fresnel:use";
         public static String valueFormat = "fresnel:valueFormat";
         public static String valueStyle = "fresnel:valueStyle";
 
@@ -78,6 +80,7 @@ public class FresnelUtil {
         // we currently we just treat everything as plain JSON keys there
         public static String showProperties = "showProperties";
         public static String alternateProperties = "alternateProperties";
+
 
         public static String WILD_PROPERTY = "*";
     }
@@ -183,7 +186,7 @@ public class FresnelUtil {
         DocumentUtil.traverse(data, (var value, var path) -> {
             if (value instanceof Map node && node.containsKey(JsonLd.TYPE_KEY)) {
                 try {
-                    var label = format(applyLens(value, FresnelUtil.LensGroupName.Chip), locale).asString();
+                    var label = format(applyLens(value, LensGroupName.Chip), locale).asString();
                     node.put(JsonLd.Platform.COMPUTED_LABEL, label);
                     // TODO Check if structured value and don't compute for sub-nodes?
                 } catch (Exception e) {
@@ -305,6 +308,8 @@ public class FresnelUtil {
             return asLangMap(byScript(new LinkedHashMap<>()));
         }
 
+        public abstract Map<String, Object> getThing();
+
         public abstract boolean isEmpty();
 
         protected abstract StringBuilder printTo(StringBuilder s);
@@ -352,6 +357,16 @@ public class FresnelUtil {
                 }
                 case FslPath fslPath -> select(thing, fslPath, takeAllAlternate);
                 case Unrecognized ignored -> {}
+                case MergeProperties mergeProperties -> {
+                    Node n = new Node(lens, selectedLang);
+                    for (var m : mergeProperties.merge()) {
+                        n.select(thing, m, takeAllAlternate);
+                    }
+                    var values = n.orderedSelection.stream().map(Selected::value).flatMap(this::asStream).toList();
+                    if (!values.isEmpty()) {
+                        this.orderedSelection.add(new Selected(mergeProperties.use(), values));
+                    }
+                }
             }
         }
 
@@ -415,6 +430,11 @@ public class FresnelUtil {
         }
 
         @Override
+        public Map<String, Object> getThing() {
+            return buildThing();
+        }
+
+        @Override
         public boolean isEmpty() {
             return orderedSelection.isEmpty();
         }
@@ -435,6 +455,81 @@ public class FresnelUtil {
         protected Map<LangCode, StringBuilder> byScript(Map<LangCode, StringBuilder> stringsByLang) {
             orderedSelection.forEach(p -> byScript(stringsByLang, p.value()));
             return stringsByLang;
+        }
+
+        private Map<String, Object> buildThing() {
+            Map<String, Object> thing = new LinkedHashMap<>();
+            if (id != null) {
+                thing.put(JsonLd.ID_KEY, id);
+            }
+            if (type != null) {
+                // TODO: Only for certain entitites? Should always be included in lens definition?
+                thing.put(JsonLd.TYPE_KEY, type);
+            }
+            orderedSelection.forEach(p -> insert(thing, p.selector(), p.value()));
+            // TODO: Only for certain entities?
+            var _str = asString();
+            if (!_str.isEmpty()) {
+                thing.put(JsonLd.SEARCH_KEY, asString());
+            }
+            return thing;
+        }
+
+        @SuppressWarnings("unchecked")
+        private void insert(Map<String, Object> thing, FslPath selector, Object value) {
+            List<String> steps = selector.asJsonPath();
+            String key = steps.removeFirst();
+
+            while (!steps.isEmpty()) {
+                switch (thing.get(key)) {
+                    case Map<?, ?> m -> thing = (Map<String, Object>) m;
+                    case List<?> l -> {
+                        Map<String, Object> child = new LinkedHashMap<>();
+                        thing.put(key, Stream.concat(l.stream(), Stream.of(child)).toList());
+                        thing = child;
+                    }
+                    case null -> {
+                        Map<String, Object> child = new LinkedHashMap<>();
+                        thing.put(key, child);
+                        thing = child;
+                    }
+                    default -> throw new IllegalStateException("Unexpected value: " + thing.get(key));
+                }
+                key = steps.removeFirst();
+            }
+
+            insert(thing, key, value);
+        }
+
+        private void insert(Map<String, Object> thing, String key, Object value) {
+            if (value instanceof Collection<?> c) {
+                for (var v : c) {
+                    insert(thing, key, v);
+                }
+                return;
+            }
+
+            if (value instanceof LanguageContainer) {
+                key = "__" + key;
+            }
+
+            List<Object> values = Stream.concat(asStream(thing.get(key)), asStream(buildValue(value))).distinct().toList();
+
+            thing.put(key, values.size() == 1 ? values.getFirst() : values);
+        }
+
+        private Object buildValue(Object value) {
+            return switch(value) {
+                case Collection<?> l -> l.stream().map(this::buildValue).flatMap(this::asStream).toList();
+                case LanguageContainer l -> l.languages.values().stream().map(this::buildValue).flatMap(this::asStream).toList();
+                case TransliteratedNode t -> t.transliterations.values().stream().map(Node::buildThing).toList();
+                case Node n -> n.buildThing();
+                default -> value; // String
+            };
+        }
+
+        private Stream<?> asStream(Object o) {
+            return o instanceof List<?> l ? l.stream() : Stream.ofNullable(o);
         }
 
         private void printTo(StringBuilder s, Object value) {
@@ -503,6 +598,12 @@ public class FresnelUtil {
         Map<LangCode, Node> transliterations = new HashMap<>();
         void add(LangCode langCode, Node node) {
             transliterations.put(langCode, node);
+        }
+
+        @Override
+        public Map<String, Object> getThing() {
+            // FIXME
+            throw new UnsupportedOperationException("");
         }
 
         @Override
@@ -624,43 +725,59 @@ public class FresnelUtil {
         }
 
         private List<ShowProperty> parseShowProperties(List<Object> showProperties) {
-            return showProperties.stream().map(p -> {
-                if (JsonLd.isAlternateProperties(p)) {
-                    return new AlternateProperties(alternatives(p));
-                }
-                if (p instanceof List<?> list) {
-                    // expanded lang alias, i.e. ["x", "xByLang"] inside alternateProperties
-                    // TODO remove expansion in jsonLd?
-                    if (list.size() == 2) {
-                        return new FslPath((String) list.getFirst());
-                    }
-                }
-                if (isInverseProperty(p)) {
-                    return parseInverseProperty(p);
-                }
-                if (JsonLd.isAlternateRangeRestriction(p)) {
-                    return parseRangeRestriction(p);
-                }
-                if (isFslSelector(p)) {
-                    return parseFslSelector(p);
-                }
-                if (p instanceof String k) {
-                    if (!jsonLd.langContainerAliasInverted.containsKey(k)) {
-                        return new FslPath(k);
-                    }
-                    // ignore langContainer aliases expanded by jsonld
-                    return null;
-                }
-                return new Unrecognized();
-            })
-            .filter(Objects::nonNull)
-            .toList();
+            return showProperties.stream()
+                    .map(p -> {
+                        if (JsonLd.isAlternateProperties(p)) {
+                            return parseAlternateProperties(p);
+                        }
+                        if (isMergeProperties(p)) {
+                            return parseMergeProperties(p);
+                        }
+                        if (p instanceof List<?> list) {
+                            // expanded lang alias, i.e. ["x", "xByLang"] inside alternateProperties
+                            // TODO remove expansion in jsonLd?
+                            if (list.size() == 2) {
+                                return new FslPath((String) list.getFirst());
+                            }
+                        }
+                        if (isInverseProperty(p)) {
+                            return parseInverseProperty(p);
+                        }
+                        if (JsonLd.isAlternateRangeRestriction(p)) {
+                            return parseRangeRestriction(p);
+                        }
+                        if (isFslSelector(p)) {
+                            return parseFslSelector(p);
+                        }
+                        if (p instanceof String k) {
+                            if (!jsonLd.langContainerAliasInverted.containsKey(k)) {
+                                return new FslPath(k);
+                            }
+                            // ignore langContainer aliases expanded by jsonld
+                            return null;
+                        }
+                        return new Unrecognized();
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
         }
 
         @SuppressWarnings("unchecked")
-        private List<ShowProperty> alternatives(Object alternateProperties) {
-            var alternatives = (List<Object>) ((Map<String, Object>) alternateProperties).get(JsonLd.ALTERNATE_PROPERTIES);
-            return parseShowProperties(alternatives);
+        private AlternateProperties parseAlternateProperties(Object alternateProperties) {
+            var alternatives = (List<Object>) ((Map<String, Object>) alternateProperties).get(Fresnel.alternateProperties);
+            return new AlternateProperties(parseShowProperties(alternatives));
+        }
+
+        @SuppressWarnings("unchecked")
+        private MergeProperties parseMergeProperties(Object mergeProperties) {
+            var m = (Map<String, Object>) mergeProperties;
+            var merge = (List<Object>) m.get(Fresnel.mergeProperties);
+            var use = new FslPath((String) m.get(Fresnel.use));
+            return new MergeProperties(parseShowProperties(merge), use);
+        }
+
+        private boolean isMergeProperties(Object showProperty) {
+            return showProperty instanceof Map<?, ?> m && m.containsKey(Fresnel.mergeProperties) && m.containsKey(Fresnel.use);
         }
 
         private boolean isInverseProperty(Object showProperty) {
@@ -726,10 +843,13 @@ public class FresnelUtil {
         };
     }
 
-    private sealed interface ShowProperty permits AlternateProperties, FslPath, Unrecognized {
+    private sealed interface ShowProperty permits AlternateProperties, FslPath, MergeProperties, Unrecognized {
     }
 
     private record AlternateProperties(List<ShowProperty> alternatives) implements ShowProperty {
+    }
+
+    private record MergeProperties(List<ShowProperty> merge, FslPath use) implements ShowProperty {
     }
 
     private record Unrecognized() implements ShowProperty {
@@ -759,6 +879,15 @@ public class FresnelUtil {
 
         ArcStep getSoleArcStep() {
             return new ArcStep(path);
+        }
+
+        List<String> asJsonPath() {
+            String[] steps = path.split("/");
+            List<String> jsonPath = new ArrayList<>();
+            for (int i = 0; i < steps.length; i += 2) {
+                jsonPath.addAll(new ArcStep(steps[i]).asJsonPath());
+            }
+            return jsonPath;
         }
 
         boolean isArcOnly() {
@@ -813,7 +942,7 @@ public class FresnelUtil {
             }
 
             private void init(String nodeStep) {
-                if (nodeStep.equals("*")) {
+                if (nodeStep.equals(Fresnel.WILD_PROPERTY)) {
                     return;
                 }
                 if (nodeStep.startsWith(SUB)) {
@@ -853,6 +982,11 @@ public class FresnelUtil {
                     return new PropertyKey(inverse != null ? inverse : JsonLd.REVERSE_KEY + "." + baseProp.name());
                 }
                 return baseProp;
+            }
+
+            List<String> asJsonPath() {
+                PropertyKey baseProp = candidateKeys.getFirst();
+                return reverse ? List.of(JsonLd.REVERSE_KEY, baseProp.name()) : List.of(baseProp.name());
             }
 
             private List<Object> getValues(Map<?, ?> m, PropertyKey p) {

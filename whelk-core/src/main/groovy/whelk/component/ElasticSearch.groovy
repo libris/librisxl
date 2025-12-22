@@ -429,7 +429,7 @@ class ElasticSearch {
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
         
-        whelk.embellish(copy, ['search-chips'])
+        whelk.embellish(copy, ['full'])
 
         if (log.isDebugEnabled()) {
             log.debug("Framing ${document.getShortId()}")
@@ -464,10 +464,12 @@ class ElasticSearch {
         String thingId = thingIds.get(0)
 
         Map framedFull = JsonLd.frame(thingId, copy.data)
+
+        Map searchCard2 = toSearchCard2(whelk, framedFull, links)
         Map searchCard = toSearchCard(whelk, framedFull, links)
 
-        searchCard['_links'] = links
-        searchCard['_outerEmbellishments'] = copy.getEmbellishments() - links
+        searchCard2['_links'] = links
+        searchCard2['_outerEmbellishments'] = copy.getEmbellishments() - links
 
         Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
         var totalItems = incomingLinkCountByRelation.values().sum(0)
@@ -477,47 +479,47 @@ class ElasticSearch {
         // TODO what should be the key "itemOf.instanceOf"?
         // FIXME don't hardcode this
         var itemPath = ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"]
-        var itemCount = ((List) DocumentUtil.getAtPath(searchCard, itemPath, []))
+        var itemCount = ((List) DocumentUtil.getAtPath(searchCard2, itemPath, []))
                 .collect{ it['heldBy']?[JsonLd.ID_KEY] }.grep().unique().size()
         incomingLinkCountByRelation.put('itemOf.instanceOf', itemCount)
         
-        searchCard['reverseLinks'] = [
+        searchCard2['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems': totalItems,
                 'totalItemsByRelation': incomingLinkCountByRelation
         ]
 
-        searchCard['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
-                framedFull,
+        searchCard2['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
+                searchCard2,
                 whelk.jsonld.locales as Set,
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
         try {
-            var topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.SearchToken, NO_FALLBACK)
+            var topLens = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.SearchToken, NO_FALLBACK)
             if (topLens.isEmpty()) {
                 // If there is no search token, take first property of chip instead
-                topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
+                topLens = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
             }
             var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values() // The values follow the key order in whelk.jsonld.locales (see subMap method implementation)
                     ?: topLens.byScript().values()
                     ?: topLens.asString()
             if (topStr) {
-                searchCard[TOP_STR] = topStr
+                searchCard2[TOP_STR] = topStr
             }
-            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
-            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
-            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            searchCard2[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
+            searchCard2[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            searchCard2[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
         } catch (Exception e) {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard['_ids'] = (thingIds + document.getRecordIdentifiers())
+        searchCard2['_ids'] = (thingIds + document.getRecordIdentifiers())
                 .collect { stripHash(lastPathSegment(it)) }
                 .unique()
                 .plus(whelk.fresnelUtil.fslSelect(framedFull, "meta/*/identifiedBy/*/value") as Collection<String>)
 
-        DocumentUtil.traverse(searchCard) { value, path ->
+        DocumentUtil.traverse(searchCard2) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
@@ -532,22 +534,22 @@ class ElasticSearch {
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
             // -->
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
-            if (value instanceof Map) {
-                var flattened = [:]
-                value.each { k, v ->
-                    if (k in whelk.jsonld.langContainerAlias) {
-                        var __k = flattenedLangMapKey(k)
-                        flattened[__k] = (flattened[__k] ?: []) + asList(v)
-                    } else if (k in whelk.jsonld.langContainerAliasInverted) {
-                        var __k = flattenedLangMapKey(whelk.jsonld.langContainerAliasInverted[k])
-                        flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
-                    }
-                }
-                value.putAll(flattened)
-            }
+//            if (value instanceof Map) {
+//                var flattened = [:]
+//                value.each { k, v ->
+//                    if (k in whelk.jsonld.langContainerAlias) {
+//                        var __k = flattenedLangMapKey(k)
+//                        flattened[__k] = (flattened[__k] ?: []) + asList(v)
+//                    } else if (k in whelk.jsonld.langContainerAliasInverted) {
+//                        var __k = flattenedLangMapKey(whelk.jsonld.langContainerAliasInverted[k])
+//                        flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
+//                    }
+//                }
+//                value.putAll(flattened)
+//            }
 
             if (whelk.features.isEnabled(EXPERIMENTAL_INDEX_HOLDING_ORGS)) {
-                if ('Item' != searchCard[TYPE_KEY]
+                if ('Item' != searchCard2[TYPE_KEY]
                         && path
                         && "heldBy" == path.last()
                         && !path.contains('hasComponent')
@@ -568,17 +570,45 @@ class ElasticSearch {
         // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
         // we follow the advice and use a separate field.
         // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
-        searchCard["_es_id"] =  toElasticId(copy.getShortId())
+        searchCard2["_es_id"] =  toElasticId(copy.getShortId())
 
         if (log.isTraceEnabled()) {
-            log.trace("Framed data: ${searchCard}")
+            log.trace("Framed data: ${searchCard2}")
         }
 
-        return JsonOutput.toJson(searchCard)
+        return JsonOutput.toJson(searchCard2)
     }
     
     static String flattenedLangMapKey(key) {
         return '__' + key
+    }
+
+    private static Map toSearchCard2(Whelk whelk, Map thing, Set<String> preserveLinks) {
+        var lensed = whelk.fresnelUtil.applyLens(thing, FresnelUtil.LensGroupName.SearchCard, TAKE_ALL_ALTERNATE)
+        Map searchCard = lensed.getThing()
+        searchCard.put(JsonLd.RECORD_KEY, thing.get(JsonLd.RECORD_KEY))
+        restoreLinks(searchCard, thing, preserveLinks)
+        return searchCard
+    }
+
+    private static void restoreLinks(Map cardOrChip, Map thing, Set<String> preserveLinks) {
+        thing.each { k, v ->
+            if (cardOrChip.containsKey(k)) {
+                // FIXME: Haven't verified that this works, maybe do it inside FresnelUtil instead (adding FresnelUtil.Options.PRESERVE_LINKS)
+                [asList(cardOrChip[k]), asList(v)].transpose().each {
+                    def (a, b) = it
+                    if (a instanceof Map && b instanceof Map) {
+                        restoreLinks(a, b, preserveLinks)
+                    }
+                }
+            }
+            else {
+                def links = JsonLd.retainLinks(v, preserveLinks)
+                if (links) {
+                    cardOrChip[k] = links
+                }
+            }
+        }
     }
 
     private static Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
