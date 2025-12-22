@@ -22,6 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
 import static whelk.FeatureFlags.Flag.EXPERIMENTAL_INDEX_HOLDING_ORGS
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
+import static whelk.JsonLd.SEARCH_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
@@ -492,6 +493,12 @@ class ElasticSearch {
                 whelk.jsonld.locales as Set,
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
+
+
+        if (searchCard2.containsKey(SEARCH_KEY)) {
+            // TODO? Let _topStr just be _str instead? (Need to review boost configuration for _topStr vs _str in that case)
+            searchCard2[TOP_STR] = searchCard2.remove(SEARCH_KEY)
+        }
 
         try {
             searchCard2[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
