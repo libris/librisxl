@@ -446,11 +446,12 @@ class ElasticSearch {
             links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
         }
 
-        def graph = ((List) copy.data['@graph'])
-        int originalSize = document.data['@graph'].size()
-        copy.data['@graph'] =
-                graph.take(originalSize) +
-                graph.drop(originalSize).collect { getShapeForEmbellishment(whelk, it) }
+        // TODO: Replicate getShapeForEmbellishment at a later stage
+//        def graph = ((List) copy.data['@graph'])
+//        int originalSize = document.data['@graph'].size()
+//        copy.data['@graph'] =
+//                graph.take(originalSize) +
+//                graph.drop(originalSize).collect { getShapeForEmbellishment(whelk, it) }
         setIdentifiers(copy)
         if (copy.isVirtual()) {
             copy.centerOnVirtualMainEntity()
