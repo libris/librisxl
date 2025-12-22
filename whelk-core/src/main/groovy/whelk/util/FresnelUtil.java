@@ -24,6 +24,8 @@ import java.util.stream.Stream;
 
 import static whelk.util.FresnelUtil.LangCode.NO_LANG;
 import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
+import static whelk.util.FresnelUtil.Options.NO_FALLBACK;
+import static whelk.util.FresnelUtil.Options.TAKE_FIRST_SHOW_PROPERTY;
 
 // https://www.w3.org/2005/04/fresnel-info/manual/
 
@@ -133,6 +135,8 @@ public class FresnelUtil {
 
     private final Map<DerivedCacheKey, Lens> derivedLensCache = new ConcurrentHashMap<>();
     private final Map<LensCacheKey, Lens> lensCache = new ConcurrentHashMap<>();
+
+    private static final LensGroupName searchKeyLens = LensGroupName.SearchToken;
 
     public FresnelUtil(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
@@ -308,7 +312,7 @@ public class FresnelUtil {
             return asLangMap(byScript(new LinkedHashMap<>()));
         }
 
-        public abstract Map<String, Object> getThing();
+        public abstract Map<String, Object> getThingForIndex();
 
         public abstract boolean isEmpty();
 
@@ -430,8 +434,8 @@ public class FresnelUtil {
         }
 
         @Override
-        public Map<String, Object> getThing() {
-            return buildThing();
+        public Map<String, Object> getThingForIndex() {
+            return buildThingForIndex();
         }
 
         @Override
@@ -457,22 +461,39 @@ public class FresnelUtil {
             return stringsByLang;
         }
 
-        private Map<String, Object> buildThing() {
+        private Map<String, Object> buildThingForIndex() {
             Map<String, Object> thing = new LinkedHashMap<>();
             if (id != null) {
                 thing.put(JsonLd.ID_KEY, id);
             }
             if (type != null) {
-                // TODO: Only for certain entitites? Should always be included in lens definition?
+                // TODO: Only for certain entitites? Should be included in lens definition if wanted?
                 thing.put(JsonLd.TYPE_KEY, type);
             }
             orderedSelection.forEach(p -> insert(thing, p.selector(), p.value()));
-            // TODO: Only for certain entities?
-            var _str = asString();
-            if (!_str.isEmpty()) {
-                thing.put(JsonLd.SEARCH_KEY, asString());
+            if (type != null) {
+                var _str = buildSearchStr(thing);
+                if (!_str.isEmpty()) {
+                    thing.put(JsonLd.SEARCH_KEY, _str.size() == 1 ? _str.getFirst() : _str);
+                }
             }
             return thing;
+        }
+
+        private List<String> buildSearchStr(Map<String, Object> thing) {
+            var lensedForSearchStr = applyLens(thing, searchKeyLens, NO_FALLBACK);
+            if (lensedForSearchStr.isEmpty()) {
+                return List.of();
+            }
+            var byLang = lensedForSearchStr.byLang();
+            if (!byLang.isEmpty()) {
+                return jsonLd.locales.stream().map(byLang::get).filter(Objects::nonNull).toList();
+            }
+            var byScript = lensedForSearchStr.byScript();
+            if (!byScript.isEmpty()) {
+                return (List<String>) byScript.values();
+            }
+            return List.of(lensedForSearchStr.asString());
         }
 
         @SuppressWarnings("unchecked")
@@ -502,34 +523,22 @@ public class FresnelUtil {
         }
 
         private void insert(Map<String, Object> thing, String key, Object value) {
-            if (value instanceof Collection<?> c) {
-                for (var v : c) {
-                    insert(thing, key, v);
+            switch (value) {
+                case Collection<?> c -> c.forEach(v -> insert(thing, key, v));
+                case LanguageContainer l -> insert(thing, key, l.asLangMap(jsonLd.locales));
+                case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(Node::buildThingForIndex).toList());
+                case Node n -> {
+                    if (jsonLd.isVocabTerm(key) && n.id != null) {
+                        insert(thing, key, jsonLd.toTermKey(n.id));
+                    } else {
+                        insert(thing, key, n.buildThingForIndex());
+                    }
                 }
-                return;
+                default -> {
+                    List<Object> values = Stream.concat(asStream(thing.get(key)), Stream.of(value)).distinct().toList();
+                    thing.put(key, values.size() == 1 ? values.getFirst() : values);
+                }
             }
-
-            if (jsonLd.isVocabTerm(key) && value instanceof Node n && n.id != null) {
-                value = jsonLd.toTermKey(n.id);
-            }
-
-            if (value instanceof LanguageContainer) {
-                key = "__" + key;
-            }
-
-            List<Object> values = Stream.concat(asStream(thing.get(key)), asStream(buildValue(value))).distinct().toList();
-
-            thing.put(key, values.size() == 1 ? values.getFirst() : values);
-        }
-
-        private Object buildValue(Object value) {
-            return switch(value) {
-                case Collection<?> l -> l.stream().map(this::buildValue).flatMap(this::asStream).toList();
-                case LanguageContainer l -> l.languages.values().stream().map(this::buildValue).flatMap(this::asStream).toList();
-                case TransliteratedNode t -> t.transliterations.values().stream().map(Node::buildThing).toList();
-                case Node n -> n.buildThing();
-                default -> value; // String
-            };
         }
 
         private Stream<?> asStream(Object o) {
@@ -605,7 +614,7 @@ public class FresnelUtil {
         }
 
         @Override
-        public Map<String, Object> getThing() {
+        public Map<String, Object> getThingForIndex() {
             // FIXME
             throw new UnsupportedOperationException("");
         }
@@ -669,6 +678,23 @@ public class FresnelUtil {
 
         public boolean isTransliterated() {
             return languages.keySet().stream().anyMatch(LangCode::isTransliterated);
+        }
+
+        public Map<String, List<String>> asLangMap(List<String> locales) {
+            Map<String, List<String>> langMap = new LinkedHashMap<>();
+            if (isTransliterated()) {
+                languages.forEach((langCode, values) -> langMap.put(langCode.code(), values));
+            } else {
+                for (String locale : locales) {
+                    for (LangCode lang : languages.keySet()) {
+                        if (locale.equals(lang.code())) {
+                            langMap.put(lang.code(), languages.get(lang));
+                            break;
+                        }
+                    }
+                }
+            }
+            return langMap;
         }
     }
 

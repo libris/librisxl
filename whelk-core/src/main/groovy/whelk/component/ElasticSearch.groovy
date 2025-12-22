@@ -8,7 +8,6 @@ import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
-import whelk.FeatureFlags
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -27,9 +26,7 @@ import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
-import static whelk.util.FresnelUtil.Options.NO_FALLBACK
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
-import static whelk.util.FresnelUtil.Options.TAKE_FIRST_SHOW_PROPERTY
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -497,17 +494,6 @@ class ElasticSearch {
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
         try {
-            var topLens = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.SearchToken, NO_FALLBACK)
-            if (topLens.isEmpty()) {
-                // If there is no search token, take first property of chip instead
-                topLens = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
-            }
-            var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values() // The values follow the key order in whelk.jsonld.locales (see subMap method implementation)
-                    ?: topLens.byScript().values()
-                    ?: topLens.asString()
-            if (topStr) {
-                searchCard2[TOP_STR] = topStr
-            }
             searchCard2[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
             searchCard2[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
             searchCard2[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
@@ -535,19 +521,19 @@ class ElasticSearch {
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
             // -->
             // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
-//            if (value instanceof Map) {
-//                var flattened = [:]
-//                value.each { k, v ->
-//                    if (k in whelk.jsonld.langContainerAlias) {
-//                        var __k = flattenedLangMapKey(k)
-//                        flattened[__k] = (flattened[__k] ?: []) + asList(v)
-//                    } else if (k in whelk.jsonld.langContainerAliasInverted) {
-//                        var __k = flattenedLangMapKey(whelk.jsonld.langContainerAliasInverted[k])
-//                        flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
-//                    }
-//                }
-//                value.putAll(flattened)
-//            }
+            if (value instanceof Map) {
+                var flattened = [:]
+                value.each { k, v ->
+                    if (k in whelk.jsonld.langContainerAlias) {
+                        var __k = flattenedLangMapKey(k)
+                        flattened[__k] = (flattened[__k] ?: []) + asList(v)
+                    } else if (k in whelk.jsonld.langContainerAliasInverted) {
+                        var __k = flattenedLangMapKey(whelk.jsonld.langContainerAliasInverted[k])
+                        flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
+                    }
+                }
+                value.putAll(flattened)
+            }
 
             if (whelk.features.isEnabled(EXPERIMENTAL_INDEX_HOLDING_ORGS)) {
                 if ('Item' != searchCard2[TYPE_KEY]
@@ -586,7 +572,7 @@ class ElasticSearch {
 
     private static Map toSearchCard2(Whelk whelk, Map thing, Set<String> preserveLinks) {
         var lensed = whelk.fresnelUtil.applyLens(thing, FresnelUtil.LensGroupName.SearchCard, TAKE_ALL_ALTERNATE)
-        Map searchCard = lensed.getThing()
+        Map searchCard = lensed.getThingForIndex()
         searchCard.put(JsonLd.RECORD_KEY, thing.get(JsonLd.RECORD_KEY))
         restoreLinks(searchCard, thing, preserveLinks)
         return searchCard
