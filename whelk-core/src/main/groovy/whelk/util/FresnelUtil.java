@@ -525,7 +525,7 @@ public class FresnelUtil {
         private void insert(Map<String, Object> thing, String key, Object value) {
             switch (value) {
                 case Collection<?> c -> c.forEach(v -> insert(thing, key, v));
-                case LanguageContainer l -> insert(thing, key, l.asLangMap(jsonLd.locales));
+                case LanguageContainer l -> insert(thing, (String) jsonLd.langContainerAlias.get(key), l.asLangMap(jsonLd.locales));
                 case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(Node::buildThingForIndex).toList());
                 case Node n -> {
                     if (jsonLd.isVocabTerm(key) && n.id != null) {
