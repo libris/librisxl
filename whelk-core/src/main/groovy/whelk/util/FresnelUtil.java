@@ -25,7 +25,8 @@ import java.util.stream.Stream;
 import static whelk.util.FresnelUtil.LangCode.NO_LANG;
 import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
 import static whelk.util.FresnelUtil.Options.NO_FALLBACK;
-import static whelk.util.FresnelUtil.Options.TAKE_FIRST_SHOW_PROPERTY;
+import static whelk.util.FresnelUtil.Options.PRESERVE_LINKS;
+import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE;
 
 // https://www.w3.org/2005/04/fresnel-info/manual/
 
@@ -97,7 +98,7 @@ public class FresnelUtil {
     public enum Options {
         DEFAULT,
         TAKE_ALL_ALTERNATE,
-        TAKE_FIRST_SHOW_PROPERTY,
+        PRESERVE_LINKS,
         NO_FALLBACK
     }
 
@@ -145,10 +146,10 @@ public class FresnelUtil {
     }
 
     public Lensed applyLens(Object thing, LensGroupName lens) {
-        return applyLens(thing, lens, Options.DEFAULT);
+        return applyLens(thing, lens, List.of());
     }
 
-    public Lensed applyLens(Object thing, LensGroupName lens, Options options) {
+    public Lensed applyLens(Object thing, LensGroupName lens, Collection<Options> options) {
         // TODO
         if (!isTypedNode(thing)) {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
@@ -158,10 +159,10 @@ public class FresnelUtil {
     }
 
     public Lensed applyLens(Object thing, DerivedLensGroup derived) {
-        return applyLens(thing, derived, Options.DEFAULT);
+        return applyLens(thing, derived, List.of());
     }
 
-    public Lensed applyLens(Object thing, DerivedLensGroup derived, Options options) {
+    public Lensed applyLens(Object thing, DerivedLensGroup derived, Collection<Options> options) {
         // TODO
         if (!(thing instanceof Map<?, ?> t)) {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
@@ -207,20 +208,20 @@ public class FresnelUtil {
     }
 
     private Object applyLens(Object value, LensGroupName lensGroupName, LangCode selectedLang) {
-        return applyLens(value, lensGroupName, Options.DEFAULT, selectedLang);
+        return applyLens(value, lensGroupName, List.of(), selectedLang);
     }
 
     private Object applyLens(
             Object value,
             LensGroupName lensGroupName,
-            Options options,
+            Collection<Options> options,
             LangCode selectedLang
     ) {
         if (!(value instanceof Map<?, ?> thing)) {
             // literal
             return value;
         }
-        var lens = findLens(thing, lensGroupName, options.equals(Options.NO_FALLBACK) ? FallbackLens.EMPTY : FallbackLens.DEFAULT);
+        var lens = findLens(thing, lensGroupName, options.contains(Options.NO_FALLBACK) ? FallbackLens.EMPTY : FallbackLens.DEFAULT);
 
         return applyLens(value, lens, options, selectedLang);
     }
@@ -228,7 +229,7 @@ public class FresnelUtil {
     private Object applyLens(
             Object value,
             Lens lens,
-            Options options,
+            Collection<Options> options,
             LangCode selectedLang
     ) {
         if (!(value instanceof Map<?, ?> thing)) {
@@ -247,12 +248,12 @@ public class FresnelUtil {
 
         var result = new Node(lens, selectedLang);
 
-        var showProperties = options == Options.TAKE_FIRST_SHOW_PROPERTY && !lens.showProperties().isEmpty()
-                ? lens.showProperties().subList(0, 1)
-                : lens.showProperties();
+        Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(JsonLd.ID_KEY)), lens.showProperties().stream())
+                .forEach(sp -> result.select(thing, sp, options));
 
-        Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(JsonLd.ID_KEY)), showProperties.stream())
-                .forEach(sp -> result.select(thing, sp, Options.TAKE_ALL_ALTERNATE.equals(options)));
+        if (options.contains(PRESERVE_LINKS)) {
+            //TODO
+        }
 
         return result;
     }
@@ -347,24 +348,24 @@ public class FresnelUtil {
             this.selectedLang = selectedLang;
         }
 
-        void select(Map<?, ?> thing, ShowProperty showProperty, boolean takeAllAlternate) {
+        void select(Map<?, ?> thing, ShowProperty showProperty, Collection<Options> options) {
             switch (showProperty) {
                 case AlternateProperties a -> {
                     for (var alternative : a.alternatives()) {
                         if (alternative instanceof FslPath fslPath) {
-                            boolean selected = select(thing, fslPath, takeAllAlternate);
-                            if (selected && !takeAllAlternate) {
+                            boolean selected = select(thing, fslPath, options);
+                            if (selected && !options.contains(TAKE_ALL_ALTERNATE)) {
                                 break;
                             }
                         }
                     }
                 }
-                case FslPath fslPath -> select(thing, fslPath, takeAllAlternate);
+                case FslPath fslPath -> select(thing, fslPath, options);
                 case Unrecognized ignored -> {}
                 case MergeProperties mergeProperties -> {
                     Node n = new Node(lens, selectedLang);
                     for (var m : mergeProperties.merge()) {
-                        n.select(thing, m, takeAllAlternate);
+                        n.select(thing, m, options);
                     }
                     var values = n.orderedSelection.stream().map(Selected::value).flatMap(this::asStream).toList();
                     if (!values.isEmpty()) {
@@ -374,7 +375,7 @@ public class FresnelUtil {
             }
         }
 
-        private boolean select(Map<?, ?> thing, FslPath fslPath, boolean takeAllAlternate) {
+        private boolean select(Map<?, ?> thing, FslPath fslPath, Collection<Options> options) {
             PropertyKey p = fslPath.getEndArcStep().asPropertyKey();
             List<?> values = fslPath.getValues(thing);
 
@@ -411,7 +412,6 @@ public class FresnelUtil {
                                 return l.languages.get(selectedLang);
                             }
                             if (fslPath.isIntegralProperty()) {
-                                Options options = takeAllAlternate ? Options.TAKE_ALL_ALTERNATE : Options.DEFAULT;
                                 if (lens.lensGroup() instanceof DerivedLensGroup d) {
                                     List<LensGroupName> handled = d.minus().stream()
                                             .filter(l -> findLens(thing, l).showProperties().contains(fslPath))
@@ -424,7 +424,7 @@ public class FresnelUtil {
                                 }
                                 return applyLens(v, lens.base(), options, selectedLang);
                             }
-                            return applyLens(v, lens.subLens(), selectedLang);
+                            return applyLens(v, lens.subLens(), options, selectedLang);
                         })
                         .toList();
                 orderedSelection.add(new Selected(fslPath, values));
@@ -481,19 +481,23 @@ public class FresnelUtil {
         }
 
         private List<String> buildSearchStr(Map<String, Object> thing) {
-            var lensedForSearchStr = applyLens(thing, searchKeyLens, NO_FALLBACK);
+            var lensedForSearchStr = applyLens(thing, searchKeyLens, List.of(NO_FALLBACK));
             if (lensedForSearchStr.isEmpty()) {
                 return List.of();
             }
             var byLang = lensedForSearchStr.byLang();
             if (!byLang.isEmpty()) {
-                return jsonLd.locales.stream().map(byLang::get).filter(Objects::nonNull).toList();
+                return jsonLd.locales.stream().map(byLang::get).filter(Objects::nonNull).distinct().toList();
             }
             var byScript = lensedForSearchStr.byScript();
             if (!byScript.isEmpty()) {
                 return (List<String>) byScript.values();
             }
-            return List.of(lensedForSearchStr.asString());
+            var asString = lensedForSearchStr.asString();
+            if (!asString.isEmpty()) {
+                return List.of(asString);
+            }
+            return List.of();
         }
 
         @SuppressWarnings("unchecked")
@@ -526,7 +530,7 @@ public class FresnelUtil {
             switch (value) {
                 case Collection<?> c -> c.forEach(v -> insert(thing, key, v));
                 case LanguageContainer l -> insert(thing, (String) jsonLd.langContainerAlias.get(key), l.asLangMap(jsonLd.locales));
-                case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(Node::buildThingForIndex).toList());
+                case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(Node::buildThingForIndex).toList()); //FIXME
                 case Node n -> {
                     if (jsonLd.isVocabTerm(key) && n.id != null) {
                         insert(thing, key, jsonLd.toTermKey(n.id));

@@ -27,6 +27,7 @@ import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
+import static whelk.util.FresnelUtil.Options.PRESERVE_LINKS
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
 import static whelk.util.Jackson.mapper
 
@@ -463,7 +464,7 @@ class ElasticSearch {
 
         Map framedFull = JsonLd.frame(thingId, copy.data)
 
-        Map searchCard2 = toSearchCard2(whelk, framedFull, links)
+        Map searchCard2 = toSearchCard2(whelk, framedFull)
 //        Map searchCard = toSearchCard(whelk, framedFull, links)
 
         searchCard2['_links'] = links
@@ -500,9 +501,9 @@ class ElasticSearch {
         }
 
         try {
-            searchCard2[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
-            searchCard2[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
-            searchCard2[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            searchCard2[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.Chip, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard2[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard2[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
         } catch (Exception e) {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
@@ -538,7 +539,9 @@ class ElasticSearch {
                         flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
                     }
                 }
-                value.putAll(flattened)
+                if (!flattened.isEmpty()) {
+                    value.putAll(flattened)
+                }
             }
 
             if (whelk.features.isEnabled(EXPERIMENTAL_INDEX_HOLDING_ORGS)) {
@@ -576,32 +579,11 @@ class ElasticSearch {
         return '__' + key
     }
 
-    private static Map toSearchCard2(Whelk whelk, Map thing, Set<String> preserveLinks) {
-        var lensed = whelk.fresnelUtil.applyLens(thing, FresnelUtil.LensGroupName.SearchCard, TAKE_ALL_ALTERNATE)
+    private static Map toSearchCard2(Whelk whelk, Map thing) {
+        var lensed = whelk.fresnelUtil.applyLens(thing, FresnelUtil.LensGroupName.SearchCard, List.of(TAKE_ALL_ALTERNATE, PRESERVE_LINKS))
         Map searchCard = lensed.getThingForIndex()
         searchCard.put(JsonLd.RECORD_KEY, thing.get(JsonLd.RECORD_KEY))
-        restoreLinks(searchCard, thing, preserveLinks)
         return searchCard
-    }
-
-    private static void restoreLinks(Map cardOrChip, Map thing, Set<String> preserveLinks) {
-        thing.each { k, v ->
-            if (cardOrChip.containsKey(k)) {
-                // FIXME: Haven't verified that this works, maybe do it inside FresnelUtil instead (adding FresnelUtil.Options.PRESERVE_LINKS)
-                [asList(cardOrChip[k]), asList(v)].transpose().each {
-                    def (a, b) = it
-                    if (a instanceof Map && b instanceof Map) {
-                        restoreLinks(a, b, preserveLinks)
-                    }
-                }
-            }
-            else {
-                def links = JsonLd.retainLinks(v, preserveLinks)
-                if (links) {
-                    cardOrChip[k] = links
-                }
-            }
-        }
     }
 
 //    private static Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
