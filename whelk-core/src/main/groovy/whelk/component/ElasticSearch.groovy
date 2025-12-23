@@ -444,7 +444,6 @@ class ElasticSearch {
             links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
         }
 
-        // TODO: Replicate getShapeForEmbellishment at a later stage
 //        def graph = ((List) copy.data['@graph'])
 //        int originalSize = document.data['@graph'].size()
 //        copy.data['@graph'] =
@@ -465,7 +464,7 @@ class ElasticSearch {
         Map framedFull = JsonLd.frame(thingId, copy.data)
 
         Map searchCard2 = toSearchCard2(whelk, framedFull, links)
-        Map searchCard = toSearchCard(whelk, framedFull, links)
+//        Map searchCard = toSearchCard(whelk, framedFull, links)
 
         searchCard2['_links'] = links
         searchCard2['_outerEmbellishments'] = copy.getEmbellishments() - links
@@ -605,45 +604,45 @@ class ElasticSearch {
         }
     }
 
-    private static Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
-        boolean chipsify = false
-        boolean addSearchKey = true
-        boolean reduceKey = false
-        boolean searchCard = true
-        
-        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preserveLinks, searchCard)
-    }
-
-    private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
-        Map e = toSearchCard(whelk, thing, Collections.EMPTY_SET)
-        recordToChip(whelk, e)
-        filterLanguages(whelk, e)
-        return e
-    }
-
-    private static void recordToChip(Whelk whelk, Map thing) {
-        if (thing[JsonLd.GRAPH_KEY]) {
-            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0], [] as Set, true)
-        }
-    }
-
-    private static void filterLanguages(Whelk whelk, Map thing) {
-        DocumentUtil.traverse(thing, { value, path ->
-            if (path && path.last() in whelk.jsonld.langContainerAliasInverted) {
-                Map<String, String> langContainer = value
-                var keep = langContainer.findAll { langTag, str -> langTag in whelk.jsonld.locales }
-                
-                var transformed = langContainer.findAll { langTag, str -> langTag.contains('-t-') }
-                keep.putAll(transformed)
-                transformed.keySet().each { tLangTag ->
-                    var original = langContainer.findAll { langTag, str -> tLangTag.contains(langTag) }
-                    keep.putAll(original)
-                }
-                
-                return new DocumentUtil.Replace(keep)
-            }
-        })
-    }
+//    private static Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
+//        boolean chipsify = false
+//        boolean addSearchKey = true
+//        boolean reduceKey = false
+//        boolean searchCard = true
+//
+//        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preserveLinks, searchCard)
+//    }
+//
+//    private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
+//        Map e = toSearchCard(whelk, thing, Collections.EMPTY_SET)
+//        recordToChip(whelk, e)
+//        filterLanguages(whelk, e)
+//        return e
+//    }
+//
+//    private static void recordToChip(Whelk whelk, Map thing) {
+//        if (thing[JsonLd.GRAPH_KEY]) {
+//            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0], [] as Set, true)
+//        }
+//    }
+//
+//    private static void filterLanguages(Whelk whelk, Map thing) {
+//        DocumentUtil.traverse(thing, { value, path ->
+//            if (path && path.last() in whelk.jsonld.langContainerAliasInverted) {
+//                Map<String, String> langContainer = value
+//                var keep = langContainer.findAll { langTag, str -> langTag in whelk.jsonld.locales }
+//
+//                var transformed = langContainer.findAll { langTag, str -> langTag.contains('-t-') }
+//                keep.putAll(transformed)
+//                transformed.keySet().each { tLangTag ->
+//                    var original = langContainer.findAll { langTag, str -> tLangTag.contains(langTag) }
+//                    keep.putAll(original)
+//                }
+//
+//                return new DocumentUtil.Replace(keep)
+//            }
+//        })
+//    }
 
     private static setIdentifiers(Document doc) {
         DocumentUtil.findKey(doc.data, ["identifiedBy", "indirectlyIdentifiedBy"]) { value, path ->
