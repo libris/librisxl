@@ -360,9 +360,8 @@ class TypeNormalizer implements UsingJsonKeys {
     }
 
     /**
-     * - Clean up and enrich carrierType and mediaType
      * - Assign one of instance types PhysicalResource/DigitalResource
-     * - Clean up and enrich genreForm, carrierType and mediaType again. TODO: Can we do this just once?
+     * - Clean up and enrich genreForm, carrierType and mediaType again
      */
     boolean simplifyInstanceType(Map instance) {
         var changed = false
@@ -372,47 +371,45 @@ class TypeNormalizer implements UsingJsonKeys {
         // Only keep the most specific mediaTypes and carrierTypes
         List mediaTypes = mappings.reduceSymbols(asList(instance["mediaType"]))
         List carrierTypes = mappings.reduceSymbols(asList(instance["carrierType"]))
+        // Fetch any GF terms
+        List instanceGenreForms = asList(instance.get("genreForm"))
 
+        // FIXME: What do the comments below mean? Still relevant?
         // TODO: Remove *all* uses of itype here? See e.g. AbstractElectronic
-        // below, which should already have been computed, making this check
-        // obsolete. OTOH, the fixMarcLegacyInstanceType does this, which might be a
-        // step too far?
+        // below, which should already have been computed, making this check obsolete.
+        // OTOH, the fixMarcLegacyInstanceType does this, which might be a step too far?
 
         // Store information about the old instanceType
         // In the case of volume, it may also be inferred
         var isElectronic = itype == "Electronic"
+        var isVolume = mappings.matches(carrierTypes, "Volume") || looksLikeVolume(instance)
 
-        // ----- Section: set Simple instanceType -----
+
+        // ----- Section: Set new instanceType -----
         /**
          * The part right below applies the new simple instance types Digital/Physical
          */
         // If the resource is electronic and has at least on carrierType that contains "Online"
         if ((isElectronic && mappings.matches(carrierTypes, "Online"))) {
-            // Is the purpose of this to make sure that 1) there is minimal duplication between instanceType and carrierType,
-            // but that there is always a carrier type (even if this means duplication)?
+            // Apply new instance types DigitalResource and PhysicalResource
+            instance.put(TYPE, "DigitalResource")
+
+            // Add/clean up carrierTypes
             carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
             if (carrierTypes.size() == 0) {
                 carrierTypes << [(ID): KBRDA + 'OnlineResource']
             }
-
-            // Apply new instance types DigitalResource and PhysicalResource
-            instance.put(TYPE, "DigitalResource")
             changed = true
         } else {
             instance.put(TYPE, "PhysicalResource")
             changed = true
         }
 
-        // ----- Section: clean up GF and carrierType -----
 
-        // NOTE: We will put non-RDA "carriers" in carrierTypes...
-        List instanceGenreForms = asList(instance.get("genreForm"))
-
-        var isBraille = dropRedundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
+        // ----- Section: Clean up Tactile and Braille -----
         var isTactile = itype == "Tactile"
-        var isVolume = mappings.matches(carrierTypes, "Volume") || looksLikeVolume(instance)
+        var isBraille = dropRedundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
 
-        // Remove old Braille terms and replace them with KTG terms
         var toDrop = [MARC + "Braille", MARC + "TacMaterialType-b"] as Set
         var nonBrailleCarrierTypes = carrierTypes.findAll { !toDrop.contains(it.get(ID)) }
         if (nonBrailleCarrierTypes.size() < carrierTypes.size()) {
@@ -420,27 +417,19 @@ class TypeNormalizer implements UsingJsonKeys {
             carrierTypes = nonBrailleCarrierTypes
         }
 
-        // TODO: Add Volume and Braille as separate terms?
-        // Why no else? There are very few, if any, Tactile instances in Libris that are not Braille.
         if (isTactile && isBraille) {
+            carrierTypes << [(ID): KTG + 'Braille']
             if (isVolume) {
-                carrierTypes << [(ID): KTG + 'BrailleVolume']
-            } else {
-                carrierTypes << [(ID): KTG + 'BrailleForm']
+                carrierTypes << [(ID): KBRDA + 'Volume']
             }
             changed = true
         }
 
-        // NOTE: Replacing unlinked "E-böcker" with linked, tentative kbgf:EBook
-        if (instanceGenreForms.removeIf { it['prefLabel'] == 'E-böcker'}) {
-            carrierTypes << [(ID): KTG + 'EBook']
-          changed = true
-        }
+
+        // ----- Section: Clean up Electronic -----
 
         var isSoundRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/SoundStorageMedium')
         var isVideoRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/VideoStorageMedium')
-
-        // ----- Section: identify electronic and print -----
 
         // If an instance has a certain (old) type which implies physical electronic carrier
         // and carrierTypes corroborating this:
@@ -460,6 +449,7 @@ class TypeNormalizer implements UsingJsonKeys {
         // we can assume it id an electronic storage medium
         if (isElectronic && (instance.get(TYPE, '') == 'PhysicalResource')) {
             carrierTypes << [(ID): KTG + 'ElectronicStorageMedium']
+            changed = true
         }
 
         // Remove redundant MARC mediaTerms if the information is implied by computed category:
@@ -474,35 +464,45 @@ class TypeNormalizer implements UsingJsonKeys {
         if (isElectronic && dropRedundantString(instance, "marc:mediaTerm", ~/(?i)elektronisk (resurs|utgåva)/)) {
             changed = true
         }
+        if (instanceGenreForms.removeIf { it['prefLabel'] == 'E-böcker'}) {
+            carrierTypes << [(ID): KTG + 'EBook']
+            changed = true
+        }
 
-        // Start wot
+
+        // ----- Section: Clean up Print and other non-electronic -----
+
         var probablyPrint = assumedToBePrint(instance)
-        // TODO: instead, for Monograph, fold overlapping categories into common specific category...
-        // e.g. [Print, Volume] => PrintedVolume
-        // TODO: Undo the above TODD and instead add Print, Volume as separate terms?
 
-        // If it is NOT electronic
         if (!isElectronic) {
 
             // If it is or looks like a volume
             if (isVolume) {
                 carrierTypes << [(ID): KBRDA + 'Volume']
-            }
-
-            // If type is Print, add ktg Print
-            if (itype == "Print") {
-                carrierTypes << [(ID): KTG + 'Print']
-                // If it is presumably a volume, add RDA Volume
-                if (isVolume) {
-                    carrierTypes << [(ID): KBRDA + 'Volume']
-                }
                 changed = true
-
-            } else if (itype == "Instance") {
-                // If it is presumably print, add print
-                // If it is presumably a volume, add RDA Volume
-                // Else, add Sheet
             }
+
+            // If its type is Print, or seems like it should be Print
+            if (itype == "Print" || probablyPrint) {
+                carrierTypes << [(ID): KTG + 'Print']
+                changed = true
+            }
+
+            // If its type is Instance (very few of those left in Libris)
+            if (itype == "Instance") {
+                // ALREADY DONE If it is presumably print, add print
+                // ALREADY DONE If it is or looks like a volume, add RDA Volume
+                // If it is not a volume, add Sheet
+                if (!isVolume && mappings.matches(carrierTypes, "Sheet")) {
+                    carrierTypes << [(ID): KBRDA + 'Sheet']
+                    // Replace local MARC term with linked SAOGF
+                    if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
+                        carrierTypes << [(ID): SAOGF + 'Poster']
+                    }
+                    changed = true
+                }
+            }
+
         }
 
 //        if (!isElectronic) {
