@@ -56,13 +56,17 @@ class TypeMappings implements UsingJsonKeys {
 
         // TODO Adjust this logic to always add carrier types as separate terms?
         assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume'])
-        assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Volume'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume'])
-        assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume'])
-        assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Sheet'], [(ID): 'https://id.kb.se/term/ktg/PrintedSheet'])
+
+        // Commented out references to composite ktg instance categories
+        // assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Volume'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume'])
+        // assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume'])
+        // assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Sheet'], [(ID): 'https://id.kb.se/term/ktg/PrintedSheet'])
 
         assert reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume']]) == [[(ID): 'https://id.kb.se/term/rda/Volume']]
-        assert reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]) == [[(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]
-        assert reduceSymbols([['@id':'https://id.kb.se/marc/Print'], ['@id':'https://id.kb.se/term/ktg/PrintedSheet'], ['@id':'https://id.kb.se/term/rda/Unmediated'], ['@id':'https://id.kb.se/term/rda/Sheet']]) == [['@id':'https://id.kb.se/term/ktg/PrintedSheet']]
+
+        // Commented out references to composite ktg instance categories
+        // assert reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]) == [[(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]
+        // assert reduceSymbols([['@id':'https://id.kb.se/marc/Print'], ['@id':'https://id.kb.se/term/ktg/PrintedSheet'], ['@id':'https://id.kb.se/term/rda/Unmediated'], ['@id':'https://id.kb.se/term/rda/Sheet']]) == [['@id':'https://id.kb.se/term/ktg/PrintedSheet']]
 
         assert isImpliedBy([(ID):'https://id.kb.se/term/rda/StillImage'], [(ID):'https://id.kb.se/term/saogf/Bilder'])
         assert !isImpliedBy([(ID):'https://id.kb.se/term/saogf/Bilder'], [(ID):'https://id.kb.se/term/rda/StillImage'])
@@ -477,47 +481,71 @@ class TypeNormalizer implements UsingJsonKeys {
         // e.g. [Print, Volume] => PrintedVolume
         // TODO: Undo the above TODD and instead add Print, Volume as separate terms?
 
+        // If it is NOT electronic
         if (!isElectronic) {
 
-            if (itype == "Print") {
-                if (isVolume) {
-                    carrierTypes << [(ID): KTG + 'PrintedVolume']
-                } else {
-                    carrierTypes << [(ID): KTG + 'Print']
-                }
-                changed = true
-            } else if (itype == "Instance") {
-                if (isVolume) {
-                    if (probablyPrint) {
-                        carrierTypes << [(ID): KTG + 'PrintedVolume']
-                        changed = true
-                        // TODO: if marc:RegularPrintReproduction, add production a Reproduction?
-                    } else {
-                        carrierTypes << [(ID): KBRDA + 'Volume']
-                        changed = true
-                    }
-                } else {
-                    if (probablyPrint) {
-                        // TODO Add Print + Sheet as separate terms?
-                        if (mappings.matches(carrierTypes, "Sheet")) {
-                            carrierTypes << [(ID): KTG + 'PrintedSheet']
-                        } else {
-                            carrierTypes << [(ID): KTG + 'Print'] // TODO: may be PartOfPrint ?
-                        }
-                        changed = true
-                    } else {
-                        if (mappings.matches(carrierTypes, "Sheet")) {
-                            carrierTypes << [(ID): KBRDA + 'Sheet']
-                            if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
-                                carrierTypes << [(ID): SAOGF + 'Poster']
-                            }
-                            changed = true
-                        }
-                    }
-                }
+            // If it is or looks like a volume
+            if (isVolume) {
+                carrierTypes << [(ID): KBRDA + 'Volume']
             }
 
+            // If type is Print, add ktg Print
+            if (itype == "Print") {
+                carrierTypes << [(ID): KTG + 'Print']
+                // If it is presumably a volume, add RDA Volume
+                if (isVolume) {
+                    carrierTypes << [(ID): KBRDA + 'Volume']
+                }
+                changed = true
+
+            } else if (itype == "Instance") {
+                // If it is presumably print, add print
+                // If it is presumably a volume, add RDA Volume
+                // Else, add Sheet
+            }
         }
+
+//        if (!isElectronic) {
+//
+//            if (itype == "Print") {
+//                if (isVolume) {
+//                    carrierTypes << [(ID): KTG + 'PrintedVolume']
+//                } else {
+//                    carrierTypes << [(ID): KTG + 'Print']
+//                }
+//                changed = true
+//            } else if (itype == "Instance") {
+//                if (isVolume) {
+//                    if (probablyPrint) {
+//                        carrierTypes << [(ID): KTG + 'PrintedVolume']
+//                        changed = true
+//                        // TODO: if marc:RegularPrintReproduction, add production a Reproduction?
+//                    } else {
+//                        carrierTypes << [(ID): KBRDA + 'Volume']
+//                        changed = true
+//                    }
+//                } else {
+//                    if (probablyPrint) {
+//                        // TODO Add Print + Sheet as separate terms?
+//                        if (mappings.matches(carrierTypes, "Sheet")) {
+//                            carrierTypes << [(ID): KTG + 'PrintedSheet']
+//                        } else {
+//                            carrierTypes << [(ID): KTG + 'Print'] // TODO: may be PartOfPrint ?
+//                        }
+//                        changed = true
+//                    } else {
+//                        if (mappings.matches(carrierTypes, "Sheet")) {
+//                            carrierTypes << [(ID): KBRDA + 'Sheet']
+//                            if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
+//                                carrierTypes << [(ID): SAOGF + 'Poster']
+//                            }
+//                            changed = true
+//                        }
+//                    }
+//                }
+//            }
+//
+//        }
 
         if (addCategory) {
             List<Map> categories = []
