@@ -384,6 +384,20 @@ class TypeNormalizer implements UsingJsonKeys {
         var isElectronic = itype == "Electronic"
         var isVolume = mappings.matches(carrierTypes, "Volume") || looksLikeVolume(instance)
 
+        // If an instance has a certain (old) type which implies physical electronic carrier
+        // and carrierTypes corroborating this:
+        if (mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/AbstractElectronic')) {
+            isElectronic = true // assume it is electronic
+        }
+
+        // FIXME When would the below be true?
+        // If old instance type is "instance" and there is a carrierType that contains "Electronic"
+        // Assume that it is electronic
+        if (instance.get(TYPE) == "Instance") {
+            if ((carrierTypes.size() == 1 && mappings.matches(carrierTypes, "Electronic"))) {
+                isElectronic = true
+            }
+        }
 
         // ----- Section: Set new instanceType -----
         /**
@@ -394,12 +408,15 @@ class TypeNormalizer implements UsingJsonKeys {
             // Apply new instance types DigitalResource and PhysicalResource
             instance.put(TYPE, "DigitalResource")
 
+            // FIXME What is the desired outcome below? Removing RDA "OnlineResource" if there are other carrierTypes?
+            // FIXME Find all CarrierTypes expect "Online". If there are none, add "Online".
+            // FIXME Commented out since we are being careful about removing RDA terms.
             // Add/clean up carrierTypes
-            carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
-            if (carrierTypes.size() == 0) {
-                carrierTypes << [(ID): KBRDA + 'OnlineResource']
-            }
-            changed = true
+            //carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
+            //if (carrierTypes.size() == 0) {
+            //    carrierTypes << [(ID): KBRDA + 'OnlineResource']
+            //}
+            //changed = true
         } else {
             instance.put(TYPE, "PhysicalResource")
             changed = true
@@ -431,19 +448,6 @@ class TypeNormalizer implements UsingJsonKeys {
         var isSoundRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/SoundStorageMedium')
         var isVideoRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/VideoStorageMedium')
 
-        // If an instance has a certain (old) type which implies physical electronic carrier
-        // and carrierTypes corroborating this:
-        if (mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/AbstractElectronic')) {
-            isElectronic = true // assume it is electronic
-        }
-
-        // If old instance type is "instance" and there is a carrierType that contains "Electronic"
-        // Assume that it is electronic
-        if (instance.get(TYPE) == "Instance") {
-            if ((carrierTypes.size() == 1 && mappings.matches(carrierTypes, "Electronic"))) {
-                isElectronic = true
-            }
-        }
 
         // If something has old itype Electronic and new itype PhysicalResource,
         // we can assume it id an electronic storage medium
