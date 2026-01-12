@@ -13,8 +13,19 @@
                 "bm25-ignore-length": {
                     "type": "BM25",
                     "b": 0
+                },
+                "bm25-prefer-short-quick-saturation": {
+                    "type": "BM25",
+                    "b": 0.9,
+                    "k1": 0.1
+                },
+                "bm25-only-idf-ignore-tf": {
+                    "type": "BM25",
+                    "b": 0,
+                    "k1": 0
                 }
-            }
+            },
+            "default_pipeline": "extract_4_digits_pipeline"
         },
         "index.query.default_field": "_all",
         "analysis": {
@@ -196,18 +207,6 @@
                     }
                 }
             },
-            "identifiedBy": {
-                "type": "nested",
-                "include_in_parent": true,
-                "properties": {
-                    "@type": {"type": "keyword"},
-                    "value": {
-                        "type": "text",
-                        "analyzer": "isbn_analyzer",
-                        "copy_to": "_all"
-                    }
-                }
-            },
             "hasTitle": {
                 "type": "nested",
                 "include_in_parent": true,
@@ -368,20 +367,64 @@
                 }
             },
             {
+                "4_digits_keyword_template": {
+                    "match": "*_4_digits_keyword",
+                    "mapping": {
+                        "type": "keyword"
+                    }
+                }
+            },
+            {
+                "4_digits_short_template": {
+                    "match": "*_4_digits_short",
+                    "mapping": {
+                        "type": "short"
+                    }
+                }
+            },
+            {
                 "year_template": {
                     "match": ["year", "startYear", "endYear"],
                     "mapping": {
                         "fields": {
                             "keyword": {
-                                "index": true,
                                 "type": "keyword"
                             }
                         },
-                        "analyzer": "numeric_extractor",
-                        "index": true,
+                        "analyzer": "standard",
                         "type": "text",
-                        "fielddata": true,
                         "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "contribution_template": {
+                    "path_match": ["contribution", "instanceOf.contribution", "@reverse.instanceOf.contribution"],
+                    "mapping": {
+                        "type": "nested",
+                        "include_in_parent": true
+                    }
+                }
+            },
+            {
+                "identifiedBy_template": {
+                    "path_match": ["identifiedBy", "@reverse.instanceOf.identifiedBy"],
+                    "mapping": {
+                        "type": "nested",
+                        "include_in_parent": true,
+                        "properties": {
+                            "@type": {"type": "keyword"},
+                            "value": {
+                                "type": "text",
+                                "fields": {
+                                    "keyword": {
+                                        "type": "keyword"
+                                    }
+                                },
+                                "analyzer": "isbn_analyzer",
+                                "copy_to": "_all"
+                            }
+                        }
                     }
                 }
             },
@@ -420,6 +463,46 @@
                     },
                     "match": "_str",
                     "match_mapping_type": "string"
+                }
+            },
+            {
+                "str_template": {
+                    "match": ["_topStr"],
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard",
+                                "similarity": "bm25-prefer-short-quick-saturation"
+                            },
+                            "length": {
+                                "type":     "token_count",
+                                "analyzer": "standard"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "similarity": "bm25-prefer-short-quick-saturation",
+                        "type": "text",
+                        "index": true
+                    }
+                }
+            },
+            {
+                "str-ignore-length_template": {
+                    "match": ["_chipStr", "_cardStr", "_searchCardStr"],
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard",
+                                "similarity": "bm25-only-idf-ignore-tf"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "similarity": "bm25-only-idf-ignore-tf",
+                        "type": "text",
+                        "index": true
+                    }
                 }
             },
             {

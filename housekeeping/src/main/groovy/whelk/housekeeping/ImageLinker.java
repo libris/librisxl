@@ -143,7 +143,7 @@ public class ImageLinker extends HouseKeeper {
                   data#>'{@graph,0,inDataset}' @> '[{"@id": "https://id.kb.se/dataset/images"}]'::jsonb AND
                   data#>>'{@graph,1,@type}' = 'ImageObject' AND
                   deleted = false AND
-                  created > ?;
+                  modified > ?;
                 """.stripIndent();
 
         try (Connection connection = whelk.getStorage().getOuterConnection();
@@ -223,7 +223,7 @@ public class ImageLinker extends HouseKeeper {
 
         try(PostgreSQLComponent.ConnectionContext ignored = new PostgreSQLComponent.ConnectionContext(whelk.getStorage().connectionContextTL)) {
             try (PreparedStatement statement = whelk.getStorage().getMyConnection().prepareStatement(getByISBNsql)) {
-                statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
+                statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": " + mapper.writeValueAsString(isbn) + "}]", java.sql.Types.OTHER);
                 ResultSet resultSet = statement.executeQuery();
                 while (resultSet.next()) {
                     result.add( resultSet.getString("uri") );
@@ -259,7 +259,7 @@ public class ImageLinker extends HouseKeeper {
 
         try(PostgreSQLComponent.ConnectionContext ignored = new PostgreSQLComponent.ConnectionContext(whelk.getStorage().connectionContextTL)) {
             try (PreparedStatement statement = whelk.getStorage().getMyConnection().prepareStatement(getByISBNsql)) {
-                statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": \"" + isbn + "\"}]", java.sql.Types.OTHER);
+                statement.setObject(1, "[{\"@type\": \"ISBN\", \"value\": " + mapper.writeValueAsString(isbn) + "}]", java.sql.Types.OTHER);
                 ResultSet resultSet = statement.executeQuery();
                 while (resultSet.next()) {
                     result.add( resultSet.getString("uri") );

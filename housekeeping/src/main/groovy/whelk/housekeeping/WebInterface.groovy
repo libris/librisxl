@@ -1,9 +1,8 @@
 package whelk.housekeeping
 
 import whelk.Whelk
-import whelk.util.WhelkFactory;
+import whelk.util.http.WhelkHttpServlet;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import groovy.transform.CompileStatic
@@ -35,13 +34,12 @@ public abstract class HouseKeeper {
 
 @CompileStatic
 @Log
-public class WebInterface extends HttpServlet {
+public class WebInterface extends WhelkHttpServlet {
     private Map<String, HouseKeeper> houseKeepersById = [:]
     Scheduler cronScheduler = new Scheduler()
 
-    public void init() {
-        Whelk whelk = WhelkFactory.getSingletonWhelk();
-
+    @Override
+    void init(Whelk whelk) {
         List<HouseKeeper> houseKeepers = [
                 // Automatic generation is disabled for now, may need design changes approved before activation.
                 //new NotificationGenerator(whelk),
@@ -49,7 +47,7 @@ public class WebInterface extends HttpServlet {
 
                 new InquirySender(whelk),
                 new NotificationCleaner(whelk),
-                //new ImageLinker(whelk), // Temporarily disabled
+                new ImageLinker(whelk),
                 new ExportSizePredictor(whelk),
                 new ScriptRunner(whelk, "wikidatalinking.groovy", "0 19 22 2,4,6,8,10,12 *"),
                 new ScriptRunner(whelk, "lxl-3599-instance-types-from-mediaterm.groovy", "0 20 1 * *"),

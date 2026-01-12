@@ -30,14 +30,6 @@ class ImporterMain {
         return Whelk.createLoadedSearchWhelk(props)
     }
 
-    @Command(args='FNAME')
-    void defs(String fname) {
-        def whelk = new Whelk(new PostgreSQLComponent(props))
-        DefinitionsImporter defsImporter = new DefinitionsImporter(whelk)
-        defsImporter.definitionsFilename = fname
-        defsImporter.run("definitions")
-    }
-
     @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
              flags='--skip-index --replace-main-ids --force-delete --skip-dependers')
     void dataset(Map flags, String sourceUrl, String datasetUri, String datasetDescPath=null) {
@@ -74,7 +66,10 @@ class ImporterMain {
 
     @Command(args='[COLLECTION] [-t NUMBEROFTHREADS]')
     void reindex(String... args) {
-        def cli = new CliBuilder(usage: 'reindex [collection] -[ht]')
+        def cli = new CliBuilder(
+                usage: 'reindex [collection] -[ht]',
+                header: '\n[collection] = auth|bib|hold|none|@type:<type>\n'
+        )
         // Create the list of options.
         cli.with {
             h longOpt: 'help', 'Show usage information'

@@ -19,4 +19,42 @@ class QueryUtilSpec extends Specification {
         "å/äö"                      | "%C3%A5/%C3%A4%C3%B6"
         "%C3%A5/%C3%A4%C3%B6"       | "%C3%A5/%C3%A4%C3%B6"
     }
+
+    def "isSimple"() {
+        expect:
+        QueryUtil.isSimple(query) == result
+
+        where:
+        query       | result
+        "Hästar"    | true
+        "Häst*"     | true
+        "H*star"    | false
+        "*star"     | false
+        "Häst?"     | true // don't treat ? as wildcard when last char in word. (e.g. pasted titles)
+        "Häst? abc" | true // don't treat ? as wildcard when last char in word. (e.g. pasted titles)
+        "Häst? Ko?" | true // don't treat ? as wildcard when last char in word. (e.g. pasted titles)
+        "Häst\\?"   | false
+        "H?star"    | false
+        "H?star?"   | false
+        "H*star?"   | false
+        "?ästar"    | false
+        'Это дом'   | true
+        'Это д?м'   | false
+        'վիրված'    | true
+        'վիրվ?ած'   | false
+    }
+
+    def "escape"() {
+        expect:
+        QueryUtil.escapeNonSimpleQueryString(query) == result
+
+        where:
+        query          | result
+        "H*star"       | "H*star"
+        "Häst\\?"      | "Häst?"
+        "*star"        | "*star"
+        "Häs^tak"      | "Häs\\^tak"
+        "hyp-hen -not" | "hyp\\-hen -not"
+        "-not"         | "-not"
+    }
 }

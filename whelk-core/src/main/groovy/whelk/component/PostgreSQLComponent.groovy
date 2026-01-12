@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.metrics.prometheus.PrometheusHistogramMetricsTrackerFactory
-import groovy.json.StringEscapeUtils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import io.prometheus.client.Counter
@@ -41,14 +40,10 @@ import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicLong
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 import static groovy.transform.TypeCheckingMode.SKIP
 import static java.sql.Types.OTHER
-import static whelk.JsonLd.Owl.SAME_AS
 import static whelk.util.Jackson.mapper
-import static whelk.exception.LinkValidationException.OutgoingLinksException
 
 /**
  *  It is important to not grab more than one connection per request/thread to avoid connection related deadlocks.
@@ -204,13 +199,20 @@ class PostgreSQLComponent {
             ORDER BY GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) ASC
             """.stripIndent()
     
-    private static final String LOAD_ALL_DOCUMENTS =
-            "SELECT id, data, created, modified, deleted FROM lddb WHERE modified >= ? AND modified <= ?"
+    private static final String LOAD_ALL_DOCUMENTS = """
+            SELECT id, data, created, modified, deleted 
+            FROM lddb 
+            WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) >= ? 
+              AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ?
+            """.stripIndent()
 
     private static final String LOAD_ALL_DOCUMENTS_BY_COLLECTION = """
             SELECT id, data, created, modified, deleted
             FROM lddb 
-            WHERE modified >= ? AND modified <= ? AND collection = ? AND deleted = false
+            WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) >= ? 
+              AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ? 
+              AND collection = ? 
+              AND deleted = false
             """.stripIndent()
 
     private static final String STATUS_OF_DOCUMENT = """
@@ -422,8 +424,8 @@ class PostgreSQLComponent {
     private static final String LOAD_ALL_DOCUMENTS_BY_DATASET = """
             SELECT id, data, created, modified, deleted
             FROM lddb
-            WHERE modified >= ?
-            AND modified <= ?
+            WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) >= ?
+            AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ?
             AND data#>'{@graph,0,inDataset}' @> ?::jsonb
             AND deleted = false
             """.stripIndent()
@@ -457,12 +459,6 @@ class PostgreSQLComponent {
 
     private static final String DELETE_USER_DATA =
             "DELETE FROM lddb__user_data WHERE id = ?"
-
-    private static final String GET_IRI_IS_DELETED = """
-            SELECT lddb.deleted
-            FROM lddb__identifiers
-            JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ?
-            """.stripIndent()
 
     private static final String GET_ALL_LIBRARIES_HOLDING_ID = """
             SELECT l.data#>>'{@graph,1,heldBy,@id}' FROM lddb__dependencies d
@@ -726,7 +722,7 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted, boolean handleExceptions) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         return withDbConnection {
@@ -776,8 +772,6 @@ class PostgreSQLComponent {
                         throw new ConflictingHoldException("Already exists a holding record for ${heldBy} and bib: $holdingFor")
                 }
 
-                assertNoLinksToDeleted(doc.getExternalRefs())
-
                 //FIXME: throw exception on null changedBy
                 if (changedBy != null) {
                     String creator = getDescriptionChangerId(changedBy)
@@ -810,6 +804,9 @@ class PostgreSQLComponent {
                 log.debug("Saved document ${doc.getShortId()} with timestamps ${doc.created} / ${doc.modified}")
                 return true
             } catch (Exception e) {
+                if (!handleExceptions) {
+                    throw e;
+                }
                 log.debug("Failed to save document: ${e.message}. Rolling back.")
                 connection.rollback()
                 return false
@@ -995,11 +992,6 @@ class PostgreSQLComponent {
             }
             
             boolean deleted = doc.getDeleted()
-
-            if (!deleted) {
-                var addedLinks = doc.getExternalRefs() - preUpdateDoc.getExternalRefs()
-                assertNoLinksToDeleted(addedLinks)
-            }
 
             if (collection == "hold") {
                 checkLinkedShelfMarkOwnership(doc, connection)
@@ -2081,26 +2073,6 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean isDeleted(String iri) {
-        withDbConnection {
-            PreparedStatement preparedStatement = null
-            ResultSet rs = null
-            try {
-                preparedStatement = getMyConnection().prepareStatement(GET_IRI_IS_DELETED)
-                preparedStatement.setString(1, iri)
-                rs = preparedStatement.executeQuery()
-
-                if (rs.next())
-                    return rs.getBoolean(1) // deleted
-                // not in lddb
-                return false
-            }
-            finally {
-                close(rs, preparedStatement)
-            }
-        }
-    }
-
     String getThingMainIriBySystemId(String id) {
         return withDbConnection {
             Connection connection = getMyConnection()
@@ -2377,12 +2349,11 @@ class PostgreSQLComponent {
                 preparedStatement = connection.prepareStatement(query)
 
                 if (idType != null) {
-                    String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                    preparedStatement.setObject(1, "[{\"@type\": \"" + idType + "\", \"value\": \"" + escapedId + "\"}]", OTHER)
+                    var json = "[{\"@type\": " + mapper.writeValueAsString(idType) + ", \"value\": " + mapper.writeValueAsString(idValue) + "}]"
+                    preparedStatement.setObject(1, json, OTHER)
                 }
                 else {
-                    String escapedId = StringEscapeUtils.escapeJavaScript(idValue)
-                    preparedStatement.setObject(1, "[{\"value\": \"" + escapedId + "\"}]", OTHER)
+                    preparedStatement.setObject(1, "[{\"value\": " + mapper.writeValueAsString(idValue) + "}]", OTHER)
                 }
 
                 rs = preparedStatement.executeQuery()
@@ -2603,8 +2574,8 @@ class PostgreSQLComponent {
     }
 
     private void normalizeDocumentForStorage(Document doc, Connection connection) {
-        // Synthetic property, should never be stored
-        DocumentUtil.findKey(doc.data, JsonLd.REVERSE_KEY) { value, path ->
+        // Synthetic properties, should never be stored
+        DocumentUtil.findKey(doc.data, [JsonLd.REVERSE_KEY, JsonLd.Platform.COMPUTED_LABEL] ) { value, path ->
             new DocumentUtil.Remove()
         }
 
@@ -2951,15 +2922,6 @@ class PostgreSQLComponent {
                     statement.setString(2, message)
                     statement.execute()
                 }
-            }
-        }
-    }
-
-    private void assertNoLinksToDeleted(Set<Link> links) {
-        links.each {link ->
-            // sameAs is allowed because when merging two entities, the id of the deleted entity is added to sameAs of the remaining entity
-            if (link.property() != SAME_AS && isDeleted(link.iri)) {
-                throw new OutgoingLinksException("Document contains link to deleted resource $link.iri at path $link.relation")
             }
         }
     }

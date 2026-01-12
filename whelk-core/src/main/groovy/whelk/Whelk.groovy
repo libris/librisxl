@@ -12,6 +12,7 @@ import whelk.component.PostgreSQLComponent.UpdateAgent
 import whelk.component.SparqlQueryClient
 import whelk.component.SparqlUpdater
 import whelk.converter.marc.MarcFrameConverter
+import whelk.exception.LinkValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.filter.LanguageLinker
 import whelk.exception.WhelkException
@@ -20,6 +21,7 @@ import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
 import whelk.search.ElasticFind
+import whelk.util.FresnelUtil
 import whelk.util.PropertyLoader
 import whelk.util.Romanizer
 
@@ -27,7 +29,6 @@ import java.time.Instant
 import java.time.ZoneId
 
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
-import static whelk.exception.LinkValidationException.IncomingLinksException
 
 /**
  * The Whelk is the root component of the XL system.
@@ -56,8 +57,9 @@ class Whelk {
     Map displayData
     Map vocabData
     Map contextData
-    JsonLd jsonld
+    public JsonLd jsonld
 
+    FresnelUtil fresnelUtil
     MarcFrameConverter marcFrameConverter
     ResourceCache resourceCache
     ElasticFind elasticFind
@@ -220,6 +222,14 @@ class Whelk {
         return this.storage.getDocumentByIri(uri)?.data
     }
 
+    PostgreSQLComponent getStorage() {
+        return storage
+    }
+
+    JsonLd getJsonld() {
+        return jsonld
+    }
+
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
@@ -227,6 +237,7 @@ class Whelk {
             elasticFind = new ElasticFind(new ESQuery(this))
             initDocumentNormalizers(elasticFind)
         }
+        this.fresnelUtil = new FresnelUtil(jsonld)
     }
 
     // FIXME: de-KBV/Libris-ify: some of these are KBV specific, is that a problem?
@@ -464,7 +475,7 @@ class Whelk {
     /**
      * NEVER use this to _update_ a document. Use storeAtomicUpdate() instead. Using this for new documents is fine.
      */
-    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted) {
+    boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean handleExceptions = true) {
         normalize(document)
 
         boolean detectCollisionsOnTypedIDs = false
@@ -474,7 +485,7 @@ class Whelk {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted)
+        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted, handleExceptions)
         if (success) {
             indexAsyncOrSync {
                 elastic.index(document, this)
@@ -574,10 +585,16 @@ class Whelk {
     }
 
     private void assertNoDependers(Document doc) {
-        boolean isDependedUpon = storage.getIncomingLinkCountByIdAndRelation(doc.getShortId())
-                .any { relation, _ -> !JsonLd.isWeak(relation) }
-        if (isDependedUpon) {
-            throw new IncomingLinksException("Record is referenced by other records")
+        Set<String> dependingRelations = storage.getIncomingLinkCountByIdAndRelation(doc.getShortId()).keySet()
+                .findAll { !JsonLd.isWeak(it) }
+        if (!dependingRelations.isEmpty()) {
+            Set<String> allDependers = dependingRelations.collect { storage.getDependersOfType(doc.getShortId(), it) }
+                    .flatten()
+                    .toSet() as Set<String>
+            String example = allDependers.first()
+            int numDependers = allDependers.size()
+            String msg = "Record is referenced by $example${numDependers > 1 ? " and ${numDependers - 1} other records" : "" }."
+            throw new LinkValidationException(msg)
         }
     }
 
@@ -634,7 +651,10 @@ class Whelk {
     void normalize(Document doc) {
         try {
             doc.normalizeUnicode()
-            doc.trimStrings()
+
+            if (!doc.getThingIdentifiers().contains(vocabDisplayUri)) { // don't trim fmt contentBefore / contentAfter
+                doc.trimStrings()
+            }
 
             // TODO: just ensure that normalizers don't trip on these?
             if (doc.data.containsKey(JsonLd.CONTEXT_KEY)) {

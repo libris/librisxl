@@ -1,6 +1,7 @@
 package whelk.util
 
 import groovy.util.logging.Log4j2
+import groovy.xml.XmlSlurper
 import org.postgresql.util.PSQLException
 import se.kb.libris.export.ExportProfile
 import se.kb.libris.util.marc.Field
@@ -72,6 +73,12 @@ class MarcExport {
         while (li.hasNext())
             if (((Field) li.next()).getTag() == "003")
                 li.remove()
+
+        try {
+            profile.maybeAdd956Images(bibRecord, rootDocument);
+        } catch (Exception e) {
+            log.warn("Failed to insert images for: " + rootDocument.getShortId(), e)
+        }
 
         try {
             return profile.mergeRecord(bibRecord, holdings, auths)

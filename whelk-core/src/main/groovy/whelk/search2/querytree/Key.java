@@ -2,22 +2,24 @@ package whelk.search2.querytree;
 
 import static whelk.JsonLd.TYPE_KEY;
 
-public sealed interface Key extends Subpath permits Key.RecognizedKey, Key.UnrecognizedKey, Key.AmbiguousKey {
+public sealed interface Key extends Subpath permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey {
     @Override
-    default Key key() { return this; }
+    default String queryForm() {
+        return value();
+    }
 
     @Override
     default boolean isType() {
         return TYPE_KEY.equals(toString());
     }
 
-    @Override
-    boolean isValid();
+    String value();
 
-    @Override
-    String toString();
+    record RecognizedKey(String value, int offset) implements Key, Token {
+        public RecognizedKey(String value) {
+            this(value, -1);
+        }
 
-    record RecognizedKey(String raw) implements Key {
         @Override
         public boolean isValid() {
             return true;
@@ -25,10 +27,15 @@ public sealed interface Key extends Subpath permits Key.RecognizedKey, Key.Unrec
 
         @Override
         public String toString() {
-            return raw;
+            return value;
         }
     }
-    record UnrecognizedKey(String raw) implements Key {
+
+    record UnrecognizedKey(String value, int offset) implements Key, Token {
+        public UnrecognizedKey(String value) {
+            this(value, -1);
+        }
+
         @Override
         public boolean isValid() {
             return false;
@@ -36,10 +43,15 @@ public sealed interface Key extends Subpath permits Key.RecognizedKey, Key.Unrec
 
         @Override
         public String toString() {
-            return raw;
+            return value;
         }
     }
-    record AmbiguousKey(String raw) implements Key {
+
+    record AmbiguousKey(String value, int offset) implements Key, Token {
+        public AmbiguousKey(String value) {
+            this(value, -1);
+        }
+
         @Override
         public boolean isValid() {
             return false;
@@ -47,7 +59,7 @@ public sealed interface Key extends Subpath permits Key.RecognizedKey, Key.Unrec
 
         @Override
         public String toString() {
-            return raw;
+            return value;
         }
     }
 }

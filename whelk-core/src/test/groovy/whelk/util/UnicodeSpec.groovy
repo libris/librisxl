@@ -126,6 +126,20 @@ class UnicodeSpec extends Specification {
         Optional.of('Kana') | 'デスノート'
         Optional.of('Hira') | 'とんとんとんと'
     }
+
+    def "rtl"() {
+        expect:
+        Unicode.guessScript(string).map(Unicode::isRtl).orElse(false) == rtl
+        where:
+        string                          | rtl
+        ''                              | false
+        '  '                            | false
+        'Это дом'                       | false
+        'dom'                           | false
+        'վիրված'                        | false
+        'می خوانم و غرق در کویر می شوم' | true
+        'קונסט און קינסטלער'            | true
+    }
         
     def "u"() {
         given:
@@ -190,5 +204,26 @@ class UnicodeSpec extends Specification {
         '124356' | '123456'  || 1
         '143256' | '123456'  || 2
         'abc'    | '1234567' || 7
+    }
+
+    def "looksLikeIsbn"() {
+        expect:
+        Unicode.looksLikeIsbn(s) == result
+
+        where:
+        s                   | result
+        '978-917-8034-239'  | true
+        '917-8034-239'      | true
+        '0-8044-2957-X'     | true
+        '080442957X'        | true
+        '0-8044-2957-4'     | true  // bad checksum still looks like ISBN
+        '979-917-8034-239'  | true  // Newer ISBN or "music land"
+        '9789177483922'     | true
+        '978--917-8034-239' | false
+        '980-917-8034-239'  | false  // Not book or music land
+        '978917748392X'     | false  // X is not used as check digit in ISBN-13
+        '978917748392'      | false
+        '978-917-8034-23-'  | false
+        '978-917-8034-23-'  | false
     }
 }

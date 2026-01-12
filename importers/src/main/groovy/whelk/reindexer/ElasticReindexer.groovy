@@ -2,15 +2,17 @@ package whelk.reindexer
 
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
+import whelk.JsonLd
 import whelk.Whelk
 import whelk.util.BlockingThreadPool
+import whelk.util.Unicode
 
 @Log
 class ElasticReindexer {
-
     static final int BATCH_SIZE = 300
     static final int MAX_RETRIES = 5
-    static final int RETRY_WAIT_MS = 3000
+    static final int INITIAL_RETRY_WAIT_MS = 3000
+    static final int MAX_RETRY_WAIT_MS = 60000
 
     Whelk whelk
 
@@ -73,9 +75,17 @@ class ElasticReindexer {
             log.info("Collection(s) to be indexed: ${collections}")
             threadPool = BlockingThreadPool.simplePool(numberOfThreads)
             collections.each { collection ->
-                log.info("Indexing collection ${collection}")
                 List<Document> documents = []
-                for (document in whelk.storage.loadAll(collection)) {
+                Iterable<Document> iterable;
+                if (collection.startsWith(JsonLd.TYPE_KEY+":")) {
+                    var type = Unicode.stripPrefix(collection, JsonLd.TYPE_KEY+":")
+                    iterable = whelk.loadAllByType(type)
+                    log.info("Indexing type ${type}")
+                } else {
+                    iterable = whelk.storage.loadAll(collection)
+                    log.info("Indexing collection ${collection}")
+                }
+                for (document in iterable) {
                     if ( ! document.getDeleted() ) {
                         documents.add(document)
                         counter++
@@ -106,12 +116,14 @@ class ElasticReindexer {
 
     private void bulkIndexWithRetries(List<Document> docs, Whelk whelk) {
         int retriesLeft = MAX_RETRIES
+        int retryCount = 0
 
         Exception error
         while(error = tryBulkIndex(docs, whelk)) {
             if (retriesLeft-- > 0) {
-                log.warn("Failed to index batch: [${error}], retrying after ${RETRY_WAIT_MS} ms")
-                sleep()
+                int waitMs = calculateBackoffMs(retryCount++)
+                log.warn("Failed to index batch: [${error}], retrying after ${waitMs} ms")
+                sleep(waitMs)
             } else {
                 log.warn("Failed to index batch: [${error}], max retries exceeded")
                 throw error
@@ -129,9 +141,16 @@ class ElasticReindexer {
         }
     }
 
-    private void sleep() {
+    private int calculateBackoffMs(int retryCount) {
+        int backoffMs = (int) (Math.pow(2, retryCount) * INITIAL_RETRY_WAIT_MS)
+        int cappedBackoffMs = Math.min(backoffMs, MAX_RETRY_WAIT_MS)
+        int jitter = (int) (Math.random() * cappedBackoffMs * 0.2)
+        return cappedBackoffMs + jitter
+    }
+
+    private void sleep(int ms) {
         try {
-            Thread.sleep(RETRY_WAIT_MS)
+            Thread.sleep(ms)
         }
         catch (InterruptedException e) {
             log.warn("Woke up early", e)

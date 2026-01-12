@@ -46,7 +46,7 @@ class ConverterAPISpec extends Specification {
         given:
         def bytes = input.getBytes("UTF-8")
         def is = GroovyMock(ServletInputStream)
-        is.getBytes() >> { bytes }
+        is.readAllBytes() >> { bytes }
         is.getText("UTF-8") >> { input }
         request.getMethod() >> { "POST" }
         request.getRequestURL() >> { converterUrl }

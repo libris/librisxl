@@ -1,7 +1,7 @@
 apply plugin: 'groovy'
 apply plugin: 'java-library'
 apply plugin: 'jacoco'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.gradleup.shadow'
 
 def mainClassName = "whelk.RestServer"
 
@@ -60,10 +60,10 @@ dependencies {
     implementation(project(':whelktool'))
 
     // Groovy
-    implementation "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy-dateutil:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy-xml:${groovyVersion}"
-    implementation "org.codehaus.groovy:groovy:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-all:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-dateutil:${groovyVersion}"
+    implementation "org.apache.groovy:groovy-xml:${groovyVersion}"
+    implementation "org.apache.groovy:groovy:${groovyVersion}"
 
     // Servlet
     api "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
@@ -74,12 +74,12 @@ dependencies {
 
     // Common tools
     implementation "com.google.guava:guava:${guavaVersion}"
-    implementation "org.apache.httpcomponents:httpclient:${httpComponentsClientVersion}"
-    implementation "org.apache.httpcomponents:httpcore:${httpComponentsCoreVersion}"
+    implementation "org.apache.httpcomponents.client5:httpclient5:${httpComponentsClientVersion}"
+    implementation "org.apache.httpcomponents.core5:httpcore5:${httpComponentsCoreVersion}"
     implementation 'commons-cli:commons-cli:1.2'
-    implementation 'commons-io:commons-io:2.11.0'
-    implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
-    implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+    implementation 'commons-io:commons-io:2.20.0'
+    implementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation 'xml-apis:xml-apis:1.4.01'
 
     // metrics
@@ -92,10 +92,11 @@ dependencies {
 
     // profiling and test
     testImplementation "org.spockframework:spock-core:${spockVersion}"
-    testImplementation 'cglib:cglib-nodep:3.1'
+    testImplementation "net.bytebuddy:byte-buddy:${byteBuddyVersion}" // required for mocking classes in spock
 }
 
 shadowJar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
     archiveClassifier = null // removes `-all` in the filename of the created .jar
 }

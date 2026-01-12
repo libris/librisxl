@@ -1,0 +1,1 @@
+These are copied from https://git.kb.se/libris/legacy/search/-/blob/master/src/main/webapp/transformers/

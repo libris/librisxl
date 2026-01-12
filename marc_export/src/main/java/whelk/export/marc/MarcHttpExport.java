@@ -10,8 +10,8 @@ import se.kb.libris.util.marc.io.MarcRecordWriter;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Whelk;
 import whelk.exception.WhelkRuntimeException;
+import whelk.util.http.CoreWhelkHttpServlet;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
@@ -25,15 +25,14 @@ import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TreeMap;
+import java.util.UUID;
 
 /**
  * Call like so:
  * curl -v -XPOST "http://localhost:8080/marc_export/?from=2018-09-10T00:00:00Z&until=2018-12-01T00:00:00Z" --data-binary @./etc/export.properties
  */
-public class MarcHttpExport extends HttpServlet
+public class MarcHttpExport extends CoreWhelkHttpServlet
 {
-    private Whelk whelk = null;
     private ProfileExport profileExport = null;
     private final Logger logger = LogManager.getLogger(this.getClass());
 
@@ -54,9 +53,9 @@ public class MarcHttpExport extends HttpServlet
         .help("API request latency in seconds.")
         .register();
 
-    public void init()
+    @Override
+    protected void init(Whelk whelk)
     {
-        whelk = Whelk.createLoadedCoreWhelk();
         profileExport = new ProfileExport(whelk, whelk.getStorage().createAdditionalConnectionPool("ProfileExport"));
     }
 
@@ -83,6 +82,8 @@ public class MarcHttpExport extends HttpServlet
 
     private void doPost2(HttpServletRequest req, HttpServletResponse res) throws IOException
     {
+        // Random unique ID to identify the request across log statements
+        String requestId = UUID.randomUUID().toString();
         // Parameters
         HashMap<String, String> parameterMap = new HashMap<>();
         String queryString = req.getQueryString();
@@ -124,6 +125,9 @@ public class MarcHttpExport extends HttpServlet
         props.load(new StringReader(body.toString()));
         se.kb.libris.export.ExportProfile profile = new se.kb.libris.export.ExportProfile(props);
 
+        logger.info("Handling export request {}, remote IP {} (x-forwarded-for: {}), query: {}, parsed parameters: {}, properties: {}",
+                requestId, req.getRemoteAddr(), req.getHeader("x-forwarded-for"), queryString, parameterMap, props);
+
         ProfileExport.DELETE_MODE deleteMode = ProfileExport.DELETE_MODE.IGNORE; // Default
         if (profile.getProperty("exportdeleted", "OFF").equalsIgnoreCase("ON"))
             deleteMode = ProfileExport.DELETE_MODE.EXPORT;
@@ -149,6 +153,7 @@ public class MarcHttpExport extends HttpServlet
                         deleteMode = ProfileExport.DELETE_MODE.SEPARATE;
                         break;
                     default:
+                        logger.error("Failed to handle request {} due to invalid option for 'deleted'", requestId);
                         failedRequests.labels("Invalid option for 'deleted'",
                                 Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
                         res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Valid options for \"deleted\" are \"ignore\", \"export\" or \"append\"");
@@ -189,7 +194,7 @@ public class MarcHttpExport extends HttpServlet
         }
         catch (SQLException | WhelkRuntimeException e)
         {
-            logger.error("Failed to handle export request.", e);
+            logger.error("Failed to handle export request {}: {}", requestId, e);
             failedRequests.labels("Export failed",
                     Integer.toString(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)).inc();
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -219,6 +224,7 @@ public class MarcHttpExport extends HttpServlet
             }
         }
         outStream.close();
+        logger.info("Finished handling export request {}", requestId);
     }
 
     private boolean isValidZonedDateTime(String candidate)

@@ -4,7 +4,6 @@ import whelk.JsonLd;
 import whelk.search2.QueryUtil;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
@@ -19,11 +18,13 @@ import static whelk.JsonLd.Rdfs.*;
 public non-sealed class Property implements Subpath {
     private final String name;
     private final Map<String, Object> definition;
-    private String mappedKey;
+    private Key.RecognizedKey mappedKey;
 
     private List<String> domain;
     private List<String> range;
     private String inverseOf;
+
+    private boolean isVocabTerm;
 
     public record Restriction(Property property, Value value) {
     }
@@ -31,7 +32,7 @@ public non-sealed class Property implements Subpath {
     private List<Restriction> restrictions;
     private List<Property> propertyChain;
 
-    public Property(String name, JsonLd jsonLd, String mappedKey) {
+    public Property(String name, JsonLd jsonLd, Key.RecognizedKey mappedKey) {
         this(name, jsonLd);
         this.mappedKey = mappedKey;
     }
@@ -44,13 +45,14 @@ public non-sealed class Property implements Subpath {
         this.inverseOf = getInverseOf(jsonLd);
         this.propertyChain = getPropertyChain(jsonLd);
         this.restrictions = getOnPropertyRestrictions(jsonLd);
+        this.isVocabTerm = jsonLd.isVocabTerm(name);
     }
 
     // For test only
     public Property(String name, Map<String, Object> definition, String mappedKey) {
         this.name = name;
         this.definition = definition;
-        this.mappedKey = mappedKey;
+        this.mappedKey = new Key.RecognizedKey(mappedKey);
     }
 
     private Property(Map<String, Object> anonymousPropertyDef, JsonLd jsonLd) {
@@ -84,8 +86,8 @@ public non-sealed class Property implements Subpath {
     }
 
     @Override
-    public Key key() {
-        return new Key.RecognizedKey(mappedKey != null ? mappedKey : name);
+    public String queryForm() {
+        return mappedKey != null ? mappedKey.value() : name;
     }
 
     @Override
@@ -102,8 +104,25 @@ public non-sealed class Property implements Subpath {
         return name.equals(RDF_TYPE);
     }
 
+    public boolean isVocabTerm() {
+        return isVocabTerm;
+    }
+
+    public boolean isPlatformTerm() {
+        return ((List<?>) asList(definition.get("category"))).stream()
+                .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/platform").equals(c));
+    }
+
+    public boolean isXsdDate() {
+        return range.contains("xsd:dateTime") || range.contains("xsd:date");
+    }
+
     public boolean isObjectProperty() {
         return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
+    }
+
+    public boolean isDatatypeProperty() {
+        return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(DATATYPE_PROPERTY::equals);
     }
 
     public boolean hasDomainAdminMetadata(JsonLd jsonLd) {
@@ -113,7 +132,7 @@ public non-sealed class Property implements Subpath {
     }
 
     public boolean mayAppearOnType(String type, JsonLd jsonLd) {
-        return domain.isEmpty() || domain.stream().anyMatch(d -> jsonLd.isSubClassOf(d, type) || jsonLd.isSubClassOf(type, d));
+        return domain.isEmpty() || domain.stream().anyMatch(d -> directDescendants(d, type, jsonLd));
     }
 
     public boolean isInverseOf(Property property) {
@@ -121,7 +140,7 @@ public non-sealed class Property implements Subpath {
     }
 
     public List<Property> expand() {
-        return isShortHand() ? propertyChain : List.of(this);
+        return isShorthand() ? propertyChain : List.of(this);
     }
 
     public List<Property> getApplicableIntegralRelations(JsonLd jsonLd, Collection<String> types) {
@@ -140,7 +159,7 @@ public non-sealed class Property implements Subpath {
                 .flatMap(List::stream)
                 .distinct()
                 .filter(ir -> ir.range().stream().anyMatch(irRangeType -> mayAppearOnType(irRangeType, jsonLd)))
-                .filter(Predicate.not(this::isInverseOf))
+                .filter(prop -> !(isInverseOf(prop) || (isShorthand() && propertyChain.getFirst().isInverseOf(prop))))
                 .toList();
     }
 
@@ -161,8 +180,12 @@ public non-sealed class Property implements Subpath {
 
     private List<Property> getIntegralRelationsForType(String type, Collection<Property> integralRelations, JsonLd jsonLd) {
         return integralRelations.stream()
-                .filter(prop -> prop.domain().stream().anyMatch(domain -> jsonLd.isSubClassOf(type, domain)))
+                .filter(prop -> prop.domain().stream().anyMatch(d -> directDescendants(d, type, jsonLd)))
                 .toList();
+    }
+
+    private static boolean directDescendants(String a, String b, JsonLd jsonLd) {
+        return jsonLd.isSubClassOf(a, b) || jsonLd.isSubClassOf(b, a);
     }
 
     private String getSuperKey(JsonLd jsonLd) {
@@ -188,7 +211,7 @@ public non-sealed class Property implements Subpath {
     }
 
     private List<Property> getPropertyChain(JsonLd jsonLd) {
-        if (!isShortHand()) {
+        if (!isShorthand() || !definition.containsKey(PROPERTY_CHAIN_AXIOM)) {
             return List.of();
         }
 
@@ -201,7 +224,7 @@ public non-sealed class Property implements Subpath {
                 .toList();
     }
 
-    private boolean isShortHand() {
+    private boolean isShorthand() {
         return ((List<?>) asList(definition.get("category"))).stream()
                 .anyMatch(c -> Map.of(JsonLd.ID_KEY, "https://id.kb.se/vocab/shorthand").equals(c));
     }
@@ -233,7 +256,7 @@ public non-sealed class Property implements Subpath {
                         return new Restriction(new Property(onPropertyKey, jsonLd),
                                 jsonLd.vocabIndex.containsKey(hasValueKey)
                                         ? new VocabTerm(hasValueKey, jsonLd.vocabIndex.get(hasValueKey))
-                                        : new Link(hasValueIri.get(), jsonLd.vocabIndex.get(hasValueKey)));
+                                        : new Link(hasValueIri.get()));
                     } else {
                         return null;
                     }
@@ -273,5 +296,11 @@ public non-sealed class Property implements Subpath {
 
     private static String getIri(Object o) {
         return (String) ((Map<?, ?>) o).get(ID_KEY);
+    }
+
+    public static class TextQuery extends Property {
+        public TextQuery(JsonLd jsonLd) {
+            super("textQuery", jsonLd);
+        }
     }
 }

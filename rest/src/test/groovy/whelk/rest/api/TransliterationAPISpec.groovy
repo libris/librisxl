@@ -66,7 +66,7 @@ class TransliterationAPISpec extends Specification {
         def input = "{\"langTag\": \"${tag}\", \"source\": \"${source}\"}"
         def bytes = input.getBytes("UTF-8")
         def is = GroovyMock(ServletInputStream)
-        is.getBytes() >> { bytes }
+        is.readAllBytes() >> { bytes }
         is.getText("UTF-8") >> { input }
         request.getInputStream() >> { is }
         request.getPathInfo() >> { "/" }
@@ -93,7 +93,7 @@ class TransliterationAPISpec extends Specification {
         given:
         def bytes = input.getBytes("UTF-8")
         def is = GroovyMock(ServletInputStream)
-        is.getBytes() >> { bytes }
+        is.readAllBytes() >> { bytes }
         is.getText("UTF-8") >> { input }
         request.getInputStream() >> { is }
         request.getPathInfo() >> { "/" }

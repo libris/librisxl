@@ -2,54 +2,42 @@ package whelk.search2;
 
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
+
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.search2.querytree.Node;
 import whelk.search2.querytree.QueryTree;
-import whelk.util.DocumentUtil;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static whelk.component.ElasticSearch.flattenedLangMapKey;
+import static whelk.search2.QueryParams.ApiParams.CUSTOM_SITE_FILTER;
+import static whelk.search2.QueryParams.ApiParams.OBJECT;
+import static whelk.search2.QueryParams.ApiParams.OFFSET;
+import static whelk.search2.QueryParams.ApiParams.PREDICATES;
+import static whelk.search2.QueryParams.ApiParams.QUERY;
+import static whelk.search2.QueryParams.ApiParams.SORT;
 
 public class QueryUtil {
     private static final Escaper QUERY_ESCAPER = UrlEscapers.urlFormParameterEscaper();
 
-    private final Whelk whelk;
-    public final EsMappings esMappings;
-    public final EsBoost esBoost;
-
-    public QueryUtil(Whelk whelk) {
-        this.whelk = whelk;
-        this.esMappings = new EsMappings(whelk.elastic != null ? whelk.elastic.getMappings() : Collections.emptyMap());
-        this.esBoost = new EsBoost(whelk.getJsonld());
+    public static String quote(String s) {
+        return "\"" + s + "\"";
     }
 
-    public Map<?, ?> query(Map<String, Object> queryDsl) {
-        return whelk.elastic.query(queryDsl);
+    public static boolean isQuoted(String s) {
+        return s.matches("\".+\"");
     }
 
-    public boolean esIsConfigured() {
-        return whelk != null && whelk.elastic != null;
-    }
-
-    public int maxItems() {
-        return whelk.elastic.maxResultWindow;
-    }
-
-    public static String quoteIfPhraseOrContainsSpecialSymbol(String s) {
-        // TODO: Don't hardcode
-        return s.matches(".*(>=|<=|[=!~<>(): ]).*") ? "\"" + s + "\"" : s;
+    public static String parenthesize(String s) {
+        return "(" + s + ")";
     }
 
     public static String encodeUri(String uri) {
@@ -60,54 +48,52 @@ public class QueryUtil {
     }
 
     public static Map<String, Object> castToStringObjectMap(Object o) {
-        return o == null
-                ? Map.of()
-                : ((Map<?, ?>) o).entrySet()
-                .stream()
-                .collect(Collectors.toMap(e -> (String) e.getKey(), e -> (Object) e.getValue()));
+        Map<String, Object> m = new HashMap<>();
+        if (o == null) {
+            return m;
+        }
+        ((Map<?, ?>) o).forEach((k, v) -> m.put((String) k, v));
+        return m;
     }
 
-    public Object getChip(String iri) {
-        return whelk.getJsonld().toChip(loadThing(iri));
+    public static String makeViewFindUrl(QueryTree qt, QueryParams queryParams) {
+        return makeViewFindUrl(qt.toQueryString(), queryParams);
     }
 
-    public Map<String, Object> loadThing(String iri) {
-        return loadThing(iri, whelk);
+    public static String makeViewFindUrl(String q, QueryParams queryParams) {
+        return makeFindUrl(q, queryParams.getCustomParamsMap(List.of(CUSTOM_SITE_FILTER, SORT, OBJECT, PREDICATES)), null);
     }
 
-    public static Map<String, Object> loadThing(String iri, Whelk whelk) {
-        return Optional.ofNullable(whelk.loadData(iri))
-                .map(data -> data.get(JsonLd.GRAPH_KEY))
-                .map(graph -> ((List<?>) graph).get(1))
-                .map(QueryUtil::castToStringObjectMap)
-                .orElse(Collections.emptyMap());
+    public static String makeFindUrl(QueryTree qt, QueryParams queryParams) {
+        return makeFindUrl(qt.toQueryString(), queryParams.getFullParamsMap(), null);
     }
 
-    public static String makeFindUrl(String i, String q, Map<String, String> nonQueryParams) {
-        return makeFindUrl(i, q, makeParams(nonQueryParams));
+    public static String makeFindUrl(QueryTree qt, QueryParams queryParams, Integer customOffset) {
+        return makeFindUrl(qt.toQueryString(), queryParams.getFullParamsMap(), customOffset);
     }
 
-    public static String makeFindUrl(QueryTree qt, Map<String, String> nonQueryParams) {
-        return makeFindUrl(qt.getTopLevelFreeText(), qt.toQueryString(), nonQueryParams);
-    }
-
-    public static String makeFindUrl(String i, String q, List<String> nonQueryParams) {
-        List<String> params = new ArrayList<>();
-        params.add(makeParam(QueryParams.ApiParams.SIMPLE_FREETEXT, i));
-        params.add(makeParam(QueryParams.ApiParams.QUERY, q));
-        params.addAll(nonQueryParams);
+    private static String makeFindUrl(String q, Map<String, String> params, Integer customOffset) {
+        params.put(QUERY, q);
+        if (customOffset != null) {
+            if (customOffset > 0) {
+                params.put(OFFSET, "" + customOffset);
+            } else {
+                params.remove(OFFSET);
+            }
+        }
         return makeFindUrl(params);
     }
 
-    public static String makeFindUrl(List<String> params) {
-        return "/find?" + String.join("&", params);
+    public static String makeFindUrl(Map<String, String> params) {
+        return "/find?" + params.entrySet().stream()
+                .map(e -> makeParam(e.getKey(), e.getValue()))
+                .collect(Collectors.joining("&"));
     }
 
-    public static List<String> makeParams(Map<String, String> params) {
-        return params.entrySet()
-                .stream()
-                .map(entry -> makeParam(entry.getKey(), entry.getValue()))
-                .toList();
+    public static Map<String, String> makeUpLink(QueryTree queryTree, Node n, QueryParams queryParams) {
+        QueryTree reducedTree = queryTree.remove(n);
+        String upUrl = makeViewFindUrl(reducedTree, queryParams);
+        return Map.of(JsonLd.ID_KEY, upUrl);
     }
 
     private static String makeParam(String key, String value) {
@@ -121,13 +107,6 @@ public class QueryUtil {
                 .replace("%3A", ":")
                 .replace("%2F", "/")
                 .replace("%40", "@");
-    }
-
-    public Optional<String> getNestedPath(String path) {
-        if (esMappings.isNestedField(path)) {
-            return Optional.of(path);
-        }
-        return esMappings.getNestedFields().stream().filter(path::startsWith).findFirst();
     }
 
     public static Map<String, Object> mustWrap(Object l) {
@@ -150,49 +129,44 @@ public class QueryUtil {
         return Map.of("nested", Map.of("path", nestedPath, "query", query));
     }
 
-    public String getSortField(String termPath) {
-        var path = expandLangMapKeys(termPath);
-        if (esMappings.isKeywordField(path) && !esMappings.isFourDigitField(path)) {
-            return String.format("%s.keyword", path);
-        } else {
-            return termPath;
+    public static Map<String, Object> loadThing(String iri, Whelk whelk) {
+        return Optional.ofNullable(whelk.loadData(iri))
+                .map(data -> data.get(JsonLd.GRAPH_KEY))
+                .map(graph -> ((List<?>) graph).get(1))
+                .map(QueryUtil::castToStringObjectMap)
+                .orElse(Collections.emptyMap());
+    }
+
+    // leading wildcards e.g. "*foo" are removed by simple_query_string
+    static Pattern NON_SIMPLE_QUERY = Pattern.compile("\\\\[?]|([*?])\\S+");
+
+    /**
+     * Can this query string be handled by ES simple_query_string?
+     */
+    public static boolean isSimple(String queryString) {
+        return !NON_SIMPLE_QUERY.matcher(queryString).find();
+    }
+
+    public static String escapeNonSimpleQueryString(String queryString) {
+        // Treat escaped question marks as actual wildcards
+        queryString = queryString.replace("\\?", "?");
+
+        // The following chars are reserved in ES and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
+        // Escape the ones that are not part of our query language.
+        for (char c : List.of('=', '&', '!', '{', '}', '[', ']', '^', ':', '/')) {
+            queryString = queryString.replace("" + c, "\\" + c);
         }
-    }
 
-    private String expandLangMapKeys(String field) {
-        var parts = field.split("\\.");
-        if (parts.length > 0) {
-            assert whelk != null;
-            var lastIx = parts.length - 1;
-            if (whelk.getJsonld().langContainerAlias.containsKey(parts[lastIx])) {
-                parts[lastIx] = flattenedLangMapKey(parts[lastIx]);
-                return String.join(".", parts);
-            }
+        // Inside words, treat '-' as regular hyphen instead of "NOT" and escape it
+        queryString = queryString.replaceAll("(^|\\s+)-(\\S+)", "$1#ACTUAL_NOT#$2");
+        queryString = queryString.replace("-", "\\-");
+        queryString = queryString.replace("#ACTUAL_NOT#", "-");
+
+        // Strip un-escapable characters
+        for (char c : List.of('<', '>')) {
+            queryString = queryString.replace("" + c, "");
         }
-        return field;
-    }
 
-    @SuppressWarnings("unchecked")
-    public Function<Map<String, Object>, Map<String, Object>> getApplyLensFunc(QueryParams queryParams) {
-        return framedThing -> {
-            @SuppressWarnings("rawtypes")
-            Set<String> preserveLinks = Stream.ofNullable(queryParams.object).collect(Collectors.toSet());
-
-            return switch (queryParams.lens) {
-                case "chips" -> (Map<String, Object>) whelk.getJsonld().toChip(framedThing, preserveLinks);
-                case "full" -> removeSystemInternalProperties(framedThing);
-                default -> whelk.getJsonld().toCard(framedThing, false, false, false, preserveLinks, true);
-            };
-        };
-    }
-
-    private static Map<String, Object> removeSystemInternalProperties(Map<String, Object> framedThing) {
-        DocumentUtil.traverse(framedThing, (value, path) -> {
-            if (!path.isEmpty() && ((String) path.getLast()).startsWith("_")) {
-                return new DocumentUtil.Remove();
-            }
-            return DocumentUtil.NOP;
-        });
-        return framedThing;
+        return queryString;
     }
 }

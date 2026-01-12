@@ -183,45 +183,6 @@ class DocumentUtil {
         nodes.findAll { !isBlank(it) }.collect { it['@id'] }
     }
 
-    private static class DFS {
-        Stack path
-        Visitor visitor
-        List operations
-
-        boolean traverse(obj, Visitor visitor) {
-            this.visitor = visitor
-            path = new Stack()
-            operations = []
-
-            node(obj)
-            operations = operations.reverse().each { it.perform(obj) }
-            return !operations.isEmpty()
-        }
-
-        private void node(obj) {
-            Operation op = visitor.visitElement(obj, Collections.unmodifiableList(path))
-            if (op && !(op instanceof Nop)) {
-                op.setPath(path)
-                operations.add(op)
-            }
-
-            if (obj instanceof Map) {
-                descend(((Map) obj).entrySet().collect({ new Tuple2(it.value, it.key) }))
-            } else if (obj instanceof List) {
-                descend(((List) obj).withIndex())
-            }
-        }
-
-        private void descend(List<Tuple2> nodes) {
-            for (n in nodes) {
-                path.push(n.v2)
-                node(n.v1)
-                path.pop()
-            }
-        }
-    }
-
-
     static abstract class Operation {
         List path
 
