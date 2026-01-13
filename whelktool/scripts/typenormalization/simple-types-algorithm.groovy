@@ -281,8 +281,8 @@ class TypeNormalizer implements UsingJsonKeys {
                     // Special handling for when the part is Electronic
                     if ((value.get(TYPE) == "PhysicalResource") && (entity.get(TYPE) == "DigitalResource")) {
                         value.put(TYPE, "DigitalResource")
-                        value.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
                         if (value.category.size() == 0) {
+                            value.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
                             value.remove("category")
                         }
                         changed = true
