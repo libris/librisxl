@@ -254,4 +254,31 @@ class DiffSpec extends Specification {
                 ]
         ]
     }
+
+    def "add multiples"() {
+        given:
+        def before = ["a": ["b"]]
+        def after = ["a":["b", "c", "d", "e"]]
+
+        def result = Diff.diff(before, after);
+
+        expect:
+        result == [
+                [
+                        "op":"add",
+                        "path": "/a/1",
+                        "value": "c"
+                ],
+                [
+                        "op":"add",
+                        "path": "/a/2",
+                        "value": "d"
+                ],
+                [
+                        "op":"add",
+                        "path": "/a/3",
+                        "value": "e"
+                ]
+        ]
+    }
 }

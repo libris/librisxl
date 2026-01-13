@@ -12,6 +12,7 @@ import org.postgresql.PGNotification
 import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
+import whelk.diff.Diff
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
@@ -468,7 +469,6 @@ class PostgreSQLComponent {
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
-    boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
     boolean sparqlQueueEnabled = false
 
@@ -788,7 +788,7 @@ class PostgreSQLComponent {
                 insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
                 insert.executeUpdate()
 
-                saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
+                saveVersion(doc, null, connection, now, now, changedIn, changedBy, collection, deleted)
                 refreshDerivativeTables(doc, connection, deleted)
 
                 connection.commit()
@@ -856,7 +856,7 @@ class PostgreSQLComponent {
                 insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, false)
                 insert.executeUpdate()
 
-                saveVersion(doc, connection, now, now, changedIn, changedBy, collection, false)
+                saveVersion(doc, null, connection, now, now, changedIn, changedBy, collection, false)
                 refreshDerivativeTables(doc, connection, false)
 
                 connection.commit()
@@ -880,7 +880,7 @@ class PostgreSQLComponent {
             Connection connection = getMyConnection()
             try {
                 connection.setAutoCommit(false)
-                saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, false)
+                saveVersion(doc, null, connection, createdTime, modTime, changedIn, changedBy, collection, false)
                 connection.commit()
                 return true
             } catch (Exception e) {
@@ -1056,7 +1056,7 @@ class PostgreSQLComponent {
             rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
             updateStatement.execute()
 
-            saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
+            saveVersion(doc, preUpdateDoc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
 
             // If the mainentity has changed URI (for example happens when new id.kb.se-uris are added to records)
             if ( preUpdateDoc.getThingIdentifiers()[0] &&
@@ -1613,10 +1613,12 @@ class PostgreSQLComponent {
         update.setObject(8, doc.getShortId(), OTHER)
     }
 
-    boolean saveVersion(Document doc, Connection connection, Date createdTime,
+    boolean saveVersion(Document doc, Document preUpdateDoc, Connection connection, Date createdTime,
                         Date modTime, String changedIn, String changedBy,
                         String collection, boolean deleted) {
-        if (versioning) {
+
+        // The classic/old lddb__versions table: TO BE REMOVED SOON.
+        {
             PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
                 log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum(jsonld)}. Modified: $modTime")
@@ -1624,7 +1626,6 @@ class PostgreSQLComponent {
                         modTime, changedIn, changedBy,
                         collection, deleted)
                 insVersion.executeUpdate()
-                return true
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
@@ -1632,9 +1633,36 @@ class PostgreSQLComponent {
             finally {
                 close(insVersion)
             }
-        } else {
-            return false
         }
+
+        // The new diff versions
+        {
+            // 1. Is there a diff to be saved? A new document (preUpdateDoc passed as null) has nothing to be diffed with.
+            //    For this case, the lddb entry, and the temporary marker in lddb__change_times is the only thing we will
+            //    hold.
+
+            if (preUpdateDoc != null) {
+                diff(doc, preUpdateDoc)
+            }
+
+            /*
+            insvers.setString(1, doc.getShortId())
+        insvers.setObject(2, doc.dataAsString, OTHER)
+        insvers.setString(3, collection)
+        insvers.setString(4, changedIn)
+        insvers.setString(5, changedBy)
+        insvers.setString(6, doc.getChecksum(jsonld))
+        insvers.setTimestamp(7, new Timestamp(createdTime.getTime()))
+        insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
+        insvers.setBoolean(9, deleted)
+             */
+
+            // diffa nuvarande version med nya, lås/hämta historikraden, ändra i historikraden, skriv, skriv i changelog
+            String selectAndLockSql = "SELECT FOR UPDATE diffs FROM lddb__version_diffs WHERE id = ?"
+
+        }
+
+        return true
     }
     
     private PreparedStatement rigVersionStatement(PreparedStatement insvers,
@@ -1673,10 +1701,8 @@ class PostgreSQLComponent {
                     doc.setCreated(now)
                     doc.setModified(now)
                     doc.setDeleted(false)
-                    if (versioning) {
-                        ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
-                        ver_batch.addBatch()
-                    }
+                    ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
+                    ver_batch.addBatch()
                     batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                     batch.addBatch()
                 }
@@ -1688,7 +1714,7 @@ class PostgreSQLComponent {
                 }
                 clearEmbellishedCache(connection)
                 connection.commit()
-                log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
+                log.debug("Stored ${docs.size()} documents in collection ${collection}")
                 return true
             } catch (Exception e) {
                 log.error("Failed to save batch: ${e.message}. Rolling back..", e)
@@ -2729,21 +2755,17 @@ class PostgreSQLComponent {
     }
 
     void remove(String identifier, String changedIn, String changedBy) {
-        if (versioning) {
-            log.debug("Marking document with ID ${identifier} as deleted.")
-            try {
-                storeUpdate(identifier, false, true, changedIn, changedBy,
-                    { Document doc ->
-                        doc.setDeleted(true)
-                        // Add a tombstone marker (without removing anything) perhaps?
-                    })
-            } catch (Throwable e) {
-                log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
-                throw e
-            }
-        } else {
-            throw new WhelkException(
-                    "Actually deleting data from lddb is currently not supported")
+
+        log.debug("Marking document with ID ${identifier} as deleted.")
+        try {
+            storeUpdate(identifier, false, true, changedIn, changedBy,
+                { Document doc ->
+                    doc.setDeleted(true)
+                    // Add a tombstone marker (without removing anything) perhaps?
+                })
+        } catch (Throwable e) {
+            log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
+            throw e
         }
 
         // Clear out dependencies
