@@ -68,9 +68,10 @@ class TypeMappings implements UsingJsonKeys {
         // assert reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]) == [[(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]
         // assert reduceSymbols([['@id':'https://id.kb.se/marc/Print'], ['@id':'https://id.kb.se/term/ktg/PrintedSheet'], ['@id':'https://id.kb.se/term/rda/Unmediated'], ['@id':'https://id.kb.se/term/rda/Sheet']]) == [['@id':'https://id.kb.se/term/ktg/PrintedSheet']]
 
-        assert isImpliedBy([(ID):'https://id.kb.se/term/rda/StillImage'], [(ID):'https://id.kb.se/term/saogf/Bilder'])
-        assert !isImpliedBy([(ID):'https://id.kb.se/term/saogf/Bilder'], [(ID):'https://id.kb.se/term/rda/StillImage'])
-        assert reduceSymbols([[(ID):'https://id.kb.se/term/rda/StillImage'], [(ID):'https://id.kb.se/term/saogf/Bilder']]) == [[(ID):'https://id.kb.se/term/saogf/Bilder']]
+        // Commented out implications between RDA and SAOGF
+        // assert isImpliedBy([(ID):'https://id.kb.se/term/rda/StillImage'], [(ID):'https://id.kb.se/term/saogf/Bilder'])
+        // assert !isImpliedBy([(ID):'https://id.kb.se/term/saogf/Bilder'], [(ID):'https://id.kb.se/term/rda/StillImage'])
+        // assert reduceSymbols([[(ID):'https://id.kb.se/term/rda/StillImage'], [(ID):'https://id.kb.se/term/saogf/Bilder']]) == [[(ID):'https://id.kb.se/term/saogf/Bilder']]
     }
 
     boolean matches(ArrayList<Map> typelikes, String value) {
