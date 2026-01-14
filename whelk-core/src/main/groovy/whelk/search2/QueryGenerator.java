@@ -3,14 +3,14 @@ package whelk.search2;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Key;
 import whelk.search2.querytree.Path;
-import whelk.search2.querytree.PathValue;
-import whelk.search2.querytree.Subpath;
+import whelk.search2.querytree.Selector;
+import whelk.search2.querytree.Token;
 import whelk.util.DocumentUtil;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,11 +28,18 @@ public class QueryGenerator {
                     if (!node.containsKey(JsonLd.Platform.COMPUTED_LABEL)) {
                         return DocumentUtil.NOP;
                     }
+
                     var v = new FreeText((String) node.get(JsonLd.Platform.COMPUTED_LABEL));
-                    var q = new PathValue(qPath, Operator.EQUALS, v).toQueryString(true);
+                    var q = qPath.path().isEmpty()
+                            ? v
+                            : new Condition(qPath, Operator.EQUALS, v);
+
                     try {
-                        var url = QueryUtil.makeViewFindUrl(q, new QueryParams(Collections.emptyMap()));
-                        node.put("_find", url);
+                        var url = QueryUtil.makeViewFindUrl(q.toQueryString(true), new QueryParams(Collections.emptyMap()));
+                        node.put("_find", Map.of(
+                                JsonLd.TYPE_KEY, "_Query",
+                                JsonLd.ID_KEY, url
+                        ));
                     } catch (InvalidQueryException e) {
                         throw new RuntimeException(e);
                     }
@@ -47,8 +54,9 @@ public class QueryGenerator {
         return new Path(docPath.stream()
                 .filter(s -> !THING_KEY.equals(s))
                 .filter(s -> !(s instanceof Number))
+                .filter(s -> !JsonLd.REVERSE_KEY.equals(s))
                 .filter(s -> !jsonLd.isIntegral(String.valueOf(s)))
-                .map(p -> (Subpath) new Key.UnrecognizedKey(String.valueOf(p), 0)).toList());
+                .map(p -> (Selector) new Key.UnrecognizedKey(new Token.Raw(String.valueOf(p), 0))).toList());
     }
 
     static boolean isBlank(Map<String, Object> node) {
