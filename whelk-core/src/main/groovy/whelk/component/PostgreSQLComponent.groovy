@@ -12,7 +12,6 @@ import org.postgresql.PGNotification
 import org.postgresql.PGStatement
 import org.postgresql.util.PGobject
 import org.postgresql.util.PSQLException
-import whelk.diff.Diff
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
@@ -24,6 +23,7 @@ import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
+import whelk.diff.Diff
 import whelk.filter.LinkFinder
 import whelk.history.DocumentVersion
 import whelk.util.DocumentUtil
@@ -1613,7 +1613,7 @@ class PostgreSQLComponent {
         update.setObject(8, doc.getShortId(), OTHER)
     }
 
-    boolean saveVersion(Document doc, Document preUpdateDoc, Connection connection, Date createdTime,
+    void saveVersion(Document doc, Document preUpdateDoc, Connection connection, Date createdTime,
                         Date modTime, String changedIn, String changedBy,
                         String collection, boolean deleted) {
 
@@ -1637,13 +1637,46 @@ class PostgreSQLComponent {
 
         // The new diff versions
         {
-            // 1. Is there a diff to be saved? A new document (preUpdateDoc passed as null) has nothing to be diffed with.
-            //    For this case, the lddb entry, and the temporary marker in lddb__change_times is the only thing we will
-            //    hold.
-
+            // 1. Is there a diff to be made? A new document (preUpdateDoc passed as null) has nothing to be diffed with.
+            List incomingDiff = null;
             if (preUpdateDoc != null) {
-                diff(doc, preUpdateDoc)
+                incomingDiff = Diff.diff(doc.data, preUpdateDoc.data)
+
+                //whelk.diff.DiffTEST.diff(doc, preUpdateDoc)
             }
+
+            // 2. Lock/get the records history-row.
+            String selectAndLockSql = "SELECT FOR UPDATE diffs FROM lddb__version_diffs WHERE id = ?"
+            String currentDiffs = null
+            if (preUpdateDoc == null) {
+                currentDiffs = "[]" // A new record has no prior history.
+            } else {
+                PreparedStatement preparedStatement = null
+                ResultSet rs = null
+                try {
+                    preparedStatement = connection.prepareStatement(selectAndLockSql)
+                    preparedStatement.setString(1, doc.getShortId())
+
+                    rs = preparedStatement.executeQuery()
+                    if (rs.next()) {
+                        currentDiffs = rs.getString("diffs")
+                    }
+                } finally {
+                    close(rs, preparedStatement)
+                }
+            }
+            if (currentDiffs == null) {
+                log.error("CATASTROPHIC FAILURE: " + doc.getShortId() " is not new, and yet has no recorded history. Data integrity has been compromised.")
+                throw new RuntimeException("Cannot write history for: " + doc.getShortId())
+            }
+
+
+            // 3. Add our new diff
+            List currentDiffList = mapper.readValue(currentDiffs, List)
+            if (incomingDiff != null)
+                currentDiffList.add()
+
+
 
             /*
             insvers.setString(1, doc.getShortId())
@@ -1658,11 +1691,9 @@ class PostgreSQLComponent {
              */
 
             // diffa nuvarande version med nya, lås/hämta historikraden, ändra i historikraden, skriv, skriv i changelog
-            String selectAndLockSql = "SELECT FOR UPDATE diffs FROM lddb__version_diffs WHERE id = ?"
+
 
         }
-
-        return true
     }
     
     private PreparedStatement rigVersionStatement(PreparedStatement insvers,
