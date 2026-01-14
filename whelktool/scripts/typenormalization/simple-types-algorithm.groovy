@@ -442,6 +442,7 @@ class TypeNormalizer implements UsingJsonKeys {
             }
             changed = true
         }
+        // There is no "else" here, since Tactile instances that are not Braille is a handful that needs manual handling.
 
 
         // ----- Section: Clean up Electronic -----
