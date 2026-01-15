@@ -479,6 +479,10 @@ public class Query {
     }
     
     private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {
+        return buildCoreAqqQuery(field, slice, ctx, false);
+    }
+
+    private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx, boolean isInsideNested) {
         var q = Map.of("terms",
                 Map.of("field", field,
                         "size", slice.size(),
@@ -491,9 +495,11 @@ public class Query {
             addSliceToAggQuery(query, slice.subSlice(), ctx);
             q.put("aggs", query);
         }
-        else if (slice.shouldCountTopLevelDocs()) {
+        else if (slice.shouldCountTopLevelDocs() && isInsideNested) {
             // count the number of top-level documents instead of the number of nested docs
             // for example multiple holdings with the same organization (heldBy.isPartOf.@id)
+            // isInsideNested - if the nested field doesn't exist, i.e. this won't be a nested agg
+            // we shouldn't generate the reverse nested either because that will be an invalid query
             q = new LinkedHashMap<>(q);
             Map<String, Object> reverse = Map.of(
                     REVERSE_NESTED_AGG_NAME, Map.of(
@@ -515,7 +521,7 @@ public class Query {
 
     private static Map<String, Object> buildNestedAggQuery(String field, AppParams.Slice slice, String nestedStem, AggContext ctx) {
         return Map.of("nested", Map.of("path", nestedStem),
-                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(field, slice, ctx)));
+                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(field, slice, ctx, true)));
     }
 
     private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {

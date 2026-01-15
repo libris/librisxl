@@ -90,8 +90,11 @@ class TestData {
                         '@type'             : 'ObjectProperty',
                         'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
                         'propertyChainAxiom': [
-                                ['@id': 'p3'],
-                                ['@id': 'p4']
+                                [
+                                        '@list': [
+                                            ['@id': 'p3'],
+                                            ['@id': 'p4']]
+                                ]
                         ]
                 ],
                 [
@@ -114,7 +117,7 @@ class TestData {
                         '@id'               : 'p10',
                         '@type'             : 'DatatypeProperty',
                         'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
-                        'propertyChainAxiom': [
+                        'propertyChainAxiom': [ [ '@list': [
                                 [
                                         'range'        : [
                                                 [
@@ -138,19 +141,19 @@ class TestData {
                                         ]
                                 ],
                                 ['@id': 'p1']
-                        ]
+                        ]]]
                 ],
                 [
                         '@id'               : 'p11',
                         '@type'             : 'ObjectProperty',
                         'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
-                        'propertyChainAxiom': [
+                        'propertyChainAxiom': [ [ '@list' : [
                                 [
                                         'range'        : [['@id': 'T3']],
                                         'subPropertyOf': [['@id': 'p3']]
                                 ],
                                 ['@id': 'p4']
-                        ]
+                        ]]]
                 ],
                 [
                         '@id'  : 'p12',
@@ -229,10 +232,10 @@ class TestData {
                         '@id'               : 'p3p1',
                         '@type'             : 'DatatypeProperty',
                         'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
-                        'propertyChainAxiom': [
+                        'propertyChainAxiom': [ [ '@list': [
                                 ['@id': 'p3'],
                                 ['@id': 'p1']
-                        ]
+                        ]]]
                 ]
         ]]
         def ctx = [
