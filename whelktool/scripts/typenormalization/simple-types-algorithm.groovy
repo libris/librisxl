@@ -598,19 +598,23 @@ class TypeNormalizer implements UsingJsonKeys {
     // ----- Typenormalizer helper methods -----
     static boolean moveInstanceGenreFormsToWork (Map instance, Map work) {
         var changed = false
-        List instanceGenreFormsToMove = asList(instance.get("genreForm")).findAll() {isLink(it)}
-        // Move unlinked instance GFs to instance category
-        List unlinkedInstanceGenreForms = asList(instance.remove("genreForm")).findAll() {!isLink(it)}
-        List allInstanceCategories = instance.get("category") ?: [] + unlinkedInstanceGenreForms
 
-        if (allInstanceCategories.size() > 0) {
-            instance.put("category", allInstanceCategories)
+        List instanceGenreForms = instance.get("genreForm") ?: []
+
+        List instanceGenreFormsToMove = instanceGenreForms.findAll {
+            isLink(it) && (it.'@id'?.startsWith('https://id.kb.se/term/barngf') || it.'@id'?.startsWith('https://id.kb.se/term/saogf'))}
+
+        List instanceGenreFormsToKeep  = instanceGenreForms - instanceGenreFormsToMove
+
+        if (instanceGenreFormsToKeep) {
+            instance.category = (instance.category ?: []) + instanceGenreFormsToKeep
             changed = true
+
         }
 
         // Move all other instance GFs to work GF
         if (instanceGenreFormsToMove) {
-            work.put("genreForm", work.get("genreForm", []) + instanceGenreFormsToMove)
+            work.genreForm = (work.genreForm ?: []) + instanceGenreFormsToMove
             changed = true
         }
 
