@@ -36,8 +36,10 @@ class ConditionSpec extends Specification {
                 'not': [
                         'property': [
                                 'propertyChainAxiom': [
-                                        ['@id': 'p1', '@type': 'DatatypeProperty'],
-                                        ['@id': 'p2', '@type': 'ObjectProperty', 'librisQueryCode': 'P2']
+                                        ['@list': [
+                                            ['@id': 'p1', '@type': 'DatatypeProperty'],
+                                            ['@id': 'p2', '@type': 'ObjectProperty', 'librisQueryCode': 'P2']
+                                        ]]
                                 ]
                         ],
                         'equals'  : ['@id': 'E1', '@type': 'Class'],
@@ -58,8 +60,10 @@ class ConditionSpec extends Specification {
         searchMapping == [
                 'property': [
                         'propertyChainAxiom': [
-                                ['inverseOf': ['@id': 'p3', '@type': 'ObjectProperty']],
-                                ['inverseOf': ['@id': 'p4', '@type': 'ObjectProperty']]
+                                ['@list': [
+                                    ['inverseOf': ['@id': 'p3', '@type': 'ObjectProperty']],
+                                    ['inverseOf': ['@id': 'p4', '@type': 'ObjectProperty']]
+                                ]]
                         ]
                 ],
                 'equals'  : 'v1',

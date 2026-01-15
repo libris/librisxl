@@ -538,39 +538,10 @@ public non-sealed class Property implements Selector {
         private List<Selector> getComponents(JsonLd jsonLd) {
             List<Selector> components = new ArrayList<>();
 
-            /*
-            When multiple chain axioms are defined on the same property, the generated Json-LD ends up with an odd structure.
-
-            For example:
-            :p :propertyChainAxiom (:a :b), (:c, :d), (:e, :f) .
-
-            -->
-            
-            {
-                "propertyChainAxiom": [
-                    { "@id": "https://id.kb.se/vocab/a },
-                    { "@id": "https://id.kb.se/vocab/b },
-                    [
-                      { "@id": "https://id.kb.se/vocab/c" },
-                      { "@id": "https://id.kb.se/vocab/d" }
-                    ],
-                    [
-                      { "@id": "https://id.kb.se/vocab/e" },
-                      { "@id": "https://id.kb.se/vocab/f" }
-                    ]
-                ]
-            }
-
-            The first chain is flattened into the top-level array, while subsequent chains are nested inside their own arrays.
-            Probably a bug in definitions but for now we work around it here.
-             */
-            var chainDef = ((List<?>) definition.get(PROPERTY_CHAIN_AXIOM));
-            var chain = getChain(chainDef, jsonLd);
-            if (!chain.isEmpty()) {
-                components.add(new Path(chain));
-            }
-            chainDef.stream().filter(List.class::isInstance)
-                    .map(l -> getChain((List<?>) l, jsonLd))
+            ((List<?>) definition.get(PROPERTY_CHAIN_AXIOM))
+                    .stream().filter(Map.class::isInstance)
+                    .filter(l -> ((Map<?,?>) l).containsKey(JsonLd.LIST_KEY) )
+                    .map(l -> getChain((List<?>) ((Map<?,?>) l).get(JsonLd.LIST_KEY), jsonLd))
                     .filter(Predicate.not(List::isEmpty))
                     .map(Path::new)
                     .forEach(components::add);

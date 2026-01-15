@@ -143,7 +143,7 @@ public final class Path implements Selector {
             }
         }
         return propertyChainAxiom.size() > 1
-                ? Map.of(PROPERTY_CHAIN_AXIOM, propertyChainAxiom)
+                ? Map.of(PROPERTY_CHAIN_AXIOM, Map.of(JsonLd.LIST_KEY, propertyChainAxiom))
                 : propertyChainAxiom.getFirst();
     }
 
