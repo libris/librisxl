@@ -1637,19 +1637,17 @@ class PostgreSQLComponent {
 
         // The new diff versions
         {
-            // 1. Is there a diff to be made? A new document (preUpdateDoc passed as null) has nothing to be diffed with.
-            List incomingDiff = null;
+            // Is there a diff to be made? A new document (preUpdateDoc passed as null) has nothing to be diffed with.
+            List incomingDiff = null
             if (preUpdateDoc != null) {
                 incomingDiff = Diff.diff(doc.data, preUpdateDoc.data)
-
-                //whelk.diff.DiffTEST.diff(doc, preUpdateDoc)
             }
 
-            // 2. Lock/get the records history-row.
-            String selectAndLockSql = "SELECT FOR UPDATE diffs FROM lddb__version_diffs WHERE id = ?"
-            String currentDiffs = null
+            // Lock/get the records history-row.
+            String selectAndLockSql = "SELECT history FROM lddb__history WHERE id = ? FOR UPDATE"
+            String currentHistory = null
             if (preUpdateDoc == null) {
-                currentDiffs = "[]" // A new record has no prior history.
+                currentHistory = "[]" // A new record has no prior history.
             } else {
                 PreparedStatement preparedStatement = null
                 ResultSet rs = null
@@ -1659,40 +1657,52 @@ class PostgreSQLComponent {
 
                     rs = preparedStatement.executeQuery()
                     if (rs.next()) {
-                        currentDiffs = rs.getString("diffs")
+                        currentHistory = rs.getString("diffs")
                     }
+                } catch(Exception e) {
+                    log.error("Failed to retrieve current document history: ${e.message}")
+                    throw e
                 } finally {
                     close(rs, preparedStatement)
                 }
             }
-            if (currentDiffs == null) {
-                log.error("CATASTROPHIC FAILURE: " + doc.getShortId() " is not new, and yet has no recorded history. Data integrity has been compromised.")
-                throw new RuntimeException("Cannot write history for: " + doc.getShortId())
+
+            Map newHistory
+            if (currentHistory == null && preUpdateDoc == null) { // A new record?
+                newHistory = Map.of("original", doc.data, "diffs", new ArrayList<>())
             }
+            else if (currentHistory == null && preUpdateDoc != null) {
+                log.error("CATASTROPHIC FAILURE: " + doc.getShortId() + " is not new, and yet has no recorded history. Data integrity has been compromised.")
+                throw new RuntimeException("Cannot write history for: " + doc.getShortId())
+            } else { // Add our new diff
+                Map currentHistoryMap = mapper.readValue(currentHistory, Map)
 
+                Map original = (Map) currentHistoryMap.get("original")
+                if (original.get("@graph") == null) { // sanity check
+                    log.error("CATASTROPHIC FAILURE: " + doc.getShortId() + " has a corrupt original version.")
+                    throw new RuntimeException("Cannot write history for: " + doc.getShortId())
+                }
 
-            // 3. Add our new diff
-            List currentDiffList = mapper.readValue(currentDiffs, List)
-            if (incomingDiff != null)
-                currentDiffList.add()
+                List diffs = (List) currentHistoryMap.get("diffs")
+                diffs.addAll(incomingDiff)
+                List newDiffs = new ArrayList(diffs)
 
-
-
-            /*
-            insvers.setString(1, doc.getShortId())
-        insvers.setObject(2, doc.dataAsString, OTHER)
-        insvers.setString(3, collection)
-        insvers.setString(4, changedIn)
-        insvers.setString(5, changedBy)
-        insvers.setString(6, doc.getChecksum(jsonld))
-        insvers.setTimestamp(7, new Timestamp(createdTime.getTime()))
-        insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
-        insvers.setBoolean(9, deleted)
-             */
-
-            // diffa nuvarande version med nya, lås/hämta historikraden, ändra i historikraden, skriv, skriv i changelog
-
-
+                newHistory = Map.of("original", original, "diffs", newDiffs)
+                String writeHistorySql = "INSERT INTO lddb__history (id, history) VALUES(?, ?) ON CONFLICT DO UPDATE SET (id, history) = (EXCLUDED.id, EXCLUDED.history)"
+                PreparedStatement preparedStatement = null
+                ResultSet rs = null
+                try {
+                    preparedStatement = connection.prepareStatement(writeHistorySql)
+                    preparedStatement.setString(1, doc.getShortId())
+                    preparedStatement.setObject(2, mapper.writeValueAsString(newHistory), OTHER)
+                    preparedStatement.executeUpdate()
+                } catch(Exception e) {
+                    log.error("Failed to save document history: ${e.message}")
+                    throw e
+                } finally {
+                    close(rs, preparedStatement)
+                }
+            }
         }
     }
     
