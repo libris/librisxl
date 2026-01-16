@@ -32,11 +32,12 @@ class TypeMappings implements UsingJsonKeys {
     Whelk whelk
 
     // TODO Should Sound & Video storage medium -- here and further down! -- be replaced with exact matches RDA media type audio and video?
+    // Removed category "Sheet" from Map mapping, since it can be sheet or volume
     Map cleanupInstanceTypes = [
       'SoundRecording': [category: 'https://id.kb.se/term/ktg/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
       'VideoRecording': [category: 'https://id.kb.se/term/ktg/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
-      'Map': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/rda/CartographicImage'],  // 12686
-      'Globe': [category: 'https://id.kb.se/term/rda/Object', workCategory: 'https://id.kb.se/term/ktg/Globe'],  // 74
+      'Map': [workCategory: 'https://id.kb.se/term/rda/CartographicImage'],  // 12686
+      'Globe': [category: 'https://id.kb.se/term/rda/CartographicThreeDimensionalForm', workCategory: 'https://id.kb.se/term/saogf/Kartglober'],  // 74
       'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/rda/StillImage'], // 54954
       'TextInstance': [category: 'https://id.kb.se/term/rda/Volume' , workCategory: 'https://id.kb.se/term/rda/Text'], // 301
     ]
@@ -145,8 +146,12 @@ class TypeMappings implements UsingJsonKeys {
         } else {
             var mappedTypes = cleanupInstanceTypes[itype]
             if (mappedTypes) {
-                instance.get('carrierType', []) << [(ID): mappedTypes.category]
                 work.get('genreForm', []) << [(ID): mappedTypes.workCategory]
+
+                if (mappedTypes?.category) {
+                    instance.get('carrierType', []) << [(ID): mappedTypes.category]
+                }
+
                 changed = true
             }
 
@@ -428,7 +433,7 @@ class TypeNormalizer implements UsingJsonKeys {
         var isTactile = itype == "Tactile"
         var isBraille = dropRedundantString(instance, "marc:mediaTerm", ~/(?i)punktskrift/)
 
-        var toDrop = [MARC + "Braille", MARC + "TacMaterialType-b"] as Set
+        var toDrop = [MARC + "Braille", MARC + "TacMaterialType-b", MARC + "TextMaterialType-c"] as Set
         var nonBrailleCarrierTypes = carrierTypes.findAll { !toDrop.contains(it.get(ID)) }
         if (nonBrailleCarrierTypes.size() < carrierTypes.size()) {
             isBraille = true
@@ -501,10 +506,10 @@ class TypeNormalizer implements UsingJsonKeys {
                 // If it is not a volume, add Sheet
                 if (!isVolume && mappings.matches(carrierTypes, "Sheet")) {
                     carrierTypes << [(ID): KBRDA + 'Sheet']
-                    // Replace local MARC term with linked SAOGF
-                    if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
-                        carrierTypes << [(ID): SAOGF + 'Poster']
-                    }
+                    // Commented out below - don't add SAOGF on instance
+                    //if (dropRedundantString(instance, "marc:mediaTerm", ~/(?i)affisch/)) {
+                    //    carrierTypes << [(ID): SAOGF + 'Poster']
+                    //}
                     changed = true
                 }
             }
