@@ -12,6 +12,7 @@ pushd $HOME/devops
 # Disable nightly exports
 # Recreate storage and import data from prod
 # Redeploy definitions
+git pull
 fab xl_qa xl_stop_services app.lxlweb.stop app.dataexporttooling.disable_nightly_exports app.whelk.recreate_storage app.whelk.import_prod_data app.whelk.reload_syscore app.whelk.reload_common app.whelk.reload_docs app.whelk.load_datasets:i18n
 
 # Move into whelktool
@@ -32,4 +33,5 @@ popd
 # Reindex
 # Restart services - when this step is completed, changes are visible in user interfaces
 # Reload SPARQL
+git pull
 fab xl_qa app.whelk.reindex xl_start_services app.lxlweb.start app.whelk.reload_sparql
