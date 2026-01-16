@@ -840,7 +840,7 @@ public class Query {
 
                     var sliceNode = new LinkedHashMap<>();
                     var observations = sliceResult.getObservations(slice, parentValue, mySelectedValue, selectedFacets);
-                    if (!observations.isEmpty()) {
+                    if (!observations.isEmpty() || parentValue != null) {
                         if (selectedFacets.isRangeFilter(propertyKey)) {
                             sliceNode.put("search", getRangeTemplate(propertyKey));
                         }

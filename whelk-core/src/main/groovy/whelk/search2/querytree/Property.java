@@ -539,7 +539,8 @@ public non-sealed class Property implements Selector {
             List<Selector> components = new ArrayList<>();
 
             ((List<?>) definition.get(PROPERTY_CHAIN_AXIOM))
-                    .stream().filter(Map.class::isInstance)
+                    .stream()
+                    .filter(Map.class::isInstance)
                     .filter(l -> ((Map<?,?>) l).containsKey(JsonLd.LIST_KEY) )
                     .map(l -> getChain((List<?>) ((Map<?,?>) l).get(JsonLd.LIST_KEY), jsonLd))
                     .filter(Predicate.not(List::isEmpty))
@@ -591,11 +592,16 @@ public non-sealed class Property implements Selector {
 
         private Path getPropertyChain(JsonLd jsonLd) {
             // Expect only a single chain
-            if (!(definition.get(PROPERTY_CHAIN_AXIOM) instanceof List<?> l && l.stream().allMatch(Map.class::isInstance))) {
+            if (!(definition.get(PROPERTY_CHAIN_AXIOM) instanceof List<?> l
+                    && l.size() == 1
+                    && QueryUtil.castToStringObjectMap(l.getFirst()).containsKey(JsonLd.LIST_KEY))
+            ) {
                 throw new RuntimeException("Invalid property chain axiom for shorthand property '" + name + "'.");
             }
 
-            var chain = l.stream()
+            var c = (List<?>) QueryUtil.castToStringObjectMap(l.getFirst()).get(JsonLd.LIST_KEY);
+
+            var chain = c.stream()
                     .map(QueryUtil::castToStringObjectMap)
                     .map(prop -> isLink(prop)
                             ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
