@@ -240,8 +240,8 @@ class TypeNormalizer implements UsingJsonKeys {
     boolean normalize(Map instance, Map work, boolean recursive = true) {
         var changed = false
 
-        var oldItype = instance.get(TYPE)
-        var oldWtype = work.get(TYPE)
+        var oldItype = getType(instance)
+        var oldWtype = getType(work)
 
         changed |= mappings.fixMarcLegacyInstanceType(instance, work)
         changed |= simplifyInstanceType(instance)
@@ -276,11 +276,11 @@ class TypeNormalizer implements UsingJsonKeys {
         DocumentUtil.traverse(entity) { value, path ->
             if (!path.isEmpty() && !path.contains('instanceOf') && !path.contains('hasInstance')) {
                 // If the part is a Work or subclass thereof
-                if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(value.get(TYPE), "Work")) {
+                if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(getType(value), "Work")) {
                     changed |= normalize([:], value, false)
                 }
                 // If the part is an instance or subclass thereof
-                else if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(value.get(TYPE), "Instance")) {
+                else if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(getType(value), "Instance")) {
                     changed |= normalize(value, [:], false)
 
                     // Special handling for when the part is Electronic
@@ -313,7 +313,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         var changed = false
 
-        def wtype = work.get(TYPE)
+        String wtype = getType(work)
 
         if (wtype == 'ManuscriptText') {
             work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
@@ -372,7 +372,7 @@ class TypeNormalizer implements UsingJsonKeys {
     boolean simplifyInstanceType(Map instance) {
         var changed = false
 
-        var itype = instance.get(TYPE)
+        var itype = getType(instance)
 
         // Only keep the most specific mediaTypes and carrierTypes
         List mediaTypes = mappings.reduceSymbols(asList(instance["mediaType"]))
@@ -399,7 +399,7 @@ class TypeNormalizer implements UsingJsonKeys {
         // FIXME When would the below be true?
         // If old instance type is "instance" and there is a carrierType that contains "Electronic"
         // Assume that it is electronic
-        if (instance.get(TYPE) == "Instance") {
+        if (getType(instance) == "Instance") {
             if ((carrierTypes.size() == 1 && mappings.matches(carrierTypes, "Electronic"))) {
                 isElectronic = true
             }
@@ -601,10 +601,20 @@ class TypeNormalizer implements UsingJsonKeys {
     }
 
     // ----- Typenormalizer helper methods -----
+
+    static String getType(Map entity) {
+        if (!entity.containsKey(TYPE)) {
+            return null
+        }
+        else {
+            return asList(entity.get(TYPE)).getFirst()
+        }
+    }
+
     static boolean moveInstanceGenreFormsToWork (Map instance, Map work) {
         var changed = false
 
-        List instanceGenreForms = instance.get("genreForm") ?: []
+        List instanceGenreForms = asList(instance.get("genreForm"))
 
         List instanceGenreFormsToMove = instanceGenreForms.findAll {
             isLink(it) && (it.'@id'?.startsWith('https://id.kb.se/term/barngf') || it.'@id'?.startsWith('https://id.kb.se/term/saogf'))}
@@ -612,14 +622,13 @@ class TypeNormalizer implements UsingJsonKeys {
         List instanceGenreFormsToKeep  = instanceGenreForms - instanceGenreFormsToMove
 
         if (instanceGenreFormsToKeep) {
-            instance.category = (instance.category ?: []) + instanceGenreFormsToKeep
+            instance.category = asList(instance.category) + instanceGenreFormsToKeep
             changed = true
-
         }
 
         // Move all other instance GFs to work GF
         if (instanceGenreFormsToMove) {
-            work.genreForm = (work.genreForm ?: []) + instanceGenreFormsToMove
+            work.genreForm = asList(work.genreForm) + instanceGenreFormsToMove
             changed = true
         }
 
