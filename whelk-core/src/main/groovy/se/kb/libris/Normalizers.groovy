@@ -3,6 +3,7 @@ package se.kb.libris
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
+import whelk.Relations
 import whelk.Whelk
 import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
@@ -175,6 +176,29 @@ class Normalizers {
     static DocumentNormalizer typeSingularity(JsonLd jsonLd) {
         return new Normalizer({ Document doc ->
             enforceTypeSingularity(doc.data, jsonLd)
+        })
+    }
+
+    static void removeBroaderCategories(Document doc, Relations relations, JsonLd jsonLd) {
+        var work = getWork(jsonLd, doc)
+        if (!work) {
+            return
+        }
+        var categories = work['category'] as Set<Map<String, String>>
+        if (categories) {
+            var categoryIds = categories.collect { it[ID_KEY] }.findAll()
+            categories.removeIf { c ->
+                categoryIds.any { otherId -> otherId != c[ID_KEY]
+                        && relations.isImpliedBy(c[ID_KEY], otherId)
+                }
+            }
+            work['category'] = categories
+        }
+    }
+
+    static DocumentNormalizer broaderCategory(Relations relations, JsonLd jsonLd) {
+        return new Normalizer({ Document doc ->
+            removeBroaderCategories(doc, relations, jsonLd)
         })
     }
 
