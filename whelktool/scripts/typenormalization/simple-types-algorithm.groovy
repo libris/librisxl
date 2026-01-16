@@ -11,6 +11,8 @@ import static whelk.util.Jackson.mapper
 import static whelk.JsonLd.isLink
 
 def missingCategoryLog = getReportWriter("missing_category_log.tsv")
+def errorLog = getReportWriter("error_log.txt")
+
 
 interface UsingJsonKeys {
     static final var ID = '@id'
@@ -698,43 +700,51 @@ if (typeNormalizer.addCategory) {
 process { def doc, Closure loadWorkItem ->
     def (record, mainEntity) = doc.graph
 
-    // If mainEntity contains "instanceOf", it's an instance
-    if ('instanceOf' in mainEntity) {
-        // Instances and locally embedded works
-        if (ID !in mainEntity.instanceOf) {
-            def work = mainEntity.instanceOf
-            if (work instanceof List && work.size() == 1) {
-                work = work[0]
-            }
-
-            var changed = typeNormalizer.normalize(mainEntity, work)
-
-            if (changed) doc.scheduleSave()
-
-        } else {
-            // Instances and linked works
-            def loadedWorkId = mainEntity.instanceOf[ID]
-            // TODO: refactor very hacky solution...
-            loadWorkItem(loadedWorkId) { workIt ->
-                def (workRecord, work) = workIt.graph
+    try {
+        // If mainEntity contains "instanceOf", it's an instance
+        if ('instanceOf' in mainEntity) {
+            // Instances and locally embedded works
+            if (ID !in mainEntity.instanceOf) {
+                def work = mainEntity.instanceOf
+                if (work instanceof List && work.size() == 1) {
+                    work = work[0]
+                }
 
                 var changed = typeNormalizer.normalize(mainEntity, work)
 
-                if (changed) {
-                    doc.scheduleSave()
-                    if (loadedWorkId !in convertedWorks) workIt.scheduleSave()
-                }
-                convertedWorks << loadedWorkId
-            }
-        }
+                if (changed) doc.scheduleSave()
 
+            } else {
+                // Instances and linked works
+                def loadedWorkId = mainEntity.instanceOf[ID]
+                // TODO: refactor very hacky solution...
+                loadWorkItem(loadedWorkId) { workIt ->
+                    def (workRecord, work) = workIt.graph
+
+                    var changed = typeNormalizer.normalize(mainEntity, work)
+
+                    if (changed) {
+                        doc.scheduleSave()
+                        if (loadedWorkId !in convertedWorks) workIt.scheduleSave()
+                    }
+                    convertedWorks << loadedWorkId
+                }
+            }
+
+        }
+        // Else if it contains the property 'hasInstance', it's a Signe work that reuqires special handling
+        else if ('hasInstance' in mainEntity) {
+            var changed = typeNormalizer.normalize([:], mainEntity)
+            if (changed) {
+                if (mainEntity[ID] !in convertedWorks) doc.scheduleSave()
+            }
+            convertedWorks << mainEntity[ID]
+        }
     }
-    // Else if it contains the property 'hasInstance', it's a Signe work that reuqires special handling
-     else if ('hasInstance' in mainEntity) {
-        var changed = typeNormalizer.normalize([:], mainEntity)
-        if (changed) {
-            if (mainEntity[ID] !in convertedWorks) doc.scheduleSave()
-        }
-        convertedWorks << mainEntity[ID]
-        }
+    catch(Exception e) {
+        errorLog.println("${mainEntity[ID]} $e")
+        e.printStackTrace(errorLog)
+        e.printStackTrace()
+    }
+
 }
