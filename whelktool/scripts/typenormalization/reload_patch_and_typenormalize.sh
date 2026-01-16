@@ -20,6 +20,9 @@ pushd $HOME/globalchanges-QA/librisxl/whelktool
 # Patch SAOGF
 time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -Drdfdata=$HOME/devops/repositories/$ENV/definitions/source/saogf/saogf-patch-wip.ttl -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --skip-index --allow-loud --validation SKIP_AND_LOG --dataset-validation SKIP_AND_LOG scripts/examples/apply-rdf-patch.groovy
 
+# Fix lddb__dependencies (so that reverse relationships can be displayed)
+time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) scripts/cleanups/2025/11/auth-deps.groovy
+
 # Run typenormalization
 time java -Xmx4G -Dxl.secret.properties=$HOME/secret.properties-$ENV -Dtypenormalization=simple-types-algorithm -DaddCategory=true -DreplaceIssuanceTypes=false -jar build/libs/whelktool.jar --report reports/$ENV-$(date +%Y%m%d-%H%M%S) --validation OFF --dataset-validation SKIP_AND_LOG --skip-index scripts/typenormalization/main.groovy
 
