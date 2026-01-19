@@ -1,0 +1,60 @@
+{
+  "type": "BibTypeNormalization",
+  "marcTypeMappings": {
+    "GenreForm": [
+      "marc:MusicCompositionType",
+      "marc:MusicTextType",
+      "marc:MapsMaterialType",
+      "marc:GovernmentPublicationType",
+      "marc:MapsFormatType",
+      "marc:ComputerTypeOfFileType",
+      "marc:GovernmentPublicationType",
+      "marc:GlobeMaterialType",
+      "marc:MapMaterialType",
+      "marc:MotionPicElementsType",
+      "marc:GovernmentPublicationType",
+      "marc:SerialsContentsType",
+      "marc:SerialsNatureType",
+      "marc:SerialsTypeOfSerialType",
+      "marc:NonProjMaterialType",
+      "marc:BooksBiographyType",
+      "marc:BooksFestschriftType",
+      "marc:BooksLiteraryFormType",
+      "marc:ConferencePublicationType",
+      "marc:GovernmentPublicationType",
+      "marc:GovernmentPublicationType",
+      "marc:VisualMaterialType"
+    ],
+    "ContentType": [
+      "marc:ComputerTypeOfFileType",
+      "marc:SerialsTypeOfSerialType",
+      "marc:BooksContentsType",
+      "marc:VisualMaterialType"
+    ],
+    "CarrierType": [
+      "marc:ItemType",
+      "marc:ItemType",
+      "marc:ComputerItemType",
+      "marc:ComputerMaterialType",
+      "marc:KitMaterialType",
+      "marc:MicroformMaterialType",
+      "marc:ItemType",
+      "marc:MotionPicMaterialType",
+      "marc:KitMaterialType",
+      "marc:ProjGraphMaterialType",
+      "marc:KitMaterialType",
+      "marc:ItemType",
+      "marc:SoundMaterialType",
+      "marc:TacMaterialType",
+      "marc:BooksItemType",
+      "marc:TextMaterialType",
+      "marc:VideoMaterialType",
+      "marc:ItemType",
+      "marc:BooksItemType",
+      "marc:ItemType"
+    ]
+  },
+  "_spec:TODO:from": "whelktool/scripts/typenormalization/tailored_examples.jsonl",
+  "_spec": [
+  ]
+}

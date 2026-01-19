@@ -16,6 +16,9 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     Map<String, String> categoryTypeMap = new HashMap()
     List<String> matchRelations = ['exactMatch', 'closeMatch', 'broader', 'broadMatch']
 
+
+    Map<String, Set<String>> marcTypeMappings
+
     void init() {
         if (!checkRequired()) {
             return
@@ -59,8 +62,14 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         work.remove('category')
         work.contentType = getCategoryOfType(categories, 'ContentType')
         work.genreForm = getCategoryOfType(categories, 'GenreForm')
-        work[TYPE] = getImpliedTypeFromCategory(categories)
-        // FIXME: ManuscriptText | ManuscriptNotatedMusic | Cartography
+        work[TYPE] = getWorkType(categories)
+    }
+
+    String getWorkType(List<Map<String, Object>> categories) {
+        // FIXME:
+        // - rank possible matches! i:Audio [if SpokenWords?/Ljudböcker] > a:Text > k:StillImage ?
+        // - also figure out: ManuscriptText | ManuscriptNotatedMusic | Cartography
+        return getImpliedTypeFromCategory(categories)
     }
 
     void toLegacyInstance(Map instance, Map work) {
@@ -68,8 +77,32 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         instance.remove('category')
         instance.mediaType = getCategoryOfType(categories, 'MediaType')
         instance.carrierType = getCategoryOfType(categories, 'CarrierType')
-        instance[TYPE] = getImpliedTypeFromCategory(categories)
+
+        // TODO: until we've finalized InstanceGenreForm->ManifestationForm
+        instance.genreForm = getCategoryOfType(categories, 'GenreForm')
+        instance[TYPE] = getInstanceType(categories)
+    }
+
+    String getInstanceType(List<Map<String, Object>> categories) {
         // FIXME: reverse the hardcoded (typenorm script) cleanupInstanceTypes too!
+        // Either look at work-category, some matches 007-genreForm-terms ...
+        //
+        // - :Electronic>	9925536  // LAST
+        //      - TODO: specify expected; e.g: bib 007: cr
+        // - :VideoRecording>	328175
+        // - :SoundRecording>	185064
+        // - :StillImageInstance>	55997
+        // - :Tactile>	20428
+        // - :Map>	12996
+        // - :Microform>	1969
+        // - :Globe>	92
+        //
+        // Strays:
+        // - :TextInstance>	2
+        // 0:
+        // - :ProjectedImageInstance	0!
+        // - :MovingImageInstance	o!
+        return getImpliedTypeFromCategory(categories)
     }
 
     List<Map<String, Object>> getDescriptions(Object refs) {
@@ -93,9 +126,24 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         return result.values().toList()
     }
 
+    boolean isSubClassOf(Object givenType, String baseType) {
+      if (baseType instanceof List) {
+        for (Object type : baseType) {
+          if (isSubClassOf(type, baseType)) {
+            return true
+          }
+        }
+      }
+      Set marcTypes = marcTypeMappings[baseType]
+      if (marcTypes != null && marcTypes.contains(givenType)) {
+        return true
+      }
+      return resourceCache.jsonld.isSubClassOf(givenType, type)
+    }
+
     void collectCategoryOfType(List<Map<String, Object>> categories, String type, Map<String, Map<String, Object>> result) {
         categories.each {
-            if (resourceCache.jsonld.isSubClassOf(it[TYPE], type)) {
+            if (isSubClassOf(it[TYPE], type)) {
                 result[it[ID]] = it
             }
             for (rel in matchRelations) {

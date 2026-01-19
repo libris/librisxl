@@ -16,12 +16,17 @@ class ResourceCache {
     LanguageResources languageResources
     RelatorResources relatorResources
 
+    private JsonLd jsonld
     private Whelk whelk
-    private Map<String, Map<String, Map<String, Object>>> byTypeCache
+    private Map<String, Map<String, Map<String, Object>>> byTypeCache = [:]
+
+    ResourceCache(JsonLd jsonld) {
+      this.jsonld = jsonld
+    }
 
     ResourceCache(Whelk whelk, LanguageLinker languageLinker, BlankNodeLinker relatorLinker) {
         this.whelk = whelk
-        byTypeCache = [:]
+        this.jsonld = whelk.jsonld
         // TODO: use getByType and no need for elasticFind!
         relatorResources = whelk.elasticFind ? new ResourceCache.RelatorResources(
                   relatorLinker: relatorLinker,
@@ -32,10 +37,6 @@ class ResourceCache {
                 languages: getByType('Language'),
                 transformedLanguageForms: getByType('TransformedLanguageForm')
         )
-    }
-
-    JsonLd getJsonld() {
-      return whelk.jsonld
     }
 
     // TODO: invalidate by time, or a new whelk.broadcastUpdate(id, type) signal...

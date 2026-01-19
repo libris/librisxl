@@ -4,6 +4,8 @@ import whelk.Document
 import whelk.JsonLd
 import whelk.JsonLdValidator
 import whelk.JsonLdValidator.Error
+import whelk.ResourceCache
+import whelk.TypeCategoryNormalizer
 import whelk.Whelk
 import whelk.filter.LinkFinder
 
@@ -24,12 +26,38 @@ if (fpaths.size() > 1) {
     fpaths = fpaths[1..-1]
 }
 
+if (cmd == "cachebytype") {
+  var whelk = Whelk.createLoadedSearchWhelk()
+  var start = new Date().time
+  for (type in ['Category', 'marc:EnumeratedTerm']) {
+    System.err.println "getByType: ${type}"
+    whelk.resourceCache.getByType(type)
+  }
+  System.err.println("took ${new Date().time - start} ms")
+  var resourceCacheByTypeFile = new File(fpaths[0])
+  mapper.writerWithDefaultPrettyPrinter().writeValue(resourceCacheByTypeFile, whelk.resourceCache.byTypeCache)
+  return
+}
+
 if (perf) {
     fpaths = fpaths * perf
     System.err.println "Measuring performance of ${fpaths.size()} ${cmd} runs..."
 }
 
 var converter = newMarcFrameConverter()
+
+if (cmd == "save-typemappings") {
+  var catTypeNormalizer = new TypeCategoryNormalizer(converter.resourceCache)
+
+  var outfile = new File(fpaths[0])
+  var mappings = [
+      typeToCategory: catTypeNormalizer.typeToCategory,
+      preferredCategory: catTypeNormalizer.preferredCategory,
+      categoryMatches: catTypeNormalizer.categoryMatches,
+  ]
+  mapper.writerWithDefaultPrettyPrinter().writeValue(outfile, mappings)
+  return
+}
 
 var start = new Date().time
 
@@ -85,23 +113,31 @@ static MarcFrameConverter newMarcFrameConverter() {
     if (System.properties.getProperty('xl.secret.properties')) {
         def whelk = Whelk.createLoadedCoreWhelk()
         return whelk.getMarcFrameConverter()
-    } else {
-      var converter = new MarcFrameConverter()
-      addJsonLd(converter)
-      return converter
     }
+
+    def defsBuildDir = System.properties.get('xl.definitions.builddir')?: '../../definitions/build'
+    System.err.println("NOTE: using xl.definitions.builddir static files: ${defsBuildDir}")
+    def jsonld = getLocalJsonLd(defsBuildDir)
+
+    def resourceCache = new ResourceCache(jsonld)
+    String resourceCacheDir = System.properties.get('xl.resourcecache.dir')
+    System.err.println("NOTE: using xl.resourcecache.dir static files: ${resourceCacheDir}")
+    if (resourceCacheDir != null) {
+      var byTypeCacheFile = new File("${resourceCacheDir}/typecache.json")
+      resourceCache.byTypeCache = mapper.readValue(byTypeCacheFile, Map)
+    }
+
+    return new MarcFrameConverter(null, jsonld, resourceCache)
 }
 
-static void addJsonLd(converter) {
-    def defsbuild = System.env.defsbuild ?: '../../definitions/build'
-
-    def contextFile = new File("$defsbuild/sys/context/kbv.jsonld")
+static JsonLd getLocalJsonLd(defsBuildDir) {
+    def contextFile = new File("$defsBuildDir/sys/context/kbv.jsonld")
     assert contextFile.exists(), "Misssing context file: ${contextFile}"
 
-    def vocabFile = new File("$defsbuild/vocab.jsonld")
+    def vocabFile = new File("$defsBuildDir/vocab.jsonld")
     assert vocabFile.exists(), "Misssing vocab file: ${vocabFile}"
 
-    def displayFile = new File("$defsbuild/vocab/display.jsonld")
+    def displayFile = new File("$defsBuildDir/vocab/display.jsonld")
     assert displayFile.exists(), "Missing display file: ${displayFile}"
 
     def contextData = mapper.readValue(contextFile, Map)
@@ -109,7 +145,7 @@ static void addJsonLd(converter) {
     def vocabData = mapper.readValue(vocabFile, Map)
     def locales = ['sv', 'en']
 
-    converter.ld = new JsonLd(contextData, displayData, vocabData, locales)
+    return new JsonLd(contextData, displayData, vocabData, locales)
 }
 
 static void reportValidation(converter, source) {
