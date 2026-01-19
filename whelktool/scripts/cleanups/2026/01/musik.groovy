@@ -4,7 +4,7 @@ import whelk.datatool.DocumentItem
 Whelk whelk = getWhelk()
 
 String where = """
-        where data #>> '{@graph,1,@type}' = 'ContentType' 
+        data #>> '{@graph,1,@type}' = 'ContentType' 
         and deleted = false
         """
 
