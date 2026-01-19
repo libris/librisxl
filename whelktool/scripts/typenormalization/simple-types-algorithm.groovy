@@ -478,7 +478,9 @@ class TypeNormalizer implements UsingJsonKeys {
             changed = true
         }
         if (instanceGenreForms.removeIf { it['prefLabel'] == 'E-böcker'}) {
-            carrierTypes << [(ID): KTG + 'EBook']
+            instanceGenreForms << [(ID): KTG + 'EBook']
+            if (instanceGenreForms.size() > 0) {
+                instance.put("genreForm", instanceGenreForms) }
             changed = true
         }
 
