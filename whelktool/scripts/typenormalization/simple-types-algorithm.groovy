@@ -625,12 +625,14 @@ class TypeNormalizer implements UsingJsonKeys {
 
         if (instanceGenreFormsToKeep) {
             instance.category = asList(instance.category) + instanceGenreFormsToKeep
+            instance.remove("genreForm")
             changed = true
         }
 
         // Move all other instance GFs to work GF
         if (instanceGenreFormsToMove) {
             work.genreForm = asList(work.genreForm) + instanceGenreFormsToMove
+            instance.remove("genreForm")
             changed = true
         }
 
