@@ -12,24 +12,6 @@ selectBySqlWhere(where) { DocumentItem doc ->
     whelk.storage.recalculateDependencies(doc.doc)
 }
 
-//whelk.reindexAllLinks('fbr4fb6qh08ngbz7')
-
-def q = [
-        "instanceOf._categoryByCollection.identify.@id": ["https://id.kb.se/term/rda/NotatedMusic"],
-        '_sort': ["@id"]
-]
-
-selectByIds(queryIds(q).collect()) { DocumentItem doc ->
-    whelk.elastic.index(doc.doc, whelk)
-}
-
-q = [
-        "instanceOf._categoryByCollection.identify.@id": ["https://id.kb.se/term/rda/PerformedMusic"],
-        '_sort': ["@id"]
-]
-
-selectByIds(queryIds(q).collect()) { DocumentItem doc ->
-    whelk.elastic.index(doc.doc, whelk)
-}
+whelk.bulkIndex(whelk.elastic.getAffectedIds(["https://id.kb.se/term/rda/PerformedMusic", "https://id.kb.se/term/rda/NotatedMusic"]))
 
 
