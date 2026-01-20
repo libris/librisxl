@@ -250,9 +250,10 @@ class TypeNormalizer implements UsingJsonKeys {
         changed |= moveInstanceGenreFormsToWork(instance, work)
         changed |= simplifyWorkType(work)
 
-
-
-        changed |= mappings.convertIssuanceType(instance, work)
+        // Don't put new types on things that already have one of the new types
+        if (!(oldWtype in ["Monograph", "Serial", "Collection", "Integrating"])) {
+          changed |= mappings.convertIssuanceType(instance, work)
+        }
 
         if (recursive) {
             changed |= normalizeLocalEntity(instance)
@@ -411,23 +412,25 @@ class TypeNormalizer implements UsingJsonKeys {
         /**
          * The part right below applies the new simple instance types Digital/Physical
          */
-        // If the resource is electronic and has at least on carrierType that contains "Online"
-        if ((isElectronic && mappings.matches(carrierTypes, "Online"))) {
-            // Apply new instance types DigitalResource and PhysicalResource
-            instance.put(TYPE, "DigitalResource")
+        // Don't put new types on things that already have one of the new types
+        if (!(itype in ['PhysicalResource', 'DigitalResource'])) {
+            // If the resource is electronic and has at least on carrierType that contains "Online"
+            if ((isElectronic && mappings.matches(carrierTypes, "Online"))) {
+                // Apply new instance types DigitalResource and PhysicalResource
+                instance.put(TYPE, "DigitalResource")
 
-            // FIXME What is the desired outcome below? Removing RDA "OnlineResource" if there are other carrierTypes?
-            // FIXME Find all CarrierTypes expect "Online". If there are none, add "Online".
-            // FIXME Commented out since we are being careful about removing RDA terms.
-            // Add/clean up carrierTypes
-            //carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
-            //if (carrierTypes.size() == 0) {
-            //    carrierTypes << [(ID): KBRDA + 'OnlineResource']
-            //}
-            //changed = true
-        } else {
-            instance.put(TYPE, "PhysicalResource")
-            changed = true
+                // FIXME What is the desired outcome below? Removing RDA "OnlineResource" if there are other carrierTypes?
+                // FIXME Find all CarrierTypes expect "Online". If there are none, add "Online".
+                // Add/clean up carrierTypes
+                //carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
+                //if (carrierTypes.size() == 0) {
+                //    carrierTypes << [(ID): KBRDA + 'OnlineResource']
+                //}
+                //changed = true
+            } else {
+                instance.put(TYPE, "PhysicalResource")
+                changed = true
+            }
         }
 
 
