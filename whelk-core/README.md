@@ -44,17 +44,36 @@ mapped to the KBV application vocabulary, which is based upon the BIBFRAME
 
 ### Using The MarcFrameConverter
 
-To run the converter "offline", not connected to the actual whelk services
-(e.g. for testing purposes), you must have a built copy of `definitions`
-side-by-side with this repository. Otherwise, you can run it against a local
-whelk with the correct local secret properties.
-
-Convert one record from MARC to RDF:
+To convert one record from MARC to RDF:
 ```sh
 $ ../gradlew runMarcFrame -Dargs="convert <path-to-some>.marcjson" 2>/dev/null | grep '^{'
 ```
-
-Revert one (convert from RDF to MARC):
+To revert from RDF to MARC:
 ```sh
 $ ../gradlew runMarcFrame -Dargs="revert <path-to-some>.jsonld" 2>/dev/null | grep '^{'
+```
+
+#### Running MarcFrame Locally Without Whelk
+
+The converter requires metadata access to operate correctly. It can be used
+with a local or remote whelk by providing a `xl.secret.properties` system
+environment variable (via the `-D` cmdline flag to java or gradle).
+
+To run the converter "offline", e.g. for testing purposes, you can use a built
+copy of `definitions` side-by-side with this repository, *and* a cache of
+important resource descriptions. These are referenced using
+`xl.resourcecache.dir` and `xl.definitions.builddir`, respectively.
+(See MarcFrameCli for details.)
+
+To create the required cache files (here in `../../xl-resource-cache`), run:
+```sh
+$ ../gradlew runMarcFrame -Dxl.secret.properties=../SOME_ENV-secret.properties -Dargs="cachebytype ../../xl-resource-cache/typecache.json"
+```
+To run using this cache and the built syscore data in a local definitions clone:
+```sh
+$ ../gradlew runMarcFrame -Dxl.resourcecache.dir=../../xl-resource-cache -Dxl.definitions.builddir=../../definitions/build -Dargs="revert some.jsonld" | grep '^{' | python3 -m json.tool
+```
+A "debug" command is also defined to examine the typemappings used by the TypeCategoryNormalizer. It can be used with either a whelk instance or the above detailed cached files (as here):
+```sh
+$ ../gradlew runMarcFrame -Dxl.resourcecache.dir=../../xl-resource-cache -Dxl.definitions.builddir=../../definitions/build -Dargs="save-typemappings ../../xl-resource-cache/type-category-mappings.json"
 ```
