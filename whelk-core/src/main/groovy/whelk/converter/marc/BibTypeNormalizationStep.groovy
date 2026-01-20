@@ -52,17 +52,26 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
         def work = instance.instanceOf
         def issuanceType = getIssuanceType(work)
-        toLegacyWork(work, instance)
-        toLegacyInstance(instance, work)
-        instance.issuanceType = issuanceType
+        var converted = toLegacyWork(work, instance)
+        converted |= toLegacyInstance(instance, work)
+        if (converted) {
+          instance.issuanceType = issuanceType ?: 'Monograph'
+        }
     }
 
-    void toLegacyWork(Map work, Map someInstance) {
+    boolean toLegacyWork(Map work, Map someInstance) {
         def categories = getDescriptions(work.category)
+        if (!categories) {
+          // TODO: define more detailed "looks like legacy"
+          return false
+        }
+
         work.remove('category')
         work.contentType = getCategoryOfType(categories, 'ContentType')
         work.genreForm = getCategoryOfType(categories, 'GenreForm')
-        work[TYPE] = getWorkType(categories)
+        work[TYPE] = getWorkType(categories) ?: 'Text'
+
+        return true
     }
 
     String getWorkType(List<Map<String, Object>> categories) {
@@ -72,8 +81,13 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         return getImpliedTypeFromCategory(categories)
     }
 
-    void toLegacyInstance(Map instance, Map work) {
+    boolean toLegacyInstance(Map instance, Map work) {
         def categories = getDescriptions(instance.category)
+        if (!categories) {
+          // TODO: define more detailed "looks like legacy"
+          return false
+        }
+
         instance.remove('category')
         instance.mediaType = getCategoryOfType(categories, 'MediaType')
         instance.carrierType = getCategoryOfType(categories, 'CarrierType')
@@ -81,6 +95,8 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         // TODO: until we've finalized InstanceGenreForm->ManifestationForm
         instance.genreForm = getCategoryOfType(categories, 'GenreForm')
         instance[TYPE] = getInstanceType(categories)
+
+        return true
     }
 
     String getInstanceType(List<Map<String, Object>> categories) {
@@ -107,7 +123,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     List<Map<String, Object>> getDescriptions(Object refs) {
         return (List<Map<String, Object>>) asList(refs).findResults {
-            catTypeNormalizer.categories[it[ID]]
+            if (ID in it) catTypeNormalizer.categories[it[ID]]
         }
     }
 
@@ -168,6 +184,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
                 }
             }
         }
+        return null
     }
 
 }
