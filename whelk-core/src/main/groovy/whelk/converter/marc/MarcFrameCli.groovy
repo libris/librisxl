@@ -44,6 +44,27 @@ if (perf) {
     System.err.println "Measuring performance of ${fpaths.size()} ${cmd} runs..."
 }
 
+var doValidate = !perf
+
+List items
+
+if (cmd.endsWith("revert-templates")) {
+  cmd = cmd.replace('-templates', '')
+  doValidate = false
+  def templates = mapper.readValue(new File(fpaths[0]), Map)
+  def only = fpaths.size() > 1 ? fpaths[1..-1] as Set : null
+  items = templates.instance.findResults { name, tplt ->
+    if (only && name !in only) return
+    def data = tplt.value.record
+    data.mainEntity = tplt.value.mainEntity
+    return [ id: name, data: data ]
+  }
+} else {
+  items = fpaths.collect {
+    [ id: it, data: mapper.readValue(new File(it), Map) ]
+  }
+}
+
 var converter = newMarcFrameConverter()
 
 if (cmd == "save-typemappings") {
@@ -61,12 +82,12 @@ if (cmd == "save-typemappings") {
 
 var start = new Date().time
 
-for (fpath in fpaths) {
-    def source = converter.mapper.readValue(new File(fpath), Map)
+for (item in items) {
+    def source = item.data
     def result = null
 
     if (cmd == "revert") {
-        if (!perf && converter.ld) {
+        if (doValidate && converter.ld) {
             reportValidation(converter, source)
         }
         result = converter.runRevert(source)
@@ -80,7 +101,7 @@ for (fpath in fpaths) {
         if (source.oaipmhSetSpecs) {
             extraData = [oaipmhSetSpecs: source.remove('oaipmhSetSpecs')]
         }
-        result = converter.runConvert(source, fpath, extraData)
+        result = converter.runConvert(source, item.id, extraData)
         if (converter.linkFinder) {
             var doc = new Document(result)
             converter.linkFinder.normalizeIdentifiers(doc)
@@ -98,7 +119,7 @@ for (fpath in fpaths) {
     }
 
     if (!perf) {
-        if (fpaths.size() > 1) println "SOURCE: ${fpath}"
+        if (items.size() > 1) println "SOURCE: ${item.id}"
         println s
     }
 }
