@@ -146,9 +146,9 @@ public sealed class Condition implements Node permits Type {
     }
 
     private Node _expand(JsonLd jsonLd) {
-        Selector expandedSelector = selector.expand(jsonLd);
+        List<PathElement> path = selector.path();
 
-        List<Node> expanded = Stream.concat(Stream.of(withSelector(expandedSelector)), getPrefilledFields(expandedSelector.path(), jsonLd).stream())
+        List<Node> expanded = Stream.concat(Stream.of(withSelector(path.size() > 1 ? new Path(path) : path.getFirst())), getPrefilledFields(path, jsonLd).stream())
                 .map(s -> s.expandType(jsonLd))
                 .toList();
 
@@ -164,7 +164,7 @@ public sealed class Condition implements Node permits Type {
                 for (Restrictions.OnProperty r : p.objectOnPropertyRestrictions()) {
                     // Support only HasValue restriction for now
                     if (r instanceof Restrictions.HasValue(Property property, Value v)) {
-                        var restrictedPath = new Path(Stream.concat(currentPath.stream(), property.expand(jsonLd).path().stream()).toList());
+                        var restrictedPath = new Path(Stream.concat(currentPath.stream(), property.path().stream()).toList());
                         prefilledFields.add(new Condition(restrictedPath, EQUALS, v));
                     }
                 }

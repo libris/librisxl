@@ -31,11 +31,6 @@ public sealed abstract class Key extends PathElement permits Key.AmbiguousKey, K
     }
 
     @Override
-    public Selector expand(JsonLd jsonLd) {
-        return this;
-    }
-
-    @Override
     public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         return List.of(this);
     }

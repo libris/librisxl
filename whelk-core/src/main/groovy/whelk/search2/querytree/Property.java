@@ -120,12 +120,12 @@ public non-sealed class Property extends PathElement {
         return List.of(this);
     }
 
-    @Override
-    public Selector expand(JsonLd jsonLd) {
-        return hasDomainAdminMetadata(jsonLd)
-                ? new Path(List.of(new Property(RECORD_KEY, jsonLd), this))
-                : this;
-    }
+//    @Override
+//    public Selector expand(JsonLd jsonLd) {
+//        return hasDomainAdminMetadata(jsonLd)
+//                ? new Path(List.of(new Property(RECORD_KEY, jsonLd), this))
+//                : this;
+//    }
 
     @Override
     public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
@@ -576,8 +576,8 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        public Selector expand(JsonLd jsonLd) {
-            return propertyChain.expand(jsonLd);
+        public List<PathElement> path() {
+            return propertyChain.path();
         }
 
         @Override

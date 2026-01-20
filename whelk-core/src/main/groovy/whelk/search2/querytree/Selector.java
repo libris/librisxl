@@ -14,7 +14,6 @@ public sealed interface Selector permits Path, PathElement {
 
     List<PathElement> path();
 
-    Selector expand(JsonLd jsonLd);
     List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
 
     boolean isValid();

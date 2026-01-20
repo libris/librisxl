@@ -48,31 +48,31 @@ public final class Path implements Selector {
 
     @Override
     public List<PathElement> path() {
-        return path;
+        return path.stream().flatMap(pe -> pe.path().stream()).toList();
     }
 
-    @Override
-    public Path expand(JsonLd jsonLd) {
-        List<PathElement> expandedPath = new ArrayList<>();
-
-        for (Selector step : path) {
-            List<PathElement> expandedStep = new ArrayList<>(step.expand(jsonLd).path());
-            if (!expandedPath.isEmpty() && expandedPath.getLast() instanceof Property p1 && expandedStep.getFirst() instanceof Property p2) {
-                if (p1.isInverseOf(p2)) {
-                    // e.g. when the original path is instanceOf.x and x expands to hasInstance.y
-                    // then we need to adjust the expanded path instanceOf.hasInstance.y -> y
-                    expandedPath.removeLast();
-                    expandedStep.removeFirst();
-                } else if (JsonLd.RECORD_KEY.equals(p1.name()) && JsonLd.RECORD_KEY.equals(p2.name())) {
-                    // when the original path is meta.x and x expands to meta.x
-                    // then we need to adjust the expanded path meta.meta.x -> meta.x
-                    expandedStep.removeFirst();
-                }
-            }
-            expandedPath.addAll(expandedStep);
-        }
-        return new Path(expandedPath);
-    }
+//    @Override
+//    public Path expand(JsonLd jsonLd) {
+//        List<PathElement> expandedPath = new ArrayList<>();
+//
+//        for (Selector step : path) {
+//            List<PathElement> expandedStep = new ArrayList<>(step.path());
+//            if (!expandedPath.isEmpty() && expandedPath.getLast() instanceof Property p1 && expandedStep.getFirst() instanceof Property p2) {
+//                if (p1.isInverseOf(p2)) {
+//                    // e.g. when the original path is instanceOf.x and x expands to hasInstance.y
+//                    // then we need to adjust the expanded path instanceOf.hasInstance.y -> y
+//                    expandedPath.removeLast();
+//                    expandedStep.removeFirst();
+//                } else if (JsonLd.RECORD_KEY.equals(p1.name()) && JsonLd.RECORD_KEY.equals(p2.name())) {
+//                    // when the original path is meta.x and x expands to meta.x
+//                    // then we need to adjust the expanded path meta.meta.x -> meta.x
+//                    expandedStep.removeFirst();
+//                }
+//            }
+//            expandedPath.addAll(expandedStep);
+//        }
+//        return new Path(expandedPath);
+//    }
 
     @Override
     public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
