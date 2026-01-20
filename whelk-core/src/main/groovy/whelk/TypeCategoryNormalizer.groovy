@@ -17,6 +17,7 @@ class TypeCategoryNormalizer {
 
     ResourceCache resourceCache
 
+    String categoryPropertyId
     Map<String, String> typeToCategory
 
     Map<String, Map<String, Object>> categories
@@ -25,38 +26,57 @@ class TypeCategoryNormalizer {
 
     TypeCategoryNormalizer(ResourceCache resourceCache) {
         this.resourceCache = resourceCache
-        typeToCategory = makeTypeToCategoryMapping(resourceCache.jsonld)
+        categoryPropertyId = resourceCache.jsonld.vocabId + 'category'
+
+        var start = new Date().time
+        System.err.println "loadCategories:"
+        loadCategories()
+        System.err.println("took ${new Date().time - start} ms")
+
+        typeToCategory = makeTypeToCategoryMapping()
         computeMappings()
     }
 
-    Map<String, String> makeTypeToCategoryMapping(JsonLd jsonld) {
+    JsonLd getJsonld() {
+        return resourceCache.jsonld
+    }
+
+    Map<String, String> makeTypeToCategoryMapping() {
         var mapping = new TreeMap()
 
-        var categoryPropertyId = jsonld.vocabId + 'category'
-
         for (Map term : jsonld.vocabIndex.values()) {
-            Map restriction = null
+            Map catRestriction = null
             String type = null
-            if (term.intersectionOf) {
-                type = term[ID]
-                if (type.startsWith(jsonld.vocabId)) {
-                    type = type.substring(jsonld.vocabId.length())
-                }
 
-                def basetype = term.intersectionOf[0][ID]
-                if (basetype.startsWith(jsonld.vocabId)) {
-                    basetype = basetype.substring(jsonld.vocabId.length())
+            type = jsonld.toTermKey(term[ID])
+
+            if (term.intersectionOf) {
+                if (!isWorkOrInstanceClass(type)) {
+                    var expectedbase = false
+                    for (item in term.intersectionOf) {
+                        if (ID in item && isWorkOrInstanceClass(jsonld.toTermKey(item[ID]))) {
+                            expectedbase = true
+                        }
+                    }
+                    if (!expectedbase) {
+                        continue
+                    }
                 }
-                if (basetype !in ['Monograph', 'Instance', 'PhysicalResource', 'DigitalResource']) {
+                catRestriction = term.intersectionOf.find { isCategoryRestriction(it) }
+            } else if (term.equivalentClass || term.isSubClassOf) {
+                if (!isWorkOrInstanceClass(type)) {
                   continue
                 }
-
-                restriction = term.intersectionOf[1]
+                // IMPORTANT: assuming that we only need to check direct equivalencies
+                catRestriction = asList(term.equivalentClass).find { isCategoryRestriction(it) }
+                if (!catRestriction) {
+                    // IMPORTANT: assuming that we only need to check direct baseclasses
+                    catRestriction = asList(term.isSubClassOf).find { isCategoryRestriction(it) }
+                }
             }
-            // restriction |= term.subClassOf.findResult { it.onProperty }
-            // TODO: also (only?) just subClassOf
-            if (type && restriction?.onProperty && restriction?.onProperty[ID] == categoryPropertyId) {
-                var category = term.intersectionOf[1].hasValue
+
+            if (type && catRestriction) {
+                var category = catRestriction.hasValue
                 mapping[type] = category[ID]
             }
         }
@@ -64,13 +84,29 @@ class TypeCategoryNormalizer {
         return mapping
     }
 
+    boolean isWorkOrInstanceClass(String termId) {
+        if (jsonld.isSubClassOf(termId, 'Work')) {
+            return true
+        }
+        if (jsonld.isSubClassOf(termId, 'Instance')) {
+            return true
+        }
+        return false
+    }
+
+    boolean isCategoryRestriction(Map term) {
+        return term?.onProperty && term?.onProperty[ID] == categoryPropertyId
+    }
+
+    void loadCategories() {
+        categories = new TreeMap()
+        categories.putAll(resourceCache.getByType('Category'))
+        categories.putAll(resourceCache.getByType('marc:EnumeratedTerm'))
+    }
+
     void computeMappings() {
         preferredCategory = new TreeMap()
         categoryMatches = new TreeMap()
-        categories = new HashMap()
-
-        categories.putAll(resourceCache.getByType('Category'))
-        categories.putAll(resourceCache.getByType('marc:EnumeratedTerm'))
 
         var sourceSchemes = [SCHEMES.marc, SCHEMES.tgm, SCHEMES.saogf, SCHEMES.barngf]
         var targetSchemes = [SCHEMES.kbrda, SCHEMES.saogf, SCHEMES.ktg]
@@ -83,10 +119,10 @@ class TypeCategoryNormalizer {
                 scheme = id.split('/[^/]+$')[0]
             }
 
-            def closeMatch = asList(ctg.closeMatch).findResults { categories[it[ID]] }
-            def exactMatch = asList(ctg.exactMatch).findResults { categories[it[ID]] }
-            def broadMatch = asList(ctg.broadMatch).findResults { categories[it[ID]] }
-            def broader = asList(ctg.broader).findResults { categories[it[ID]] }
+            def closeMatch = asList(ctg.closeMatch).findResults { if (ID in it) categories[it[ID]] }
+            def exactMatch = asList(ctg.exactMatch).findResults { if (ID in it) categories[it[ID]] }
+            def broadMatch = asList(ctg.broadMatch).findResults { if (ID in it) categories[it[ID]] }
+            def broader = asList(ctg.broader).findResults { if (ID in it) categories[it[ID]] }
 
             for (match in closeMatch + exactMatch) {
                 String matchId = match[ID]
@@ -119,20 +155,6 @@ class TypeCategoryNormalizer {
                 }
             }
         }
-    }
-
-    public static void main(String[] args) {
-        var whelk = Whelk.createLoadedSearchWhelk()
-
-        var catTypeNormalizer = new TypeCategoryNormalizer(whelk.resourceCache)
-
-        var outfile = new File(args[0])
-        var mappings = [
-            typeToCategory: catTypeNormalizer.typeToCategory,
-            preferredCategory: catTypeNormalizer.preferredCategory,
-            categoryMatches: catTypeNormalizer.categoryMatches,
-        ]
-        whelk.util.Jackson.mapper.writerWithDefaultPrettyPrinter().writeValue(outfile, mappings)
     }
 
 }

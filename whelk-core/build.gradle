@@ -177,9 +177,9 @@ task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
     description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'whelk.converter.marc.MarcFrameCli'
-    systemProperties(
-        'xl.secret.properties': System.getProperty("xl.secret.properties")
-    )
+    System.properties.each { k, v ->
+      if (k.startsWith('xl.')) systemProperty(k, v)
+    }
     args(System.getProperty('args', "").split() as String[])
 }
 

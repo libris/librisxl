@@ -78,9 +78,14 @@ class ElasticReindexer {
                 List<Document> documents = []
                 Iterable<Document> iterable;
                 if (collection.startsWith(JsonLd.TYPE_KEY+":")) {
-                    var type = Unicode.stripPrefix(collection, JsonLd.TYPE_KEY+":")
+                    var type = Unicode.stripPrefix(collection, JsonLd.TYPE_KEY + ":")
                     iterable = whelk.loadAllByType(type)
                     log.info("Indexing type ${type}")
+                } else if (collection.startsWith("file://")) {
+                    String fileName = Unicode.stripPrefix(collection, "file://");
+                    var ids = new File(fileName).readLines().collect { it.strip() }
+                    iterable = whelk.storage.bulkLoad(ids).values()
+                    log.info("Indexing ${iterable.size()} docs from ${ids.size()} ids from file ${fileName}")
                 } else {
                     iterable = whelk.storage.loadAll(collection)
                     log.info("Indexing collection ${collection}")
