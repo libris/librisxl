@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public sealed interface Selector permits Key, Path, Property {
+public sealed interface Selector permits Path, PathElement {
     String queryKey();
     String esField();
 
-    List<Selector> path();
+    List<PathElement> path();
 
     Selector expand(JsonLd jsonLd);
     List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes);

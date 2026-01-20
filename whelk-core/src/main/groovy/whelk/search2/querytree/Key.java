@@ -8,7 +8,7 @@ import java.util.Map;
 
 import static whelk.JsonLd.TYPE_KEY;
 
-public sealed abstract class Key implements Selector permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey {
+public sealed abstract class Key extends PathElement permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey {
     protected final Token token;
 
     public Key(Token token) {
@@ -26,7 +26,7 @@ public sealed abstract class Key implements Selector permits Key.AmbiguousKey, K
     }
 
     @Override
-    public List<Selector> path() {
+    public List<PathElement> path() {
         return List.of(this);
     }
 

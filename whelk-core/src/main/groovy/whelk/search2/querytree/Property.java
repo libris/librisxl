@@ -33,7 +33,7 @@ import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.JsonLd.isLink;
 
-public non-sealed class Property implements Selector {
+public non-sealed class Property extends PathElement {
     protected String name;
     protected Key.RecognizedKey queryKey;
     protected String indexKey;
@@ -116,7 +116,7 @@ public non-sealed class Property implements Selector {
     }
 
     @Override
-    public List<Selector> path() {
+    public List<PathElement> path() {
         return List.of(this);
     }
 
@@ -555,14 +555,14 @@ public non-sealed class Property implements Selector {
             return components;
         }
 
-        private List<Selector> getChain(List<?> chainDef, JsonLd jsonLd) {
+        private List<PathElement> getChain(List<?> chainDef, JsonLd jsonLd) {
             return chainDef.stream()
                     .filter(Map.class::isInstance)
                     .map(QueryUtil::castToStringObjectMap)
                     .map(prop -> isLink(prop)
                             ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
                             : new AnonymousProperty(prop, jsonLd))
-                    .map(Selector.class::cast)
+                    .map(PathElement.class::cast)
                     .toList();
         }
     }
@@ -606,7 +606,7 @@ public non-sealed class Property implements Selector {
                     .map(prop -> isLink(prop)
                             ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
                             : new AnonymousProperty(prop, jsonLd))
-                    .map(Selector.class::cast)
+                    .map(PathElement.class::cast)
                     .toList();
 
             return new Path(chain);

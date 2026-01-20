@@ -155,12 +155,12 @@ public sealed class Condition implements Node permits Type {
         return expanded.size() > 1 ? new And(expanded) : expanded.getFirst();
     }
 
-    private List<Condition> getPrefilledFields(List<Selector> path, JsonLd jsonLd) {
+    private List<Condition> getPrefilledFields(List<PathElement> path, JsonLd jsonLd) {
         List<Condition> prefilledFields = new ArrayList<>();
-        List<Selector> currentPath = new ArrayList<>();
-        for (Selector s : path) {
-            currentPath.add(s);
-            if (s instanceof Property p && p.isRestrictedSubProperty() && !p.hasIndexKey()) {
+        List<PathElement> currentPath = new ArrayList<>();
+        for (PathElement pe : path) {
+            currentPath.add(pe);
+            if (pe instanceof Property p && p.isRestrictedSubProperty() && !p.hasIndexKey()) {
                 for (Restrictions.OnProperty r : p.objectOnPropertyRestrictions()) {
                     // Support only HasValue restriction for now
                     if (r instanceof Restrictions.HasValue(Property property, Value v)) {

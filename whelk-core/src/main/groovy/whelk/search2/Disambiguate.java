@@ -71,7 +71,7 @@ public class Disambiguate {
                 var narrowed = restrictByValue(path.last(), value);
                 var newPath = new ArrayList<>(path.path());
                 newPath.removeLast();
-                newPath.add(narrowed);
+                newPath.addAll(narrowed.path());
                 yield new Path(newPath, path.token());
             }
             case Key k -> k;
@@ -105,7 +105,7 @@ public class Disambiguate {
 
     private Selector _mapQueryKey(Token token) {
         if (token.value().contains(".")) {
-            List<Selector> path = new ArrayList<>();
+            List<PathElement> path = new ArrayList<>();
             int currentOffset = token.offset();
             for (String key : token.value().split("\\.")) {
                 path.add(mapSingleKey(new Token.Raw(key, currentOffset)));
@@ -116,7 +116,7 @@ public class Disambiguate {
         return mapSingleKey(token);
     }
 
-    private Selector mapSingleKey(Token token) {
+    private PathElement mapSingleKey(Token token) {
         for (String ns : nsPrecedenceOrder) {
             Set<String> mappedProperties = vocabMappings.properties()
                     .getOrDefault(token.value().toLowerCase(), Map.of())

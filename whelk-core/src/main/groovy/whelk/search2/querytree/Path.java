@@ -16,20 +16,20 @@ import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 
 public final class Path implements Selector {
-    private final List<Selector> path;
+    private final List<PathElement> path;
     private Token token;
 
-    public Path(List<Selector> path, Token token) {
+    public Path(List<PathElement> path, Token token) {
         this.path = path;
         this.token = token;
     }
 
-    public Path(List<Selector> path) {
+    public Path(List<PathElement> path) {
         this.path = path;
     }
 
-    public Path(Selector s) {
-        this.path = List.of(s);
+    public Path(PathElement pe) {
+        this.path = List.of(pe);
     }
 
     @Override
@@ -47,16 +47,16 @@ public final class Path implements Selector {
     }
 
     @Override
-    public List<Selector> path() {
+    public List<PathElement> path() {
         return path;
     }
 
     @Override
     public Path expand(JsonLd jsonLd) {
-        List<Selector> expandedPath = new ArrayList<>();
+        List<PathElement> expandedPath = new ArrayList<>();
 
         for (Selector step : path) {
-            List<Selector> expandedStep = new ArrayList<>(step.expand(jsonLd).path());
+            List<PathElement> expandedStep = new ArrayList<>(step.expand(jsonLd).path());
             if (!expandedPath.isEmpty() && expandedPath.getLast() instanceof Property p1 && expandedStep.getFirst() instanceof Property p2) {
                 if (p1.isInverseOf(p2)) {
                     // e.g. when the original path is instanceOf.x and x expands to hasInstance.y
@@ -82,12 +82,12 @@ public final class Path implements Selector {
                 .toList();
     }
 
-    private List<List<Selector>> getAltPaths(List<Selector> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+    private List<List<PathElement>> getAltPaths(List<PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         if (tail.isEmpty()) {
             return List.of(List.of());
         }
-        Selector next = tail.getFirst();
-        List<Selector> newTail = tail.subList(1, tail.size());
+        PathElement next = tail.getFirst();
+        List<PathElement> newTail = tail.subList(1, tail.size());
         return next.getAltSelectors(jsonLd, rdfSubjectTypes).stream()
                 .flatMap(s -> getAltPaths(newTail, jsonLd, next.range()).stream()
                         .map(altPath -> Stream.concat(s.path().stream(), altPath.stream())))
@@ -184,9 +184,5 @@ public final class Path implements Selector {
 
     public Selector last() {
         return path.getLast();
-    }
-
-    private List<Selector> tail() {
-        return path.subList(1, path.size());
     }
 }
