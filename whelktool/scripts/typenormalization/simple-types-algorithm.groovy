@@ -251,7 +251,8 @@ class TypeNormalizer implements UsingJsonKeys {
         changed |= simplifyWorkType(work)
 
         // Don't put new types on things that already have one of the new types
-        if (!(oldWtype in ["Monograph", "Serial", "Collection", "Integrating"])) {
+        List newWorkTypes =  ["Monograph", "Serial", "Collection", "Integrating"]
+        if (!(oldWtype in newWorkTypes)) {
           changed |= mappings.convertIssuanceType(instance, work)
         }
 
@@ -380,6 +381,7 @@ class TypeNormalizer implements UsingJsonKeys {
         // Only keep the most specific mediaTypes and carrierTypes
         List mediaTypes = mappings.reduceSymbols(asList(instance["mediaType"]))
         List carrierTypes = mappings.reduceSymbols(asList(instance["carrierType"]))
+
         // Fetch any GF terms
         List instanceGenreForms = asList(instance.get("genreForm"))
 
@@ -413,24 +415,19 @@ class TypeNormalizer implements UsingJsonKeys {
          * The part right below applies the new simple instance types Digital/Physical
          */
         // Don't put new types on things that already have one of the new types
-        if (!(itype in ['PhysicalResource', 'DigitalResource'])) {
+        List newInstanceTypes = ['PhysicalResource', 'DigitalResource']
+        if (!(itype in newInstanceTypes)) {
+
             // If the resource is electronic and has at least on carrierType that contains "Online"
             if ((isElectronic && mappings.matches(carrierTypes, "Online"))) {
                 // Apply new instance types DigitalResource and PhysicalResource
                 instance.put(TYPE, "DigitalResource")
-
-                // FIXME What is the desired outcome below? Removing RDA "OnlineResource" if there are other carrierTypes?
-                // FIXME Find all CarrierTypes expect "Online". If there are none, add "Online".
-                // Add/clean up carrierTypes
-                //carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
-                //if (carrierTypes.size() == 0) {
-                //    carrierTypes << [(ID): KBRDA + 'OnlineResource']
-                //}
-                //changed = true
+                changed = true
             } else {
                 instance.put(TYPE, "PhysicalResource")
                 changed = true
             }
+
         }
 
 
@@ -460,6 +457,15 @@ class TypeNormalizer implements UsingJsonKeys {
         var isSoundRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/SoundStorageMedium')
         var isVideoRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/VideoStorageMedium')
 
+        // FIXME What is the desired outcome below? Removing RDA "OnlineResource" if there are other carrierTypes?
+        // FIXME Find all CarrierTypes expect "Online". If there are none, add "Online".
+        if (isElectronic && (instance.get(TYPE, '') == 'DigitalResource')) {
+            carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
+            if (carrierTypes.size() == 0) {
+                carrierTypes << [(ID): KBRDA + 'OnlineResource']
+                changed = true
+            }
+        }
 
         // If something has old itype Electronic and new itype PhysicalResource,
         // we can assume it id an electronic storage medium
