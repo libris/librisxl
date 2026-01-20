@@ -503,6 +503,10 @@ public class Query {
                 }
                 var sliceNode = new LinkedHashMap<>();
                 var observations = getObservations(propertyKey, buckets);
+
+                if (property.name().equals(JsonLd.Rdfs.RDF_TYPE)) {
+                    observations = new FacetTree(whelk.getJsonld()).sortObservationsAsTree(observations);
+                }
                 if (!observations.isEmpty()) {
                     if (selectedFilters.isRangeFilter(propertyKey)) {
                         sliceNode.put("search", getRangeTemplate(propertyKey));
