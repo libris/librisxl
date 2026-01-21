@@ -449,7 +449,7 @@ class TypeNormalizer implements UsingJsonKeys {
             }
             changed = true
         }
-        // There is no "else" here, since Tactile instances that are not Braille is a handful that needs manual handling.
+        // No "else" clause here, since all Tactile instances are also Braille, except a handful which require manual handling.
 
 
         // ----- Section: Clean up Electronic -----
@@ -457,10 +457,11 @@ class TypeNormalizer implements UsingJsonKeys {
         var isSoundRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/SoundStorageMedium')
         var isVideoRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/VideoStorageMedium')
 
-        // FIXME What is the desired outcome below? Removing RDA "OnlineResource" if there are other carrierTypes?
-        // FIXME Find all CarrierTypes expect "Online". If there are none, add "Online".
+        // Remove redundant non-RDA carrierTypes. Keep or add rda/OnlineResource.
         if (isElectronic && (instance.get(TYPE, '') == 'DigitalResource')) {
-            carrierTypes = carrierTypes.findAll { !it.getOrDefault(ID, "").contains("Online") }
+            carrierTypes = carrierTypes.findAll { (it.getOrDefault(ID, "").contains("rda")) || (!it.getOrDefault(ID, "").contains("Online")) }
+            changed = true
+            // Keep all that do not contain "Online" and all that contain RDA
             if (carrierTypes.size() == 0) {
                 carrierTypes << [(ID): KBRDA + 'OnlineResource']
                 changed = true
