@@ -150,14 +150,18 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
           }
         }
       }
+
       if (givenType !instanceof String) {
         return false
       }
+
+      // Hardcoded "ducktyped" marc enum types (which used to be real subclasses):
       Set marcTypes = marcTypeMappings[baseType]
       if (marcTypes != null && marcTypes.contains(givenType)) {
         return true
       }
-      return resourceCache.jsonld.isSubClassOf(givenType, type)
+
+      return resourceCache.jsonld.isSubClassOf(givenType, baseType)
     }
 
     void collectCategoryOfType(List<Map<String, Object>> categories, String type, Map<String, Map<String, Object>> result) {
