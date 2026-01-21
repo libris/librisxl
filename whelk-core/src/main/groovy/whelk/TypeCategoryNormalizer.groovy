@@ -28,12 +28,7 @@ class TypeCategoryNormalizer {
         this.resourceCache = resourceCache
         categoryPropertyId = resourceCache.jsonld.vocabId + 'category'
 
-        var start = new Date().time
-        System.err.println "loadCategories:"
         loadCategories()
-        System.err.println("took ${new Date().time - start} ms")
-
-        typeToCategory = makeTypeToCategoryMapping()
         computeMappings()
     }
 
@@ -105,6 +100,7 @@ class TypeCategoryNormalizer {
     }
 
     void computeMappings() {
+        typeToCategory = makeTypeToCategoryMapping()
         preferredCategory = new TreeMap()
         categoryMatches = new TreeMap()
 

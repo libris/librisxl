@@ -472,7 +472,7 @@ public class Query {
                     })
                             : ctx.mmSelected;
                     Map<String, Object> filter = SelectedFacets.buildMultiSelectedTree(mSelected.values())
-                            .expand(ctx.jsonLd)
+                            .expand(ctx.jsonLd, ctx.rdfSubjectTypes)
                             .toEs(ctx.esSettings);
                     query.put(field, filterWrap(aggs, property.name(), filter));
                 });
