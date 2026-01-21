@@ -1635,36 +1635,33 @@ class PostgreSQLComponent {
             }
         }
 
-        // The new diff versions
+        // The new history
         {
             // Is there a diff to be made? A new document (preUpdateDoc passed as null) has nothing to be diffed with.
             List incomingDiff = null
             if (preUpdateDoc != null) {
-                incomingDiff = Diff.diff(doc.data, preUpdateDoc.data)
+                incomingDiff = Diff.diff(preUpdateDoc.data, doc.data)
             }
 
             // Lock/get the records history-row.
             String selectAndLockSql = "SELECT history FROM lddb__history WHERE id = ? FOR UPDATE"
             String currentHistory = null
-            if (preUpdateDoc == null) {
-                currentHistory = "[]" // A new record has no prior history.
-            } else {
-                PreparedStatement preparedStatement = null
-                ResultSet rs = null
-                try {
-                    preparedStatement = connection.prepareStatement(selectAndLockSql)
-                    preparedStatement.setString(1, doc.getShortId())
 
-                    rs = preparedStatement.executeQuery()
-                    if (rs.next()) {
-                        currentHistory = rs.getString("diffs")
-                    }
-                } catch(Exception e) {
-                    log.error("Failed to retrieve current document history: ${e.message}")
-                    throw e
-                } finally {
-                    close(rs, preparedStatement)
+            PreparedStatement lockRowPreparedStatement = null
+            ResultSet lockRockRs = null
+            try {
+                lockRowPreparedStatement = connection.prepareStatement(selectAndLockSql)
+                lockRowPreparedStatement.setString(1, doc.getShortId())
+
+                lockRockRs = lockRowPreparedStatement.executeQuery()
+                if (lockRockRs.next()) {
+                    currentHistory = lockRockRs.getString("history")
                 }
+            } catch (Exception e) {
+                log.error("Failed to retrieve current document history: ${e.message}")
+                throw e
+            } finally {
+                close(lockRockRs, lockRowPreparedStatement)
             }
 
             Map newHistory
@@ -1683,27 +1680,41 @@ class PostgreSQLComponent {
                     throw new RuntimeException("Cannot write history for: " + doc.getShortId())
                 }
 
+                boolean loud = true
+                if (doc.getGenerationDate() != null) {
+                    if (Instant.parse(doc.getModified()).isBefore( Instant.parse(doc.getGenerationDate()) ))
+                        loud = false
+                }
+
                 List diffs = (List) currentHistoryMap.get("diffs")
-                diffs.addAll(incomingDiff)
+                Map diffEntry = new HashMap()
+                diffEntry.put("time", modTime)
+                diffEntry.put("loud", loud)
+                diffEntry.put("changedIn", changedIn)
+                diffEntry.put("changedBy", changedBy)
+                diffEntry.put("deleted", deleted)
+                diffEntry.put("diff", incomingDiff)
+                diffs.addAll( diffEntry )
                 List newDiffs = new ArrayList(diffs)
 
                 newHistory = Map.of("original", original, "diffs", newDiffs)
-                String writeHistorySql = "INSERT INTO lddb__history (id, history) VALUES(?, ?) ON CONFLICT DO UPDATE SET (id, history) = (EXCLUDED.id, EXCLUDED.history)"
-                PreparedStatement preparedStatement = null
-                ResultSet rs = null
-                try {
-                    preparedStatement = connection.prepareStatement(writeHistorySql)
-                    preparedStatement.setString(1, doc.getShortId())
-                    preparedStatement.setObject(2, mapper.writeValueAsString(newHistory), OTHER)
-                    preparedStatement.executeUpdate()
-                } catch(Exception e) {
-                    log.error("Failed to save document history: ${e.message}")
-                    throw e
-                } finally {
-                    close(rs, preparedStatement)
-                }
             }
-        }
+
+            String writeHistorySql = "INSERT INTO lddb__history (id, history) VALUES(?, ?) ON CONFLICT (id) DO UPDATE SET (id, history) = (EXCLUDED.id, EXCLUDED.history)"
+            PreparedStatement preparedStatement = null
+            ResultSet rs = null
+            try {
+                preparedStatement = connection.prepareStatement(writeHistorySql)
+                preparedStatement.setString(1, doc.getShortId())
+                preparedStatement.setObject(2, mapper.writeValueAsString(newHistory), OTHER)
+                preparedStatement.executeUpdate()
+            } catch(Exception e) {
+                log.error("Failed to save document history: ${e.message}")
+                throw e
+            } finally {
+                close(rs, preparedStatement)
+            }
+        } // new history
     }
     
     private PreparedStatement rigVersionStatement(PreparedStatement insvers,
