@@ -1524,6 +1524,14 @@ class MarcFixedFieldHandler {
 
             if (v instanceof List) {
                 v = v.findAll { it && width >= it.size() }
+                if (v.size() > 1 && tokensInOrder != null) {
+                  var vset = v as Set
+                  for (String token : tokensInOrder) {
+                    if (token in vset) {
+                      return token
+                    }
+                  }
+                }
                 if (itemPos != null) {
                     return itemPos < v.size() ? v[itemPos] : fixedDefault
                 } else {
@@ -1702,6 +1710,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     String property
     String uriTemplate
     Pattern matchUriToken = null
+    List<String> tokensInOrder = null
     boolean parseZeroPaddedNumber
     DateTimeFormatter dateTimeFormat
     ZoneId timeZone
@@ -1742,6 +1751,9 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         parseZeroPaddedNumber = (fieldDfn.parseZeroPaddedNumber == true)
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
+            if (fieldDfn.matchUriToken.startsWith('^[') && fieldDfn.matchUriToken.endsWith(']$')) {
+              tokensInOrder = fieldDfn.matchUriToken[2..-3].collect { it }
+            }
             matchUriToken = Pattern.compile(fieldDfn.matchUriToken as String)
             if (fieldDfn.matchSpec) {
                 fieldDfn.matchSpec['matches'].each {
@@ -1885,7 +1897,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                         return revertToken(it, token)
                     }
                     if (it instanceof Map) {
-                        // TODO: def enumCandidates = relations.findDependers(id, MATCHING_LINKS) // TODO: of sought after enum type? Won't reduce selection as things are imolemented right now...
+                        // TODO: def enumCandidates = relations.findDependers(id, MATCHING_LINKS) // TODO: of sought after enum type? Won't reduce selection as things are implemented right now...
                         for (same in Util.asList(it['sameAs'])) {
                             token = findTokenFromId(same, uriTemplate, matchUriToken)
                             if (token) {
