@@ -8,19 +8,18 @@ class SelectorSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
 
-    def "expand"() {
+    def "get expanded path"() {
         given:
         Selector p = ((Condition) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
 
         expect:
-        p.expand(jsonLd).toString() == result
+        p.path().collect { it.toString() } == result
 
         where:
         _p      | result
-        "p1"    | "p1"
-        "p5"    | "meta.p5"
-        "p6"    | "p3.p4"
-        "p6.p1" | "p3.p4.p1"
+        "p1"    | ["p1"]
+        "p6"    | ["p3", "p4"]
+        "p6.p1" | ["p3", "p4", "p1"]
     }
 
     def "get alternative paths for integral relations"() {
@@ -28,7 +27,7 @@ class SelectorSpec extends Specification {
         Selector p = ((Condition) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
 
         expect:
-        p.getAltSelectors(jsonLd, types).collect { it.expand(jsonLd).toString() } == result
+        p.getAltSelectors(jsonLd, types).collect { it.path().collect { it.toString() }.join(".") } == result
 
         where:
         _p               | types        | result

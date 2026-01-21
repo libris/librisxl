@@ -146,16 +146,16 @@ public sealed class Condition implements Node permits Type {
     }
 
     private Node _expand(JsonLd jsonLd) {
-        List<PathElement> path = selector.path();
+        List<? extends PathElement> path = selector.path();
 
-        List<Node> expanded = Stream.concat(Stream.of(withSelector(path.size() > 1 ? new Path(path) : path.getFirst())), getPrefilledFields(path, jsonLd).stream())
+        List<Node> expanded = Stream.concat(Stream.of(withSelector(path.size() > 1 ? new Path(path) : path.getFirst())), getPrefilledFields(path).stream())
                 .map(s -> s.expandType(jsonLd))
                 .toList();
 
         return expanded.size() > 1 ? new And(expanded) : expanded.getFirst();
     }
 
-    private List<Condition> getPrefilledFields(List<PathElement> path, JsonLd jsonLd) {
+    private List<Condition> getPrefilledFields(List<? extends PathElement> path) {
         List<Condition> prefilledFields = new ArrayList<>();
         List<PathElement> currentPath = new ArrayList<>();
         for (PathElement pe : path) {

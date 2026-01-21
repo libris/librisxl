@@ -69,7 +69,7 @@ public class Disambiguate {
             case Property p -> restrictByValue(p, value);
             case Path path -> {
                 var narrowed = restrictByValue(path.last(), value);
-                var newPath = new ArrayList<>(path.path());
+                List<PathElement> newPath = new ArrayList<>(path.path());
                 newPath.removeLast();
                 newPath.addAll(narrowed.path());
                 yield new Path(newPath, path.token());

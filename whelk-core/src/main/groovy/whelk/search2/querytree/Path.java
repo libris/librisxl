@@ -3,7 +3,6 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.QueryUtil;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,13 +18,13 @@ public final class Path implements Selector {
     private final List<PathElement> path;
     private Token token;
 
-    public Path(List<PathElement> path, Token token) {
-        this.path = path;
+    public Path(List<? extends PathElement> path, Token token) {
+        this(path);
         this.token = token;
     }
 
-    public Path(List<PathElement> path) {
-        this.path = path;
+    public Path(List<? extends PathElement> path) {
+        this.path = path.stream().map(PathElement.class::cast).toList();
     }
 
     public Path(PathElement pe) {
@@ -47,49 +46,39 @@ public final class Path implements Selector {
     }
 
     @Override
-    public List<PathElement> path() {
+    public List<? extends PathElement> path() {
         return path.stream().flatMap(pe -> pe.path().stream()).toList();
     }
 
-//    @Override
-//    public Path expand(JsonLd jsonLd) {
-//        List<PathElement> expandedPath = new ArrayList<>();
-//
-//        for (Selector step : path) {
-//            List<PathElement> expandedStep = new ArrayList<>(step.path());
-//            if (!expandedPath.isEmpty() && expandedPath.getLast() instanceof Property p1 && expandedStep.getFirst() instanceof Property p2) {
-//                if (p1.isInverseOf(p2)) {
-//                    // e.g. when the original path is instanceOf.x and x expands to hasInstance.y
-//                    // then we need to adjust the expanded path instanceOf.hasInstance.y -> y
-//                    expandedPath.removeLast();
-//                    expandedStep.removeFirst();
-//                } else if (JsonLd.RECORD_KEY.equals(p1.name()) && JsonLd.RECORD_KEY.equals(p2.name())) {
-//                    // when the original path is meta.x and x expands to meta.x
-//                    // then we need to adjust the expanded path meta.meta.x -> meta.x
-//                    expandedStep.removeFirst();
-//                }
-//            }
-//            expandedPath.addAll(expandedStep);
-//        }
-//        return new Path(expandedPath);
-//    }
-
     @Override
     public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return getAltPaths(path, jsonLd, rdfSubjectTypes).stream()
-                .map(Path::new)
-                .map(Selector.class::cast)
+        return getAltPaths(path(), jsonLd, rdfSubjectTypes).stream()
+                .map(l -> l.size() > 1 ? new Path(l) : l.getFirst())
                 .toList();
     }
 
-    private List<List<PathElement>> getAltPaths(List<PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+    private List<List<PathElement>> getAltPaths(List<? extends PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         if (tail.isEmpty()) {
             return List.of(List.of());
         }
-        PathElement next = tail.getFirst();
-        List<PathElement> newTail = tail.subList(1, tail.size());
-        return next.getAltSelectors(jsonLd, rdfSubjectTypes).stream()
+        var next = tail.getFirst();
+        var newTail = tail.subList(1, tail.size());
+        var nextAltSelectors = next.getAltSelectors(jsonLd, rdfSubjectTypes);
+        if (nextAltSelectors.isEmpty()) {
+            // Indicates that an integral relation has been canceled out by its reverse
+            // For example, when instanceOf is prepended to hasInstance.x
+            // the integral property is dropped and only the tail (x) is kept
+            return getAltPaths(newTail, jsonLd, List.of());
+        }
+        return nextAltSelectors.stream()
                 .flatMap(s -> getAltPaths(newTail, jsonLd, next.range()).stream()
+                        .filter(altPath ->
+                                // Avoid creating alternative paths caused by inverse integral round-trips.
+                                // For example, if the original path is hasInstance.x, do not
+                                // generate the alternative path x via instanceOf.hasInstance.x.
+                                !(s instanceof Property p1
+                                        && !altPath.isEmpty() && altPath.getFirst() instanceof Property p2
+                                        && p1.isInverseOf(p2)))
                         .map(altPath -> Stream.concat(s.path().stream(), altPath.stream())))
                 .map(Stream::toList)
                 .toList();

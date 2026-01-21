@@ -198,21 +198,34 @@ class TestData {
                         '@type': 'ObjectProperty'
                 ],
                 [
+                        '@id'               : 'hasInstanceCategory',
+                        'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
+                        'domain'            : ['@id': 'T2'],
+                        '@type'             : 'ObjectProperty',
+                        'propertyChainAxiom': [['@list': [
+                                ['@id': 'hasInstance'],
+                                ['@id': 'category']
+                        ]]]
+                ],
+                [
                         '@id'          : 'librissearch:findCategory',
                         '@type'        : 'ObjectProperty',
                         'subPropertyOf': [['@id': 'category']],
+                        'domain'       : ['@id': 'T2'],
                         'ls:indexKey'  : '_categoryByCollection.find'
                 ],
                 [
                         '@id'          : 'librissearch:identifyCategory',
                         '@type'        : 'ObjectProperty',
                         'subPropertyOf': [['@id': 'category']],
+                        'domain'       : ['@id': 'T2'],
                         'ls:indexKey'  : '_categoryByCollection.identify'
                 ],
                 [
                         '@id'          : 'librissearch:noneCategory',
                         '@type'        : 'ObjectProperty',
                         'subPropertyOf': [['@id': 'category']],
+                        'domain'       : ['@id': 'T2'],
                         'ls:indexKey'  : '_categoryByCollection.@none'
                 ],
                 ['@id': 'textQuery', '@type': 'DatatypeProperty'],

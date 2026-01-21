@@ -12,7 +12,7 @@ public sealed interface Selector permits Path, PathElement {
     String queryKey();
     String esField();
 
-    List<PathElement> path();
+    List<? extends PathElement> path();
 
     List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
 

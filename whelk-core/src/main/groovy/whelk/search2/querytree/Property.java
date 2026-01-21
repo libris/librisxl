@@ -116,7 +116,7 @@ public non-sealed class Property extends PathElement {
     }
 
     @Override
-    public List<PathElement> path() {
+    public List<Property> path() {
         return List.of(this);
     }
 
@@ -301,13 +301,21 @@ public non-sealed class Property extends PathElement {
                         .stream()
                         .anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
 
-        List<Selector> altSelectors = integralRelations.stream()
+        List<List<Property>> altPaths = integralRelations.stream()
                 .filter(followIntegralRelation)
-                .map(ir -> new Path(List.of(ir, this)))
+                .map(ir -> {
+                    var altPath = new ArrayList<>(path());
+                    if (ir.isInverseOf(altPath.getFirst())) {
+                        altPath.removeFirst();
+                    } else {
+                        altPath.addFirst(ir);
+                    }
+                    return altPath;
+                })
                 .collect(Collectors.toList());
 
-        if (altSelectors.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
-            altSelectors.add(this);
+        if (altPaths.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+            altPaths.add(List.of(this));
         }
 
         /*
@@ -318,11 +326,14 @@ public non-sealed class Property extends PathElement {
         if ("bibliography".equals(name)) {
             integralRelations.stream().filter(ir -> "hasInstance".equals(ir.name()))
                     .findFirst()
-                    .map(hasInstance -> new Path(List.of(hasInstance, this)))
-                    .ifPresent(altSelectors::add);
+                    .map(hasInstance -> List.of(hasInstance, this))
+                    .ifPresent(altPaths::add);
         }
 
-        return altSelectors;
+        return altPaths.stream()
+                .filter(Predicate.not(List::isEmpty))
+                .map(altPath -> altPath.size() > 1 ? new Path(altPath) : altPath.getFirst())
+                .toList();
     }
 
     private boolean hasDomainAdminMetadata(JsonLd jsonLd) {
@@ -568,7 +579,7 @@ public non-sealed class Property extends PathElement {
     }
 
     private static class ShorthandProperty extends Property {
-        private final Path propertyChain;
+        private final List<Property> propertyChain;
 
         public ShorthandProperty(String name, JsonLd jsonLd, Key.RecognizedKey key) {
             super(name, jsonLd, key);
@@ -576,21 +587,21 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        public List<PathElement> path() {
-            return propertyChain.path();
+        public List<Property> path() {
+            return propertyChain;
         }
 
         @Override
         public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-            return propertyChain.getAltSelectors(jsonLd, rdfSubjectTypes);
+            return new Path(propertyChain).getAltSelectors(jsonLd, rdfSubjectTypes);
         }
 
         @Override
         public boolean isType() {
-            return propertyChain.isType();
+            return propertyChain.getLast().isType();
         }
 
-        private Path getPropertyChain(JsonLd jsonLd) {
+        private List<Property> getPropertyChain(JsonLd jsonLd) {
             // Expect only a single chain
             if (!(definition.get(PROPERTY_CHAIN_AXIOM) instanceof List<?> l
                     && l.size() == 1
@@ -601,15 +612,12 @@ public non-sealed class Property extends PathElement {
 
             var c = (List<?>) QueryUtil.castToStringObjectMap(l.getFirst()).get(JsonLd.LIST_KEY);
 
-            var chain = c.stream()
+            return c.stream()
                     .map(QueryUtil::castToStringObjectMap)
                     .map(prop -> isLink(prop)
                             ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
                             : new AnonymousProperty(prop, jsonLd))
-                    .map(PathElement.class::cast)
                     .toList();
-
-            return new Path(chain);
         }
     }
 }
