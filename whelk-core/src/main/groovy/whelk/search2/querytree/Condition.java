@@ -138,6 +138,7 @@ public sealed class Condition implements Node permits Type {
 
     private ExpandedNode expandWithAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         List<Node> withAltSelectors = selector.getAltSelectors(jsonLd, rdfSubjectTypes).stream()
+                .map(s -> s.withPrependedMetaProperty(jsonLd))
                 .map(this::withSelector)
                 .map(s -> s._expand(jsonLd))
                 .toList();
@@ -146,25 +147,25 @@ public sealed class Condition implements Node permits Type {
     }
 
     private Node _expand(JsonLd jsonLd) {
-        Selector expandedSelector = selector.expand(jsonLd);
+        List<? extends PathElement> path = selector.path();
 
-        List<Node> expanded = Stream.concat(Stream.of(withSelector(expandedSelector)), getPrefilledFields(expandedSelector.path(), jsonLd).stream())
+        List<Node> expanded = Stream.concat(Stream.of(withSelector(path.size() > 1 ? new Path(path) : path.getFirst())), getPrefilledFields(path).stream())
                 .map(s -> s.expandType(jsonLd))
                 .toList();
 
         return expanded.size() > 1 ? new And(expanded) : expanded.getFirst();
     }
 
-    private List<Condition> getPrefilledFields(List<Selector> path, JsonLd jsonLd) {
+    private List<Condition> getPrefilledFields(List<? extends PathElement> path) {
         List<Condition> prefilledFields = new ArrayList<>();
-        List<Selector> currentPath = new ArrayList<>();
-        for (Selector s : path) {
-            currentPath.add(s);
-            if (s instanceof Property p && p.isRestrictedSubProperty() && !p.hasIndexKey()) {
+        List<PathElement> currentPath = new ArrayList<>();
+        for (PathElement pe : path) {
+            currentPath.add(pe);
+            if (pe instanceof Property p && p.isRestrictedSubProperty() && !p.hasIndexKey()) {
                 for (Restrictions.OnProperty r : p.objectOnPropertyRestrictions()) {
                     // Support only HasValue restriction for now
                     if (r instanceof Restrictions.HasValue(Property property, Value v)) {
-                        var restrictedPath = new Path(Stream.concat(currentPath.stream(), property.expand(jsonLd).path().stream()).toList());
+                        var restrictedPath = new Path(Stream.concat(currentPath.stream(), property.path().stream()).toList());
                         prefilledFields.add(new Condition(restrictedPath, EQUALS, v));
                     }
                 }

@@ -40,7 +40,8 @@ class TestData {
                 'findcategory'    : ['librissearch:findCategory'] as Set,
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
                 'nonecategory'    : ['librissearch:noneCategory'] as Set,
-                'p3p1'            : ['p3p1'] as Set
+                'p3p1'            : ['p3p1'] as Set,
+                'bibliography'    : ['bibliography'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -198,21 +199,34 @@ class TestData {
                         '@type': 'ObjectProperty'
                 ],
                 [
+                        '@id'               : 'hasInstanceCategory',
+                        'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
+                        'domain'            : ['@id': 'T2'],
+                        '@type'             : 'ObjectProperty',
+                        'propertyChainAxiom': [['@list': [
+                                ['@id': 'hasInstance'],
+                                ['@id': 'category']
+                        ]]]
+                ],
+                [
                         '@id'          : 'librissearch:findCategory',
                         '@type'        : 'ObjectProperty',
                         'subPropertyOf': [['@id': 'category']],
+                        'domain'       : ['@id': 'T2'],
                         'ls:indexKey'  : '_categoryByCollection.find'
                 ],
                 [
                         '@id'          : 'librissearch:identifyCategory',
                         '@type'        : 'ObjectProperty',
                         'subPropertyOf': [['@id': 'category']],
+                        'domain'       : ['@id': 'T2'],
                         'ls:indexKey'  : '_categoryByCollection.identify'
                 ],
                 [
                         '@id'          : 'librissearch:noneCategory',
                         '@type'        : 'ObjectProperty',
                         'subPropertyOf': [['@id': 'category']],
+                        'domain'       : ['@id': 'T2'],
                         'ls:indexKey'  : '_categoryByCollection.@none'
                 ],
                 ['@id': 'textQuery', '@type': 'DatatypeProperty'],
@@ -236,7 +250,8 @@ class TestData {
                                 ['@id': 'p3'],
                                 ['@id': 'p1']
                         ]]]
-                ]
+                ],
+                ['@id': 'bibliography', '@type': 'ObjectProperty', 'domain': ['@id': 'https://id.kb.se/vocab/AdminMetadata']],
         ]]
         def ctx = [
                 '@context': [

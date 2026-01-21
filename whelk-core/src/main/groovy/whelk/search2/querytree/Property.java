@@ -33,7 +33,7 @@ import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.JsonLd.isLink;
 
-public non-sealed class Property implements Selector {
+public non-sealed class Property extends PathElement {
     protected String name;
     protected Key.RecognizedKey queryKey;
     protected String indexKey;
@@ -100,9 +100,13 @@ public non-sealed class Property implements Selector {
         if (Restrictions.isNarrowingProperty(propertyKey)) {
             return new NarrowedRestrictedProperty(propertyKey, jsonLd, queryKey);
         }
-        return RDF_TYPE.equals(propertyKey)
-                ? new RdfType(jsonLd, queryKey)
-                : new Property(propertyKey, jsonLd, queryKey);
+        if (RDF_TYPE.equals(propertyKey)) {
+            return new RdfType(jsonLd, queryKey);
+        }
+        if (RECORD_KEY.equals(propertyKey)) {
+            return new Meta(jsonLd, queryKey);
+        }
+        return new Property(propertyKey, jsonLd, queryKey);
     }
 
     @Override
@@ -116,20 +120,20 @@ public non-sealed class Property implements Selector {
     }
 
     @Override
-    public List<Selector> path() {
+    public List<Property> path() {
         return List.of(this);
-    }
-
-    @Override
-    public Selector expand(JsonLd jsonLd) {
-        return hasDomainAdminMetadata(jsonLd)
-                ? new Path(List.of(new Property(RECORD_KEY, jsonLd), this))
-                : this;
     }
 
     @Override
     public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         return _getAltSelectors(jsonLd, rdfSubjectTypes);
+    }
+
+    @Override
+    public Selector withPrependedMetaProperty(JsonLd jsonLd) {
+        return hasDomainAdminMetadata(jsonLd)
+                ? new Path(List.of(new Meta(jsonLd), this))
+                : this;
     }
 
     @Override
@@ -301,13 +305,21 @@ public non-sealed class Property implements Selector {
                         .stream()
                         .anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
 
-        List<Selector> altSelectors = integralRelations.stream()
+        List<List<Property>> altPaths = integralRelations.stream()
                 .filter(followIntegralRelation)
-                .map(ir -> new Path(List.of(ir, this)))
+                .map(ir -> {
+                    var altPath = new ArrayList<>(path());
+                    if (ir.isInverseOf(altPath.getFirst())) {
+                        altPath.removeFirst();
+                    } else {
+                        altPath.addFirst(ir);
+                    }
+                    return altPath;
+                })
                 .collect(Collectors.toList());
 
-        if (altSelectors.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
-            altSelectors.add(this);
+        if (altPaths.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+            altPaths.add(List.of(this));
         }
 
         /*
@@ -318,11 +330,14 @@ public non-sealed class Property implements Selector {
         if ("bibliography".equals(name)) {
             integralRelations.stream().filter(ir -> "hasInstance".equals(ir.name()))
                     .findFirst()
-                    .map(hasInstance -> new Path(List.of(hasInstance, this)))
-                    .ifPresent(altSelectors::add);
+                    .map(hasInstance -> List.of(hasInstance, this))
+                    .ifPresent(altPaths::add);
         }
 
-        return altSelectors;
+        return altPaths.stream()
+                .filter(Predicate.not(List::isEmpty))
+                .map(altPath -> altPath.size() > 1 ? new Path(altPath) : altPath.getFirst())
+                .toList();
     }
 
     private boolean hasDomainAdminMetadata(JsonLd jsonLd) {
@@ -418,6 +433,16 @@ public non-sealed class Property implements Selector {
         public RdfType(JsonLd jsonLd, Key.RecognizedKey key) {
             super(RDF_TYPE, jsonLd, key);
             this.indexKey = TYPE_KEY;
+        }
+    }
+
+    public static final class Meta extends Property {
+        public Meta(JsonLd jsonLd) {
+            super(RECORD_KEY, jsonLd);
+        }
+
+        public Meta(JsonLd jsonLd, Key.RecognizedKey key) {
+            super(RECORD_KEY, jsonLd, key);
         }
     }
 
@@ -555,20 +580,20 @@ public non-sealed class Property implements Selector {
             return components;
         }
 
-        private List<Selector> getChain(List<?> chainDef, JsonLd jsonLd) {
+        private List<PathElement> getChain(List<?> chainDef, JsonLd jsonLd) {
             return chainDef.stream()
                     .filter(Map.class::isInstance)
                     .map(QueryUtil::castToStringObjectMap)
                     .map(prop -> isLink(prop)
                             ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
                             : new AnonymousProperty(prop, jsonLd))
-                    .map(Selector.class::cast)
+                    .map(PathElement.class::cast)
                     .toList();
         }
     }
 
     private static class ShorthandProperty extends Property {
-        private final Path propertyChain;
+        private final List<Property> propertyChain;
 
         public ShorthandProperty(String name, JsonLd jsonLd, Key.RecognizedKey key) {
             super(name, jsonLd, key);
@@ -576,21 +601,21 @@ public non-sealed class Property implements Selector {
         }
 
         @Override
-        public Selector expand(JsonLd jsonLd) {
-            return propertyChain.expand(jsonLd);
+        public List<Property> path() {
+            return propertyChain;
         }
 
         @Override
         public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-            return propertyChain.getAltSelectors(jsonLd, rdfSubjectTypes);
+            return new Path(propertyChain).getAltSelectors(jsonLd, rdfSubjectTypes);
         }
 
         @Override
         public boolean isType() {
-            return propertyChain.isType();
+            return propertyChain.getLast().isType();
         }
 
-        private Path getPropertyChain(JsonLd jsonLd) {
+        private List<Property> getPropertyChain(JsonLd jsonLd) {
             // Expect only a single chain
             if (!(definition.get(PROPERTY_CHAIN_AXIOM) instanceof List<?> l
                     && l.size() == 1
@@ -601,15 +626,12 @@ public non-sealed class Property implements Selector {
 
             var c = (List<?>) QueryUtil.castToStringObjectMap(l.getFirst()).get(JsonLd.LIST_KEY);
 
-            var chain = c.stream()
+            return c.stream()
                     .map(QueryUtil::castToStringObjectMap)
                     .map(prop -> isLink(prop)
                             ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
                             : new AnonymousProperty(prop, jsonLd))
-                    .map(Selector.class::cast)
                     .toList();
-
-            return new Path(chain);
         }
     }
 }

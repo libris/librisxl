@@ -15,7 +15,7 @@ class QuerySpec extends Specification {
                     'sliceList': [
                             ['dimensionChain': ['rdf:type']],
                             ['dimensionChain': ['p2']],
-                            ['dimensionChain': ['p6']],
+                            ['dimensionChain': ['p6']]
                     ]
             ]
     ]
@@ -23,7 +23,8 @@ class QuerySpec extends Specification {
             "statistics": [
                     "sliceList": [
                             ["dimensionChain": ["findCategory"], "slice": ["dimensionChain": ["identifyCategory"]]],
-                            ["dimensionChain": ["noneCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]]
+                            ["dimensionChain": ["noneCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]],
+                            ["dimensionChain": ["hasInstanceCategory"], "itemLimit": 100]
                     ]
             ]
     ]
@@ -248,48 +249,66 @@ class QuerySpec extends Specification {
     def "build agg query for categories"() {
         given:
         SelectedFacets selectedFacets = new SelectedFacets(QueryTree.newEmpty(), appParams2.sliceList)
-        Map aggQuery = Query.buildAggQuery(appParams2.sliceList, jsonLd, [], esSettings, selectedFacets)
+        Map aggQuery = Query.buildAggQuery(appParams2.sliceList, jsonLd, ['T2'], esSettings, selectedFacets)
 
         expect:
         aggQuery == [
-                "_categoryByCollection.find.@id": [
-                        "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+            "_categoryByCollection.find.@id" : [
+                "aggs" : [
+                    "librissearch:findCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "field" : "_categoryByCollection.find.@id",
+                            "size" : 10
                         ],
-                        "aggs"  : [
-                                "librissearch:findCategory": [
-                                        "terms": [
-                                                "size" : 10,
-                                                "field": "_categoryByCollection.find.@id",
-                                                "order": [
-                                                        "_count": "desc"
-                                                ]
-                                        ],
-                                        "aggs" : [
-                                                "_categoryByCollection.identify.@id": [
-                                                        "filter": [
-                                                                "bool": [
-                                                                        "must": []
-                                                                ]
-                                                        ],
-                                                        "aggs"  : [
-                                                                "librissearch:identifyCategory": [
-                                                                        "terms": [
-                                                                                "size" : 10,
-                                                                                "field": "_categoryByCollection.identify.@id",
-                                                                                "order": [
-                                                                                        "_count": "desc"
-                                                                                ]
-                                                                        ]
-                                                                ]
-                                                        ]
-                                                ]
+                        "aggs" : [
+                            "_categoryByCollection.identify.@id" : [
+                                "aggs" : [
+                                    "librissearch:identifyCategory" : [
+                                        "terms" : [
+                                            "order" : [
+                                                "_count" : "desc"
+                                            ],
+                                            "field" : "_categoryByCollection.identify.@id",
+                                            "size" : 10
                                         ]
+                                    ]
+                                ],
+                                "filter" : [
+                                    "bool" : [
+                                        "must" : [ ]
+                                    ]
                                 ]
+                            ]
                         ]
+                    ]
+                ],
+                "filter" : [
+                    "bool" : [
+                        "must" : [ ]
+                    ]
                 ]
+            ],
+            "@reverse.instanceOf.category.@id" : [
+                "aggs" : [
+                    "hasInstanceCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "field" : "@reverse.instanceOf.category.@id",
+                            "size" : 100
+                        ]
+                    ]
+                ],
+                "filter" : [
+                    "bool" : [
+                        "must" : [ ]
+                    ]
+                ]
+            ]
         ]
     }
 
@@ -300,66 +319,88 @@ class QuerySpec extends Specification {
 
         expect:
         aggQuery == [
-                "_categoryByCollection.find.@id" : [
-                        "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+            "_categoryByCollection.find.@id" : [
+                "aggs" : [
+                    "librissearch:findCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "size" : 10,
+                            "field" : "_categoryByCollection.find.@id"
                         ],
-                        "aggs"  : [
-                                "librissearch:findCategory": [
-                                        "terms": [
-                                                "order": [
-                                                        "_count": "desc"
-                                                ],
-                                                "field": "_categoryByCollection.find.@id",
-                                                "size" : 10
-                                        ],
-                                        "aggs" : [
-                                                "_categoryByCollection.identify.@id": [
-                                                        "filter": [
-                                                                "bool": [
-                                                                        "must": []
-                                                                ]
-                                                        ],
-                                                        "aggs"  : [
-                                                                "librissearch:identifyCategory": [
-                                                                        "terms": [
-                                                                                "order": [
-                                                                                        "_count": "desc"
-                                                                                ],
-                                                                                "field": "_categoryByCollection.identify.@id",
-                                                                                "size" : 10
-                                                                        ]
-                                                                ]
-                                                        ]
-                                                ]
+                        "aggs" : [
+                            "_categoryByCollection.identify.@id" : [
+                                "aggs" : [
+                                    "librissearch:identifyCategory" : [
+                                        "terms" : [
+                                            "order" : [
+                                                "_count" : "desc"
+                                            ],
+                                            "size" : 10,
+                                            "field" : "_categoryByCollection.identify.@id"
                                         ]
+                                    ]
+                                ],
+                                "filter" : [
+                                    "bool" : [
+                                        "must" : [ ]
+                                    ]
                                 ]
+                            ]
                         ]
+                    ]
                 ],
-                "_categoryByCollection.@none.@id": [
-                        "filter": [
-                                "bool": [
-                                        "filter": [
-                                                "term": [
-                                                        "_categoryByCollection.find.@id": "https://id.kb.se/term/ktg/X"
-                                                ]
-                                        ]
-                                ]
-                        ],
-                        "aggs"  : [
-                                "librissearch:noneCategory": [
-                                        "terms": [
-                                                "order": [
-                                                        "_count": "desc"
-                                                ],
-                                                "field": "_categoryByCollection.@none.@id",
-                                                "size" : 100
-                                        ]
-                                ]
-                        ]
+                "filter" : [
+                    "bool" : [
+                        "must" : [ ]
+                    ]
                 ]
+            ],
+            "_categoryByCollection.@none.@id" : [
+                "aggs" : [
+                    "librissearch:noneCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "size" : 100,
+                            "field" : "_categoryByCollection.@none.@id"
+                        ]
+                    ]
+                ],
+                "filter" : [
+                    "bool" : [
+                        "filter" : [
+                            "term" : [
+                                "_categoryByCollection.find.@id" : "https://id.kb.se/term/ktg/X"
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            "@reverse.instanceOf.category.@id" : [
+                "aggs" : [
+                    "hasInstanceCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "size" : 100,
+                            "field" : "@reverse.instanceOf.category.@id"
+                        ]
+                    ]
+                ],
+                "filter" : [
+                    "bool" : [
+                        "filter" : [
+                            "term" : [
+                                "_categoryByCollection.find.@id" : "https://id.kb.se/term/ktg/X"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
         ]
     }
 }
