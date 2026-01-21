@@ -63,7 +63,7 @@ public class QueryGenerator {
                 .filter(s -> !(s instanceof Number))
                 .filter(s -> !JsonLd.REVERSE_KEY.equals(s))
                 .filter(s -> !jsonLd.isIntegral(String.valueOf(s)))
-                .map(p -> (Selector) new Key.UnrecognizedKey(new Token.Raw(String.valueOf(p), 0))).toList());
+                .map(p -> new Key.UnrecognizedKey(new Token.Raw(String.valueOf(p), 0))).toList());
     }
 
     private static FreeText scopedFreeText(String s) {
