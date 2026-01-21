@@ -39,7 +39,11 @@ public class QueryTree {
     }
 
     public ExpandedQueryTree expand(JsonLd jsonLd) {
-        return isEmpty() ? ExpandedQueryTree.newEmpty() : new ExpandedQueryTree(tree.expand(jsonLd, List.of()));
+        return expand(jsonLd, List.of());
+    }
+
+    public ExpandedQueryTree expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return isEmpty() ? ExpandedQueryTree.newEmpty() : new ExpandedQueryTree(tree.expand(jsonLd, rdfSubjectTypes));
     }
 
     public ReducedQueryTree merge(QueryTree other, JsonLd jsonLd) {
