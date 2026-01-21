@@ -12,12 +12,14 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     TypeCategoryNormalizer catTypeNormalizer
 
-    Set<String> issuanceTypes = new HashSet()
+    // Injected configuration
+    List<String> matchRelations
+    List<String> newWorkTypes
+    String componentPartCategory
+    Map<String, Set<String>> marcTypeMappings  // TODO: turn JSON set value to Set! (for speed)
+
+    Set<String> issuanceTypeSet = new HashSet()
     Map<String, String> categoryTypeMap = new HashMap()
-    List<String> matchRelations = ['exactMatch', 'closeMatch', 'broader', 'broadMatch']
-
-
-    Map<String, Set<String>> marcTypeMappings
 
     void init() {
         if (!checkRequired()) {
@@ -25,8 +27,8 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         }
 
         catTypeNormalizer = new TypeCategoryNormalizer(resourceCache)
-        issuanceTypes.addAll(['Monograph', 'Serial', 'Collection', 'Integrating'])
-        // 'SingleUnit', 'MultipleUnits'
+        issuanceTypeSet.addAll(newWorkTypes)
+
         catTypeNormalizer.typeToCategory.each { type, cat ->
             categoryTypeMap[cat] = type
         }
@@ -51,55 +53,51 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         }
 
         def work = instance.instanceOf
-        def issuanceType = getIssuanceType(work)
-        var converted = toLegacyWork(work, instance)
-        converted |= toLegacyInstance(instance, work)
-        if (converted) {
-          instance.issuanceType = issuanceType ?: 'Monograph'
-        }
-    }
 
-    boolean toLegacyWork(Map work, Map someInstance) {
-        def categories = getDescriptions(work.category)
-        if (!categories) {
-          // TODO: define more detailed "looks like legacy"
-          return false
+        // Pick out the categories:
+        var workCategories = getDescriptions(work.category)
+        var instanceCategories = getDescriptions(instance.category)
+
+        // Stop processing if we already seem to have a legacy shape:
+        // TODO: define more detailed "looks like legacy"?
+        if (!workCategories && !instanceCategories) { // && workType !in newWorkTypes ?
+          return
         }
 
+        // Then remove from shape (*might* hurt to keep, since these are to be used in legacy form):
         work.remove('category')
-        work.contentType = getCategoryOfType(categories, 'ContentType')
-        work.genreForm = getCategoryOfType(categories, 'GenreForm')
-        work[TYPE] = getWorkType(categories) ?: 'Text'
+        instance.remove('category')
 
-        return true
+        // Mutate into legacy form:
+        def issuanceType = getIssuanceType(work[TYPE], instance[TYPE], workCategories, instanceCategories)
+        reshapeToLegacyWork(work, instance, workCategories, instanceCategories)
+        reshapeToLegacyInstance(work, instance, workCategories, instanceCategories)
+        instance.issuanceType = issuanceType ?: 'Monograph'
     }
 
-    String getWorkType(List<Map<String, Object>> categories) {
+    void reshapeToLegacyWork(Map work, Map someInstance, List workCategories, List instanceCategories) {
+        work.contentType = getCategoryOfType(workCategories, 'ContentType')
+        work.genreForm = getCategoryOfType(workCategories, 'GenreForm')
+        work[TYPE] = getWorkType(workCategories) ?: 'Text'
+    }
+
+    String getWorkType(List<Map<String, Object>> workCategories) {
         // FIXME:
         // - rank possible matches! i:Audio [if SpokenWords?/Ljudböcker] > a:Text > k:StillImage ?
         // - also figure out: ManuscriptText | ManuscriptNotatedMusic | Cartography
-        return getImpliedTypeFromCategory(categories)
+        return getImpliedTypeFromCategory(workCategories)
     }
 
-    boolean toLegacyInstance(Map instance, Map work) {
-        def categories = getDescriptions(instance.category)
-        if (!categories) {
-          // TODO: define more detailed "looks like legacy"
-          return false
-        }
-
-        instance.remove('category')
-        instance.mediaType = getCategoryOfType(categories, 'MediaType')
-        instance.carrierType = getCategoryOfType(categories, 'CarrierType')
+    void reshapeToLegacyInstance(Map work, Map instance, List workCategories, List instanceCategories) {
+        instance.mediaType = getCategoryOfType(instanceCategories, 'MediaType')
+        instance.carrierType = getCategoryOfType(instanceCategories, 'CarrierType')
 
         // TODO: until we've finalized InstanceGenreForm->ManifestationForm
-        instance.genreForm = getCategoryOfType(categories, 'GenreForm')
-        instance[TYPE] = getInstanceType(categories)
-
-        return true
+        instance.genreForm = getCategoryOfType(instanceCategories, 'GenreForm')
+        instance[TYPE] = getInstanceType(instanceCategories)
     }
 
-    String getInstanceType(List<Map<String, Object>> categories) {
+    String getInstanceType(List<Map<String, Object>> instanceCategories) {
         // FIXME: reverse the hardcoded (typenorm script) cleanupInstanceTypes too!
         // Either look at work-category, some matches 007-genreForm-terms ...
         //
@@ -118,7 +116,8 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         // 0:
         // - :ProjectedImageInstance	0!
         // - :MovingImageInstance	o!
-        return getImpliedTypeFromCategory(categories)
+
+        return getImpliedTypeFromCategory(instanceCategories)
     }
 
     List<Map<String, Object>> getDescriptions(Object refs) {
@@ -127,17 +126,23 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         }
     }
 
-    String getIssuanceType(Map work) {
-        for (def type in asList(work[TYPE])) {
-            if (type in issuanceTypes) {
+    String getIssuanceType(String workType, String instanceType, List workCategories, List instanceCategories) {
+        if (instanceCategories.any { it[ID] == componentPartCategory}) {
+          return 'ComponentPart'
+        }
+        for (def type in asList(workType)) {
+            if (type in issuanceTypeSet) {
                 return type
             }
         }
         return null
     }
 
+    // TODO: optimize by returning result *Map* (check only id in keys unless more is needed)
+    // - also: LinkedHashMap, ordered by most specific (broader last; also see catTypeNormalizer.preferredCategory?)
+    // - Note that MarcFrameConverter now uses a fixed field preference order though (based on matchUriToken).
     Collection<Map<String, Object>> getCategoryOfType(List<Map<String, Object>> categories, String type) {
-        def result = [:]
+        var result = new LinkedHashMap()
         collectCategoryOfType(categories, type, result)
         return result.values().toList()
     }
@@ -164,9 +169,9 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
       return resourceCache.jsonld.isSubClassOf(givenType, baseType)
     }
 
-    void collectCategoryOfType(List<Map<String, Object>> categories, String type, Map<String, Map<String, Object>> result) {
+    private void collectCategoryOfType(List<Map<String, Object>> categories, String type, Map<String, Map<String, Object>> result) {
         categories.each {
-            if (isSubClassOf(it[TYPE], type)) {
+            if (asList(it[TYPE]).any { t -> isSubClassOf(t, type) }) {
                 result[it[ID]] = it
             }
             for (rel in matchRelations) {

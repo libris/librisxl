@@ -1,5 +1,8 @@
 {
   "type": "BibTypeNormalization",
+  "matchRelations": ["exactMatch", "closeMatch", "broader", "broadMatch"],
+  "newWorkTypes": ["Monograph", "Serial", "Collection", "Integrating"],
+  "componentPartCategory": "https://id.kb.se/term/ktg/ComponentPart",
   "marcTypeMappings": {
     "GenreForm": [
       "marc:MusicCompositionType",
