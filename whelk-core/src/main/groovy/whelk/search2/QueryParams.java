@@ -14,7 +14,7 @@ import java.util.function.Predicate;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 20;
-    private final static int MAX_LIMIT = 100;
+    private final static int MAX_LIMIT = 150;
     private final static int DEFAULT_OFFSET = 0;
 
     public static class ApiParams {
