@@ -143,12 +143,15 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     }
 
     boolean isSubClassOf(Object givenType, String baseType) {
-      if (baseType instanceof List) {
-        for (Object type : baseType) {
+      if (givenType instanceof List) {
+        for (Object type : givenType) {
           if (isSubClassOf(type, baseType)) {
             return true
           }
         }
+      }
+      if (givenType !instanceof String) {
+        return false
       }
       Set marcTypes = marcTypeMappings[baseType]
       if (marcTypes != null && marcTypes.contains(givenType)) {
