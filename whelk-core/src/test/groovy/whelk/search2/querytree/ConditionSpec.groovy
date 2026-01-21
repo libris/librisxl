@@ -95,15 +95,19 @@ class ConditionSpec extends Specification {
         statement.expand(jsonLd, subjectTypes).toString() == result
 
         where:
-        query                                | subjectTypes | result
-        "p1:v1"                              | []           | "p1:v1"
-        "p1:v1"                              | ["T1"]       | "instanceOf.p1:v1 OR p1:v1"
-        "p1:v1"                              | ["T2"]       | "hasInstance.p1:v1 OR p1:v1"
-        "p1:v1"                              | ["T3"]       | "p1:v1"
-        "hasInstance.p7:v7"                  | ["T1"]       | "p7:v7"
-        "hasInstance.p7:v7"                  | ["T2"]       | "hasInstance.p7:v7"
-        "instanceOf.p8:v8"                   | ["T1"]       | "instanceOf.p8:v8"
-        "instanceOf.p8:v8"                   | ["T2"]       | "p8:v8"
+        query               | subjectTypes | result
+        "p1:v1"             | []           | "p1:v1"
+        "p1:v1"             | ["T1"]       | "instanceOf.p1:v1 OR p1:v1"
+        "p1:v1"             | ["T2"]       | "hasInstance.p1:v1 OR p1:v1"
+        "p1:v1"             | ["T3"]       | "p1:v1"
+        "hasInstance.p7:v7" | ["T1"]       | "p7:v7"
+        "hasInstance.p7:v7" | ["T2"]       | "hasInstance.p7:v7"
+        "instanceOf.p8:v8"  | ["T1"]       | "instanceOf.p8:v8"
+        "instanceOf.p8:v8"  | ["T2"]       | "p8:v8"
+        "p5:x"              | []           | "meta.p5:x"
+        "meta.p5:x"         | []           | "meta.p5:x"
+        "bibliography:x"    | ["T1"]       | "meta.bibliography:x"
+        "bibliography:x"    | ["T2"]       | "meta.bibliography:x OR hasInstance.meta.bibliography:x"
     }
 
     def "To ES query (negation + nested field)"() {

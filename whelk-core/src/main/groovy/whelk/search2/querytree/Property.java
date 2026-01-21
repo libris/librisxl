@@ -100,9 +100,13 @@ public non-sealed class Property extends PathElement {
         if (Restrictions.isNarrowingProperty(propertyKey)) {
             return new NarrowedRestrictedProperty(propertyKey, jsonLd, queryKey);
         }
-        return RDF_TYPE.equals(propertyKey)
-                ? new RdfType(jsonLd, queryKey)
-                : new Property(propertyKey, jsonLd, queryKey);
+        if (RDF_TYPE.equals(propertyKey)) {
+            return new RdfType(jsonLd, queryKey);
+        }
+        if (RECORD_KEY.equals(propertyKey)) {
+            return new Meta(jsonLd, queryKey);
+        }
+        return new Property(propertyKey, jsonLd, queryKey);
     }
 
     @Override
@@ -120,16 +124,16 @@ public non-sealed class Property extends PathElement {
         return List.of(this);
     }
 
-//    @Override
-//    public Selector expand(JsonLd jsonLd) {
-//        return hasDomainAdminMetadata(jsonLd)
-//                ? new Path(List.of(new Property(RECORD_KEY, jsonLd), this))
-//                : this;
-//    }
-
     @Override
     public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         return _getAltSelectors(jsonLd, rdfSubjectTypes);
+    }
+
+    @Override
+    public Selector withPrependedMetaProperty(JsonLd jsonLd) {
+        return hasDomainAdminMetadata(jsonLd)
+                ? new Path(List.of(new Meta(jsonLd), this))
+                : this;
     }
 
     @Override
@@ -429,6 +433,16 @@ public non-sealed class Property extends PathElement {
         public RdfType(JsonLd jsonLd, Key.RecognizedKey key) {
             super(RDF_TYPE, jsonLd, key);
             this.indexKey = TYPE_KEY;
+        }
+    }
+
+    public static final class Meta extends Property {
+        public Meta(JsonLd jsonLd) {
+            super(RECORD_KEY, jsonLd);
+        }
+
+        public Meta(JsonLd jsonLd, Key.RecognizedKey key) {
+            super(RECORD_KEY, jsonLd, key);
         }
     }
 

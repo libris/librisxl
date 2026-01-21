@@ -40,7 +40,8 @@ class TestData {
                 'findcategory'    : ['librissearch:findCategory'] as Set,
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
                 'nonecategory'    : ['librissearch:noneCategory'] as Set,
-                'p3p1'            : ['p3p1'] as Set
+                'p3p1'            : ['p3p1'] as Set,
+                'bibliography'    : ['bibliography'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -249,7 +250,8 @@ class TestData {
                                 ['@id': 'p3'],
                                 ['@id': 'p1']
                         ]]]
-                ]
+                ],
+                ['@id': 'bibliography', '@type': 'ObjectProperty', 'domain': ['@id': 'https://id.kb.se/vocab/AdminMetadata']],
         ]]
         def ctx = [
                 '@context': [

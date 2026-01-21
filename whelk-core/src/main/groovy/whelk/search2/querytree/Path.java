@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.QueryUtil;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,6 +56,18 @@ public final class Path implements Selector {
         return getAltPaths(path(), jsonLd, rdfSubjectTypes).stream()
                 .map(l -> l.size() > 1 ? new Path(l) : l.getFirst())
                 .toList();
+    }
+
+    @Override
+    public Selector withPrependedMetaProperty(JsonLd jsonLd) {
+        List<PathElement> newPath = new ArrayList<>();
+        for (PathElement pe : path()) {
+            if (pe.appearsOnlyOnRecord(jsonLd) && (newPath.isEmpty() || !(newPath.getLast() instanceof Property.Meta))) {
+                newPath.add(new Property.Meta(jsonLd));
+            }
+            newPath.add(pe);
+        }
+        return new Path(newPath);
     }
 
     private List<List<PathElement>> getAltPaths(List<? extends PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
