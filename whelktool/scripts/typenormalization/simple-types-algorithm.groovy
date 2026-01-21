@@ -499,7 +499,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         var probablyPrint = assumedToBePrint(instance)
 
-        if (!isElectronic) {
+        if (!isElectronic && !isSoundRecording && !isVideoRecording) {
 
             // If it is or looks like a volume
             if (isVolume) {
