@@ -7,7 +7,10 @@ import whelk.component.DocumentNormalizer
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 
+import static whelk.JsonLd.asList
 import static whelk.JsonLd.ID_KEY as ID
+import static whelk.JsonLd.TYPE_KEY as TYPE
+import static whelk.JsonLd.REVERSE_KEY as REVERSE
 
 // TODO: Make this a general interface for loading by type (or inScheme).
 @CompileStatic
@@ -39,13 +42,33 @@ class ResourceCache {
         )
     }
 
-    // TODO: invalidate by time, or a new whelk.broadcastUpdate(id, type) signal...
+    // TODO: invalidate by time, or a new whelk.broadcastUpdate(id, type) signal... (there is one! See PostgreSQLComponent?)
     Map<String, Map<String, Object>> getByType(String type) {
         if (byTypeCache.containsKey(type)) {
           return byTypeCache[type]
         }
 
         Map<String, Map<String, Object>> descriptions = [:]
+
+        if (!whelk) {
+          return descriptions
+        }
+
+        // NOTE: Since whelk.loadAllByType does not index/find resources having
+        // multiple types, we need to either fallback to elastic, or (as done
+        // now), load a specific hardcoded dataset which happens to contain the
+        // only ones we use multiple types on (i.e. the MARC enum types).
+        // TODO: Remove this hack if we fix loadAllByType!
+        if (type.startsWith('marc:')) {
+          var enumsDataset = 'https://id.kb.se/dataset/enums' // TODO: configure? Or live with...
+          whelk.storage.loadAll(enumsDataset).each { doc ->
+              Map<String, Object> thing = doc.getThing()
+              if (asList(thing[TYPE]).any { it instanceof String && jsonld.isSubClassOf(it, type) }) {
+                String id = thing[ID]
+                descriptions[id] = thing
+              }
+          }
+        }
 
         whelk.loadAllByType(type).each {doc ->
             var thing = doc.getThing()
@@ -60,11 +83,11 @@ class ResourceCache {
             }
         }
 
-        byTypeCache[type] = Collections.unmodifiableMap(descriptions)
+        descriptions = Collections.unmodifiableMap(descriptions)
+        byTypeCache[type] = descriptions
 
         return descriptions
     }
-
 
     @CompileStatic
     //@NullCheck(includeGenerated = true)
