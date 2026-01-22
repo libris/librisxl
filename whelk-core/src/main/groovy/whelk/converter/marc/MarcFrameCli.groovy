@@ -1,5 +1,8 @@
 package whelk.converter.marc
 
+import java.nio.file.Files
+import java.nio.file.Paths
+
 import whelk.Document
 import whelk.JsonLd
 import whelk.JsonLdValidator
@@ -40,6 +43,7 @@ if (cmd == "cachebytype") {
 }
 
 var doValidate = !perf
+var prettyMarc = false
 
 List items = fpaths
 
@@ -54,6 +58,21 @@ if (cmd.endsWith("revert-templates")) {
     data.mainEntity = tplt.value.mainEntity
     return [ id: name, data: data ]
   }
+}
+
+if (cmd.endsWith("revert-lines")) {
+  cmd = cmd.replace('-lines', '')
+  doValidate = false
+  items = Files.lines(Paths.get(fpaths[0])).map(line -> {
+    def data = mapper.readValue(line, Map)
+    def id = data['@graph'][0]['@id']
+    return [ id: id, data: data ]
+  })
+}
+
+if (cmd.startsWith("pretty-revert")) {
+  cmd = cmd.replace('pretty-', '')
+  prettyMarc = true
 }
 
 var converter = newMarcFrameConverter()
@@ -115,12 +134,16 @@ for (item in items) {
     }
 
     def s = null
-    try {
-        s = converter.mapper.writeValueAsString(result)
-    } catch (e) {
-        System.err.println "Error in result:"
-        System.err.println result
-        throw e
+    if (prettyMarc) {
+      s = toPrettyMarc(result)
+    } else {
+      try {
+          s = converter.mapper.writeValueAsString(result)
+      } catch (e) {
+          System.err.println "Error in result:"
+          System.err.println result
+          throw e
+      }
     }
 
     if (!perf) {
@@ -186,4 +209,28 @@ static void reportValidation(converter, source) {
     } else {
         System.err.println "OK"
     }
+}
+
+static String toPrettyMarc(Map result) {
+  var sb = new StringBuilder()
+  sb << "000\t${result.leader}\n"
+  for (field in result.fields) {
+    field.each { tag, tv ->
+      sb << "${tag}\t"
+      if (tv instanceof Map) {
+        sb << "${tv.ind1} "
+        sb << "${tv.ind2}\t"
+        tv.subfields.eachWithIndex { subf, i ->
+          if (i) sb << "\t"
+          subf.each { code, cv ->
+            sb << "\$${code} ${cv}"
+          }
+        }
+        sb << "\n"
+      } else {
+        sb << "${tv}\n"
+      }
+    }
+  }
+  return sb.toString()
 }
