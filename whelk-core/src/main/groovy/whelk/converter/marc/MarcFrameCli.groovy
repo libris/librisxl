@@ -39,14 +39,9 @@ if (cmd == "cachebytype") {
   return
 }
 
-if (perf) {
-    fpaths = fpaths * perf
-    System.err.println "Measuring performance of ${fpaths.size()} ${cmd} runs..."
-}
-
 var doValidate = !perf
 
-List items
+List items = fpaths
 
 if (cmd.endsWith("revert-templates")) {
   cmd = cmd.replace('-templates', '')
@@ -58,10 +53,6 @@ if (cmd.endsWith("revert-templates")) {
     def data = tplt.value.record
     data.mainEntity = tplt.value.mainEntity
     return [ id: name, data: data ]
-  }
-} else {
-  items = fpaths.collect {
-    [ id: it, data: mapper.readValue(new File(it), Map) ]
   }
 }
 
@@ -80,10 +71,24 @@ if (cmd == "save-typemappings") {
   return
 }
 
+if (perf) {
+    fpaths = fpaths * perf
+    System.err.println "Measuring performance of ${fpaths.size()} ${cmd} runs..."
+}
+
 var start = new Date().time
 
 for (item in items) {
-    def source = item.data
+    def source
+    def sourceId
+    if (item instanceof String) {
+      source = mapper.readValue(new File(item), Map)
+      sourceId = item
+    } else {
+      source = item.data
+      sourceId = item.id
+    }
+
     def result = null
 
     if (cmd == "revert") {
@@ -101,7 +106,7 @@ for (item in items) {
         if (source.oaipmhSetSpecs) {
             extraData = [oaipmhSetSpecs: source.remove('oaipmhSetSpecs')]
         }
-        result = converter.runConvert(source, item.id, extraData)
+        result = converter.runConvert(source, sourceId, extraData)
         if (converter.linkFinder) {
             var doc = new Document(result)
             converter.linkFinder.normalizeIdentifiers(doc)
@@ -119,7 +124,7 @@ for (item in items) {
     }
 
     if (!perf) {
-        if (items.size() > 1) println "SOURCE: ${item.id}"
+        if (items.size() > 1) println "SOURCE: ${sourceId}"
         println s
     }
 }
