@@ -380,7 +380,7 @@
             },
             {
                 "year_template": {
-                    "match": ["year", "startYear", "endYear"],
+                    "match": ["year", "startYear", "endYear", "librissearch:year"],
                     "mapping": {
                         "fields": {
                             "keyword": {
