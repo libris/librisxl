@@ -2,6 +2,7 @@
   "type": "BibTypeNormalization",
   "matchRelations": ["exactMatch", "closeMatch", "broader", "broadMatch"],
   "newWorkTypes": ["Monograph", "Serial", "Collection", "Integrating"],
+  "defaultWorkLegacyType": "Text",
   "componentPartCategory": "https://id.kb.se/term/ktg/ComponentPart",
   "marcTypeMappings": {
     "GenreForm": [

@@ -15,6 +15,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     // Injected configuration
     List<String> matchRelations
     List<String> newWorkTypes
+    String defaultWorkLegacyType
     String componentPartCategory
     Map<String, Set<String>> marcTypeMappings  // TODO: turn JSON set value to Set! (for speed)
 
@@ -78,14 +79,16 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     void reshapeToLegacyWork(Map work, Map someInstance, List workCategories, List instanceCategories) {
         work.contentType = getCategoryOfType(workCategories, 'ContentType')
         work.genreForm = getCategoryOfType(workCategories, 'GenreForm')
-        work[TYPE] = getWorkType(workCategories) ?: 'Text'
+        work[TYPE] = getWorkType(workCategories) ?: defaultWorkLegacyType
     }
 
     String getWorkType(List<Map<String, Object>> workCategories) {
-        // FIXME:
-        // - rank possible matches! i:Audio [if SpokenWords?/Ljudböcker] > a:Text > k:StillImage ?
-        // - also figure out: ManuscriptText | ManuscriptNotatedMusic | Cartography
-        return getImpliedTypeFromCategory(workCategories)
+        // TODO:
+        // - better match ranking? i:Audio [if SpokenWords?/Ljudböcker] > a:Text > k:StillImage ?
+        // FIXME: also construct ManuscriptText | ManuscriptNotatedMusic | Cartography
+        var result = collectImpliedTypesFromCategory(workCategories)
+        if (defaultWorkLegacyType in result) return defaultWorkLegacyType
+        for (type in result) return type
     }
 
     void reshapeToLegacyInstance(Map work, Map instance, List workCategories, List instanceCategories) {
@@ -117,7 +120,8 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         // - :ProjectedImageInstance	0!
         // - :MovingImageInstance	o!
 
-        return getImpliedTypeFromCategory(instanceCategories)
+        var result = collectImpliedTypesFromCategory(instanceCategories)
+        for (type in result) return type
     }
 
   List<Map<String, Object>> getDescriptions(Object refs) {
@@ -180,23 +184,26 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         }
     }
 
-    String getImpliedTypeFromCategory(List<Map<String, Object>> categories) {
+    Set<String> collectImpliedTypesFromCategory(List<Map<String, Object>> categories) {
+      var result = new HashSet<String>()
+      collectImpliedTypesFromCategory(categories, result)
+      return result
+    }
+    void collectImpliedTypesFromCategory(List<Map<String, Object>> categories, Set<String> result) {
         // TODO: if multiple types, select one (e.g. prefer Text over StillImage?)
-        def type = categories.findResult { categoryTypeMap[it[ID]] }
-        if (type) {
-            return type
+        for (ctg in categories) {
+          var type = categoryTypeMap[ctg[ID]]
+          if (type) {
+              result << type
+          }
         }
         // breadth first search, assuming matchRelations are ordered by closeness
         // (but less optimal for lots of categories)
         for (rel in matchRelations) {
             for (category in categories) {
-                type = getImpliedTypeFromCategory(getDescriptions(category[rel]))
-                if (type) {
-                    return type
-                }
+                collectImpliedTypesFromCategory(getDescriptions(category[rel]), result)
             }
         }
-        return null
     }
 
 }
