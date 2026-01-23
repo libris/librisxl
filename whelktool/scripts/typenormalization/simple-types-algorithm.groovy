@@ -254,7 +254,10 @@ class TypeNormalizer implements UsingJsonKeys {
         List newWorkTypes =  ["Monograph", "Serial", "Collection", "Integrating"]
         if (!(oldWtype in newWorkTypes)) {
           changed |= mappings.convertIssuanceType(instance, work)
+        } else {
+           instance.remove("issuanceType")
         }
+
 
         if (recursive) {
             changed |= normalizeLocalEntity(instance)
@@ -282,9 +285,8 @@ class TypeNormalizer implements UsingJsonKeys {
                 // If the part is a Work or subclass thereof
                 if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(getType(value), "Work")) {
                     changed |= normalize([:], value, false)
-                }
-                // If the part is an instance or subclass thereof
-                else if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(getType(value), "Instance")) {
+                } else if (value instanceof Map && mappings.whelk.jsonld.isSubClassOf(getType(value), "Instance")) {
+                    // If the part is an instance or subclass thereof
                     changed |= normalize(value, [:], false)
 
                     // Special handling for when the part is Electronic
@@ -321,17 +323,14 @@ class TypeNormalizer implements UsingJsonKeys {
 
         if (wtype == 'ManuscriptText') {
             work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
-        }
-        else if (wtype == 'ManuscriptNotatedMusic') {
+        } else if (wtype == 'ManuscriptNotatedMusic') {
             work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
             work.get('contentType', []) << [(ID): KBRDA + 'NotatedMusic']
-        }
-        else if (wtype == 'Cartography') {
+        } else if (wtype == 'Cartography') {
             if (!work['contentType'].any { it[ID]?.startsWith(KBRDA + 'Cartographic') }) {
                 work.get('contentType', []) << [(ID): KBRDA + 'CartographicImage'] // TODO: good enough guess?
             }
-        }
-        else {
+        } else {
             def mappedCategory = wtype ? mappings.typeToCategory[wtype] : null
             //assert mappedCategory, "Unable to map ${wtype} to contentType or genreForm"
             if (mappedCategory) {
@@ -392,7 +391,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         // Store information about the old instanceType
         // In the case of volume, it may also be inferred
-        var isElectronic = itype == "Electronic"
+        var isElectronic = itype in ["Electronic", "DigitalResource"]
         var isVolume = mappings.matches(carrierTypes, "Volume") || looksLikeVolume(instance)
 
         // If an instance has a certain (old) type which implies physical electronic carrier
@@ -619,8 +618,7 @@ class TypeNormalizer implements UsingJsonKeys {
     static String getType(Map entity) {
         if (!entity.containsKey(TYPE)) {
             return null
-        }
-        else {
+        } else {
             return asList(entity.get(TYPE)).getFirst()
         }
     }
@@ -744,10 +742,8 @@ process { def doc, Closure loadWorkItem ->
                     convertedWorks << loadedWorkId
                 }
             }
-
-        }
-        // Else if it contains the property 'hasInstance', it's a Signe work that reuqires special handling
-        else if ('hasInstance' in mainEntity) {
+        } else if ('hasInstance' in mainEntity) {
+            // Else if it contains the property 'hasInstance', it's a Signe work that reuqires special handling
             var changed = typeNormalizer.normalize([:], mainEntity)
             if (changed) {
                 if (mainEntity[ID] !in convertedWorks) doc.scheduleSave()
@@ -760,5 +756,4 @@ process { def doc, Closure loadWorkItem ->
         e.printStackTrace(errorLog)
         e.printStackTrace()
     }
-
 }
