@@ -94,7 +94,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
         // TODO: until we've finalized InstanceGenreForm->ManifestationForm
         instance.genreForm = getCategoryOfType(instanceCategories, 'GenreForm')
-        instance[TYPE] = getInstanceType(instanceCategories)
+        instance[TYPE] = getInstanceType(instanceCategories) ?: 'Instance'
     }
 
     String getInstanceType(List<Map<String, Object>> instanceCategories) {
@@ -120,9 +120,9 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         return getImpliedTypeFromCategory(instanceCategories)
     }
 
-    List<Map<String, Object>> getDescriptions(Object refs) {
+  List<Map<String, Object>> getDescriptions(Object refs) {
         return (List<Map<String, Object>>) asList(refs).findResults {
-            if (ID in it) catTypeNormalizer.categories[it[ID]]
+            if (ID in it) catTypeNormalizer.categories[it[ID]]?.clone() // TODO: tries as lazy-copies?
         }
     }
 
