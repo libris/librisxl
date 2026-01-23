@@ -1,4 +1,4 @@
-def fourDigitFields = ["year", "startYear", "endYear"];
+def fourDigitFields = ["year", "startYear", "endYear", "librissearch:year"];
 
 def stack = new ArrayDeque();
 stack.push(ctx);
