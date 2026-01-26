@@ -1042,6 +1042,13 @@ public class FresnelUtil {
             return new DecoratedTransliterated(lang);
         }
 
+        private Decorated formatLanguageContainer(LanguageContainer lang, String className, String propertyName) {
+            var picked = lang.pick(locale, fallbackLocales);
+            var literal = new DecoratedLiteral(String.join(" ", picked));
+            formats.valueStyle(className, propertyName).apply(literal);
+            return literal;
+        }
+
         private List<Decorated> formatProperties(List<Node.Selected> selected, String className) {
             return mapWithIndex(selected,
                     (p, ix) -> formatProperty(p, className, ix == 0, ix == selected.size() - 1)
@@ -1117,6 +1124,7 @@ public class FresnelUtil {
             Decorated result = switch (value) {
                 case Node node -> formatResource(node, isFirst, isLast);
                 case TransliteratedNode node -> formatTransliterated(node, isFirst, isLast);
+                case LanguageContainer lang -> formatLanguageContainer(lang, className, propertyName);
                 default -> {
                     var r = new DecoratedLiteral(value);
                     formats.valueStyle(className, propertyName).apply(r);
