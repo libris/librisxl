@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.sql.*;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -188,21 +189,30 @@ public class HistoryArchiver extends HouseKeeper {
 
         try {
 
-            connection.setAutoCommit(false);
-            List<String> ids = getIdBatchToArchive(connection);
-            lockRows(ids, connection);
-            String archiveLog = generateArchiveLogFor(ids);
-            writeArchiveLog(archiveLog);
+            // Work for up to ~15 minutes a day archiving history
+            Instant start = Instant.now();
+            while (Instant.now().isBefore( start.plus(15, ChronoUnit.MINUTES) )) {
 
-            // Delete history and record
+                connection.setAutoCommit(false);
+                List<String> ids = getIdBatchToArchive(connection);
+                lockRows(ids, connection);
+                String archiveLog = generateArchiveLogFor(ids);
+                writeArchiveLog(archiveLog);
 
-            connection.commit();
+                // Delete history and record
 
-            if (!ids.isEmpty()) {
-                logger.info("Archived history for " + ids.size() + " deleted records.");
+                connection.commit();
+
+                if (!ids.isEmpty()) {
+                    logger.info("Archived history for " + ids.size() + " deleted records.");
+                }
+
+                possiblyCheckpoint();
+
+                if (ids.isEmpty()) {
+                    break; // Don't spin around doing nothing.
+                }
             }
-
-            possiblyCheckpoint();
 
         } catch (Exception e) {
             status = e.getMessage();
