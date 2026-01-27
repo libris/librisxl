@@ -23,7 +23,6 @@ import whelk.exception.StorageCreateFailedException
 import whelk.exception.TooHighEncodingLevelException
 import whelk.exception.WhelkException
 import whelk.exception.WhelkRuntimeException
-import whelk.diff.Diff
 import whelk.filter.LinkFinder
 import whelk.history.DocumentVersion
 import whelk.util.DocumentUtil
@@ -469,6 +468,7 @@ class PostgreSQLComponent {
     private HikariDataSource connectionPool
     private HikariDataSource outerConnectionPool
 
+    boolean versioning = true
     boolean doVerifyDocumentIdRetention = true
     boolean sparqlQueueEnabled = false
 
@@ -788,7 +788,7 @@ class PostgreSQLComponent {
                 insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, deleted)
                 insert.executeUpdate()
 
-                saveVersion(doc, null, connection, now, now, changedIn, changedBy, collection, deleted)
+                saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
                 refreshDerivativeTables(doc, connection, deleted)
 
                 connection.commit()
@@ -856,7 +856,7 @@ class PostgreSQLComponent {
                 insert = rigInsertStatement(insert, doc, now, changedIn, changedBy, collection, false)
                 insert.executeUpdate()
 
-                saveVersion(doc, null, connection, now, now, changedIn, changedBy, collection, false)
+                saveVersion(doc, connection, now, now, changedIn, changedBy, collection, false)
                 refreshDerivativeTables(doc, connection, false)
 
                 connection.commit()
@@ -880,7 +880,7 @@ class PostgreSQLComponent {
             Connection connection = getMyConnection()
             try {
                 connection.setAutoCommit(false)
-                saveVersion(doc, null, connection, createdTime, modTime, changedIn, changedBy, collection, false)
+                saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, false)
                 connection.commit()
                 return true
             } catch (Exception e) {
@@ -1056,7 +1056,7 @@ class PostgreSQLComponent {
             rigUpdateStatement(updateStatement, doc, modTime, changedIn, changedBy, collection, deleted)
             updateStatement.execute()
 
-            saveVersion(doc, preUpdateDoc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
+            saveVersion(doc, connection, createdTime, modTime, changedIn, changedBy, collection, deleted)
 
             // If the mainentity has changed URI (for example happens when new id.kb.se-uris are added to records)
             if ( preUpdateDoc.getThingIdentifiers()[0] &&
@@ -1613,12 +1613,10 @@ class PostgreSQLComponent {
         update.setObject(8, doc.getShortId(), OTHER)
     }
 
-    void saveVersion(Document doc, Document preUpdateDoc, Connection connection, Date createdTime,
+    boolean saveVersion(Document doc, Connection connection, Date createdTime,
                         Date modTime, String changedIn, String changedBy,
                         String collection, boolean deleted) {
-
-        // The classic/old lddb__versions table: TO BE REMOVED SOON.
-        {
+        if (versioning) {
             PreparedStatement insVersion = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
             try {
                 log.debug("Trying to save a version of ${doc.getShortId() ?: ""} with checksum ${doc.getChecksum(jsonld)}. Modified: $modTime")
@@ -1626,6 +1624,7 @@ class PostgreSQLComponent {
                         modTime, changedIn, changedBy,
                         collection, deleted)
                 insVersion.executeUpdate()
+                return true
             } catch (Exception e) {
                 log.error("Failed to save document version: ${e.message}")
                 throw e
@@ -1633,90 +1632,9 @@ class PostgreSQLComponent {
             finally {
                 close(insVersion)
             }
+        } else {
+            return false
         }
-
-        // The new history
-        /*
-        {
-            // Is there a diff to be made? A new document (preUpdateDoc passed as null) has nothing to be diffed with.
-            List incomingDiff = null
-            if (preUpdateDoc != null) {
-                incomingDiff = Diff.diff(preUpdateDoc.data, doc.data)
-            }
-
-            // Lock/get the records history-row.
-            String selectAndLockSql = "SELECT history FROM lddb__history WHERE id = ? FOR UPDATE"
-            String currentHistory = null
-
-            PreparedStatement lockRowPreparedStatement = null
-            ResultSet lockRockRs = null
-            try {
-                lockRowPreparedStatement = connection.prepareStatement(selectAndLockSql)
-                lockRowPreparedStatement.setString(1, doc.getShortId())
-
-                lockRockRs = lockRowPreparedStatement.executeQuery()
-                if (lockRockRs.next()) {
-                    currentHistory = lockRockRs.getString("history")
-                }
-            } catch (Exception e) {
-                log.error("Failed to retrieve current document history: ${e.message}")
-                throw e
-            } finally {
-                close(lockRockRs, lockRowPreparedStatement)
-            }
-
-            Map newHistory
-            if (currentHistory == null && preUpdateDoc == null) { // A new record?
-                newHistory = Map.of("original", doc.data, "diffs", new ArrayList<>())
-            }
-            else if (currentHistory == null && preUpdateDoc != null) {
-                log.error("CATASTROPHIC FAILURE: " + doc.getShortId() + " is not new, and yet has no recorded history. Data integrity has been compromised.")
-                throw new RuntimeException("Cannot write history for: " + doc.getShortId())
-            } else { // Add our new diff
-                Map currentHistoryMap = mapper.readValue(currentHistory, Map)
-
-                Map original = (Map) currentHistoryMap.get("original")
-                if (original.get("@graph") == null) { // sanity check
-                    log.error("CATASTROPHIC FAILURE: " + doc.getShortId() + " has a corrupt original version.")
-                    throw new RuntimeException("Cannot write history for: " + doc.getShortId())
-                }
-
-                boolean loud = true
-                if (doc.getGenerationDate() != null) {
-                    if (Instant.parse(doc.getModified()).isBefore( Instant.parse(doc.getGenerationDate()) ))
-                        loud = false
-                }
-
-                List diffs = (List) currentHistoryMap.get("diffs")
-                Map diffEntry = new HashMap()
-                diffEntry.put("time", modTime)
-                diffEntry.put("loud", loud)
-                diffEntry.put("changedIn", changedIn)
-                diffEntry.put("changedBy", changedBy)
-                diffEntry.put("deleted", deleted)
-                diffEntry.put("diff", incomingDiff)
-                diffs.addAll( diffEntry )
-                List newDiffs = new ArrayList(diffs)
-
-                newHistory = Map.of("original", original, "diffs", newDiffs)
-            }
-
-            String writeHistorySql = "INSERT INTO lddb__history (id, history) VALUES(?, ?) ON CONFLICT (id) DO UPDATE SET (id, history) = (EXCLUDED.id, EXCLUDED.history)"
-            PreparedStatement preparedStatement = null
-            ResultSet rs = null
-            try {
-                preparedStatement = connection.prepareStatement(writeHistorySql)
-                preparedStatement.setString(1, doc.getShortId())
-                preparedStatement.setObject(2, mapper.writeValueAsString(newHistory), OTHER)
-                preparedStatement.executeUpdate()
-            } catch(Exception e) {
-                log.error("Failed to save document history: ${e.message}")
-                throw e
-            } finally {
-                close(rs, preparedStatement)
-            }
-        } // new history
-        */
     }
     
     private PreparedStatement rigVersionStatement(PreparedStatement insvers,
@@ -1755,8 +1673,10 @@ class PostgreSQLComponent {
                     doc.setCreated(now)
                     doc.setModified(now)
                     doc.setDeleted(false)
-                    ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
-                    ver_batch.addBatch()
+                    if (versioning) {
+                        ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
+                        ver_batch.addBatch()
+                    }
                     batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
                     batch.addBatch()
                 }
@@ -1768,7 +1688,7 @@ class PostgreSQLComponent {
                 }
                 clearEmbellishedCache(connection)
                 connection.commit()
-                log.debug("Stored ${docs.size()} documents in collection ${collection}")
+                log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
                 return true
             } catch (Exception e) {
                 log.error("Failed to save batch: ${e.message}. Rolling back..", e)
@@ -2809,17 +2729,21 @@ class PostgreSQLComponent {
     }
 
     void remove(String identifier, String changedIn, String changedBy) {
-
-        log.debug("Marking document with ID ${identifier} as deleted.")
-        try {
-            storeUpdate(identifier, false, true, changedIn, changedBy,
-                { Document doc ->
-                    doc.setDeleted(true)
-                    // Add a tombstone marker (without removing anything) perhaps?
-                })
-        } catch (Throwable e) {
-            log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
-            throw e
+        if (versioning) {
+            log.debug("Marking document with ID ${identifier} as deleted.")
+            try {
+                storeUpdate(identifier, false, true, changedIn, changedBy,
+                    { Document doc ->
+                        doc.setDeleted(true)
+                        // Add a tombstone marker (without removing anything) perhaps?
+                    })
+            } catch (Throwable e) {
+                log.warn("Could not mark document with ID ${identifier} as deleted: ${e}")
+                throw e
+            }
+        } else {
+            throw new WhelkException(
+                    "Actually deleting data from lddb is currently not supported")
         }
 
         // Clear out dependencies
