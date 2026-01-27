@@ -68,8 +68,8 @@ public class HistoryArchiver extends HouseKeeper {
         ResultSet resultSet;
 
         connection.setAutoCommit(false);
-        //Timestamp cutoff = Timestamp.from(Instant.now().minus(60, ChronoUnit.DAYS));
-        Timestamp cutoff = Timestamp.from(Instant.now());
+        Timestamp cutoff = Timestamp.from(Instant.now().minus(60, ChronoUnit.DAYS));
+        //Timestamp cutoff = Timestamp.from(Instant.now());
         String sql = "SELECT id FROM lddb WHERE deleted = true AND modified < ? LIMIT 1000";
         statement = connection.prepareStatement(sql);
         statement.setTimestamp(1, cutoff);
@@ -179,6 +179,22 @@ public class HistoryArchiver extends HouseKeeper {
         }
     }
 
+    private void removeHistory(List<String> ids, Connection connection) throws SQLException {
+        { // versions
+            String sql = "DELETE FROM lddb__versions WHERE id = ANY (?)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setArray(1, connection.createArrayOf("TEXT", ids.toArray()));
+            statement.execute();
+        }
+
+        { // main table
+            String sql = "DELETE FROM lddb WHERE id = ANY (?)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setArray(1, connection.createArrayOf("TEXT", ids.toArray()));
+            statement.execute();
+        }
+    }
+
     public void trigger() {
         if (walPath == null) {
             logger.warn("No history archive root specified, not doing any history archiving.");
@@ -198,9 +214,7 @@ public class HistoryArchiver extends HouseKeeper {
                 lockRows(ids, connection);
                 String archiveLog = generateArchiveLogFor(ids);
                 writeArchiveLog(archiveLog);
-
-                // Delete history and record
-
+                removeHistory(ids, connection);
                 connection.commit();
 
                 if (!ids.isEmpty()) {
