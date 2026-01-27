@@ -436,44 +436,46 @@ public class Query {
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
-        property.getAltSelectors(ctx.jsonLd, ctx.rdfSubjectTypes).forEach(selector -> {
-            String field = selector.esField();
-            if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
-                field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
-            } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
-                field = String.format("%s.%s", field, KEYWORD);
-            } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
-                field = String.format("%s.%s", field, JsonLd.ID_KEY);
-            }
-            Optional<String> nestedStem = selector.getEsNestedStem(ctx.esSettings.mappings());
-            Map<String, Object> aggs = nestedStem.isPresent()
-                    ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
-                    : buildCoreAqqQuery(field, slice, ctx);
-            Map<String, List<Condition>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
-                    ? with(new HashMap<>(ctx.mmSelected), m -> {
-                m.remove(pKey);
-                // FIXME
-                if (slice.parentSlice() != null) {
-                    m.remove(slice.parentSlice().propertyKey());
-                }
-                if (slice.subSlice() != null) {
-                    m.remove(slice.subSlice().propertyKey());
-                }
-                // TODO don't hardcode this if we decide it is what we want
-                if (Restrictions.FIND_CATEGORY.equals(pKey) || Restrictions.IDENTIFY_CATEGORY.equals(pKey)) {
-                    m.remove(Restrictions.NONE_CATEGORY);
-                }
-                //if ("_categoryByCollection.@none".equals(pKey)) {
-                //    m.remove("_categoryByCollection.find");
-                //    m.remove("_categoryByCollection.identify");
-                //}
-            })
-                    : ctx.mmSelected;
-            Map<String, Object> filter = SelectedFacets.buildMultiSelectedTree(mSelected.values())
-                    .expand(ctx.jsonLd, ctx.rdfSubjectTypes)
-                    .toEs(ctx.esSettings);
-            query.put(field, filterWrap(aggs, property.name(), filter));
-        });
+        property.getAltSelectors(ctx.jsonLd, ctx.rdfSubjectTypes).stream()
+                .map(s -> s.withPrependedMetaProperty(ctx.jsonLd))
+                .forEach(selector -> {
+                    String field = selector.esField();
+                    if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
+                        field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
+                    } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
+                        field = String.format("%s.%s", field, KEYWORD);
+                    } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
+                        field = String.format("%s.%s", field, JsonLd.ID_KEY);
+                    }
+                    Optional<String> nestedStem = selector.getEsNestedStem(ctx.esSettings.mappings());
+                    Map<String, Object> aggs = nestedStem.isPresent()
+                            ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
+                            : buildCoreAqqQuery(field, slice, ctx);
+                    Map<String, List<Condition>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
+                            ? with(new HashMap<>(ctx.mmSelected), m -> {
+                        m.remove(pKey);
+                        // FIXME
+                        if (slice.parentSlice() != null) {
+                            m.remove(slice.parentSlice().propertyKey());
+                        }
+                        if (slice.subSlice() != null) {
+                            m.remove(slice.subSlice().propertyKey());
+                        }
+                        // TODO don't hardcode this if we decide it is what we want
+                        if (Restrictions.FIND_CATEGORY.equals(pKey) || Restrictions.IDENTIFY_CATEGORY.equals(pKey)) {
+                            m.remove(Restrictions.NONE_CATEGORY);
+                        }
+                        //if ("_categoryByCollection.@none".equals(pKey)) {
+                        //    m.remove("_categoryByCollection.find");
+                        //    m.remove("_categoryByCollection.identify");
+                        //}
+                    })
+                            : ctx.mmSelected;
+                    Map<String, Object> filter = SelectedFacets.buildMultiSelectedTree(mSelected.values())
+                            .expand(ctx.jsonLd, ctx.rdfSubjectTypes)
+                            .toEs(ctx.esSettings);
+                    query.put(field, filterWrap(aggs, property.name(), filter));
+                });
     }
     
     private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {
