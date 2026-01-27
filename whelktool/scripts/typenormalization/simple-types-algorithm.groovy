@@ -39,7 +39,7 @@ class TypeMappings implements UsingJsonKeys {
       'SoundRecording': [category: 'https://id.kb.se/term/ktg/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
       'VideoRecording': [category: 'https://id.kb.se/term/ktg/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
       'Map': [workCategory: 'https://id.kb.se/term/rda/CartographicImage'],  // 12686
-      'Globe': [category: 'https://id.kb.se/term/rda/CartographicThreeDimensionalForm', workCategory: 'https://id.kb.se/term/saogf/Kartglober'],  // 74
+      'Globe': [workCategory: ['https://id.kb.se/term/saogf/Kartglober', 'https://id.kb.se/term/rda/CartographicThreeDimensionalForm']],  // 74
       'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/rda/StillImage'], // 54954
       'TextInstance': [category: 'https://id.kb.se/term/rda/Volume' , workCategory: 'https://id.kb.se/term/rda/Text'], // 301
     ]
@@ -498,7 +498,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         var probablyPrint = assumedToBePrint(instance)
 
-        if (!isElectronic && !isSoundRecording && !isVideoRecording) {
+        if (!isElectronic) {
 
             // If it is or looks like a volume
             if (isVolume) {
@@ -506,15 +506,19 @@ class TypeNormalizer implements UsingJsonKeys {
                 changed = true
             }
 
-            // If its type is Print, or seems like it should be Print
-            if (itype == "Print" || probablyPrint) {
+            // If its type is Print
+            if (itype == "Print") {
                 carrierTypes << [(ID): KTG + 'Print']
                 changed = true
             }
 
             // If its type is Instance (very few of those left in Libris)
             if (itype == "Instance") {
-                // ALREADY DONE If it is presumably print, add print
+                // If it is presumably print, add print
+                if (probablyPrint) {
+                    carrierTypes << [(ID): KTG + 'Print']
+                    changed = true
+                }
                 // ALREADY DONE If it is or looks like a volume, add RDA Volume
                 // If it is not a volume, add Sheet
                 if (!isVolume && mappings.matches(carrierTypes, "Sheet")) {
