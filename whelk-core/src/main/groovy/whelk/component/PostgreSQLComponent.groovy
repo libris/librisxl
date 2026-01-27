@@ -1636,6 +1636,7 @@ class PostgreSQLComponent {
         }
 
         // The new history
+        /*
         {
             // Is there a diff to be made? A new document (preUpdateDoc passed as null) has nothing to be diffed with.
             List incomingDiff = null
@@ -1715,6 +1716,7 @@ class PostgreSQLComponent {
                 close(rs, preparedStatement)
             }
         } // new history
+        */
     }
     
     private PreparedStatement rigVersionStatement(PreparedStatement insvers,

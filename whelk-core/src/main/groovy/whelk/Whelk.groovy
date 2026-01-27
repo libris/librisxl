@@ -68,6 +68,7 @@ class Whelk {
     Romanizer romanizer
     FeatureFlags features
     File logRoot
+    String historyArchiveRoot
 
     URI baseUri = null
     boolean skipIndex = false
@@ -136,6 +137,8 @@ class Whelk {
         if (configuration.locales) {
             locales = ((String) configuration.locales).split(',').collect { it.trim() }
         }
+
+        historyArchiveRoot = configuration.historyArchiveRoot
         
         features = new FeatureFlags(configuration)
 
