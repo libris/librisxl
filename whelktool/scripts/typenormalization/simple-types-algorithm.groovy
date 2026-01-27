@@ -513,7 +513,7 @@ class TypeNormalizer implements UsingJsonKeys {
             }
 
             // If its type is Instance (very few of those left in Libris)
-            if (itype == "Instance") {
+            else if (itype == "Instance") {
                 // If it is presumably print, add print
                 if (probablyPrint) {
                     carrierTypes << [(ID): KTG + 'Print']
