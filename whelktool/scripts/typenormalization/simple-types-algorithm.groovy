@@ -39,7 +39,7 @@ class TypeMappings implements UsingJsonKeys {
       'SoundRecording': [category: 'https://id.kb.se/term/ktg/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
       'VideoRecording': [category: 'https://id.kb.se/term/ktg/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
       'Map': [workCategory: 'https://id.kb.se/term/rda/CartographicImage'],  // 12686
-      'Globe': [workCategory: ['https://id.kb.se/term/saogf/Kartglober', 'https://id.kb.se/term/rda/CartographicThreeDimensionalForm']],  // 74
+      'Globe': [category: 'https://id.kb.se/term/rda/Object', workCategory: 'https://id.kb.se/term/rda/CartographicThreeDimensionalForm'],  // 74
       'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/rda/StillImage'], // 54954
       'TextInstance': [category: 'https://id.kb.se/term/rda/Volume' , workCategory: 'https://id.kb.se/term/rda/Text'], // 301
     ]
@@ -148,8 +148,12 @@ class TypeMappings implements UsingJsonKeys {
         } else {
             var mappedTypes = cleanupInstanceTypes[itype]
             if (mappedTypes) {
-                work.get('genreForm', []) << [(ID): mappedTypes.workCategory]
-
+                if (mappedTypes.workCategory.contains('/rda/')) {
+                    work.get('contentType', []) << [(ID): mappedTypes.workCategory]
+                }
+                else {
+                    work.get('genreForm', []) << [(ID): mappedTypes.workCategory]
+                }
                 if (mappedTypes?.category) {
                     instance.get('carrierType', []) << [(ID): mappedTypes.category]
                 }
