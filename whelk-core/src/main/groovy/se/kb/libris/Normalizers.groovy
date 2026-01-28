@@ -125,7 +125,7 @@ class Normalizers {
         return new Normalizer({ Document doc ->
             def (_record, thing, legacyWork) = doc.data[GRAPH_KEY]
 
-            boolean shouldMove = (legacyWork && isInstanceOf(jsonLd, legacyWork, 'Work')
+            boolean shouldMove = (legacyWork && isClassOrSubClassOf(jsonLd, legacyWork, 'Work')
                     && thing && thing['instanceOf'] && thing['instanceOf'][ID_KEY]
                     && thing['instanceOf'][ID_KEY] == legacyWork[ID_KEY])
 
@@ -181,10 +181,24 @@ class Normalizers {
 
     static void removeBroaderCategories(Document doc, Relations relations, JsonLd jsonLd) {
         var work = getWork(jsonLd, doc)
-        if (!work) {
+        var instance = getInstance(jsonLd, doc)
+
+        //TODO: do this for all types? integral relations instead of instanceOf
+        if (!work && !instance) {
             return
         }
-        var categories = work['category'] as Set<Map<String, String>>
+        var workCategories = getNormalizedCategories(work, relations)
+        if (workCategories) {
+            work['category'] = workCategories
+        }
+        var instanceCategories = getNormalizedCategories(instance, relations)
+        if (instanceCategories) {
+            instance['category'] = instanceCategories
+        }
+    }
+
+    static Collection getNormalizedCategories(Map thing, Relations relations) {
+        var categories = thing?['category'] as Set<Map<String, String>>
         if (categories) {
             var categoryIds = categories.collect { it[ID_KEY] }.findAll()
             categories.removeIf { c ->
@@ -192,7 +206,9 @@ class Normalizers {
                         && relations.isImpliedBy(c[ID_KEY], otherId)
                 }
             }
-            work['category'] = categories
+            return categories
+        } else {
+            return null
         }
     }
 
@@ -217,15 +233,23 @@ class Normalizers {
 
     static Map getWork(JsonLd jsonLd, Document doc) {
         def (_record, thing) = doc.data['@graph']
-        if (thing && isInstanceOf(jsonLd, thing, 'Work')) {
+        if (thing && isClassOrSubClassOf(jsonLd, thing, 'Work')) {
             return thing
-        } else if (thing && thing['instanceOf'] && isInstanceOf(jsonLd, thing['instanceOf'], 'Work')) {
+        } else if (thing && thing['instanceOf'] && isClassOrSubClassOf(jsonLd, thing['instanceOf'], 'Work')) {
             return thing['instanceOf']
         }
         return null
     }
 
-    static boolean isInstanceOf(JsonLd jsonLd, Map entity, String baseType) {
+    static Map getInstance(JsonLd jsonLd, Document doc) {
+        def (_record, thing) = doc.data['@graph']
+        if (thing && isClassOrSubClassOf(jsonLd, thing, 'Instance')) {
+            return thing
+        }
+        return null
+    }
+
+    static boolean isClassOrSubClassOf(JsonLd jsonLd, Map entity, String baseType) {
         def type = entity['@type']
         if (type == null)
             return false
