@@ -3,11 +3,15 @@ set -euo pipefail
 
 # A testfolder located ../../ two levels up from whelktool, i.e. beside the librisxl repo
 TESTFOLDER=$1
+TESTRECORDS=${2:-./scripts/typenormalization/tailored_examples.jsonl}
+
+echo "Using tailored examples file: $TESTRECORDS"
+echo "Saving results to test folder: $TESTFOLDER"
 
 # Eun this from the whelktool folder
 # Zip the tailored examples file and save it in the parent folder of the librixl reop
 echo "Creating compressed tailored examples file..."
-gzip -c -k -f scripts/typenormalization/tailored_examples.jsonl > ../../$TESTFOLDER/qa-instances.jsonl.gz
+gzip -c -k -f $TESTRECORDS > ../../$TESTFOLDER/qa-instances.jsonl.gz
 
 # Run the typenormalization script on the tailored examples and save as qa-NORMALIZED-with-category.jsonl
 echo "Running typenormalization on tailored examples..."
