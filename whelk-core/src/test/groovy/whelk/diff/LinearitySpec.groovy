@@ -156,7 +156,7 @@ class LinearitySpec extends Specification {
         recreatedVersions.equals(versions)
     }
 
-    def "linearity 5"() {
+    def "linearity 6"() {
         given:
 
         def versions = [

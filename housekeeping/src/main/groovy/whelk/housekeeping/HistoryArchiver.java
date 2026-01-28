@@ -16,6 +16,7 @@ import java.sql.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
@@ -35,6 +36,12 @@ public class HistoryArchiver extends HouseKeeper {
         this.whelk = whelk;
 
         String archiveRoot = whelk.getHistoryArchiveRoot();
+        if (archiveRoot == null) {
+            prelimPath = walPath = null;
+            permanentLocationPattern = null;
+            logger.info("No history archive root configured. Not doing any archiving.");
+            return;
+        }
         Path archiveRootPath = Paths.get(archiveRoot);
         try {
             Files.createDirectories(archiveRootPath);
@@ -47,6 +54,7 @@ public class HistoryArchiver extends HouseKeeper {
         prelimPath = archiveRootPath.resolve("libris-history.json.lines.tmp");
         walPath = archiveRootPath.resolve("libris-history.json.lines.wal");
         permanentLocationPattern = archiveRootPath.resolve("libris-history-£.json.lines.gz").toString();
+        logger.info("History archiver is active. Archive root set to: " + archiveRoot);
     }
 
     private String status = "OK";
@@ -69,7 +77,6 @@ public class HistoryArchiver extends HouseKeeper {
 
         connection.setAutoCommit(false);
         Timestamp cutoff = Timestamp.from(Instant.now().minus(60, ChronoUnit.DAYS));
-        //Timestamp cutoff = Timestamp.from(Instant.now());
         String sql = "SELECT id FROM lddb WHERE deleted = true AND modified < ? LIMIT 1000";
         statement = connection.prepareStatement(sql);
         statement.setTimestamp(1, cutoff);
@@ -79,7 +86,7 @@ public class HistoryArchiver extends HouseKeeper {
         while (resultSet.next()) {
             result.add( resultSet.getString("id") );
         }
-        return result;
+        return Collections.unmodifiableList(result);
     }
 
     private void lockRows(List<String> ids, Connection connection) throws SQLException {
@@ -98,12 +105,16 @@ public class HistoryArchiver extends HouseKeeper {
         // easily appended to an existing archive log file, and 'grep':ed in for finding
         // individual records and their history.
         // Each record (line) is a json document with an original version of the record
-        // followed by diffs for every change since.
+        // and diffs for every change since.
 
         StringBuilder sb = new StringBuilder();
         for (String id : ids) {
 
             List<Document> versions = whelk.getStorage().loadAllVersions(id);
+            if (versions.isEmpty()) { // Should be impossible
+                logger.error("History archiving: Broken data detected: No versions for " + id);
+                continue;
+            }
 
             List<List> diffs = new ArrayList<>();
             for (int i = 0; i < versions.size()-1; ++i) {
@@ -157,7 +168,7 @@ public class HistoryArchiver extends HouseKeeper {
         }
 
         if (timeToCheckpoint) {
-            String permanentLocation = permanentLocationPattern.replaceAll("£", Instant.now().toString());
+            String permanentLocation = permanentLocationPattern.replaceAll("£", Instant.now().toString()).replace(":", "_");
             Path permanentPath = Paths.get(permanentLocation);
 
             FileInputStream is = new FileInputStream(walPath.toFile());
@@ -187,6 +198,13 @@ public class HistoryArchiver extends HouseKeeper {
             statement.execute();
         }
 
+        { // identifiers
+            String sql = "DELETE FROM lddb__identifiers WHERE id = ANY (?)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setArray(1, connection.createArrayOf("TEXT", ids.toArray()));
+            statement.execute();
+        }
+
         { // main table
             String sql = "DELETE FROM lddb WHERE id = ANY (?)";
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -201,42 +219,45 @@ public class HistoryArchiver extends HouseKeeper {
             return;
         }
 
-        Connection connection = whelk.getStorage().getOuterConnection();
-
-        try {
-
-            // Work for up to ~15 minutes a day archiving history
-            Instant start = Instant.now();
-            while (Instant.now().isBefore( start.plus(15, ChronoUnit.MINUTES) )) {
-
-                connection.setAutoCommit(false);
-                List<String> ids = getIdBatchToArchive(connection);
-                lockRows(ids, connection);
-                String archiveLog = generateArchiveLogFor(ids);
-                writeArchiveLog(archiveLog);
-                removeHistory(ids, connection);
-                connection.commit();
-
-                if (!ids.isEmpty()) {
-                    logger.info("Archived history for " + ids.size() + " deleted records.");
-                }
-
-                possiblyCheckpoint();
-
-                if (ids.isEmpty()) {
-                    break; // Don't spin around doing nothing.
-                }
-            }
-
-        } catch (Exception e) {
-            status = e.getMessage();
+        // The double-try is so that we can do an explicit rollback() on failures.
+        try (Connection connection = whelk.getStorage().getOuterConnection()) {
             try {
-                connection.rollback();
-            } catch (SQLException sqle) {
-                throw new RuntimeException(sqle);
+
+                // Work for up to ~15 minutes a day archiving history
+                Instant start = Instant.now();
+                while (Instant.now().isBefore(start.plus(15, ChronoUnit.MINUTES))) {
+
+                    connection.setAutoCommit(false);
+                    List<String> ids = getIdBatchToArchive(connection);
+                    lockRows(ids, connection);
+                    String archiveLog = generateArchiveLogFor(ids);
+                    writeArchiveLog(archiveLog);
+                    removeHistory(ids, connection);
+                    connection.commit();
+
+                    if (!ids.isEmpty()) {
+                        logger.info("Archived history for " + ids.size() + " deleted records.");
+                    }
+
+                    possiblyCheckpoint();
+
+                    if (ids.isEmpty()) {
+                        break; // Don't spin around doing nothing.
+                    }
+                }
+
+            } catch (Exception e) {
+                status = e.getMessage();
+                try {
+                    connection.rollback();
+                } catch (SQLException sqle) {
+                    throw new RuntimeException(sqle);
+                }
+                throw new RuntimeException(e);
             }
-            throw new RuntimeException(e);
+            status = "OK";
+        } catch (SQLException sqle) {
+            throw new RuntimeException(sqle);
         }
-        status = "OK";
     }
 }
