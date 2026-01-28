@@ -955,7 +955,7 @@ class Document {
 
         // TODO...
         if (!work['hasTitle']) {
-            work['hasTitle'] = (instance['hasTitle'] ?: []).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
+            work['hasTitle'] = JsonLd.asList(instance['hasTitle']).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
         }
 
         set(["@graph", 1], work)
