@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.util.FresnelUtil.LangCode.NO_LANG;
@@ -510,7 +511,7 @@ public class FresnelUtil {
                     case Map<?, ?> m -> thing = (Map<String, Object>) m;
                     case List<?> l -> {
                         Map<String, Object> child = new LinkedHashMap<>();
-                        thing.put(key, Stream.concat(l.stream(), Stream.of(child)).toList());
+                        thing.put(key, Stream.concat(l.stream(), Stream.of(child)).collect(Collectors.toList()));
                         thing = child;
                     }
                     case null -> {
@@ -530,7 +531,7 @@ public class FresnelUtil {
             switch (value) {
                 case Collection<?> c -> c.forEach(v -> insert(thing, key, v));
                 case LanguageContainer l -> insert(thing, (String) jsonLd.langContainerAlias.get(key), l.asLangMap(jsonLd.locales));
-                case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(Node::buildThingForIndex).toList()); //FIXME
+                case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(Node::buildThingForIndex).collect(Collectors.toList())); //FIXME
                 case Node n -> {
                     if (jsonLd.isVocabTerm(key) && n.id != null) {
                         insert(thing, key, jsonLd.toTermKey(n.id));
@@ -539,7 +540,7 @@ public class FresnelUtil {
                     }
                 }
                 default -> {
-                    List<Object> values = Stream.concat(asStream(thing.get(key)), Stream.of(value)).distinct().toList();
+                    List<Object> values = Stream.concat(asStream(thing.get(key)), Stream.of(value)).distinct().collect(Collectors.toList());
                     thing.put(key, values.size() == 1 ? values.getFirst() : values);
                 }
             }
