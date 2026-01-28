@@ -119,6 +119,7 @@ class SearchUtilsSpec extends Specification {
         ['q': 'functions & duties']    | SearchType.ELASTIC           | '/find?q=functions+%26+duties'
         ['q': 'ftp://test']            | SearchType.ELASTIC           | '/find?q=ftp://test'
         ['q': 'hej', '@type': 'Work']  | SearchType.ELASTIC           | '/find?q=hej&@type=Work'
+        ['q': '*', '_limit': 0]        | SearchType.ELASTIC           | '/find?q=*'
         ['a': ['1']]                   | SearchType.ELASTIC           | '/find?q=*&a=1'
         ['a': '1']                     | SearchType.ELASTIC           | '/find?q=*&a=1'
         ['a': ['1', '2']]              | SearchType.ELASTIC           | '/find?q=*&a=1&a=2'
