@@ -28,7 +28,9 @@ class TypeMappings implements UsingJsonKeys {
     static final var BARNGF = "https://id.kb.se/term/barngf/"
     static final var KBRDA = "https://id.kb.se/term/rda/"
 
+    static final var SAOBF = "https://id.kb.se/term/saobf/"
     static final var KTG = "https://id.kb.se/term/ktg/"
+
     boolean replaceIssuanceTypes = Boolean.parseBoolean(System.getProperty("replaceIssuanceTypes")) ?: false
 
     Whelk whelk
@@ -36,8 +38,8 @@ class TypeMappings implements UsingJsonKeys {
     // TODO Should Sound & Video storage medium -- here and further down! -- be replaced with exact matches RDA media type audio and video?
     // Removed category "Sheet" from Map mapping, since it can be sheet or volume
     Map cleanupInstanceTypes = [
-      'SoundRecording': [category: 'https://id.kb.se/term/ktg/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
-      'VideoRecording': [category: 'https://id.kb.se/term/ktg/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
+      'SoundRecording': [category: 'https://id.kb.se/term/saobf/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
+      'VideoRecording': [category: 'https://id.kb.se/term/saobf/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
       'Map': [workCategory: 'https://id.kb.se/term/rda/CartographicImage'],  // 12686
       'Globe': [category: 'https://id.kb.se/term/rda/Object', workCategory: 'https://id.kb.se/term/rda/CartographicThreeDimensionalForm'],  // 74
       'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/rda/StillImage'], // 54954
@@ -196,7 +198,7 @@ class TypeMappings implements UsingJsonKeys {
 
         // Remove ComponentPart as a work/issuance type, retaining the information with an instance category
         if (issuancetype == 'SerialComponentPart' || issuancetype == 'ComponentPart') {
-            instance.get('category', []) << [(ID): KTG + 'ComponentPart']
+            instance.get('category', []) << [(ID): SAOBF + 'ComponentPart']
             issuancetype = 'Monograph'
         }
 
@@ -229,6 +231,7 @@ class TypeNormalizer implements UsingJsonKeys {
     static SAOGF = TypeMappings.SAOGF
     static KBRDA = TypeMappings.KBRDA
     static KTG = TypeMappings.KTG
+    static SAOBF = TypeMappings.SAOBF
 
     TypeMappings mappings
     def missingCategoryLog
@@ -294,7 +297,7 @@ class TypeNormalizer implements UsingJsonKeys {
                     if ((value.get(TYPE) == "PhysicalResource") && (entity.get(TYPE) == "DigitalResource")) {
                         value.put(TYPE, "DigitalResource")
                         if (value.category && value.category.size() == 0) {
-                            value.category.removeAll { it['@id'] == "https://id.kb.se/term/ktg/ElectronicStorageMedium" }
+                            value.category.removeAll { it['@id'] == "https://id.kb.se/term/saobf/ElectronicStorageMedium" }
                             value.remove("category")
                         }
                         changed = true
@@ -389,7 +392,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
         // If an instance has a certain (old) type which implies physical electronic carrier
         // and carrierTypes corroborating this:
-        if (mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/AbstractElectronic')) {
+        if (mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/saobf/AbstractElectronic')) {
             isElectronic = true // assume it is electronic
         }
 
@@ -435,7 +438,7 @@ class TypeNormalizer implements UsingJsonKeys {
         }
 
         if (isTactile && isBraille) {
-            carrierTypes << [(ID): KTG + 'Braille']
+            carrierTypes << [(ID): SAOBF + 'Braille']
             if (isVolume) {
                 carrierTypes << [(ID): KBRDA + 'Volume']
             }
@@ -446,8 +449,8 @@ class TypeNormalizer implements UsingJsonKeys {
 
         // ----- Section: Clean up Electronic -----
 
-        var isSoundRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/SoundStorageMedium')
-        var isVideoRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/ktg/VideoStorageMedium')
+        var isSoundRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/saobf/SoundStorageMedium')
+        var isVideoRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/saobf/VideoStorageMedium')
 
         // Remove redundant non-RDA carrierTypes. Keep or add rda/OnlineResource.
         if (isElectronic && (instance.get(TYPE, '') == 'DigitalResource')) {
@@ -463,7 +466,7 @@ class TypeNormalizer implements UsingJsonKeys {
         // If something has old itype Electronic and new itype PhysicalResource,
         // we can assume it id an electronic storage medium
         if (isElectronic && (instance.get(TYPE, '') == 'PhysicalResource')) {
-            carrierTypes << [(ID): KTG + 'ElectronicStorageMedium']
+            carrierTypes << [(ID): SAOBF + 'ElectronicStorageMedium']
             changed = true
         }
 
@@ -480,7 +483,7 @@ class TypeNormalizer implements UsingJsonKeys {
             changed = true
         }
         if (instanceGenreForms.removeIf { it['prefLabel'] == 'E-böcker'}) {
-            instanceGenreForms << [(ID): KTG + 'EBook']
+            instanceGenreForms << [(ID): SAOBF + 'EBook']
             if (instanceGenreForms.size() > 0) {
                 instance.put("genreForm", instanceGenreForms) }
             changed = true
@@ -501,7 +504,7 @@ class TypeNormalizer implements UsingJsonKeys {
 
             // If its type is Print
             if (itype == "Print") {
-                carrierTypes << [(ID): KTG + 'Print']
+                carrierTypes << [(ID): SAOBF + 'Print']
                 changed = true
             }
 
@@ -509,7 +512,7 @@ class TypeNormalizer implements UsingJsonKeys {
             else if (itype == "Instance") {
                 // If it is presumably print, add print
                 if (probablyPrint) {
-                    carrierTypes << [(ID): KTG + 'Print']
+                    carrierTypes << [(ID): SAOBF + 'Print']
                     changed = true
                 }
                 // ALREADY DONE If it is or looks like a volume, add RDA Volume
