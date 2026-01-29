@@ -1,5 +1,6 @@
 package whelk.util;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.JsonLd;
@@ -23,10 +24,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.JsonLd.ID_KEY;
 import static whelk.util.FresnelUtil.LangCode.NO_LANG;
 import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
 import static whelk.util.FresnelUtil.Options.NO_FALLBACK;
-import static whelk.util.FresnelUtil.Options.PRESERVE_LINKS;
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE;
 
 // https://www.w3.org/2005/04/fresnel-info/manual/
@@ -99,7 +100,6 @@ public class FresnelUtil {
     public enum Options {
         DEFAULT,
         TAKE_ALL_ALTERNATE,
-        PRESERVE_LINKS,
         NO_FALLBACK
     }
 
@@ -247,14 +247,10 @@ public class FresnelUtil {
             return n;
         }
 
-        var result = new Node(lens, selectedLang);
+        var result = new Node(lens, selectedLang, thing);
 
-        Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(JsonLd.ID_KEY)), lens.showProperties().stream())
-                .forEach(sp -> result.select(thing, sp, options));
-
-        if (options.contains(PRESERVE_LINKS)) {
-            //TODO
-        }
+        Stream.concat(Stream.of(new FslPath(JsonLd.TYPE_KEY), new FslPath(ID_KEY)), lens.showProperties().stream())
+                .forEach(sp -> result.select(sp, options));
 
         return result;
     }
@@ -314,7 +310,7 @@ public class FresnelUtil {
             return asLangMap(byScript(new LinkedHashMap<>()));
         }
 
-        public abstract Map<String, Object> getThingForIndex();
+        public abstract Map<String, Object> getThingForIndex(Collection<String> preserveLinks);
 
         public abstract boolean isEmpty();
 
@@ -343,30 +339,32 @@ public class FresnelUtil {
         String type;
         List<Selected> orderedSelection = new ArrayList<>();
         Lens lens;
+        Map<?, ?> thing;
 
-        Node(Lens lens, LangCode selectedLang) {
+        Node(Lens lens, LangCode selectedLang, Map<?, ?> thing) {
             this.lens = lens;
             this.selectedLang = selectedLang;
+            this.thing = thing;
         }
 
-        void select(Map<?, ?> thing, ShowProperty showProperty, Collection<Options> options) {
+        void select(ShowProperty showProperty, Collection<Options> options) {
             switch (showProperty) {
                 case AlternateProperties a -> {
                     for (var alternative : a.alternatives()) {
                         if (alternative instanceof FslPath fslPath) {
-                            boolean selected = select(thing, fslPath, options);
+                            boolean selected = select(fslPath, options);
                             if (selected && !options.contains(TAKE_ALL_ALTERNATE)) {
                                 break;
                             }
                         }
                     }
                 }
-                case FslPath fslPath -> select(thing, fslPath, options);
+                case FslPath fslPath -> select(fslPath, options);
                 case Unrecognized ignored -> {}
                 case MergeProperties mergeProperties -> {
-                    Node n = new Node(lens, selectedLang);
+                    Node n = new Node(lens, selectedLang, thing);
                     for (var m : mergeProperties.merge()) {
-                        n.select(thing, m, options);
+                        n.select(m, options);
                     }
                     var values = n.orderedSelection.stream().map(Selected::value).flatMap(this::asStream).toList();
                     if (!values.isEmpty()) {
@@ -376,7 +374,7 @@ public class FresnelUtil {
             }
         }
 
-        private boolean select(Map<?, ?> thing, FslPath fslPath, Collection<Options> options) {
+        private boolean select(FslPath fslPath, Collection<Options> options) {
             PropertyKey p = fslPath.getEndArcStep().asPropertyKey();
             List<?> values = fslPath.getValues(thing);
 
@@ -395,7 +393,7 @@ public class FresnelUtil {
                 }
                 type = (String) values.getFirst(); // TODO how to handle multiple types?
             }
-            else if (JsonLd.ID_KEY.equals(p.name)) {
+            else if (ID_KEY.equals(p.name)) {
                 if (!fslPath.isArcOnly()) {
                     throw new RuntimeException("");
                 }
@@ -435,8 +433,8 @@ public class FresnelUtil {
         }
 
         @Override
-        public Map<String, Object> getThingForIndex() {
-            return buildThingForIndex();
+        public Map<String, Object> getThingForIndex(Collection<String> preserveLinks) {
+            return buildThingForIndex(preserveLinks);
         }
 
         @Override
@@ -462,23 +460,49 @@ public class FresnelUtil {
             return stringsByLang;
         }
 
-        private Map<String, Object> buildThingForIndex() {
-            Map<String, Object> thing = new LinkedHashMap<>();
+        private Map<String, Object> buildThingForIndex(Collection<String> preserveLinks) {
+            Map<String, Object> lensedThing = new LinkedHashMap<>();
             if (id != null) {
-                thing.put(JsonLd.ID_KEY, id);
+                lensedThing.put(ID_KEY, id);
             }
             if (type != null) {
                 // TODO: Only for certain entitites? Should be included in lens definition if wanted?
-                thing.put(JsonLd.TYPE_KEY, type);
+                lensedThing.put(JsonLd.TYPE_KEY, type);
             }
-            orderedSelection.forEach(p -> insert(thing, p.selector(), p.value()));
+            orderedSelection.forEach(p -> insert(lensedThing, p.selector(), p.value(), preserveLinks));
+            if (!preserveLinks.isEmpty()) {
+                restoreLinks(lensedThing, thing, preserveLinks);
+            }
             if (type != null) {
-                var _str = buildSearchStr(thing);
+                var _str = buildSearchStr(lensedThing);
                 if (!_str.isEmpty()) {
-                    thing.put(JsonLd.SEARCH_KEY, _str.size() == 1 ? _str.getFirst() : _str);
+                    lensedThing.put(JsonLd.SEARCH_KEY, _str.size() == 1 ? _str.getFirst() : _str);
                 }
             }
-            return thing;
+            return lensedThing;
+        }
+
+        private static void restoreLinks(Map<String, Object> lensedThing, Map<?, ?> originalThing, Collection<String> preserveLinks) {
+            originalThing.forEach((k, v) -> {
+                var key = (String) k;
+                if (!lensedThing.containsKey(key)) {
+                    Object links = JsonLd.retainLinks(v, preserveLinks);
+                    if (!ObjectUtils.isEmpty(links)) {
+                        if (links instanceof Map<?, ?> link) {
+                            // Use a temporary ID key so these links are skipped during framing
+                            lensedThing.put(key, Map.of("_id", link.get(ID_KEY)));
+                            return;
+                        }
+                        DocumentUtil.traverse(links, (value, path) -> {
+                            if (value instanceof Map<?, ?> m && JsonLd.isLink(m)) {
+                                return new DocumentUtil.Replace(Map.of("_id", m.get(ID_KEY)));
+                            }
+                            return new DocumentUtil.Nop();
+                        });
+                        lensedThing.put(key, links);
+                    }
+                }
+            });
         }
 
         private List<String> buildSearchStr(Map<String, Object> thing) {
@@ -502,7 +526,7 @@ public class FresnelUtil {
         }
 
         @SuppressWarnings("unchecked")
-        private void insert(Map<String, Object> thing, FslPath selector, Object value) {
+        private void insert(Map<String, Object> thing, FslPath selector, Object value, Collection<String> preserveLinks) {
             List<String> steps = selector.asJsonPath();
             String key = steps.removeFirst();
 
@@ -524,19 +548,19 @@ public class FresnelUtil {
                 key = steps.removeFirst();
             }
 
-            insert(thing, key, value);
+            insert(thing, key, value, preserveLinks);
         }
 
-        private void insert(Map<String, Object> thing, String key, Object value) {
+        private void insert(Map<String, Object> thing, String key, Object value, Collection<String> preserveLinks) {
             switch (value) {
-                case Collection<?> c -> c.forEach(v -> insert(thing, key, v));
-                case LanguageContainer l -> insert(thing, (String) jsonLd.langContainerAlias.get(key), l.asLangMap(jsonLd.locales));
-                case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(Node::buildThingForIndex).collect(Collectors.toList())); //FIXME
+                case Collection<?> c -> c.forEach(v -> insert(thing, key, v, preserveLinks));
+                case LanguageContainer l -> insert(thing, (String) jsonLd.langContainerAlias.get(key), l.asLangMap(jsonLd.locales), preserveLinks);
+                case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(n -> buildThingForIndex(preserveLinks)).collect(Collectors.toList()), preserveLinks); //FIXME
                 case Node n -> {
                     if (jsonLd.isVocabTerm(key) && n.id != null) {
-                        insert(thing, key, jsonLd.toTermKey(n.id));
+                        insert(thing, key, jsonLd.toTermKey(n.id), preserveLinks);
                     } else {
-                        insert(thing, key, n.buildThingForIndex());
+                        insert(thing, key, n.buildThingForIndex(preserveLinks), preserveLinks);
                     }
                 }
                 default -> {
@@ -619,7 +643,7 @@ public class FresnelUtil {
         }
 
         @Override
-        public Map<String, Object> getThingForIndex() {
+        public Map<String, Object> getThingForIndex(Collection<String> preserveLinks) {
             // FIXME
             throw new UnsupportedOperationException("");
         }
@@ -1319,8 +1343,8 @@ public class FresnelUtil {
 
             for (var fd : formats.entrySet()) {
                 var f = fd.getValue();
-                if (!fd.getKey().equals(f.get(JsonLd.ID_KEY))) {
-                    logger.warn("Mismatch in format id: {} {}", fd.getKey(), f.get(JsonLd.ID_KEY));
+                if (!fd.getKey().equals(f.get(ID_KEY))) {
+                    logger.warn("Mismatch in format id: {} {}", fd.getKey(), f.get(ID_KEY));
                 }
                 if (!Fresnel.Format.equals(f.get(JsonLd.TYPE_KEY))) {
                     logger.warn("Unknown type, skipping {}", f.get(JsonLd.TYPE_KEY));
@@ -1557,7 +1581,7 @@ public class FresnelUtil {
             var result = new HashMap<String, Object>();
             result.put(JsonLd.TYPE_KEY, type);
             if (id != null) {
-                result.put(JsonLd.ID_KEY, id);
+                result.put(ID_KEY, id);
             }
             result.put(Fmt.DISPLAY, display.stream().map(Decorated::asJsonLd).toList());
 

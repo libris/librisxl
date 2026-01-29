@@ -33,7 +33,6 @@ import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
 import static whelk.util.FresnelUtil.Options.NO_FALLBACK
-import static whelk.util.FresnelUtil.Options.PRESERVE_LINKS
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
 import static whelk.util.Jackson.mapper
 
@@ -605,8 +604,8 @@ class ElasticSearch {
         def thing = (Map) embellishedGraph[1]
 
         // TODO: Vad blir effekten av TAKE_ALL_ALTERNATE?
-        def recordSearchCard = minimalRecord(record) + whelk.fresnelUtil.applyLens(record, FresnelUtil.LensGroupName.SearchCard, [TAKE_ALL_ALTERNATE, PRESERVE_LINKS]).getThingForIndex()
-        def thingSearchCard = whelk.fresnelUtil.applyLens(thing, FresnelUtil.LensGroupName.SearchCard, [TAKE_ALL_ALTERNATE, PRESERVE_LINKS]).getThingForIndex()
+        def recordSearchCard = minimalRecord(record) + whelk.fresnelUtil.applyLens(record, FresnelUtil.LensGroupName.SearchCard, [TAKE_ALL_ALTERNATE]).getThingForIndex(links)
+        def thingSearchCard = whelk.fresnelUtil.applyLens(thing, FresnelUtil.LensGroupName.SearchCard, [TAKE_ALL_ALTERNATE]).getThingForIndex(links)
 
         copy.data[GRAPH_KEY] = [recordSearchCard, thingSearchCard]
 
@@ -686,10 +685,15 @@ class ElasticSearch {
                 }
             }
 
-            // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
-            // -->
-            // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
             if (value instanceof Map) {
+                // Replace temporary _id keys with the formal @id key
+                if (value.containsKey('_id')) {
+                    return new DocumentUtil.Replace([(ID_KEY): value.get('_id')])
+                }
+
+                // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
+                // -->
+                // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
                 var flattened = [:]
                 value.each { k, v ->
                     if (k in whelk.jsonld.langContainerAlias) {
@@ -761,7 +765,7 @@ class ElasticSearch {
         def lensGroupName = integralIds.contains(thing[ID_KEY])
                 ? FresnelUtil.LensGroupName.SearchCard
                 : FresnelUtil.LensGroupName.SearchChip
-        def shrunkThing = fresnelUtil.applyLens(thing, lensGroupName, List.of(TAKE_ALL_ALTERNATE)).getThingForIndex()
+        def shrunkThing = fresnelUtil.applyLens(thing, lensGroupName, List.of(TAKE_ALL_ALTERNATE)).getThingForIndex(List.of())
         def shrunkRecord = minimalRecord((Map) record) + ((Map) shrunkThing.remove(RECORD_KEY) ?: [:])
         embellishData[GRAPH_KEY] = [shrunkRecord, shrunkThing]
         return embellishData
