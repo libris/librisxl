@@ -225,9 +225,6 @@ class TypeMappings implements UsingJsonKeys {
 
 class TypeNormalizer implements UsingJsonKeys {
 
-    //Parse system property "addCategory" and "replaceIssuanceTypes" as a boolean, default to false if none given
-    boolean addCategory = Boolean.parseBoolean(System.getProperty("addCategory")) ?: false
-
     static MARC = TypeMappings.MARC
     static SAOGF = TypeMappings.SAOGF
     static KBRDA = TypeMappings.KBRDA
@@ -348,26 +345,18 @@ class TypeNormalizer implements UsingJsonKeys {
         var contentTypes = mappings.reduceSymbols(asList(work.get("contentType")))
         var workGenreForms = mappings.reduceSymbols(asList(work.get("genreForm")))
 
-        if (addCategory) {
-            List<String> categories = []
-            categories += workGenreForms + contentTypes
-            work.remove("genreForm")
-            work.remove("contentType")
+        // Replace genreForm and contentType properties with category
+        List<String> categories = []
+        categories += workGenreForms + contentTypes
+        work.remove("genreForm")
+        work.remove("contentType")
 
-            if (categories.size() > 0) {
-                // Further reduce, e.g. removing contentTypes implied by workGenreForms.
-                work.put("category", mappings.reduceSymbols(categories))
-                changed = true
-            }
-        } else {
-            // Put back the reduced GFs and contentTypes
-            if (workGenreForms.size() > 0) {
-              work.put("genreForm", workGenreForms)
-            }
-            if (contentTypes.size() > 0) {
-              work.put("contentType", contentTypes)
-            }
+        if (categories.size() > 0) {
+            // Further reduce, e.g. removing contentTypes implied by workGenreForms.
+            work.put("category", mappings.reduceSymbols(categories))
+            changed = true
         }
+
 
         return changed
     }
@@ -579,44 +568,23 @@ class TypeNormalizer implements UsingJsonKeys {
 //
 //        }
 
-        if (addCategory) {
-            List<Map> categories = []
+        // Replace properties mediaType and carrierType with category
+        List<Map> categories = []
 
-            categories += mediaTypes
-            categories += carrierTypes
+        categories += mediaTypes
+        categories += carrierTypes
 
-            // Remove the ambiguous NARC term Other
-            categories.removeAll { it['@id'] == "https://id.kb.se/marc/Other" }
+        // Remove the ambiguous NARC term Other
+        categories.removeAll { it['@id'] == "https://id.kb.se/marc/Other" }
 
-            instance.remove("carrierType")
-            instance.remove("mediaType")
+        instance.remove("carrierType")
+        instance.remove("mediaType")
 
-            if (categories.size() > 0) {
-                categories = mappings.reduceSymbols(categories)
-                instance.put("category", categories)
-                changed = true
-            }
-        } else {
-            // Remove the mediaType if it can be inferred by the carrierType
-            var impliedMediaIds = carrierTypes.findResults { mappings.categoryMatches[it[ID]] }.flatten() as Set
-            if (mediaTypes.every { it[ID] in impliedMediaIds }) {
-                instance.remove("mediaType")
-                changed = true
-            }
-            // FIXME: If it cannot be inferred from the carrierType, do we want to put it back?
-            var explicitMediaTypes = mediaTypes.findAll { it[ID] !in impliedMediaIds }
-            if (explicitMediaTypes.size() > 0) {
-              instance.put("mediaType", explicitMediaTypes)
-            }
-
-            if (carrierTypes.size() > 0) {
-              instance.put("carrierType", carrierTypes)
-            }
-            // TODO: Decide in which property we want the instance "genreForms" (including old types)
-            if (instanceGenreForms.size() > 0) {
-              instance.put("category", instanceGenreForms)
-            }
-          }
+        if (categories.size() > 0) {
+            categories = mappings.reduceSymbols(categories)
+            instance.put("category", categories)
+            changed = true
+        }
 
         return changed
     }
@@ -712,10 +680,6 @@ class TypeNormalizer implements UsingJsonKeys {
 convertedWorks = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
 typeNormalizer = new TypeNormalizer(new TypeMappings(getWhelk(), scriptDir), missingCategoryLog)
-
-if (typeNormalizer.addCategory) {
-    System.out.println("Normalizing using property: category")
-}
 
 process { def doc, Closure loadWorkItem ->
     def (record, mainEntity) = doc.graph
