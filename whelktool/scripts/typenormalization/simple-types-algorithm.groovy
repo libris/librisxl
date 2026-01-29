@@ -399,7 +399,6 @@ class TypeNormalizer implements UsingJsonKeys {
         // Don't put new types on things that already have one of the new types
         List newInstanceTypes = ['PhysicalResource', 'DigitalResource']
         if (!(itype in newInstanceTypes)) {
-
             // If the resource is electronic and has at least on carrierType that contains "Online"
             if ((isElectronic && mappings.matches(carrierTypes, "Online"))) {
                 // Apply new instance types DigitalResource and PhysicalResource
@@ -440,7 +439,7 @@ class TypeNormalizer implements UsingJsonKeys {
         var isVideoRecording = mappings.anyImplies(carrierTypes, 'https://id.kb.se/term/saobf/VideoStorageMedium')
 
         // Remove redundant non-RDA carrierTypes. Keep or add rda/OnlineResource.
-        if (isElectronic && (instance.get(TYPE, '') == 'DigitalResource')) {
+        if (isElectronic && mappings.matches(carrierTypes, "Online")) {
             carrierTypes = carrierTypes.findAll { (it.getOrDefault(ID, "").contains("rda")) || (!it.getOrDefault(ID, "").contains("Online")) }
             changed = true
             // Keep all that do not contain "Online" and all that contain RDA
