@@ -12,6 +12,7 @@ class TypeCategoryNormalizer {
       tgm: 'https://id.kb.se/term/gmgpc/swe',
       kbrda: 'https://id.kb.se/term/rda',
       ktg: 'https://id.kb.se/term/ktg',
+      saobf: 'https://id.kb.se/term/saobf',
       marc: 'https://id.kb.se/marc',
     ]
 
@@ -105,8 +106,8 @@ class TypeCategoryNormalizer {
         categoryMatches = new TreeMap()
 
         var sourceSchemes = [SCHEMES.marc, SCHEMES.tgm, SCHEMES.saogf, SCHEMES.barngf]
-        var targetSchemes = [SCHEMES.kbrda, SCHEMES.saogf, SCHEMES.ktg]
-        var broaderSchemes = [SCHEMES.saogf, SCHEMES.barngf, SCHEMES.kbrda, SCHEMES.tgm, SCHEMES.ktg]
+        var targetSchemes = [SCHEMES.kbrda, SCHEMES.saogf, SCHEMES.ktg, SCHEMES.saobf]
+        var broaderSchemes = [SCHEMES.saogf, SCHEMES.barngf, SCHEMES.kbrda, SCHEMES.tgm, SCHEMES.ktg, SCHEMES.saobf]
 
         for (ctg in categories.values()) {
             String id = ctg[ID]
