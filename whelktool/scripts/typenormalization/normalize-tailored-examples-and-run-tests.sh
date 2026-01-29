@@ -13,10 +13,10 @@ echo "Saving results to test folder: $TESTFOLDER"
 echo "Creating compressed tailored examples file..."
 gzip -c -k -f $TESTRECORDS > ../../$TESTFOLDER/qa-instances.jsonl.gz
 
-# Run the typenormalization script on the tailored examples and save as qa-NORMALIZED-with-category.jsonl
+# Run the typenormalization script on the tailored examples and save as qa-normalized.jsonl
 echo "Running typenormalization on tailored examples..."
-time java -Xmx2G -Dxl.secret.properties=../secret.properties-dev2 -Dtypenormalization=simple-types-algorithm -DaddCategory=true -DreplaceIssuanceTypes=false -Dnowhelk.datadir=../../$TESTFOLDER -Dnowhelk.basename=qa -jar build/libs/whelktool.jar --dry-run --no-threads scripts/typenormalization/nowhelk.groovy
+time java -Xmx2G -Dxl.secret.properties=../secret.properties-dev2 -Dtypenormalization=simple-types-algorithm -Dnowhelk.datadir=../../$TESTFOLDER -Dnowhelk.basename=qa -jar build/libs/whelktool.jar --dry-run --no-threads scripts/typenormalization/nowhelk.groovy
 
 # Run tests on the output
 echo "Running tests on normalized tailored examples..."
-python3 scripts/typenormalization/run_tailored_tests.py ../../$TESTFOLDER/qa-NORMALIZED-with-category.jsonl
+python3 scripts/typenormalization/run_tailored_tests.py ../../$TESTFOLDER/qa-normalized.jsonl

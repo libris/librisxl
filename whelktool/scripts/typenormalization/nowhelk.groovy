@@ -31,13 +31,7 @@ var basename = System.properties['nowhelk.basename'] ?: 'lddb-examples'
 
 var workDataFileName = "$DATADIR/${basename}-works.jsonl.gz"
 var inDataFileName = "$DATADIR/${basename}-instances.jsonl.gz"
-var outDataFileName
-
-if (Boolean.parseBoolean(System.getProperty("addCategory"))) {
-  outDataFileName = "$DATADIR/${basename}-NORMALIZED-with-category.jsonl"
-} else {
-  outDataFileName = "$DATADIR/${basename}-NORMALIZED-without-category.jsonl"
-}
+var outDataFileName = "$DATADIR/${basename}-normalized.jsonl"
 
 System.err.println inDataFileName
 System.err.println outDataFileName

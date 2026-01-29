@@ -310,4 +310,14 @@ for r in data:
 		instance_categories = {c["@id"] for c in record["category"]}
 		assert "https://id.kb.se/term/rda/Print" not in instance_categories, record
 		
+	# TactileText ska inte få verkskategori rda/Text
+	elif id == "https://libris-qa.kb.se/test/tactileText":
+		assert work_category == [{"@id":"https://id.kb.se/rda/TactileText"}], record
+
+	# TactileText och StillImage ska inte få verkskategori rda/Text
+	elif id == "https://libris-qa.kb.se/test/tactileTextAndStillImage":
+		work_categories = {c["@id"] for c in record["instanceOf"]["category"]}
+		assert work_categories == {"https://id.kb.se/rda/TactileText", "https://id.kb.se/rda/StillImage"}, record
+
+		
 print("\nAll tests passed!")
