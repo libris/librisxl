@@ -308,7 +308,13 @@ class TypeNormalizer implements UsingJsonKeys {
 
         String wtype = getType(work)
 
-        if (wtype == 'ManuscriptText') {
+        if (wtype == 'Text') {
+            if (!asList(work.get("contentType")).findAll { (it.getOrDefault(ID, "").contains("TactileText"))}) {
+                // If there is NO contentType "TactileText", add "Text"
+                work.get('contentType', []) << [(ID): KBRDA + 'Text']
+            }
+            // If there is ANY contentType "TactileText", do nothing
+        } else if (wtype == 'ManuscriptText') {
             work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
         } else if (wtype == 'ManuscriptNotatedMusic') {
             work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
@@ -322,9 +328,7 @@ class TypeNormalizer implements UsingJsonKeys {
             //assert mappedCategory, "Unable to map ${wtype} to contentType or genreForm"
             if (mappedCategory) {
                 assert mappedCategory instanceof String
-                if (mappedCategory) {
-                    work.get('contentType', []) << [(ID): mappedCategory]
-                }
+                work.get('contentType', []) << [(ID): mappedCategory]
             }
         }
 
