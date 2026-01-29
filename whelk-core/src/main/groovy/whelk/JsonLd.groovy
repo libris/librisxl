@@ -1162,7 +1162,7 @@ class JsonLd {
         }
     }
 
-    private static Object retainLinks(Object o, Set<String> preserveLinks) {
+    static Object retainLinks(Object o, Collection<String> preserveLinks) {
         if (o instanceof Map) {
             if (preserveLinks.contains(o.get(ID_KEY))) {
                 return o.subMap([ID_KEY])
