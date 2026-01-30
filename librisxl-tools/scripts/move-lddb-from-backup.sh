@@ -98,3 +98,8 @@ pg_restore -f - "${DUMPPATH}" |
     ( read; cat - |
     perl -pe "$REPLACEID" |
     handle_sql_dump )
+
+if [[ -v DESTHOST ]]; then
+    PGPASSWORD=$DESTPASSWORD psql -h $DESTHOST -U $DESTUSER $DESTDB -c "ANALYZE;"
+fi
+
