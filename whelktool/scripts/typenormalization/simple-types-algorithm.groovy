@@ -57,24 +57,27 @@ class TypeMappings implements UsingJsonKeys {
         preferredCategory = catTypeNormalizer.preferredCategory
         categoryMatches = catTypeNormalizer.categoryMatches
 
-        // TODO Adjust this logic to always add carrier types as separate terms?
+        // Sanity checks on startup (if these fail, either the data isn't up to date, or the domain knowledge has changed without being reflected here)
         assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume'])
+        assert reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume']]) == [[(ID): 'https://id.kb.se/term/rda/Volume']]
 
-        // Commented out references to composite ktg instance categories
+        assert isImpliedBy([(ID): 'https://id.kb.se/term/saobf/AbstractElectronic'], [(ID): 'https://id.kb.se/term/rda/ComputerDiscCartridge'])
+        assert isImpliedBy([(ID): 'https://id.kb.se/term/saobf/AbstractElectronic'], [(ID): 'https://id.kb.se/term/rda/OnlineResource'])
+
+        // The below no longer holds (pending future normalization decisions)
+
+        // Composite ktg instance categories
         // assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Volume'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume'])
         // assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume'])
         // assert isImpliedBy([(ID): 'https://id.kb.se/term/rda/Sheet'], [(ID): 'https://id.kb.se/term/ktg/PrintedSheet'])
-
-        assert reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume']]) == [[(ID): 'https://id.kb.se/term/rda/Volume']]
-
-        // Commented out references to composite ktg instance categories
         // assert reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]) == [[(ID): 'https://id.kb.se/term/ktg/PrintedVolume']]
         // assert reduceSymbols([['@id':'https://id.kb.se/marc/Print'], ['@id':'https://id.kb.se/term/ktg/PrintedSheet'], ['@id':'https://id.kb.se/term/rda/Unmediated'], ['@id':'https://id.kb.se/term/rda/Sheet']]) == [['@id':'https://id.kb.se/term/ktg/PrintedSheet']]
 
-        // Commented out implications between RDA and SAOGF
+        // Implications between RDA and SAOGF
         // assert isImpliedBy([(ID):'https://id.kb.se/term/rda/StillImage'], [(ID):'https://id.kb.se/term/saogf/Bilder'])
         // assert !isImpliedBy([(ID):'https://id.kb.se/term/saogf/Bilder'], [(ID):'https://id.kb.se/term/rda/StillImage'])
         // assert reduceSymbols([[(ID):'https://id.kb.se/term/rda/StillImage'], [(ID):'https://id.kb.se/term/saogf/Bilder']]) == [[(ID):'https://id.kb.se/term/saogf/Bilder']]
+
     }
 
     boolean matches(ArrayList<Map> typelikes, String value) {
