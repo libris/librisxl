@@ -598,20 +598,15 @@ class ElasticSearch {
             links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
         }
 
-        def embellishedGraph = ((List) copy.data[GRAPH_KEY])
-
-        def record = (Map) embellishedGraph[0]
-        def thing = (Map) embellishedGraph[1]
+        var embellishedGraph = ((List) copy.data[GRAPH_KEY])
+        var originalGraph = (List) document.data[GRAPH_KEY]
 
         // TODO: Vad blir effekten av TAKE_ALL_ALTERNATE?
-        def recordSearchCard = minimalRecord(record) + whelk.fresnelUtil.applyLens(record, FresnelUtil.LensGroupName.SearchCard, [TAKE_ALL_ALTERNATE]).getThingForIndex(links)
-        def thingSearchCard = whelk.fresnelUtil.applyLens(thing, FresnelUtil.LensGroupName.SearchCard, [TAKE_ALL_ALTERNATE]).getThingForIndex(links)
-
-        copy.data[GRAPH_KEY] = [recordSearchCard, thingSearchCard]
+        copy.data[GRAPH_KEY] = originalGraph.collect { whelk.fresnelUtil.applyLens(it, FresnelUtil.LensGroupName.SearchCard, [TAKE_ALL_ALTERNATE]).getThingForIndex(links) }
 
         def integralIds = collectIntegralIds(copy.data, whelk.jsonld)
 
-        copy.data[GRAPH_KEY] += embellishedGraph.drop(2).collect { toSearchChipOrCard(whelk.fresnelUtil, (Map) it, integralIds) }
+        copy.data[GRAPH_KEY] += embellishedGraph.drop(originalGraph.size()).collect { toSearchChipOrCard(whelk.fresnelUtil, (Map) it, integralIds) }
 
         setIdentifiers(copy)
         if (copy.isVirtual()) {
