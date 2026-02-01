@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
+import static whelk.JsonLd.RECORD_TYPE;
+import static whelk.JsonLd.THING_KEY;
 import static whelk.util.FresnelUtil.LangCode.NO_LANG;
 import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
 import static whelk.util.FresnelUtil.Options.NO_FALLBACK;
@@ -469,6 +471,10 @@ public class FresnelUtil {
                 // TODO: Only for certain entitites? Should be included in lens definition if wanted?
                 lensedThing.put(JsonLd.TYPE_KEY, type);
             }
+            if (RECORD_TYPE.equals(type) && thing.containsKey(THING_KEY)) {
+                // Always keep mainEntity link
+                lensedThing.put(THING_KEY, thing.get(THING_KEY));
+            }
             orderedSelection.forEach(p -> insert(lensedThing, p.selector(), p.value(), preserveLinks));
             if (!preserveLinks.isEmpty()) {
                 restoreLinks(lensedThing, thing, preserveLinks);
@@ -488,9 +494,9 @@ public class FresnelUtil {
                 if (!lensedThing.containsKey(key)) {
                     Object links = JsonLd.retainLinks(v, preserveLinks);
                     if (!ObjectUtils.isEmpty(links)) {
-                        if (links instanceof Map<?, ?> link) {
+                        if (links instanceof Map<?, ?> m && JsonLd.isLink(m)) {
                             // Use a temporary ID key so these links are skipped during framing
-                            lensedThing.put(key, Map.of("_id", link.get(ID_KEY)));
+                            lensedThing.put(key, Map.of("_id", m.get(ID_KEY)));
                             return;
                         }
                         DocumentUtil.traverse(links, (value, path) -> {
@@ -555,7 +561,7 @@ public class FresnelUtil {
             switch (value) {
                 case Collection<?> c -> c.forEach(v -> insert(thing, key, v, preserveLinks));
                 case LanguageContainer l -> insert(thing, (String) jsonLd.langContainerAlias.get(key), l.asLangMap(jsonLd.locales), preserveLinks);
-                case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(n -> buildThingForIndex(preserveLinks)).collect(Collectors.toList()), preserveLinks); //FIXME
+                case TransliteratedNode t -> insert(thing, key, t.transliterations.values().stream().map(n -> n.buildThingForIndex(preserveLinks)).collect(Collectors.toList()), preserveLinks); //FIXME
                 case Node n -> {
                     if (jsonLd.isVocabTerm(key) && n.id != null) {
                         insert(thing, key, jsonLd.toTermKey(n.id), preserveLinks);
