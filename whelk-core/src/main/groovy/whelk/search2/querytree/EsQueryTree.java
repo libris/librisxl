@@ -2,6 +2,7 @@ package whelk.search2.querytree;
 
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
+import whelk.search2.QueryUtil;
 import whelk.search2.SelectedFacets;
 
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static whelk.search2.QueryUtil.matchAny;
 
 public class EsQueryTree extends QueryTree {
     private final ESSettings esSettings;
@@ -31,7 +34,7 @@ public class EsQueryTree extends QueryTree {
 
     public Map<String, Object> getMainQuery() {
         var queryTree = postFilterTree.isEmpty() ? nestedTree : nestedTree.removeAll(postFilterTree.flattenedConditions());
-        return queryTree.isEmpty() ? Map.of("match_all", Map.of()) : queryTree.tree().toEs(esSettings);
+        return queryTree.isEmpty() ? matchAny() : queryTree.tree().toEs(esSettings);
     }
 
     public Map<String, Object> getPostFilter() {

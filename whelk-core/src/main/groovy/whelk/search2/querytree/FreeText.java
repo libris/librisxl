@@ -23,6 +23,7 @@ import static whelk.search2.Query.Connective.AND;
 import static whelk.search2.Query.Connective.OR;
 import static whelk.search2.QueryUtil.isQuoted;
 import static whelk.search2.QueryUtil.isSimple;
+import static whelk.search2.QueryUtil.matchAny;
 import static whelk.search2.QueryUtil.parenthesize;
 import static whelk.search2.QueryUtil.quote;
 import static whelk.search2.QueryUtil.shouldWrap;
@@ -43,7 +44,7 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
 
     @Override
     public Map<String, Object> toEs(ESSettings esSettings) {
-        return _toEs(tokens, esSettings.boost().fieldBoost());
+        return isWild() ? matchAny() : _toEs(tokens, esSettings.boost().fieldBoost());
     }
 
     public Map<String, Object> toEs(ESSettings.Boost.FieldBoost boostSettings) {
