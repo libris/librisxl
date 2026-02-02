@@ -295,4 +295,33 @@ class ParseSpec extends Specification {
         thrown InvalidQueryException
     }
 
+    def "empty group"() {
+        given:
+        def input = "()"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "empty group 2"() {
+        given:
+        def input = "AAA AND ()"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "empty group 3"() {
+        given:
+        def input = "AAA AND ( BBB OR (()) )"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
 }

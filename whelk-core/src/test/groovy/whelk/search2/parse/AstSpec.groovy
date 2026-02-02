@@ -133,4 +133,48 @@ class AstSpec extends Specification {
         then:
         thrown InvalidQueryException
     }
+
+    def "empty group as string"() {
+        given:
+        def input = "AAA OR ()"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Ast.Node ast = Ast.buildFrom(parseTree)
+
+        expect:
+        ast == new Ast.Or(
+                [
+                        new Ast.Leaf(new Lex.Symbol(STRING, "AAA", 0)),
+                        new Ast.Leaf(new Lex.Symbol(STRING, "", 8)),
+                ] as List<Ast.Node>
+        )
+    }
+
+    def "empty group as string2"() {
+        given:
+        def input = "AAA OR (())"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Ast.Node ast = Ast.buildFrom(parseTree)
+
+        expect:
+        ast == new Ast.Or(
+                [
+                        new Ast.Leaf(new Lex.Symbol(STRING, "AAA", 0)),
+                        new Ast.Leaf(new Lex.Symbol(STRING, "", 9)),
+                ] as List<Ast.Node>
+        )
+    }
+
+    def "empty group as string3"() {
+        given:
+        def input = "()"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Ast.Node ast = Ast.buildFrom(parseTree)
+
+        expect:
+        ast == new Ast.Leaf(new Lex.Symbol(STRING, "", 1))
+
+    }
 }
