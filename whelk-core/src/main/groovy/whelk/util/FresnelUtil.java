@@ -153,6 +153,10 @@ public class FresnelUtil {
     }
 
     public Lensed applyLens(Object thing, LensGroupName lens, Collection<Options> options) {
+        return applyLens(thing, new DefinedLensGroup(lens), options);
+    }
+
+    public Lensed applyLens(Object thing, LensGroup lens, Collection<Options> options) {
         // TODO
         if (!isTypedNode(thing)) {
             throw new IllegalArgumentException("Thing is not typed node: " + thing);
@@ -173,7 +177,7 @@ public class FresnelUtil {
 
         var types = t.get(JsonLd.TYPE_KEY);
         var derivedLens = derivedLensCache.computeIfAbsent(new DerivedCacheKey(types, derived), k -> {
-            var base = findLens(t, derived.base);
+            var base = findLens(t, derived);
             var minus = derived.minus.stream().map(l -> findLens(t, l)).toList();
             return base.minus(minus, derived);
         });
@@ -210,13 +214,13 @@ public class FresnelUtil {
         return new FslPath(fslSelector).getValues(thing);
     }
 
-    private Object applyLens(Object value, LensGroupName lensGroupName, LangCode selectedLang) {
-        return applyLens(value, lensGroupName, List.of(), selectedLang);
+    private Object applyLens(Object value, LensGroup lensGroup, LangCode selectedLang) {
+        return applyLens(value, lensGroup, List.of(), selectedLang);
     }
 
     private Object applyLens(
             Object value,
-            LensGroupName lensGroupName,
+            LensGroup lensGroup,
             Collection<Options> options,
             LangCode selectedLang
     ) {
@@ -224,7 +228,7 @@ public class FresnelUtil {
             // literal
             return value;
         }
-        var lens = findLens(thing, lensGroupName, options.contains(Options.NO_FALLBACK) ? FallbackLens.EMPTY : FallbackLens.DEFAULT);
+        var lens = findLens(thing, lensGroup, options.contains(Options.NO_FALLBACK) ? FallbackLens.EMPTY : FallbackLens.DEFAULT);
 
         return applyLens(value, lens, options, selectedLang);
     }
@@ -423,7 +427,7 @@ public class FresnelUtil {
                                         return applyLens(v, new DerivedLensGroup(d.base(), handled, d.subLens()), options);
                                     }
                                 }
-                                return applyLens(v, lens.base(), options, selectedLang);
+                                return applyLens(v, lens.lensGroup(), options, selectedLang);
                             }
                             return applyLens(v, lens.subLens(), options, selectedLang);
                         })
@@ -734,10 +738,15 @@ public class FresnelUtil {
     }
 
     private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName) {
-        return findLens(thing, lensGroupName, FallbackLens.DEFAULT);
+        return findLens(thing, new DefinedLensGroup(lensGroupName));
     }
 
-    private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName, FallbackLens fallbackLens) {
+    private Lens findLens(Map<?,?> thing, LensGroup lensGroup) {
+        return findLens(thing, lensGroup, FallbackLens.DEFAULT);
+    }
+
+    private Lens findLens(Map<?,?> thing, LensGroup lensGroup, FallbackLens fallbackLens) {
+        var lensGroupName = lensGroup.base();
         var types = thing.get(JsonLd.TYPE_KEY);
         var cacheKey = new LensCacheKey(types, lensGroupName, fallbackLens);
 
@@ -748,11 +757,11 @@ public class FresnelUtil {
                 @SuppressWarnings("unchecked")
                 var lens = (Map<String, Object>) jsonLd.getLensFor(thing, group);
                 if (lens != null) {
-                    return new Lens(lens, lensGroupName);
+                    return new Lens(lens, lensGroup);
                 }
             }
 
-            return new Lens(fallbackLens.lens, lensGroupName);
+            return new Lens(fallbackLens.lens, lensGroup);
         });
     }
 
@@ -760,8 +769,8 @@ public class FresnelUtil {
         private final LensGroup lensGroup;
         private final List<ShowProperty> showProperties;
 
-        public Lens(Map<String, Object> lensDefinition, LensGroupName lensGroupName) {
-            this.lensGroup = new DefinedLensGroup(lensGroupName, FresnelUtil.subLens(lensGroupName));
+        public Lens(Map<String, Object> lensDefinition, LensGroup lensGroup) {
+            this.lensGroup = lensGroup;
 
             @SuppressWarnings("unchecked")
             var showProperties = (List<Object>) lensDefinition.get(Fresnel.showProperties);
@@ -777,12 +786,8 @@ public class FresnelUtil {
             return lensGroup;
         }
 
-        LensGroupName base() {
-            return lensGroup.base();
-        }
-
-        LensGroupName subLens() {
-            return lensGroup.subLens();
+        LensGroup subLens() {
+            return new DefinedLensGroup(lensGroup.subLens());
         }
 
         List<ShowProperty> showProperties() {
@@ -894,7 +899,11 @@ public class FresnelUtil {
         LensGroupName subLens();
     }
 
-    public record DefinedLensGroup(LensGroupName base, LensGroupName subLens) implements LensGroup {}
+    public record DefinedLensGroup(LensGroupName base, LensGroupName subLens) implements LensGroup {
+        public DefinedLensGroup(LensGroupName base) {
+            this(base, FresnelUtil.subLens(base));
+        }
+    }
     public record DerivedLensGroup(LensGroupName base, List<LensGroupName> minus, LensGroupName subLens) implements LensGroup {}
 
     private static LensGroupName subLens(LensGroupName lensGroupName) {

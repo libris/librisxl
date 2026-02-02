@@ -521,7 +521,7 @@ class FresnelUtilSpec extends Specification {
         ]
         var fresnel = new FresnelUtil(ld)
 
-        var result = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Card, FresnelUtil.Options.TAKE_ALL_ALTERNATE)
+        var result = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Card, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
 
         expect:
         result.asString() == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Svenska Swedish Hästar"
@@ -636,7 +636,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
 
         var takeFirst = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
-        var takeAllAlternate = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip, FresnelUtil.Options.TAKE_ALL_ALTERNATE)
+        var takeAllAlternate = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
 
         expect:
         takeFirst.asString() == takeFirstRes
@@ -648,30 +648,6 @@ class FresnelUtilSpec extends Specification {
         ["hasTitle/VariantTitle/mainTitle", "hasTitle/Title/mainTitle"]    | "variant title"       | "variant title Titel"
         ["hasTitle/KeyTitle/mainTitle", "hasTitle/VariantTitle/mainTitle"] | "variant title"       | "variant title"
         ["hasTitle/KeyTitle/mainTitle", "hasTitle/*/mainTitle"]            | "Titel variant title" | "Titel variant title"
-    }
-
-    def "Take first in showProperties"() {
-        given:
-        var thing = [
-                '@type'   : 'Work',
-                'hasTitle': title,
-                'language': [
-                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
-                ]
-        ]
-        var fresnel = new FresnelUtil(ld)
-        var first = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip, FresnelUtil.Options.TAKE_FIRST_SHOW_PROPERTY)
-
-        expect:
-        first.asString() == res
-
-        where:
-        title                                                                                                                                | res
-        [['@type': 'Title', 'mainTitle': 'Titel'], ['@type': 'VariantTitle', 'mainTitle': 'variant title']]                                  | "Titel"
-        [['@type': 'VariantTitle', 'mainTitle': 'variant title']]                                                                            | 'variant title'
-        [['@type': 'Title', 'mainTitleByLang': ['sv': 'Titel', 'en': 'Title']]]                                                              | "Titel Title"
-        [['@type': 'Title', 'mainTitleByLang': ['sv': 'Titel', 'en': 'Title'], 'subtitle': 'subtitle']]                                      | "Titel Title subtitle"
-        [['@type': 'Title', 'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"], 'subtitle': 'Lysistratē']] | "Nephelai Lysistratē Νεφέλαι Lysistratē"
     }
 
     def "Split up strings by language"() {
@@ -788,7 +764,7 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, FresnelUtil.Options.NO_FALLBACK)
+        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, [FresnelUtil.Options.NO_FALLBACK])
 
         then:
         searchToken.asString() == "Titel"
@@ -800,7 +776,7 @@ class FresnelUtilSpec extends Specification {
                 'familyName': 'Namnsson',
                 'lifeSpan'  : '1990-'
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, FresnelUtil.Options.NO_FALLBACK)
+        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, [FresnelUtil.Options.NO_FALLBACK])
 
         then:
         searchToken.asString() == "Namn Namnsson"
@@ -810,7 +786,7 @@ class FresnelUtilSpec extends Specification {
                 '@type'    : 'Topic',
                 'prefLabel': 'Hästar'
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, FresnelUtil.Options.NO_FALLBACK)
+        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, [FresnelUtil.Options.NO_FALLBACK])
 
         then:
         searchToken.asString() == ""
@@ -952,9 +928,9 @@ class FresnelUtilSpec extends Specification {
         ]
         var chipStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Chip).asString()
         var cardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card).asString()
-        var cardStrAlt = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
+        var cardStrAlt = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card, [FresnelUtil.Options.TAKE_ALL_ALTERNATE]).asString()
         var cardOnlyStr = fresnel.applyLens(work, CARD_ONLY).asString()
-        var cardOnlyStrAlt = fresnel.applyLens(work, CARD_ONLY, FresnelUtil.Options.TAKE_ALL_ALTERNATE).asString()
+        var cardOnlyStrAlt = fresnel.applyLens(work, CARD_ONLY, [FresnelUtil.Options.TAKE_ALL_ALTERNATE]).asString()
         var searchCardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.SearchCard).asString()
         var searchCardOnlyStr = fresnel.applyLens(work, SEARCH_CARD_ONLY).asString()
 
