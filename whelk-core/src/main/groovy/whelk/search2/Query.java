@@ -523,7 +523,7 @@ public class Query {
 
     private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
         return Map.of("aggs", Map.of(property, aggs),
-                "filter", filter.isEmpty() ? QueryUtil.mustWrap(List.of()) : filter);
+                "filter", filter);
     }
 
     private class LinkLoader {
