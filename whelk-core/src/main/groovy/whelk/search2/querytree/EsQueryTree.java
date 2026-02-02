@@ -31,7 +31,7 @@ public class EsQueryTree extends QueryTree {
 
     public Map<String, Object> getMainQuery() {
         var queryTree = postFilterTree.isEmpty() ? nestedTree : nestedTree.removeAll(postFilterTree.flattenedConditions());
-        return queryTree.isEmpty() ? Map.of() : queryTree.tree().toEs(esSettings);
+        return queryTree.isEmpty() ? Map.of("match_all", Map.of()) : queryTree.tree().toEs(esSettings);
     }
 
     public Map<String, Object> getPostFilter() {

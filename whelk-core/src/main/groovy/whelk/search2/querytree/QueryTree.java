@@ -153,7 +153,7 @@ public class QueryTree {
     }
 
     public String toQueryString() {
-        return isEmpty() ? Operator.WILDCARD : tree.toQueryString(true);
+        return isEmpty() ? "" : tree.toQueryString(true);
     }
 
     @Override

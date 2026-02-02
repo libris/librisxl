@@ -100,7 +100,13 @@ public class QueryTreeBuilder {
             return af;
         }
 
-        return new FreeText(disambiguate.getTextQueryProperty(), getToken(leaf.value()));
+        Token token = getToken(leaf.value());
+
+        if (token.value().isEmpty()) {
+            return null;
+        }
+
+        return new FreeText(disambiguate.getTextQueryProperty(), token);
     }
 
     private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate) throws InvalidQueryException {
