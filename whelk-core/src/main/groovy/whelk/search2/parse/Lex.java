@@ -45,7 +45,7 @@ public class Lex {
         }
     }
 
-    private static final List<Character> reservedCharsInString = Arrays.asList('!', '<', '>', '=', '~', '(', ')', ':');
+    private static final List<Character> reservedCharsInString = Arrays.asList('<', '>', '=', '(', ')', ':');
 
     private static Symbol getNextSymbol(StringBuilder query, MutableInteger offset) throws InvalidQueryException {
         consumeWhiteSpace(query, offset);
@@ -154,6 +154,18 @@ public class Lex {
                 case "NOT":
                     name = TokenName.KEYWORD;
                     symbolValue = new StringBuilder(symbolValue.toString().toLowerCase());
+                    break;
+                case "OCH":
+                    name = TokenName.KEYWORD;
+                    symbolValue = new StringBuilder("and");
+                    break;
+                case "ELLER":
+                    name = TokenName.KEYWORD;
+                    symbolValue = new StringBuilder("or");
+                    break;
+                case "INTE":
+                    name = TokenName.KEYWORD;
+                    symbolValue = new StringBuilder("not");
                     break;
                 default:
                     name = TokenName.STRING;
