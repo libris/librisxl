@@ -50,6 +50,7 @@ public class QueryTreeBuilder {
                 switch (node) {
                     case FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
                     case Condition c when c.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
+                    case null -> {}
                     default -> children.add(node);
                 }
                 if (!freeTextTokens.isEmpty() && freeTextStartIdx == -1) {
@@ -88,7 +89,7 @@ public class QueryTreeBuilder {
 
     private static Node buildFromLeaf(Ast.Leaf leaf, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
         if (selector != null) {
-            return buildStatement(selector, operator, leaf, disambiguate);
+            return buildCondition(selector, operator, leaf, disambiguate);
         }
 
         Lex.Symbol symbol = leaf.value();
@@ -114,14 +115,14 @@ public class QueryTreeBuilder {
         return buildTree(c.operand(), disambiguate, selector, c.operator());
     }
 
-    private static Condition buildStatement(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
+    private static Condition buildCondition(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
         Token token = getToken(leaf.value());
         if (disambiguate.isRestrictedByValue(selector)) {
             selector = disambiguate.restrictByValue(selector, token.value());
         }
         Value value = disambiguate.mapValueForSelector(selector, token).orElse(new FreeText(token));
-        Condition statement = new Condition(selector, operator, value);
-        return statement.isTypeNode() ? statement.asTypeNode() : statement;
+        Condition condition = new Condition(selector, operator, value);
+        return condition.isTypeNode() ? condition.asTypeNode() : condition;
     }
 
     private static Token getToken(Lex.Symbol symbol) {

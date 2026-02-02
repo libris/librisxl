@@ -135,4 +135,16 @@ class ConditionSpec extends Specification {
                 ]
         ]
     }
+
+    def "To ES exists query"() {
+        given:
+        var exists = QueryTreeBuilder.buildTree(q, disambiguate)
+        ESSettings esSettings = new ESSettings(esMappings, new ESSettings.Boost([:]))
+
+        expect:
+        exists.toEs(esSettings) == [ "exists" : [ "field" : "p" ] ]
+
+        where:
+        q << ["p:()", "p:*"]
+    }
 }
