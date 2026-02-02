@@ -17,6 +17,16 @@ class ParseSpec extends Specification {
         parseTree != null
     }
 
+    def "normal parse swedish aliases"() {
+        given:
+        def input = "AAA BBB OCH (CCC ELLER DDD)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
     def "implicit and group"() {
         given:
         def input = "AAA BBB (CCC OR DDD)"
@@ -29,7 +39,7 @@ class ParseSpec extends Specification {
 
     def "parse negative"() {
         given:
-        def input = "!AAA"
+        def input = "NOT AAA"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -39,7 +49,7 @@ class ParseSpec extends Specification {
 
     def "parse negative2"() {
         given:
-        def input = "NOT AAA"
+        def input = "INTE AAA"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -286,17 +296,6 @@ class ParseSpec extends Specification {
 
     def "Fail compare with not"() {
         given:
-        def input = "AAA < ! CCC"
-        def lexedSymbols = Lex.lexQuery(input)
-
-        when:
-        Parse.parseQuery(lexedSymbols)
-        then:
-        thrown InvalidQueryException
-    }
-
-    def "Fail compare with not2"() {
-        given:
         def input = "AAA < NOT CCC"
         def lexedSymbols = Lex.lexQuery(input)
 
@@ -306,15 +305,33 @@ class ParseSpec extends Specification {
         thrown InvalidQueryException
     }
 
-    def "Fail compare with like"() {
+    def "empty group"() {
         given:
-        def input = "AAA < ~ CCC"
+        def input = "()"
         def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
-        when:
-        Parse.parseQuery(lexedSymbols)
-        then:
-        thrown InvalidQueryException
+        expect:
+        parseTree != null
     }
 
+    def "empty group 2"() {
+        given:
+        def input = "AAA AND ()"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
+    def "empty group 3"() {
+        given:
+        def input = "AAA AND ( BBB OR (()) )"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
 }

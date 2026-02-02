@@ -16,6 +16,7 @@ class JsonLD2DublinCoreConverter implements FormatConverter
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
         XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance()
+        xmlOutputFactory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true)
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(baos)
         writer.writeStartElement("oai_dc", "dc", "http://www.openarchives.org/OAI/2.0/oai_dc/")
         writer.writeNamespace("oai_dc", "http://www.openarchives.org/OAI/2.0/oai_dc/")

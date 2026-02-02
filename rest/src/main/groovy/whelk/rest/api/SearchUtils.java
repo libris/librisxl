@@ -1,5 +1,6 @@
 package whelk.rest.api;
 
+import org.apache.commons.lang3.ObjectUtils;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.escape.Escaper;
@@ -771,7 +772,7 @@ public class SearchUtils {
 
         for (String k : keys) {
             Object v = queryParameters.get(k);
-            if (v == null) {
+            if (ObjectUtils.isEmpty(v) || (v instanceof Integer && (Integer) v == 0)) {
                 continue;
             }
 
