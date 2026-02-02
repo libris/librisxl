@@ -14,7 +14,7 @@ public class Parse {
      * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
      * ANDCOMB: TERM ( "AND" TERM | TERM )*
      * TERM: STRING | GROUP | UOPERATOR TERM | STRING BOPERATOR STRING | STRING BOPERATOREQ TERM
-     * UOPERATOR: "!" | "~" | "NOT" |
+     * UOPERATOR: "NOT"
      * BOPERATOR: "<" | ">" | "<=" | ">="
      * BOPERATOREQ: ":" | "="
      * STRING: ...
@@ -108,16 +108,9 @@ public class Parse {
             }
         }
 
-        // UOPERATOR: "!" | "~" | "NOT"
+        // UOPERATOR: "NOT"
         {
             if (!stack.isEmpty()) {
-                if (stack.getFirst() instanceof Lex.Symbol s &&
-                        s.name() == Lex.TokenName.OPERATOR &&
-                        (s.value().equals("!") || s.value().equals("~"))) {
-                    stack.pop();
-                    stack.push(new Uoperator(s, null));
-                    return true;
-                }
                 if (stack.getFirst() instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.KEYWORD &&
                         s.value().equals("not")) {

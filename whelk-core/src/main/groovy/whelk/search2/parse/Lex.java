@@ -45,7 +45,7 @@ public class Lex {
         }
     }
 
-    private static final List<Character> reservedCharsInString = Arrays.asList('!', '<', '>', '=', '~', '(', ')', ':');
+    private static final List<Character> reservedCharsInString = Arrays.asList('<', '>', '=', '(', ')', ':');
 
     private static Symbol getNextSymbol(StringBuilder query, MutableInteger offset) throws InvalidQueryException {
         consumeWhiteSpace(query, offset);
