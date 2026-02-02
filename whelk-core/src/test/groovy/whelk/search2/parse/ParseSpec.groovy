@@ -17,6 +17,16 @@ class ParseSpec extends Specification {
         parseTree != null
     }
 
+    def "normal parse swedish aliases"() {
+        given:
+        def input = "AAA BBB OCH (CCC ELLER DDD)"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+
+        expect:
+        parseTree != null
+    }
+
     def "implicit and group"() {
         given:
         def input = "AAA BBB (CCC OR DDD)"
@@ -29,7 +39,7 @@ class ParseSpec extends Specification {
 
     def "parse negative"() {
         given:
-        def input = "!AAA"
+        def input = "NOT AAA"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 
@@ -39,7 +49,7 @@ class ParseSpec extends Specification {
 
     def "parse negative2"() {
         given:
-        def input = "NOT AAA"
+        def input = "INTE AAA"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
 

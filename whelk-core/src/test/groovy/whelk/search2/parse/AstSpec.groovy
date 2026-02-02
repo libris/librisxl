@@ -28,6 +28,25 @@ class AstSpec extends Specification {
         )
     }
 
+    def "normal tree swedish"() {
+        given:
+        def input = "AAA BBB OCH (CCC ELLER DDD) INTE EEE"
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Ast.Node ast = Ast.buildFrom(parseTree)
+
+        expect:
+        ast == new Ast.And(
+                [
+                        new Ast.Leaf(new Lex.Symbol(STRING, "AAA", 0)),
+                        new Ast.Leaf(new Lex.Symbol(STRING, "BBB", 4)),
+                        new Ast.Or([new Ast.Leaf(new Lex.Symbol(STRING, "CCC", 13)),
+                                    new Ast.Leaf(new Lex.Symbol(STRING, "DDD", 23))]),
+                        new Ast.Not(new Ast.Leaf(new Lex.Symbol(STRING, "EEE", 33)))
+                ] as List<Ast.Node>
+        )
+    }
+
     def "normal query"() {
         given:
         def input = "subject: \"lcsh:Physics\" AND NOT published < 2023 AND \"svarta hål\""

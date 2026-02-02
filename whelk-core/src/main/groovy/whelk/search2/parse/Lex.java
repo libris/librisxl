@@ -155,6 +155,18 @@ public class Lex {
                     name = TokenName.KEYWORD;
                     symbolValue = new StringBuilder(symbolValue.toString().toLowerCase());
                     break;
+                case "OCH":
+                    name = TokenName.KEYWORD;
+                    symbolValue = new StringBuilder("and");
+                    break;
+                case "ELLER":
+                    name = TokenName.KEYWORD;
+                    symbolValue = new StringBuilder("or");
+                    break;
+                case "INTE":
+                    name = TokenName.KEYWORD;
+                    symbolValue = new StringBuilder("not");
+                    break;
                 default:
                     name = TokenName.STRING;
             }
