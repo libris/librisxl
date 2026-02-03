@@ -222,7 +222,7 @@ public sealed class Condition implements Node permits Type {
             case VocabTerm vocabTerm -> esResourceFilter(f, vocabTerm);
             case Term term -> esTermFilter(f, term);
             case YearRange yearRange -> esYearRangeFilter(f, yearRange, esSettings);
-            case Value.Any ignored -> existsFilter(f);
+            case Any ignored -> existsFilter(f);
         };
     }
 

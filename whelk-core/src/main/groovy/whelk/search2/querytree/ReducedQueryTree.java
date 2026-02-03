@@ -8,7 +8,7 @@ public class ReducedQueryTree extends QueryTree {
     }
 
     public static ReducedQueryTree newEmpty() {
-        return new ReducedQueryTree(null);
+        return new ReducedQueryTree(new Any.EmptyString());
     }
 
     @Override

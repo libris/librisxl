@@ -44,7 +44,7 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
 
     @Override
     public Map<String, Object> toEs(ESSettings esSettings) {
-        return isWild() ? matchAny() : _toEs(tokens, esSettings.boost().fieldBoost());
+        return _toEs(tokens, esSettings.boost().fieldBoost());
     }
 
     public Map<String, Object> toEs(ESSettings.Boost.FieldBoost boostSettings) {
@@ -114,10 +114,6 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     @Override
     public int hashCode() {
         return Objects.hashCode(toString());
-    }
-
-    public boolean isWild() {
-        return Operator.WILDCARD.equals(toString());
     }
 
     public Optional<Token> getCurrentlyEditedToken(int cursorPos) {

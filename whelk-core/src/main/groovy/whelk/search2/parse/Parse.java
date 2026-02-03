@@ -336,7 +336,7 @@ public class Parse {
                         s2.value().equals("(")) {
                     stack.pop();
                     stack.pop();
-                    stack.push(new Term(new Lex.Symbol(Lex.TokenName.STRING, "", s1.offset()), null, null, null, null, null, null));
+                    stack.push(new Group(null, new AndComb(List.of()), null));
                     return true;
                 }
             }

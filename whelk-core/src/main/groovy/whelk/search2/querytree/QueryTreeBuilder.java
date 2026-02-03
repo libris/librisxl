@@ -15,10 +15,15 @@ import java.util.Optional;
 
 public class QueryTreeBuilder {
     public static Node buildTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
+        if (queryString.isEmpty()) {
+            return new Any.EmptyString();
+        } else if (queryString.equals(Operator.WILDCARD)) {
+            return new Any.Wildcard();
+        }
         return buildTree(getAst(queryString).tree, disambiguate, null, null);
     }
 
-    public static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
+    private static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
         return switch (astNode) {
             case Ast.Group g -> buildFromGroup(g, disambiguate, selector, operator);
             case Ast.Not n -> buildFromNot(n, disambiguate, selector, operator);
@@ -39,6 +44,12 @@ public class QueryTreeBuilder {
     }
 
     private static Node buildFromGroup(Ast.Group group, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
+        if (group.operands().isEmpty()) {
+            return selector != null
+                    ? new Condition(selector, operator, new Any.EmptyGroup())
+                    : new Any.EmptyGroup();
+        }
+
         List<Node> children = new ArrayList<>();
         List<Token> freeTextTokens = new ArrayList<>();
         int freeTextStartIdx = -1;
@@ -50,7 +61,6 @@ public class QueryTreeBuilder {
                 switch (node) {
                     case FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
                     case Condition c when c.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
-                    case null -> {}
                     default -> children.add(node);
                 }
                 if (!freeTextTokens.isEmpty() && freeTextStartIdx == -1) {
@@ -101,13 +111,7 @@ public class QueryTreeBuilder {
             return af;
         }
 
-        Token token = getToken(leaf.value());
-
-        if (token.value().isEmpty()) {
-            return null;
-        }
-
-        return new FreeText(disambiguate.getTextQueryProperty(), token);
+        return new FreeText(disambiguate.getTextQueryProperty(), getToken(symbol));
     }
 
     private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate) throws InvalidQueryException {

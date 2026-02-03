@@ -2,7 +2,6 @@ package whelk.search2.querytree;
 
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
-import whelk.search2.QueryUtil;
 import whelk.search2.SelectedFacets;
 
 import java.util.ArrayList;
@@ -14,7 +13,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static whelk.search2.QueryUtil.matchAny;
 
 public class EsQueryTree extends QueryTree {
     private final ESSettings esSettings;
@@ -33,8 +31,7 @@ public class EsQueryTree extends QueryTree {
     }
 
     public Map<String, Object> getMainQuery() {
-        var queryTree = postFilterTree.isEmpty() ? nestedTree : nestedTree.removeAll(postFilterTree.flattenedConditions());
-        return queryTree.isEmpty() ? matchAny() : queryTree.tree().toEs(esSettings);
+        return nestedTree.removeAll(postFilterTree.flattenedConditions()).tree().toEs(esSettings);
     }
 
     public Map<String, Object> getPostFilter() {
@@ -141,7 +138,7 @@ public class EsQueryTree extends QueryTree {
 
         private static PostFilterTree from(ExpandedQueryTree eqt, NestedTree nestedTree, SelectedFacets selectedFacets) {
             if (selectedFacets == null) {
-                return new PostFilterTree(null);
+                return new PostFilterTree(new Any.EmptyString());
             }
 
             List<List<Node>> multiSelectGroups = selectedFacets.getAllMultiOrRadioSelected()
@@ -151,7 +148,7 @@ public class EsQueryTree extends QueryTree {
                     .toList();
 
             if (multiSelectGroups.isEmpty()) {
-                return new PostFilterTree(null);
+                return new PostFilterTree(new Any.EmptyString());
             }
 
             List<And.Nested> nestedGroups = nestedTree.getTopNodesOfType(And.Nested.class);

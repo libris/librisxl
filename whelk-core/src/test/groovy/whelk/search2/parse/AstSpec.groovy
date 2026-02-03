@@ -164,7 +164,7 @@ class AstSpec extends Specification {
         ast == new Ast.Or(
                 [
                         new Ast.Leaf(new Lex.Symbol(STRING, "AAA", 0)),
-                        new Ast.Leaf(new Lex.Symbol(STRING, "", 8)),
+                        new Ast.And([])
                 ] as List<Ast.Node>
         )
     }
@@ -180,7 +180,7 @@ class AstSpec extends Specification {
         ast == new Ast.Or(
                 [
                         new Ast.Leaf(new Lex.Symbol(STRING, "AAA", 0)),
-                        new Ast.Leaf(new Lex.Symbol(STRING, "", 9)),
+                        new Ast.And([])
                 ] as List<Ast.Node>
         )
     }
@@ -193,7 +193,7 @@ class AstSpec extends Specification {
         Ast.Node ast = Ast.buildFrom(parseTree)
 
         expect:
-        ast == new Ast.Leaf(new Lex.Symbol(STRING, "", 1))
+        ast == new Ast.And([])
 
     }
 }

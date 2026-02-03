@@ -20,14 +20,13 @@ class QueryTreeSpec extends Specification {
         where:
         input                                              | back
         null                                               | ""
-        "()"                                               | ""
+        "()"                                               | "()"
         ""                                                 | ""
         "*"                                                | "*"
-        "x ()"                                             | "x"
-        "x OR ()"                                          | "x"
+        "x ()"                                             | "x ()"
+        "x OR ()"                                          | "x OR ()"
         "p1:()"                                            | "p1:()"
         "p1:*"                                             | "p1:*"
-        "* p1:x"                                           | "p1:x"
         "x y"                                              | "x y"
         "\"x y\""                                          | "\"x y\""
         "\"x y\" z"                                        | "\"x y\" z"

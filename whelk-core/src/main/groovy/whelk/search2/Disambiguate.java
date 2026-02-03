@@ -155,8 +155,8 @@ public class Disambiguate {
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {
-        if (value.isEmpty() || value.equals(Operator.WILDCARD)) {
-            return Optional.of(new Value.Any(token));
+        if (value.equals(Operator.WILDCARD)) {
+            return Optional.of(new Any.Wildcard());
         }
         if (property.isXsdDate()) {
             var yearRange = YearRange.parse(value, token);

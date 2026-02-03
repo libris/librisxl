@@ -40,7 +40,7 @@ public sealed abstract class Group implements Node permits And, Or {
             }
         }
         Node expandedRoot = switch (newChildren.size()) {
-            case 0 -> null;
+            case 0 -> new Any.EmptyString();
             case 1 -> newChildren.getFirst();
             default -> newInstance(newChildren);
         };
