@@ -4,6 +4,7 @@ import spock.lang.Specification
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.search.QueryDateTime
+import whelk.search2.querytree.Any
 import whelk.search2.querytree.DateTime
 import whelk.search2.querytree.InvalidValue
 import whelk.search2.querytree.Key
@@ -46,9 +47,9 @@ class DisambiguateSpec extends Specification {
 
         where:
         p          | v                                       | result
-        'p1'       | '*'                                     | null
-        'p2'       | '*'                                     | null
-        'p3'       | '*'                                     | null
+        'p1'       | '*'                                     | new Any.Wildcard()
+        'p2'       | '*'                                     | new Any.Wildcard()
+        'p3'       | '*'                                     | new Any.Wildcard()
         'rdf:type' | 'T1'                                    | new VocabTerm('T1', [:])
         'rdf:type' | 'not a class'                           | InvalidValue.forbidden('not a class')
         'rdf:type' | 't'                                     | new VocabTerm('T', [:])

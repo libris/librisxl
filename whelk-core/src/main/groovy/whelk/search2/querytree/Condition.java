@@ -215,15 +215,14 @@ public sealed class Condition implements Node permits Type {
         }
         return switch (v) {
             case DateTime dateTime -> esDateFilter(f, dateTime, esSettings);
-            case FreeText ft -> ft.isWild()
-                    ? existsFilter(f)
-                    : esFreeTextFilter(selector.isObjectProperty() ? f + "." + SEARCH_KEY : f, ft, esSettings);
+            case FreeText ft -> esFreeTextFilter(selector.isObjectProperty() ? f + "." + SEARCH_KEY : f, ft, esSettings);
             case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
             case Numeric numeric -> esNumFilter(f, numeric, esSettings);
             case Link link -> esResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link);
             case VocabTerm vocabTerm -> esResourceFilter(f, vocabTerm);
             case Term term -> esTermFilter(f, term);
             case YearRange yearRange -> esYearRangeFilter(f, yearRange, esSettings);
+            case Any ignored -> existsFilter(f);
         };
     }
 

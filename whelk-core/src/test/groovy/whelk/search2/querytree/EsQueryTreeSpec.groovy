@@ -113,6 +113,14 @@ class EsQueryTreeSpec extends Specification {
         ]
     }
 
+    def "match all if empty"() {
+        given:
+        EsQueryTree esQueryTree = new EsQueryTree(ExpandedQueryTree.newEmpty(), esSettings)
+
+        expect:
+        esQueryTree.getMainQuery() == Map.of("match_all", Map.of())
+    }
+
     def "category ES query"() {
         given:
         def q = 'type:T1x category:"https://id.kb.se/term/ktg/Y" category:("https://id.kb.se/term/ktg/A" OR "https://id.kb.se/term/ktg/B")'

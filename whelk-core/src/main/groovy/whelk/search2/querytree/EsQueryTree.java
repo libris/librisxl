@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+
 public class EsQueryTree extends QueryTree {
     private final ESSettings esSettings;
     private final NestedTree nestedTree;
@@ -30,8 +31,7 @@ public class EsQueryTree extends QueryTree {
     }
 
     public Map<String, Object> getMainQuery() {
-        var queryTree = postFilterTree.isEmpty() ? nestedTree : nestedTree.removeAll(postFilterTree.flattenedConditions());
-        return queryTree.isEmpty() ? Map.of() : queryTree.tree().toEs(esSettings);
+        return nestedTree.removeAll(postFilterTree.flattenedConditions()).tree().toEs(esSettings);
     }
 
     public Map<String, Object> getPostFilter() {
@@ -138,7 +138,7 @@ public class EsQueryTree extends QueryTree {
 
         private static PostFilterTree from(ExpandedQueryTree eqt, NestedTree nestedTree, SelectedFacets selectedFacets) {
             if (selectedFacets == null) {
-                return new PostFilterTree(null);
+                return new PostFilterTree(new Any.EmptyString());
             }
 
             List<List<Node>> multiSelectGroups = selectedFacets.getAllMultiOrRadioSelected()
@@ -148,7 +148,7 @@ public class EsQueryTree extends QueryTree {
                     .toList();
 
             if (multiSelectGroups.isEmpty()) {
-                return new PostFilterTree(null);
+                return new PostFilterTree(new Any.EmptyString());
             }
 
             List<And.Nested> nestedGroups = nestedTree.getTopNodesOfType(And.Nested.class);

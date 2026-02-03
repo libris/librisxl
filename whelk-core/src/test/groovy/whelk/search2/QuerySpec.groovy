@@ -41,9 +41,7 @@ class QuerySpec extends Specification {
         aggQuery == [
                 "@type"    : [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "rdf:type": [
@@ -57,9 +55,7 @@ class QuerySpec extends Specification {
                 ],
                 "p2"       : [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "p2": [
@@ -73,9 +69,7 @@ class QuerySpec extends Specification {
                 ],
                 "p3.p4.@id": [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "p6": [
@@ -116,9 +110,7 @@ class QuerySpec extends Specification {
                                 ]
                         ],
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ]
                 ],
                 "p2"       : [
@@ -208,9 +200,7 @@ class QuerySpec extends Specification {
         aggQuery == [
                 "p2"       : [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "p2": [
@@ -224,9 +214,7 @@ class QuerySpec extends Specification {
                 ],
                 "p3.p4.@id": [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "p6": [
@@ -277,18 +265,14 @@ class QuerySpec extends Specification {
                                     ]
                                 ],
                                 "filter" : [
-                                    "bool" : [
-                                        "must" : [ ]
-                                    ]
+                                        "match_all": [:]
                                 ]
                             ]
                         ]
                     ]
                 ],
                 "filter" : [
-                    "bool" : [
-                        "must" : [ ]
-                    ]
+                        "match_all": [:]
                 ]
             ],
             "@reverse.instanceOf.category.@id" : [
@@ -304,9 +288,7 @@ class QuerySpec extends Specification {
                     ]
                 ],
                 "filter" : [
-                    "bool" : [
-                        "must" : [ ]
-                    ]
+                        "match_all": [:]
                 ]
             ]
         ]
@@ -343,18 +325,14 @@ class QuerySpec extends Specification {
                                     ]
                                 ],
                                 "filter" : [
-                                    "bool" : [
-                                        "must" : [ ]
-                                    ]
+                                        "match_all": [:]
                                 ]
                             ]
                         ]
                     ]
                 ],
                 "filter" : [
-                    "bool" : [
-                        "must" : [ ]
-                    ]
+                        "match_all": [:]
                 ]
             ],
             "_categoryByCollection.@none.@id" : [

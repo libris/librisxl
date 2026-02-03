@@ -23,6 +23,7 @@ import static whelk.search2.Query.Connective.AND;
 import static whelk.search2.Query.Connective.OR;
 import static whelk.search2.QueryUtil.isQuoted;
 import static whelk.search2.QueryUtil.isSimple;
+import static whelk.search2.QueryUtil.matchAny;
 import static whelk.search2.QueryUtil.parenthesize;
 import static whelk.search2.QueryUtil.quote;
 import static whelk.search2.QueryUtil.shouldWrap;
@@ -113,10 +114,6 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     @Override
     public int hashCode() {
         return Objects.hashCode(toString());
-    }
-
-    public boolean isWild() {
-        return Operator.WILDCARD.equals(toString());
     }
 
     public Optional<Token> getCurrentlyEditedToken(int cursorPos) {

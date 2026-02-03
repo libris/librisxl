@@ -287,17 +287,14 @@ public class Query {
         }
     }
 
-    private static SearchMode getSearchMode(QueryParams queryParams) throws InvalidQueryException {
+    private static SearchMode getSearchMode(QueryParams queryParams) {
         if (queryParams.suggest) {
             return SearchMode.SUGGEST;
         }
         if (queryParams.object != null) {
             return queryParams.predicates.isEmpty() ? SearchMode.OBJECT_SEARCH : SearchMode.PREDICATE_OBJECT_SEARCH;
         }
-        if (!queryParams.q.isEmpty()) {
-            return SearchMode.STANDARD_SEARCH;
-        }
-        throw new InvalidQueryException("Missing required query parameter: _q");
+        return SearchMode.STANDARD_SEARCH;
     }
 
     private Map<String, Object> getEsQueryDsl() {
@@ -526,7 +523,7 @@ public class Query {
 
     private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
         return Map.of("aggs", Map.of(property, aggs),
-                "filter", filter.isEmpty() ? QueryUtil.mustWrap(List.of()) : filter);
+                "filter", filter);
     }
 
     private class LinkLoader {

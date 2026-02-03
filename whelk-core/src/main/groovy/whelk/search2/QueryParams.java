@@ -72,8 +72,8 @@ public class QueryParams {
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.computedLabelLocale = getOptionalSingleNonEmpty(JsonLd.Platform.COMPUTED_LABEL, apiParameters).orElse(null);
-        this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
-        this.r = getOptionalSingle(ApiParams.CUSTOM_SITE_FILTER, apiParameters).orElse("");
+        this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse(null);
+        this.r = getOptionalSingle(ApiParams.CUSTOM_SITE_FILTER, apiParameters).orElse(null);
         this.suggest = getOptionalSingle(ApiParams.SUGGEST, apiParameters).map("true"::equalsIgnoreCase).isPresent();
         this.cursor = getCursor(apiParameters);
         this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
@@ -107,12 +107,12 @@ public class QueryParams {
         for (String param : apiParams) {
             switch (param) {
                 case ApiParams.QUERY -> {
-                    if (!q.isEmpty()) {
+                    if (q != null) {
                         params.put(ApiParams.QUERY, q);
                     }
                 }
                 case ApiParams.CUSTOM_SITE_FILTER -> {
-                    if (!r.isEmpty()) {
+                    if (r != null) {
                         params.put(ApiParams.CUSTOM_SITE_FILTER, r);
                     }
                 }

@@ -16,14 +16,11 @@ public class QueryTree {
     private Node tree;
 
     public QueryTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
-        if (queryString != null && !queryString.isEmpty()) {
-            this.tree = buildTree(queryString, disambiguate);
-            normalizeTree();
-        }
+        this.tree = queryString == null ? new Any.EmptyString() : buildTree(queryString, disambiguate);
     }
 
     public QueryTree(Node tree) {
-        this.tree = tree;
+        this.tree = tree == null ? new Any.EmptyString() : tree;
     }
 
     public Node tree() {
@@ -31,11 +28,11 @@ public class QueryTree {
     }
 
     public static QueryTree newEmpty() {
-        return new QueryTree(null);
+        return new QueryTree(new Any.EmptyString());
     }
 
     public ReducedQueryTree reduce(JsonLd jsonLd) {
-        return isEmpty() ? ReducedQueryTree.newEmpty() : new ReducedQueryTree(tree.reduce(jsonLd));
+        return new ReducedQueryTree(tree.reduce(jsonLd));
     }
 
     public ExpandedQueryTree expand(JsonLd jsonLd) {
@@ -43,11 +40,11 @@ public class QueryTree {
     }
 
     public ExpandedQueryTree expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return isEmpty() ? ExpandedQueryTree.newEmpty() : new ExpandedQueryTree(tree.expand(jsonLd, rdfSubjectTypes));
+        return new ExpandedQueryTree(tree.expand(jsonLd, rdfSubjectTypes));
     }
 
     public ReducedQueryTree merge(QueryTree other, JsonLd jsonLd) {
-        Node mergedTree = isEmpty() ? other.tree() : (other.isEmpty() ? tree : merge(tree, other.tree(), jsonLd));
+        Node mergedTree = isAny() ? other.tree() : (other.isAny() ? tree : merge(tree, other.tree(), jsonLd));
         return mergedTree != null ? new ReducedQueryTree(mergedTree.reduce(jsonLd)) : ReducedQueryTree.newEmpty();
     }
 
@@ -56,13 +53,10 @@ public class QueryTree {
     }
 
     public RdfSubjectType getRdfSubjectType() {
-        return isEmpty() ? RdfSubjectType.noType() : tree.rdfSubjectType();
+        return tree.rdfSubjectType();
     }
 
     public Map<String, Object> toSearchMapping(QueryParams queryParams, String apiParam) {
-        if (isEmpty()) {
-            return Collections.emptyMap();
-        }
         return tree.toSearchMapping(n -> Map.of(JsonLd.ID_KEY, makeViewFindUrl(remove(n).toQueryString(), queryParams, apiParam)));
     }
 
@@ -85,7 +79,6 @@ public class QueryTree {
     public QueryTree add(Node node) {
         QueryTree copy = copy();
         copy._add(node);
-        copy.normalizeTree();
         return copy;
     }
 
@@ -96,7 +89,11 @@ public class QueryTree {
     }
 
     public boolean isEmpty() {
-        return tree == null;
+        return tree instanceof Any.EmptyGroup || tree instanceof Any.EmptyString;
+    }
+
+    public boolean isAny() {
+        return tree instanceof Any;
     }
 
     public Stream<Node> allDescendants() {
@@ -153,7 +150,7 @@ public class QueryTree {
     }
 
     public String toQueryString() {
-        return isEmpty() ? Operator.WILDCARD : tree.toQueryString(true);
+        return tree.toQueryString(true);
     }
 
     @Override
@@ -165,12 +162,9 @@ public class QueryTree {
         return new QueryTree(tree);
     }
 
-    private void normalizeTree() {
-        removeFreeTextWildcard();
-    }
-
     private void _remove(Collection<? extends Node> remove) {
-        this.tree = _remove(tree, remove);
+        var modified =  _remove(tree, remove);
+        this.tree = modified == null ? new Any.EmptyString() : modified;
     }
 
     private void _replace(Node replace, Node replacement) {
@@ -179,17 +173,6 @@ public class QueryTree {
 
     private void _add(Node add) {
         this.tree = _add(tree, add);
-        normalizeTree();
-    }
-
-    private void _removeTopNodesByCondition(Predicate<Node> p) {
-        this.tree = _removeTopNodesByCondition(tree, p);
-    }
-
-    private void removeFreeTextWildcard() {
-        if (tree != null && !isWild(tree)) {
-            _removeTopNodesByCondition(QueryTree::isWild);
-        }
     }
 
     private static Node _remove(Node tree, Collection<? extends Node> remove) {
@@ -218,23 +201,10 @@ public class QueryTree {
 
     private static Node _add(Node tree, Node add) {
         return switch (tree) {
-            case null -> add;
+            case Any ignored -> add;
             case And and -> new And(Stream.concat(and.children().stream(), Stream.of(add)).distinct().toList());
             default -> tree.equals(add) ? tree : new And(List.of(tree, add));
         };
-    }
-
-    private static Node _removeTopNodesByCondition(Node tree, Predicate<Node> p) {
-        // Remove all nodes meeting the condition p
-        return switch (tree) {
-            case null -> null;
-            case And and -> and.filterAndReinstantiate(Predicate.not(p));
-            default -> p.test(tree) ? null : tree;
-        };
-    }
-
-    private static boolean isWild(Node node) {
-        return node instanceof FreeText ft && ft.isWild();
     }
 
     private static Iterable<Node> _allDescendants(Node node) {

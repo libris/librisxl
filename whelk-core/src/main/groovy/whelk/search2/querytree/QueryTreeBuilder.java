@@ -15,10 +15,15 @@ import java.util.Optional;
 
 public class QueryTreeBuilder {
     public static Node buildTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
+        if (queryString.isEmpty()) {
+            return new Any.EmptyString();
+        } else if (queryString.equals(Operator.WILDCARD)) {
+            return new Any.Wildcard();
+        }
         return buildTree(getAst(queryString).tree, disambiguate, null, null);
     }
 
-    public static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
+    private static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
         return switch (astNode) {
             case Ast.Group g -> buildFromGroup(g, disambiguate, selector, operator);
             case Ast.Not n -> buildFromNot(n, disambiguate, selector, operator);
@@ -39,6 +44,12 @@ public class QueryTreeBuilder {
     }
 
     private static Node buildFromGroup(Ast.Group group, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
+        if (group.operands().isEmpty()) {
+            return selector != null
+                    ? new Condition(selector, operator, new Any.EmptyGroup())
+                    : new Any.EmptyGroup();
+        }
+
         List<Node> children = new ArrayList<>();
         List<Token> freeTextTokens = new ArrayList<>();
         int freeTextStartIdx = -1;
@@ -88,7 +99,7 @@ public class QueryTreeBuilder {
 
     private static Node buildFromLeaf(Ast.Leaf leaf, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
         if (selector != null) {
-            return buildStatement(selector, operator, leaf, disambiguate);
+            return buildCondition(selector, operator, leaf, disambiguate);
         }
 
         Lex.Symbol symbol = leaf.value();
@@ -100,7 +111,7 @@ public class QueryTreeBuilder {
             return af;
         }
 
-        return new FreeText(disambiguate.getTextQueryProperty(), getToken(leaf.value()));
+        return new FreeText(disambiguate.getTextQueryProperty(), getToken(symbol));
     }
 
     private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate) throws InvalidQueryException {
@@ -108,14 +119,14 @@ public class QueryTreeBuilder {
         return buildTree(c.operand(), disambiguate, selector, c.operator());
     }
 
-    private static Condition buildStatement(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
+    private static Condition buildCondition(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
         Token token = getToken(leaf.value());
         if (disambiguate.isRestrictedByValue(selector)) {
             selector = disambiguate.restrictByValue(selector, token.value());
         }
         Value value = disambiguate.mapValueForSelector(selector, token).orElse(new FreeText(token));
-        Condition statement = new Condition(selector, operator, value);
-        return statement.isTypeNode() ? statement.asTypeNode() : statement;
+        Condition condition = new Condition(selector, operator, value);
+        return condition.isTypeNode() ? condition.asTypeNode() : condition;
     }
 
     private static Token getToken(Lex.Symbol symbol) {

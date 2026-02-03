@@ -1,6 +1,6 @@
 package whelk.search2.querytree;
 
-public sealed interface Value permits DateTime, FreeText, Numeric, Resource, Term, YearRange {
+public sealed interface Value permits Any, DateTime, FreeText, Numeric, Resource, Term, YearRange {
     // As represented in query string
     String queryForm();
 

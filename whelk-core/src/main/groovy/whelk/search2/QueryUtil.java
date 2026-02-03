@@ -127,6 +127,10 @@ public class QueryUtil {
         return Map.of("nested", Map.of("path", nestedPath, "query", query));
     }
 
+    public static Map<String, Object> matchAny() {
+        return Map.of("match_all", Map.of());
+    }
+
     public static Map<String, Object> loadThing(String iri, Whelk whelk) {
         return Optional.ofNullable(whelk.loadData(iri))
                 .map(data -> data.get(JsonLd.GRAPH_KEY))

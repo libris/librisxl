@@ -19,9 +19,14 @@ class QueryTreeSpec extends Specification {
 
         where:
         input                                              | back
-        null                                               | "*"
+        null                                               | ""
+        "()"                                               | "()"
+        ""                                                 | ""
         "*"                                                | "*"
-        "* p1:x"                                           | "p1:x"
+        "x ()"                                             | "x ()"
+        "x OR ()"                                          | "x OR ()"
+        "p1:()"                                            | "p1:()"
+        "p1:*"                                             | "p1:*"
         "x y"                                              | "x y"
         "\"x y\""                                          | "\"x y\""
         "\"x y\" z"                                        | "\"x y\" z"
@@ -168,7 +173,7 @@ class QueryTreeSpec extends Specification {
                                         ]
                                 ]],
                         "up" : [
-                                "@id": "/find?_q=*"
+                                "@id": "/find?_q="
                         ]
                 ]
     }
@@ -219,11 +224,11 @@ class QueryTreeSpec extends Specification {
         'p1:v1 p2:v2'                  | ['p1:v1']                            | 'p2:v2'
         'p1:v1 p2:v2'                  | ['p3:v3']                            | 'p1:v1 p2:v2'
         'p1:v1 p2:v2 p3:v3'            | ['p3:v3']                            | 'p1:v1 p2:v2'
-        'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2 p3:v3']                | '*'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2 p3:v3']                | ''
         'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2']                      | 'p1:v1 p2:v2 p3:v3'
         'p1:v1 p2:v2 p3:v3'            | ['p1:v1', 'p2:v2']                   | 'p3:v3'
         'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2 p3:v3 p4:v4']          | 'p1:v1 p2:v2 p3:v3'
-        'p1:v1 p2:v2 p3:v3'            | ['p1:v1', 'p2:v2', 'p3:v3', 'p4:v4'] | '*'
+        'p1:v1 p2:v2 p3:v3'            | ['p1:v1', 'p2:v2', 'p3:v3', 'p4:v4'] | ''
         'p1:v1 p2:v2 p3:v3 p4:v4'      | ['p1:v1', 'p2:v2', 'p3:v3']          | 'p4:v4'
         'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p1:v1', 'p4:v4']                   | 'p2:v2 OR p3:v3'
         'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p1:v1', 'p2:v2 OR p3:v3']          | 'p4:v4'
