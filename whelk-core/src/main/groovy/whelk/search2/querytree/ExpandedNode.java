@@ -7,7 +7,7 @@ public record ExpandedNode(
         Map<Node, Node> nodeMap   // original -> expanded for every sub-node in the original tree
 ) {
     public boolean isEmpty() {
-        return expandedRoot instanceof Any;
+        return expandedRoot == null;
     }
 
     public static ExpandedNode identity(Node n) {
@@ -15,7 +15,7 @@ public record ExpandedNode(
     }
 
     public static ExpandedNode newEmpty() {
-        return new ExpandedNode(new Any.EmptyString(), Map.of());
+        return new ExpandedNode(null, Map.of());
     }
 
     @Override
