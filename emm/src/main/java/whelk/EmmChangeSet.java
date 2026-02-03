@@ -65,7 +65,8 @@ public class EmmChangeSet {
             var activityObject = new HashMap<>();
             activityInStream.put("object", activityObject);
             activityObject.put("id", activityInList.uri);
-            activityObject.put("type", ld.prependVocabPrefix(activityInList.entityType));
+            if (activityInList.entityType != null)
+                activityObject.put("type", ld.prependVocabPrefix(activityInList.entityType));
             if (activityInList.library != null) {
                 activityObject.put("kbv:heldBy", Map.of("@id", activityInList.library));
             }
