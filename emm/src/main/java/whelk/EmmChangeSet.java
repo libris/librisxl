@@ -159,6 +159,7 @@ public class EmmChangeSet {
     static Set<String> prefixes(Collection<EmmActivity> activities) {
         return activities.stream()
                 .map(a -> a.entityType)
+                .filter(Objects::nonNull)
                 .map(type -> type.split(":"))
                 .filter(a -> a.length == 2)
                 .map(a -> a[0])
