@@ -151,7 +151,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         collectCategoryOfType(categories, type, result)
         return result.values().findResults { ctg ->
             if (!abstractTermCategory || !asList(ctg['category']).any { it[ID] == abstractTermCategory}) {
-                ctg.clone()
+                new HashMap(ctg)
             }
         }
     }
