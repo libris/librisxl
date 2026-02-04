@@ -150,10 +150,16 @@ String rdfDeletionGraphId = System.getProperty("rdfdelete")
 var graph = loadDescriptions(getWhelk(), rdfDataFile)
 for (var desc : graph) {
     id = desc[ID]
-    if (rdfDeletionGraphId != null && rdfDeletionGraphId == id) {
-        for (var delDesc : desc[GRAPH]) {
-            if (ID in delDesc) {
-                deletionMap[delDesc[ID]] = delDesc
+    if (!id) {
+        continue
+    }
+
+    if (GRAPH in desc) { // named graph
+        if (rdfDeletionGraphId != null && rdfDeletionGraphId == id) {
+            for (var delDesc : desc[GRAPH]) {
+                if (ID in delDesc) {
+                    deletionMap[delDesc[ID]] = delDesc
+                }
             }
         }
     } else {
