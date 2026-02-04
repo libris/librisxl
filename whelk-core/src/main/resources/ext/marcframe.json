@@ -918,7 +918,7 @@
         "[16]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksLiteraryFormType-{_}",
-          "matchUriToken": "^[01cdefhijmps]$"
+          "matchUriToken": "^[cdefhijmps01]$"
         },
         "[17]": {
           "addLink": "genreForm",
@@ -2436,7 +2436,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/BooksLiteraryFormType-{_}",
-          "matchUriToken": "^[01cdefhijmps]$",
+          "matchUriToken": "^[cdefhijmps01]$",
           "NOTE:lcMarc2bfCodeMap": "litform",
           "silentRevert": false
         },
@@ -2627,7 +2627,7 @@
           "TODO": "Decide if it should be Work or Instance",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/SerialsTypeOfSerialType-{_}",
-          "matchUriToken": "^[dlmnpw]$",
+          "matchUriToken": "^[dlmnwp]$",
           "NOTE:lcMarc2bfCodeMap": "crtype",
           "fixedDefault": " ",
           "silentRevert": false
