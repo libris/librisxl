@@ -4,6 +4,7 @@
   "newWorkTypes": ["Monograph", "Serial", "Collection", "Integrating"],
   "defaultWorkLegacyType": "Text",
   "componentPartCategory": "https://id.kb.se/term/ktg/ComponentPart",
+  "abstractTermCategory": "https://id.kb.se/term/div/abstract",
   "marcTypeMappings": {
     "GenreForm": [
       "marc:MusicCompositionType",

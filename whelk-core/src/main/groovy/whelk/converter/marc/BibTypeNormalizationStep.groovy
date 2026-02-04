@@ -17,6 +17,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     List<String> newWorkTypes
     String defaultWorkLegacyType
     String componentPartCategory
+    String abstractTermCategory
     Map<String, Set<String>> marcTypeMappings  // TODO: turn JSON set value to Set! (for speed)
 
     Set<String> issuanceTypeSet = new HashSet()
@@ -149,7 +150,9 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         var result = new LinkedHashMap()
         collectCategoryOfType(categories, type, result)
         return result.values().findResults { ctg ->
-            ctg.clone()
+            if (!abstractTermCategory || !asList(ctg['category']).any { it[ID] == abstractTermCategory}) {
+                ctg.clone()
+            }
         }
     }
 
