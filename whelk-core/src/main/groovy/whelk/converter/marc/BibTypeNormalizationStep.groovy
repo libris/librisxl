@@ -126,7 +126,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
   List<Map<String, Object>> getDescriptions(Object refs) {
         return (List<Map<String, Object>>) asList(refs).findResults {
-            if (ID in it) catTypeNormalizer.categories[it[ID]]?.clone() // TODO: tries as lazy-copies?
+            if (ID in it) catTypeNormalizer.categories[it[ID]]
         }
     }
 
@@ -148,7 +148,9 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     Collection<Map<String, Object>> getCategoryOfType(List<Map<String, Object>> categories, String type) {
         var result = new LinkedHashMap()
         collectCategoryOfType(categories, type, result)
-        return result.values().toList()
+        return result.values().findResults { ctg ->
+            ctg.clone()
+        }
     }
 
     boolean isSubClassOf(Object givenType, String baseType) {

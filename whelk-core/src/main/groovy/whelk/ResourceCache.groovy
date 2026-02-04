@@ -60,12 +60,12 @@ class ResourceCache {
         // only ones we use multiple types on (i.e. the MARC enum types).
         // TODO: Remove this hack if we fix loadAllByType!
         if (type.startsWith('marc:')) {
-          var enumsDataset = 'https://id.kb.se/dataset/enums' // TODO: configure? Or live with...
+          var enumsDataset = 'https://id.kb.se/dataset/enums' // Could be configured, but see above.
           whelk.storage.loadAll(enumsDataset).each { doc ->
               Map<String, Object> thing = doc.getThing()
               if (asList(thing[TYPE]).any { it instanceof String && jsonld.isSubClassOf(it, type) }) {
                 String id = thing[ID]
-                descriptions[id] = thing
+                descriptions[id] = Collections.unmodifiableMap(thing)
               }
           }
         }
@@ -73,13 +73,13 @@ class ResourceCache {
         whelk.loadAllByType(type).each {doc ->
             var thing = doc.getThing()
             String id = thing[ID]
-            descriptions[id] = thing
+            descriptions[id] = Collections.unmodifiableMap(thing)
         }
         whelk.jsonld.getSubClasses(type).forEach { subType ->
             whelk.loadAllByType(subType).each {doc ->
                 Map<String, Object> thing = doc.getThing()
                 String id = thing[ID]
-                descriptions[id] = thing
+                descriptions[id] = Collections.unmodifiableMap(thing)
             }
         }
 
