@@ -1526,9 +1526,11 @@ class MarcFixedFieldHandler {
                 v = v.findAll { it && width >= it.size() }
                 if (v.size() > 1 && tokensInOrder != null) {
                   var vset = v as Set
+                  v = []
                   for (String token : tokensInOrder) {
                     if (token in vset) {
-                      return token
+                      v << token
+                      vset.remove(token)
                     }
                   }
                 }
