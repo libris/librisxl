@@ -225,8 +225,8 @@ for r in data:
 		work_categories = {c["@id"] for c in record["instanceOf"]["category"]}
 		assert work_categories == {"https://id.kb.se/term/saogf/Romaner", "https://id.kb.se/term/rda/Text"}, record
 
-		instance_categories = [c for c in record["category"]]
-		assert sorted(instance_categories, key=str) == sorted(
+		instance_category_nodes = [c for c in record["category"]]
+		assert sorted(instance_category_nodes, key=str) == sorted(
 			[{'@id': 'https://id.kb.se/term/saobf/Print'}, {"@id":"https://id.kb.se/marc/Thesis"}, {"@type": "GenreForm", "prefLabel":"Ancient scroll"}], key=str), record
 
 	# På verk: gammal hasPart Text blir Work
@@ -280,14 +280,14 @@ for r in data:
 
 	# När instanstyp är Instance och carrierTypes innehåller termer som innehåller/är mappade till 'Online' och 'Electronic' - sätt instanstyp DigitalResource
 	# FIXME Varför får denna inte "isElectronic=true" på rad 382-285? Det verkar inte som att det finns några termer som implicerar 'https://id.kb.se/term/saobf/AbstractElectronic'
-	#elif id == "https://libris-qa.kb.se/test/digitalResourceFromInstance":
-	#	assert instance_type == "DigitalResource", record
+	elif id == "https://libris-qa.kb.se/test/digitalResourceFromInstance":
+		assert instance_type == "DigitalResource", record
 	
 	# När instanstyp är Electronic och carrierTypes innehåller Online, ta bort länkade carrierTypes med Online i URIn, utom rda/OnlineResource
 	# FIXME Det verkar inte som att det finns några termer som implicerar 'https://id.kb.se/term/saobf/AbstractElectronic'
-	#elif id == "https://libris-qa.kb.se/test/multipleCarrierTypesOneOnline":
-	#	instance_categories = {c["@id"] for c in record["category"]}
-	#	assert instance_categories == {"https://id.kb.se/term/rda/OnlineResource", "https://id.kb.se/term/rda/Volume", "https://id.kb.se/term/marc/RegularPrint"}, record
+	elif id == "https://libris-qa.kb.se/test/multipleCarrierTypesOneOnline":
+		instance_categories = {c["@id"] for c in record["category"]}
+		assert instance_categories == {"https://id.kb.se/term/rda/OnlineResource", "https://id.kb.se/term/rda/Volume", "https://id.kb.se/marc/RegularPrint", "https://id.kb.se/term/saogf/Webbplatser"}, record
 
 	# Sätt instanskategori rda/volume om instanstyp är instans och extent innehåller uppgift om sidor
 	elif id == "https://libris-qa.kb.se/test/computeVolumeFromExtent":
@@ -296,9 +296,9 @@ for r in data:
 
 	# Byr ut lokal entitet 'E-böcker' mot saobf/E-books.
 	# FIXME - Det verkar inte som att det finns några termer som implicerar 'https://id.kb.se/term/saobf/AbstractElectronic'
-	#elif id == "https://libris-qa.kb.se/test/replaceLocalEböckerWithEbooks":
-	#	instance_categories = {c["@id"] for c in record["category"]}
-	#	assert instance_categories == {"https://id.kb.se/term/saobf/ElectronicStorageMedium", "https://id.kb.se/term/saobf/EBook"}, record
+	elif id == "https://libris-qa.kb.se/test/replaceLocalEböckerWithEbooks":
+		instance_categories = {c["@id"] for c in record["category"]}
+		assert instance_categories == {"https://id.kb.se/term/saobf/ElectronicStorageMedium", "https://id.kb.se/term/saobf/EBook"}, record
 
 	# Bevara nya typer Monograph och DigitalResource på redan normaliserade poster
 	elif id == "https://libris-qa.kb.se/test/alreadyNormalized":
@@ -317,12 +317,12 @@ for r in data:
 		
 	# TactileText ska inte få verkskategori rda/Text
 	elif id == "https://libris-qa.kb.se/test/tactileText":
-		assert work_category == [{"@id":"https://id.kb.se/rda/TactileText"}], record
+		assert work_category == [{"@id":"https://id.kb.se/term/rda/TactileText"}], record
 
 	# TactileText och StillImage ska inte få verkskategori rda/Text
 	elif id == "https://libris-qa.kb.se/test/tactileTextAndStillImage":
 		work_categories = {c["@id"] for c in record["instanceOf"]["category"]}
-		assert work_categories == {"https://id.kb.se/rda/TactileText", "https://id.kb.se/rda/StillImage"}, record
+		assert work_categories == {"https://id.kb.se/term/rda/TactileText", "https://id.kb.se/term/rda/StillImage"}, record
 
 		
 print("\nAll tests passed!")

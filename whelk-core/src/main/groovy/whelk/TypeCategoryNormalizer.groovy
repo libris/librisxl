@@ -1,5 +1,7 @@
 package whelk
 
+import java.util.stream.Collectors
+
 import static whelk.JsonLd.ID_KEY as ID
 import static whelk.JsonLd.TYPE_KEY as TYPE
 import static whelk.JsonLd.asList
@@ -24,6 +26,18 @@ class TypeCategoryNormalizer {
     Map<String, Map<String, Object>> categories
     Map preferredCategory
     Map categoryMatches
+
+    List<String> newWorkTypes = ["Monograph", "Serial", "Collection", "Integrating"]
+    List<String> newInstanceTypes = ['PhysicalResource', 'DigitalResource']
+
+    Map remappedLegacyInstanceTypes = [
+      'SoundRecording': [category: 'https://id.kb.se/term/saobf/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
+      'VideoRecording': [category: 'https://id.kb.se/term/saobf/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
+      'Map': [workCategory: 'https://id.kb.se/term/rda/CartographicImage'],  // 12686
+      'Globe': [category: 'https://id.kb.se/term/rda/Object', workCategory: 'https://id.kb.se/term/rda/CartographicThreeDimensionalForm'],  // 74
+      'StillImageInstance': [category: 'https://id.kb.se/term/rda/Sheet', workCategory: 'https://id.kb.se/term/rda/StillImage'], // 54954
+      'TextInstance': [category: 'https://id.kb.se/term/rda/Volume' , workCategory: 'https://id.kb.se/term/rda/Text'], // 301
+    ]
 
     TypeCategoryNormalizer(ResourceCache resourceCache) {
         this.resourceCache = resourceCache
@@ -152,6 +166,54 @@ class TypeCategoryNormalizer {
                 }
             }
         }
+    }
+
+    List reduceSymbols(List symbols) {
+        symbols = symbols.stream()
+                .map(x -> x.containsKey(ID) && preferredCategory.containsKey(x[ID]) ? [(ID): preferredCategory[x[ID]]] : x)
+                .collect(Collectors.toList())
+
+        Set mostSpecific = symbols.stream()
+                .filter(x -> !(symbols.stream().anyMatch(y -> x[ID] != y[ID] && isImpliedBy(x, y))))
+                .collect(Collectors.toSet())
+
+        return mostSpecific.toList()
+    }
+
+    // Any kind of broad/matches base...
+    boolean isImpliedBy(Object x, Object y, Set visited = new HashSet()) {
+        String xId = x instanceof Map ? x[ID] : x
+        String yId = y instanceof Map ? y[ID] : y
+
+        if (xId == null || yId == null) {
+          return false
+        }
+
+        if (xId == yId) {
+            return true
+        }
+
+        visited << yId
+
+        List bases = categoryMatches[yId]
+        for (var base in bases) {
+            if (base !in visited) {
+              if (isImpliedBy(xId, base, visited + new HashSet())) {
+                  return true
+              }
+            }
+        }
+
+        return false
+    }
+
+    boolean anyImplies(List<Map> categories, String symbol) {
+        for (var category in categories) {
+            if (isImpliedBy(symbol, category)) {
+                return true
+            }
+        }
+        return false
     }
 
 }
