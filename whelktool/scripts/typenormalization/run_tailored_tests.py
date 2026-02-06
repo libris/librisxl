@@ -287,7 +287,7 @@ for r in data:
 	# FIXME Det verkar inte som att det finns några termer som implicerar 'https://id.kb.se/term/saobf/AbstractElectronic'
 	elif id == "https://libris-qa.kb.se/test/multipleCarrierTypesOneOnline":
 		instance_categories = {c["@id"] for c in entity["category"]}
-		assert instance_categories == {"https://id.kb.se/term/rda/OnlineResource", "https://id.kb.se/term/rda/Volume", "https://id.kb.se/marc/RegularPrint", "https://id.kb.se/term/saogf/Webbplatser"}, entity
+		assert instance_categories == {"https://id.kb.se/term/rda/OnlineResource", "https://id.kb.se/term/rda/Volume", "https://id.kb.se/marc/RegularPrint"}, entity
 
 	# Sätt instanskategori rda/volume om instanstyp är instans och extent innehåller uppgift om sidor
 	elif id == "https://libris-qa.kb.se/test/computeVolumeFromExtent":
