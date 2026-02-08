@@ -16,6 +16,7 @@ import whelk.util.DocumentUtil
 import whelk.util.FresnelUtil
 import whelk.util.FresnelUtil.DefinedLensGroup
 import whelk.util.FresnelUtil.DerivedLensGroup
+import whelk.util.FresnelUtil.FinalLensGroup
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -35,6 +36,7 @@ import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
 import static whelk.util.FresnelUtil.Options.NO_FALLBACK
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
+import static whelk.util.FresnelUtil.Options.TRACK_ORIGINAL
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -600,16 +602,16 @@ class ElasticSearch {
         }
 
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
-        var originalGraph = (List) document.data[GRAPH_KEY]
+        var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
 
-        def mainGraphLens = new FresnelUtil.DefinedLensGroup(FresnelUtil.LensGroupName.SearchCard, FresnelUtil.LensGroupName.SearchCard);
+        def mainGraphLens = new FinalLensGroup(FresnelUtil.LensGroupName.SearchCard);
 
         // TODO: Vad blir effekten av TAKE_ALL_ALTERNATE?
-        copy.data[GRAPH_KEY] = originalGraph.collect { whelk.fresnelUtil.applyLens(it, mainGraphLens, [TAKE_ALL_ALTERNATE]).getThingForIndex(links) }
+        copy.data[GRAPH_KEY] = embellishedGraph.take(originalGraphSize).collect { whelk.fresnelUtil.applyLensAndGet(it, mainGraphLens, links) }
 
         def integralIds = collectIntegralIds(copy.data, whelk.jsonld)
 
-        copy.data[GRAPH_KEY] += embellishedGraph.drop(originalGraph.size()).collect { toSearchChipOrCard(whelk.fresnelUtil, (Map) it, integralIds) }
+        copy.data[GRAPH_KEY] += embellishedGraph.drop(originalGraphSize).collect { toSearchChipOrCard(whelk.fresnelUtil, (Map) it, integralIds) }
 
         setIdentifiers(copy)
         if (copy.isVirtual()) {
@@ -762,9 +764,9 @@ class ElasticSearch {
             def (record, thing) = graph
             thing[RECORD_KEY] = record
             def searchCardThenSearchChip = new DefinedLensGroup(FresnelUtil.LensGroupName.SearchCard, FresnelUtil.LensGroupName.SearchChip)
-            def searchChipThroughout = new DefinedLensGroup(FresnelUtil.LensGroupName.SearchChip, FresnelUtil.LensGroupName.SearchChip)
+            def searchChipThroughout = new FinalLensGroup(FresnelUtil.LensGroupName.SearchChip)
             def lensGroup = integralIds.contains(thing[ID_KEY]) ? searchCardThenSearchChip : searchChipThroughout
-            def shrunkThing = fresnelUtil.applyLens(thing, lensGroup, List.of(TAKE_ALL_ALTERNATE)).getThingForIndex(List.of())
+            def shrunkThing = fresnelUtil.applyLensAndGet(thing, lensGroup)
             def shrunkRecord = minimalRecord((Map) record) + ((Map) shrunkThing.remove(RECORD_KEY) ?: [:])
             embellishData[GRAPH_KEY] = [shrunkRecord, shrunkThing]
         }
