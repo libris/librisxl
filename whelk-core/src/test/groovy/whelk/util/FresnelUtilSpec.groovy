@@ -28,7 +28,8 @@ class FresnelUtilSpec extends Specification {
                     "partNumberByLang"             : ["@id": "partNumber", "@container": "@language"],
                     "titleRemainderByLang"         : ["@id": "titleRemainder", "@container": "@language"],
                     "responsibilityStatementByLang": ["@id": "responsibilityStatement", "@container": "@language"],
-
+                    "givenNameByLang"              : ["@id": "givenName", "@container": "@language"],
+                    "familyNameByLang"             : ["@id": "familyName", "@container": "@language"],
                     "issuanceType"                 : ["@type": "@vocab"],
                     "langCodeBib"                  : ["@id": "code", "@type": "ISO639-2-B"],
 
@@ -524,7 +525,7 @@ class FresnelUtilSpec extends Specification {
         var result = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Card, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
 
         expect:
-        result.asString() == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Svenska Swedish Hästar"
+        result.asString() == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Swedish Svenska Hästar"
     }
 
     def "Handle FSL path in showProperties"() {
@@ -590,17 +591,17 @@ class FresnelUtilSpec extends Specification {
 
         where:
         fslPath                                    | result
-        "hasTitle"                                 | "Titel undertitel varianttitel variant title Svenska Swedish"
-        "hasTitle/Title/mainTitle"                 | "Titel Svenska Swedish"
-        "hasTitle[Title]"                          | "Titel undertitel Svenska Swedish"
-        "hasTitle[^Title]"                         | "Titel undertitel varianttitel variant title Svenska Swedish"
-        "hasTitle/VariantTitle/mainTitle"          | "varianttitel variant title Svenska Swedish"
-        "hasTitle/*/mainTitle"                     | "Titel varianttitel variant title Svenska Swedish"
-        "language/Language/code"                   | "sv Svenska Swedish"
-        "language/Language/mainTitle"              | "Svenska Swedish"
-        "language/Title/code"                      | "Svenska Swedish"
-        'in::instanceOf/*/responsibilityStatement' | 'av En Författare Svenska Swedish'
-        'in::instanceOf/*/meta/*/controlNumber'    | 'dz7666s5bdksvtls Svenska Swedish'
+        "hasTitle"                                 | "Titel undertitel varianttitel variant title Swedish Svenska"
+        "hasTitle/Title/mainTitle"                 | "Titel Swedish Svenska"
+        "hasTitle[Title]"                          | "Titel undertitel Swedish Svenska"
+        "hasTitle[^Title]"                         | "Titel undertitel varianttitel variant title Swedish Svenska"
+        "hasTitle/VariantTitle/mainTitle"          | "varianttitel variant title Swedish Svenska"
+        "hasTitle/*/mainTitle"                     | "Titel varianttitel variant title Swedish Svenska"
+        "language/Language/code"                   | "sv Swedish Svenska"
+        "language/Language/mainTitle"              | "Swedish Svenska"
+        "language/Title/code"                      | "Swedish Svenska"
+        'in::instanceOf/*/responsibilityStatement' | 'av En Författare Swedish Svenska'
+        'in::instanceOf/*/meta/*/controlNumber'    | 'dz7666s5bdksvtls Swedish Svenska'
     }
 
     def "Handle FSL paths as alternateProperties"() {
@@ -704,7 +705,7 @@ class FresnelUtilSpec extends Specification {
         chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
 
         then:
-        chip.byScript() == ['grc': 'Νεφέλαι Svenska Swedish', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Svenska Swedish']
+        chip.byScript() == ['grc': 'Νεφέλαι Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Swedish Svenska']
 
         when:
         thing = [
@@ -717,7 +718,7 @@ class FresnelUtilSpec extends Specification {
         chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
 
         then:
-        chip.byScript() == ['grc': 'Νεφέλαι subtitle Svenska Swedish', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai subtitle Svenska Swedish']
+        chip.byScript() == ['grc': 'Νεφέλαι subtitle Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai subtitle Swedish Svenska']
 
         when:
         thing = [
@@ -732,7 +733,7 @@ class FresnelUtilSpec extends Specification {
         chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
 
         then:
-        chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Svenska Swedish', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Svenska Swedish']
+        chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Swedish Svenska']
 
         when:
         thing = [
@@ -747,7 +748,7 @@ class FresnelUtilSpec extends Specification {
         chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
 
         then:
-        chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Svenska Swedish', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Svenska Swedish']
+        chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Swedish Svenska']
     }
 
     def "search-tokens"() {
@@ -936,11 +937,45 @@ class FresnelUtilSpec extends Specification {
 
         expect:
         chipStr == "Verkstitel"
-        cardStr == "Verkstitel Svenska Swedish Instanstitel av Någon"
-        cardStrAlt == "Verkstitel Svenska Swedish Instanstitel Instanstitel 9789178034239 av Någon"
-        cardOnlyStr == "Svenska Swedish Instanstitel av Någon"
-        cardOnlyStrAlt == "Svenska Swedish Instanstitel Instanstitel 9789178034239 av Någon"
-        searchCardStr == "Verkstitel Svenska Swedish Instanstitel av Någon upplagan 2025"
+        cardStr == "Verkstitel Swedish Svenska Instanstitel av Någon"
+        cardStrAlt == "Verkstitel Swedish Svenska Instanstitel Instanstitel 9789178034239 av Någon"
+        cardOnlyStr == "Swedish Svenska Instanstitel av Någon"
+        cardOnlyStrAlt == "Swedish Svenska Instanstitel Instanstitel 9789178034239 av Någon"
+        searchCardStr == "Verkstitel Swedish Svenska Instanstitel av Någon upplagan 2025"
         searchCardOnlyStr == "upplagan 2025"
+    }
+
+    def "rebuild from lensed"() {
+        var fresnel = new FresnelUtil(ld)
+        var thing = [
+                "@type"      : "Thing",
+                "notation"   : "NOTATION",
+                "labelByLang": ["sv": "etikett", "en": "label"],
+                "title"      : [
+                        "@type"          : "Title",
+                        "mainTitleByLang": [
+                                "el"                      : "Το νησι των θησαυρων",
+                                "el-Latn-t-el-Grek-x0-btj": "To nisi ton thisavron"]],
+                "note"       : ["NOTE 1", "NOTE 2"]
+        ]
+
+        var result = fresnel.applyLensAndGet(thing, new FresnelUtil.FinalLensGroup(FresnelUtil.LensGroupName.Chip))
+
+        expect:
+        result == [
+            "@type" : "Thing",
+            "notation" : "NOTATION",
+            "labelByLang" : [
+                "en" : "label"
+            ],
+            "note" : [ "NOTE 1", "NOTE 2" ],
+            "title" : [
+                "@type" : "Title",
+                "mainTitleByLang" : [
+                    "el-Latn-t-el-Grek-x0-btj" : "To nisi ton thisavron",
+                    "el" : "Το νησι των θησαυρων"
+                ]
+            ]
+        ]
     }
 }
