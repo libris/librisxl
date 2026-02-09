@@ -197,8 +197,8 @@ class Normalizers {
         }
     }
 
-    static Collection getNormalizedCategories(Map thing, Relations relations) {
-        var categories = thing?['category'] as Set<Map<String, String>>
+    static List getNormalizedCategories(Map thing, Relations relations) {
+        var categories = thing?['category'] as ArrayList<Map<String, String>>
         if (categories) {
             var categoryIds = categories.collect { it[ID_KEY] }.findAll()
             categories.removeIf { c ->
