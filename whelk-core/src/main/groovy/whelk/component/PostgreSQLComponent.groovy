@@ -117,6 +117,9 @@ class PostgreSQLComponent {
             WHERE lddb__identifiers.iri = ?
             """.stripIndent()
 
+    private static final String IS_ARCHIVED_IRI =
+            "SELECT EXISTS(SELECT 1 FROM lddb__graveyard where iri = ?)"
+
     private static final String GET_DOCUMENT_FOR_UPDATE =
             "SELECT id, data, collection, created, modified, deleted, changedBy FROM lddb WHERE id = ? FOR UPDATE"
 
@@ -1295,6 +1298,27 @@ class PostgreSQLComponent {
             }
         } finally {
             close(rs, statement, connection)
+        }
+    }
+
+    boolean isArchivedIri(String iri) {
+        return withDbConnection {
+            PreparedStatement statement = null
+            ResultSet rs = null
+            Connection connection = getMyConnection()
+            connection.setAutoCommit(false)
+            try {
+                statement = connection.prepareStatement(IS_ARCHIVED_IRI)
+                statement.setString(1, iri)
+
+                rs = statement.executeQuery()
+                if (rs.next()) {
+                    return rs.getBoolean(1)
+                }
+                return false
+            } finally {
+                close(rs, statement, connection)
+            }
         }
     }
 

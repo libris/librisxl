@@ -131,6 +131,16 @@ public class HistoryArchiver extends HouseKeeper {
         return sb.toString();
     }
 
+    private List<String> getAllUrisFor(List<String> ids) {
+        List<String> uris = new ArrayList<>(ids.size() * 4);
+        for (String id : ids) {
+            Document doc = whelk.getDocument(id);
+            uris.addAll(doc.getThingIdentifiers());
+            uris.addAll(doc.getRecordIdentifiers());
+        }
+        return Collections.unmodifiableList(uris);
+    }
+
     private void writeArchiveLog(String archiveLog) throws IOException {
 
         // Create the wal-file if it does not exist. Ignore the return, either true or false is fine.
@@ -148,6 +158,15 @@ public class HistoryArchiver extends HouseKeeper {
         // Disk write durability is notoriously hard to guarantee, but perform an fsync() here and we've done about all we can.
         try (FileChannel channel = (FileChannel) Files.newByteChannel(walPath, StandardOpenOption.READ)) {
             channel.force(true);
+        }
+    }
+
+    private void writeToGraveyard(List<String> uris, Connection connection) throws SQLException {
+        for (String uri : uris) {
+            String sql = "INSERT INTO lddb__graveyard (iri) VALUES (?) ON CONFLICT DO NOTHING";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, uri);
+            statement.execute();
         }
     }
 
@@ -230,6 +249,8 @@ public class HistoryArchiver extends HouseKeeper {
                     connection.setAutoCommit(false);
                     List<String> ids = getIdBatchToArchive(connection);
                     lockRows(ids, connection);
+                    List<String> uris = getAllUrisFor(ids);
+                    writeToGraveyard(uris, connection);
                     String archiveLog = generateArchiveLogFor(ids);
                     writeArchiveLog(archiveLog);
                     removeHistory(ids, connection);
