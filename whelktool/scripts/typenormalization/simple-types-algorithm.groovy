@@ -93,17 +93,27 @@ class TypeNormalizer {
                     changed |= normalize([:], value, false)
                 } else if (value instanceof Map && normalizer.jsonld.isSubClassOf(getType(value), "Instance")) {
                     // If the part is an instance or subclass thereof
+                    // Normalize
                     changed |= normalize(value, [:], false)
 
-                    // Special handling for when the part is Electronic
-                    if ((value.get(TYPE) == "PhysicalResource") && entityIsDigital) {
-                        value.put(TYPE, "DigitalResource")
-                        if (value.category && value.category.size() == 0) {
-                            value.category.removeAll { it['@id'] == "https://id.kb.se/term/saobf/ElectronicStorageMedium" }
+                    // Always keep old instance type
+                    value.put(TYPE, "Instance")
+                    // Since we typically can't tell if Electronic ones are digital or not, don't assume
+                    if (value.category) {
+                        if (value.category.removeAll { it['@id'] == "https://id.kb.se/term/saobf/ElectronicStorageMedium" }) {
+                            value.get('category', []) << [(ID): SAOBF + 'AbstractElectronic']
+                        }
+                        if (value.category.size() == 0) {
                             value.remove("category")
                         }
-                        changed = true
                     }
+                    changed = true
+                }
+
+                        // Special handling for when the part is Electronic
+                    if ((value.get(TYPE) == "PhysicalResource") && entityIsDigital) {
+                        value.put(TYPE, "DigitalResource")
+
                 }
             }
             return new DocumentUtil.Nop()
@@ -241,7 +251,6 @@ class TypeNormalizer {
             work.put("category", normalizer.reduceSymbols(categories))
             changed = true
         }
-
 
         return changed
     }
