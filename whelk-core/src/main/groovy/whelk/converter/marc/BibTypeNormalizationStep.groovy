@@ -10,7 +10,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     boolean requiresResources = true
 
-    TypeCategoryNormalizer catTypeNormalizer
+    TypeCategoryNormalizer typeCategoryNormalizer
 
     // Injected configuration
     List<String> matchRelations
@@ -28,10 +28,10 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
             return
         }
 
-        catTypeNormalizer = new TypeCategoryNormalizer(resourceCache)
+        typeCategoryNormalizer = new TypeCategoryNormalizer(resourceCache)
         issuanceTypeSet.addAll(newWorkTypes)
 
-        catTypeNormalizer.typeToCategory.each { type, cat ->
+        typeCategoryNormalizer.typeToCategory.each { type, cat ->
             categoryTypeMap[cat] = type
         }
     }
@@ -46,7 +46,8 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     }
 
     void modify(Map record, Map thing) {
-        // FIXME: apply typeNormalizer
+        // FIXME:
+        //bibTypeNormaliser.normalize(instance, work)
     }
 
     void unmodify(Map record, Map instance) {
@@ -96,38 +97,31 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         instance.mediaType = getCategoryOfType(instanceCategories, 'MediaType')
         instance.carrierType = getCategoryOfType(instanceCategories, 'CarrierType')
 
-        // TODO: until we've finalized InstanceGenreForm->ManifestationForm
+        // TODO: Keeping for now; until we've finalized InstanceGenreForm->ManifestationForm?
         instance.genreForm = getCategoryOfType(instanceCategories, 'GenreForm')
-        instance[TYPE] = getInstanceType(instanceCategories) ?: 'Instance'
+        var itype = getInstanceType(instanceCategories)
+
+        if (itype == null) {
+            typeCategoryNormalizer.remappedLegacyInstanceTypes.each { ruletype, rule ->
+                if (typeCategoryNormalizer.anyImplies(instanceCategories, rule.category)) {
+                    if (typeCategoryNormalizer.anyImplies(workCategories, rule.workCategory)) {
+                        itype = ruletype
+                    }
+                }
+            }
+        }
+
+        instance[TYPE] = itype ?: 'Instance'
     }
 
     String getInstanceType(List<Map<String, Object>> instanceCategories) {
-        // FIXME: reverse the hardcoded (typenorm script) cleanupInstanceTypes too!
-        // Either look at work-category, some matches 007-genreForm-terms ...
-        //
-        // - :Electronic>	9925536  // LAST
-        //      - TODO: specify expected; e.g: bib 007: cr
-        // - :VideoRecording>	328175
-        // - :SoundRecording>	185064
-        // - :StillImageInstance>	55997
-        // - :Tactile>	20428
-        // - :Map>	12996
-        // - :Microform>	1969
-        // - :Globe>	92
-        //
-        // Strays:
-        // - :TextInstance>	2
-        // 0:
-        // - :ProjectedImageInstance	0!
-        // - :MovingImageInstance	o!
-
         var result = collectImpliedTypesFromCategory(instanceCategories)
         for (type in result) return type
     }
 
   List<Map<String, Object>> getDescriptions(Object refs) {
         return (List<Map<String, Object>>) asList(refs).findResults {
-            if (ID in it) catTypeNormalizer.categories[it[ID]]
+            if (ID in it) typeCategoryNormalizer.categories[it[ID]]
         }
     }
 
@@ -144,7 +138,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     }
 
     // TODO: optimize by returning result *Map* (check only id in keys unless more is needed)
-    // - also: LinkedHashMap, ordered by most specific (broader last; also see catTypeNormalizer.preferredCategory?)
+    // - also: LinkedHashMap, ordered by most specific (broader last; also see typeCategoryNormalizer.preferredCategory?)
     // - Note that MarcFrameConverter now uses a fixed field preference order though (based on matchUriToken).
     Collection<Map<String, Object>> getCategoryOfType(List<Map<String, Object>> categories, String type) {
         var result = new LinkedHashMap()
