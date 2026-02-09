@@ -84,7 +84,6 @@ class TypeNormalizer {
     }
 
     boolean normalizeLocalEntity(Map entity) {
-        var entityIsDigital = entity.get(TYPE) == "DigitalResource"
         boolean changed = false
         DocumentUtil.traverse(entity) { value, path ->
             if (!path.isEmpty() && !path.contains('instanceOf') && !path.contains('hasInstance')) {
@@ -110,11 +109,6 @@ class TypeNormalizer {
                     changed = true
                 }
 
-                        // Special handling for when the part is Electronic
-                    if ((value.get(TYPE) == "PhysicalResource") && entityIsDigital) {
-                        value.put(TYPE, "DigitalResource")
-
-                }
             }
             return new DocumentUtil.Nop()
         }
