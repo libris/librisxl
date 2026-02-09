@@ -233,19 +233,27 @@ for r in data:
 	elif id == "https://libris-qa.kb.se/test/workHasPartText":
 		assert entity["instanceOf"]["hasPart"][0]["@type"] == "Work", entity
 
-	# På verk: gammal hasPart Print blir PhysicalResource
+	# På verk: gammal hasPart Print blir Instance med saobf/Print
 	elif id == "https://libris-qa.kb.se/test/workHasPartPrint":
-		assert entity["instanceOf"]["hasPart"][0]["@type"] == "PhysicalResource", entity
+		part = entity["instanceOf"]["hasPart"][0]
+		assert part["@type"] == "Instance", entity
+		assert part["category"] == [{"@id":"https://id.kb.se/term/saobf/Print"}], entity
 
-	# På instans: Om gammal hasPart är Electronic och huvudpostens nya typ DigitalResource, blir hasPart DigitalResources
+	# På instans: Om gammal hasPart är Electronic -> ny typ Instance, saobf/AbstractElectronic
 	elif id == "https://libris-qa.kb.se/test/instanceHasPartElectronic":
-		assert instance_type == "DigitalResource", entity
-		assert entity["hasPart"][0]["@type"] == "DigitalResource", entity
+		part = entity["hasPart"][0]
+		assert part["@type"] == "Instance", entity
+		assert part["category"] == [{"@id":"https://id.kb.se/term/saobf/AbstractElectronic"}], entity
 
-	# På instans: gammal hasPart Print blir PhysicalResource; gammal hasPart Text blir Work
+	# På instans: gammal hasPart Print blir Instance med saobf/Print; gammal hasPart Text blir Work med rda/Text
 	elif id == "https://libris-qa.kb.se/test/instanceHasPartsTextPrint":
 		part_types = {p["@type"] for p in entity["hasPart"]}
-		assert part_types == {"PhysicalResource", "Work"}, entity
+		assert part_types == {"Instance", "Work"}, entity
+		for part in entity["hasPart"]:
+			if part["@type"] == "Instance":
+				assert part["category"] == [{"@id":"https://id.kb.se/term/saobf/Print"}], entity
+			if part["@type"] == "Work":
+				assert part["category"] == [{"@id":"https://id.kb.se/term/rda/Text"}], entity
 
 	# Specialfall Signe: verk som inte länkas från instanser blir också normaliserade
 	elif id == "https://libris-qa.kb.se/test/workNotLinkedFromInstance":
