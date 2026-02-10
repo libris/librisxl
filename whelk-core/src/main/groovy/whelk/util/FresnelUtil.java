@@ -13,12 +13,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -169,7 +167,7 @@ public class FresnelUtil {
     }
 
     public Lensed applyLens(Object thing, LensGroupName lens, Collection<Options> options) {
-        return applyLens(thing, new DefinedLensGroup(lens), options);
+        return applyLens(thing, new NestedLensGroup(lens), options);
     }
 
     public Lensed applyLens(Object thing, LensGroup lens) {
@@ -651,9 +649,7 @@ public class FresnelUtil {
         private IntermediateNode build(IntermediateNode n, LensGroup lensGroup, Collection<Options> options) {
             n.orderedSelection = n.selected().stream()
                     .map(s -> {
-                        var nextLensGroup = lensGroup.isFinal() || s.pKey().isIntegral()
-                                ? lensGroup
-                                : new DefinedLensGroup(lensGroup.subLens());
+                        var nextLensGroup = s.pKey().isIntegral() ? lensGroup : lensGroup.next();
                         var values = s.values().stream()
                                 .map(v -> build(v, nextLensGroup, s.pKey(), options))
                                 .toList();
@@ -670,9 +666,6 @@ public class FresnelUtil {
         }
 
         private LensGroup getNextLensLevel(LensGroup current, Map<String, Object> thing, FslPath fslPath, boolean integral) {
-            if (current.isFinal()) {
-                return current;
-            }
             if (integral) {
                 if (current instanceof DerivedLensGroup d) {
                     List<LensGroupName> handled = d.minus().stream()
@@ -683,11 +676,11 @@ public class FresnelUtil {
                     if (!handled.isEmpty()) {
                         return new DerivedLensGroup(d.base(), handled, d.subLens());
                     }
-                    return new DefinedLensGroup(d.base());
+                    return new NestedLensGroup(d.base(), d.subLens());
                 }
                 return current;
             }
-            return new DefinedLensGroup(current.subLens());
+            return current.next();
         }
 
         @Override
@@ -748,10 +741,10 @@ public class FresnelUtil {
         private Object mapVocabTerm(Object value, Collection<Options> options) {
             if (value instanceof String s) {
                 var def = jsonLd.vocabIndex.get(s);
-                return applyLens(def != null ? def : s, lens.subLens(), options, selectedLang);
+                return applyLens(def != null ? def : s, lens.lensGroup().next(), options, selectedLang);
             } else {
                 // bad data
-                return applyLens(value, lens.subLens(), options, selectedLang);
+                return applyLens(value, lens.lensGroup().next(), options, selectedLang);
             }
         }
     }
@@ -897,7 +890,7 @@ public class FresnelUtil {
     }
 
     private Lens findLens(Map<?,?> thing, LensGroupName lensGroupName) {
-        return findLens(thing, new DefinedLensGroup(lensGroupName));
+        return findLens(thing, new NestedLensGroup(lensGroupName));
     }
 
     private Lens findLens(Map<?,?> thing, LensGroup lensGroup) {
@@ -950,10 +943,6 @@ public class FresnelUtil {
 
         LensGroup lensGroup() {
             return lensGroup;
-        }
-
-        LensGroup subLens() {
-            return lensGroup.isFinal() ? lensGroup : new DefinedLensGroup(lensGroup.subLens());
         }
 
         List<ShowProperty> showProperties() {
@@ -1060,46 +1049,52 @@ public class FresnelUtil {
         }
     }
 
-    public sealed interface LensGroup permits DefinedLensGroup, DerivedLensGroup, FinalLensGroup {
+    public sealed interface LensGroup permits NestedLensGroup, DerivedLensGroup, GlobalLensGroup {
         LensGroupName base();
-        LensGroupName subLens();
-        default boolean isFinal() {
-            return false;
-        }
+        LensGroup next();
     }
 
-    public record FinalLensGroup(LensGroupName lensGroupName) implements LensGroup {
+    public record GlobalLensGroup(LensGroupName lensGroupName) implements LensGroup {
         @Override
         public LensGroupName base() {
             return lensGroupName;
         }
 
         @Override
-        public LensGroupName subLens() {
-            return lensGroupName;
+        public LensGroup next() {
+            return this;
+        }
+    }
+    public record NestedLensGroup(LensGroupName base, LensGroupName subLens) implements LensGroup {
+        public NestedLensGroup(LensGroupName base) {
+            this(base, null);
         }
 
         @Override
-        public boolean isFinal() {
-            return true;
+        public LensGroup next() {
+            return new NestedLensGroup(subLens());
+        }
+
+        public LensGroupName subLens() {
+            return subLens != null ? subLens : subLens(base);
+        }
+
+        private static LensGroupName subLens(LensGroupName lensGroupName) {
+            return switch (lensGroupName) {
+                case Full -> LensGroupName.Card;
+                case Card -> LensGroupName.Chip;
+                case Chip, Token -> LensGroupName.Token;
+
+                case SearchCard, SearchChip -> LensGroupName.SearchChip;
+                case SearchToken -> LensGroupName.SearchToken;
+            };
         }
     }
-    public record DefinedLensGroup(LensGroupName base, LensGroupName subLens) implements LensGroup {
-        public DefinedLensGroup(LensGroupName base) {
-            this(base, FresnelUtil.subLens(base));
+    public record DerivedLensGroup(LensGroupName base, List<LensGroupName> minus, LensGroupName subLens) implements LensGroup {
+        @Override
+        public LensGroup next() {
+            return new NestedLensGroup(subLens());
         }
-    }
-    public record DerivedLensGroup(LensGroupName base, List<LensGroupName> minus, LensGroupName subLens) implements LensGroup {}
-
-    private static LensGroupName subLens(LensGroupName lensGroupName) {
-        return switch (lensGroupName) {
-            case Full -> LensGroupName.Card;
-            case Card -> LensGroupName.Chip;
-            case Chip, Token -> LensGroupName.Token;
-
-            case SearchCard, SearchChip -> LensGroupName.SearchChip;
-            case SearchToken -> LensGroupName.SearchToken;
-        };
     }
 
     private sealed interface ShowProperty permits AlternateProperties, FslPath, MergeProperties, Unrecognized {
