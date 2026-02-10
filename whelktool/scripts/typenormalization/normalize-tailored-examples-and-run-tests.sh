@@ -2,9 +2,11 @@
 set -euo pipefail
 
 # A testfolder (suggestion: ../../testdata, i.e. beside the librisxl repo)
-TESTFOLDER=$1
-TESTRECORDS=${2:-./scripts/typenormalization/tailored_examples.jsonl}
+ENV=$1
+TESTFOLDER=$2
+TESTRECORDS=${3:-./scripts/typenormalization/tailored_examples.jsonl}
 
+echo "Running normalization and tests against environment: $ENV"
 echo "Using tailored examples file: $TESTRECORDS"
 echo "Saving results to test folder: $TESTFOLDER"
 
@@ -21,7 +23,7 @@ echo "Rebuild whelktool"
 
 # Run the typenormalization script on the tailored examples and save as tailored-normalized.jsonl
 echo "Running typenormalization on tailored examples..."
-time java -Xmx2G -Dxl.secret.properties=../secret.properties-dev2 -Dtypenormalization=simple-types-algorithm -Dnowhelk.datadir=$TESTFOLDER -Dnowhelk.basename=tailored -jar build/libs/whelktool.jar --dry-run --no-threads scripts/typenormalization/nowhelk.groovy
+time java -Xmx2G -Dxl.secret.properties=../secret.properties-$ENV -Dtypenormalization=simple-types-algorithm -Dnowhelk.datadir=$TESTFOLDER -Dnowhelk.basename=tailored -jar build/libs/whelktool.jar --dry-run --no-threads scripts/typenormalization/nowhelk.groovy
 
 # Run tests on the output
 echo "Running tests on normalized tailored examples..."
