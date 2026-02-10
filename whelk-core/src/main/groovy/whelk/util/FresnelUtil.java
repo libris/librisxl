@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.RECORD_TYPE;
 import static whelk.JsonLd.REVERSE_KEY;
-import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.JsonLd.THING_KEY;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
@@ -80,11 +79,13 @@ public class FresnelUtil {
         public static String fslselector = "fresnel:fslselector";
         public static String group = "fresnel:group";
         public static String mergeProperties = "fresnel:mergeProperties";
+        public static String property = "fresnel:property";
         public static String propertyFormat = "fresnel:propertyFormat";
         public static String propertyFormatDomain = "fresnel:propertyFormatDomain";
         public static String propertyStyle = "fresnel:propertyStyle";
         public static String resourceFormat = "fresnel:resourceFormat";
         public static String resourceStyle = "fresnel:resourceStyle";
+        public static String subLens = "fresnel:subLens";
         public static String super_ = "fresnel:super";
         public static String use = "fresnel:use";
         public static String valueFormat = "fresnel:valueFormat";
@@ -247,11 +248,12 @@ public class FresnelUtil {
 
         List<ShowProperty> showProperties = loadShowProperties(thing, lens, options);
 
-        Stream.concat(Stream.of(new FslPath(TYPE_KEY), new FslPath(ID_KEY)), showProperties.stream())
-                .forEach(sp -> result.select(thing, sp, options));
+        result.select(thing, showProperties, options);
 
         return result;
     }
+
+
 
     static class Format {
         static final Format DEFAULT_FORMAT = new Format();
@@ -538,7 +540,12 @@ public class FresnelUtil {
             this.selectedLang = selectedLang;
         }
 
-        void select(Map<String, Object> thing, ShowProperty showProperty, Collection<Options> options) {
+        void select(Map<String, Object> thing, List<ShowProperty> showProperties, Collection<Options> options) {
+            Stream.concat(Stream.of(new FslPath(TYPE_KEY), new FslPath(ID_KEY)), showProperties.stream())
+                    .forEach(sp -> select(thing, sp, options));
+        }
+
+        private void select(Map<String, Object> thing, ShowProperty showProperty, Collection<Options> options) {
             if (options.contains(TRACK_ORIGINAL)) {
                 this.thing = thing;
             }
@@ -563,6 +570,20 @@ public class FresnelUtil {
                     var values = n.orderedSelection.stream().map(Selected::values).flatMap(FresnelUtil::asStream).toList();
                     if (!values.isEmpty()) {
                         this.orderedSelection.add(new Selected(mergeProperties.use(), values));
+                    }
+                }
+                case PropertyDescription pd -> {
+                    List<ShowProperty> showProperties = loadShowProperties(pd.subLensClassDomain(), pd.subLens(), options);
+                    var values = new ArrayList<>();
+                    for (Object o : asList(thing.get(pd.property().name()))) {
+                        if (o instanceof Map<?, ?> m && m.get(TYPE_KEY) instanceof String t && jsonLd.isSubClassOf(t, pd.subLensClassDomain())) {
+                            Node n = new Node(pd.subLens(), selectedLang);
+                            n.select(asMap(m), showProperties, options);
+                            values.add(n);
+                        }
+                    }
+                    if (!values.isEmpty()) {
+                        this.orderedSelection.add(new Selected(pd.property(), values));
                     }
                 }
             }
@@ -886,6 +907,10 @@ public class FresnelUtil {
         return loadShowProperties(thing, lens.base(), options);
     }
 
+    private List<ShowProperty> loadShowProperties(String type, Lens lens, Collection<Options> options) {
+        return loadShowProperties(Map.of(TYPE_KEY, type), lens, options);
+    }
+
     private List<ShowProperty> loadShowProperties(Map<?,?> thing, LensGroupName lensGroupName, Collection<Options> options) {
         var types = thing.get(TYPE_KEY);
         var fallbackLens = options.contains(NO_FALLBACK) ? FallbackLens.EMPTY : FallbackLens.DEFAULT;
@@ -965,6 +990,9 @@ public class FresnelUtil {
                         if (isMergeProperties(p)) {
                             return parseMergeProperties(p);
                         }
+                        if (isPropertyDescription(p)) {
+                            return parsePropertyDescription(p);
+                        }
                         if (p instanceof List<?> list) {
                             // expanded lang alias, i.e. ["x", "xByLang"] inside alternateProperties
                             // TODO remove expansion in jsonLd?
@@ -1008,6 +1036,25 @@ public class FresnelUtil {
             return new MergeProperties(parse(merge), use);
         }
 
+        private boolean isPropertyDescription(Object showProperty) {
+            return showProperty instanceof Map<?, ?> m && m.containsKey(Fresnel.property) && m.containsKey(Fresnel.subLens);
+        }
+
+        private PropertyDescription parsePropertyDescription(Object propertyDescription) {
+            var m = asMap(propertyDescription);
+            var p = (String) m.get(Fresnel.property);
+            var subLens = (Map<?, ?>) m.get(Fresnel.subLens);
+            var subLensId = (String) subLens.get(ID_KEY);
+            var split = subLensId.split("-");
+            var className = split[0];
+            var lensGroupName = switch (split[1].toLowerCase()) {
+                case "chips" -> new NestedLens(LensGroupName.Chip);
+                case "cards" -> new NestedLens(LensGroupName.Card);
+                default -> throw new RuntimeException("Unknown lens group");
+            };
+            return new PropertyDescription(new PropertyKey(p), className, lensGroupName);
+        }
+
         private boolean isMergeProperties(Object showProperty) {
             return showProperty instanceof Map<?, ?> m && m.containsKey(Fresnel.mergeProperties) && m.containsKey(Fresnel.use);
         }
@@ -1040,13 +1087,16 @@ public class FresnelUtil {
         }
     }
 
-    private sealed interface ShowProperty permits AlternateProperties, FslPath, MergeProperties, Unrecognized {
+    private sealed interface ShowProperty permits AlternateProperties, FslPath, MergeProperties, PropertyDescription, Unrecognized {
     }
 
     private record AlternateProperties(List<ShowProperty> alternatives) implements ShowProperty {
     }
 
     private record MergeProperties(List<ShowProperty> merge, PropertyKey use) implements ShowProperty {
+    }
+
+    private record PropertyDescription(PropertyKey property, String subLensClassDomain, Lens subLens) implements ShowProperty {
     }
 
     private record Unrecognized() implements ShowProperty {
