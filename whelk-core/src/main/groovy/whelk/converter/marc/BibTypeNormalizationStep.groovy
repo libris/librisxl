@@ -3,6 +3,8 @@ package whelk.converter.marc
 //import groovy.transform.CompileStatic
 
 import whelk.TypeCategoryNormalizer
+import whelk.converter.BibTypeNormalizer
+
 import static whelk.JsonLd.asList
 
 //@CompileStatic
@@ -10,7 +12,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     boolean requiresResources = true
 
-    TypeCategoryNormalizer typeCategoryNormalizer
+    BibTypeNormalizer bibTypeNormaliser
 
     // Injected configuration
     List<String> matchRelations
@@ -28,12 +30,17 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
             return
         }
 
-        typeCategoryNormalizer = new TypeCategoryNormalizer(resourceCache)
+        bibTypeNormaliser = new BibTypeNormalizer(resourceCache)
+
         issuanceTypeSet.addAll(newWorkTypes)
 
         typeCategoryNormalizer.typeToCategory.each { type, cat ->
             categoryTypeMap[cat] = type
         }
+    }
+
+    TypeCategoryNormalizer getTypeCategoryNormalizer() {
+        return bibTypeNormaliser.normalizer
     }
 
     boolean checkRequired() {
@@ -46,8 +53,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     }
 
     void modify(Map record, Map thing) {
-        // FIXME:
-        //bibTypeNormaliser.normalize(instance, work)
+        bibTypeNormaliser.normalize(thing, thing.instanceOf)
     }
 
     void unmodify(Map record, Map instance) {
