@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.RECORD_TYPE;
 import static whelk.JsonLd.REVERSE_KEY;
+import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.JsonLd.THING_KEY;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
@@ -154,11 +155,15 @@ public class FresnelUtil {
         this.formats = new Formats(getUnsafe(jsonLd.displayData, "formatters", null));
     }
 
-    public Map<String, Object> applyLensAndGet(Object thing, Lens lens) {
+    public Map<String, Object> getLensedThing(Object thing, LensGroupName lensGroupName) {
+        return new AppliedLens(thing, new NestedLens(lensGroupName), List.of()).getThing();
+    }
+
+    public Map<String, Object> getLensedThing(Object thing, Lens lens) {
         return new AppliedLens(thing, lens, List.of()).getThing();
     }
 
-    public Map<String, Object> applyLensAndGet(Object thing, Lens lens, Collection<String> preserveLinks) {
+    public Map<String, Object> getLensedThing(Object thing, Lens lens, Collection<String> preserveLinks) {
         return new AppliedLens(thing, lens, preserveLinks).getThing();
     }
 
@@ -330,19 +335,16 @@ public class FresnelUtil {
         private Map<String, Object> merge(Collection<Node> nodes) {
             Map<String, Object> mergedThing = new LinkedHashMap<>();
             for (Node n : nodes) {
-                buildThing(n).forEach((k, v) -> {
-                    if (jsonLd.langContainerAliasInverted.containsKey(k) && v instanceof Map<?, ?> m) {
-                        var langMap = asMap(mergedThing.computeIfAbsent(k, x -> new HashMap<>()));  // TODO? Order matters?
-                        m.forEach((lang, value) -> langMap.put((String) lang, value));
-                    } else {
-                        mergedThing.put(k, v);
-                    }
-                });
+                buildThing(n).forEach((k, v) -> insert(mergedThing, k, v));
             }
             return mergedThing;
         }
 
         private Map<String, Object> buildThing(Node n) {
+            if (n instanceof LanguageContainer l) {
+                return l.filteredLangMap(fallbackLocales);
+            }
+
             Map<String, Object> lensedThing = new LinkedHashMap<>();
 
             if (n.id != null) {
@@ -375,23 +377,21 @@ public class FresnelUtil {
         }
 
         private void insert(Map<String, Object> thing, Node.Selected s) {
-            if (s.pKey() instanceof InversePropertyKey ipk) {
-                insert(asMap(thing.computeIfAbsent(REVERSE_KEY, k -> new HashMap<>())), ipk.inverseOf(), s.values());
-            } else {
-                insert(thing, s.pKey().name(), s.values());
+            for (var value : s.values()) {
+                var v = value instanceof Lensed l ? getThing(l) : value;
+                if (s.pKey() instanceof InversePropertyKey ipk) {
+                    insert(asMap(thing.computeIfAbsent(REVERSE_KEY, k -> new HashMap<>())), ipk.inverseOf(), v);
+                } else if (s.pKey().hasLangAlias()) {
+                    insert(thing, value instanceof LanguageContainer ? s.pKey().langAlias() : s.pKey().name(), v);
+                } else {
+                    insert(thing, s.pKey().name(), v);
+                }
             }
         }
 
         private void insert(Map<String, Object> thing, String key, Object value) {
-            switch (value) {
-                case Collection<?> c -> c.forEach(v -> insert(thing, key, v));
-                case LanguageContainer l -> insert(thing, (String) jsonLd.langContainerAlias.get(key), l.filteredLangMap(fallbackLocales));
-                case Lensed l -> insert(thing, key, getThing(l));
-                default -> {
-                    List<Object> values = Stream.concat(asStream(thing.get(key)), Stream.of(value)).distinct().collect(Collectors.toList());
-                    thing.put(key, unwrapSingle(values));
-                }
-            }
+            List<Object> uniqueValues = Stream.concat(asStream(thing.get(key)), asStream(value)).distinct().collect(Collectors.toList());
+            thing.put(key, unwrapSingle(uniqueValues));
         }
 
         private static void restoreLinks(Map<String, Object> lensedThing, Map<?, ?> originalThing, Collection<String> preserveLinks) {
@@ -1901,6 +1901,6 @@ public class FresnelUtil {
     }
 
     private static Stream<?> asStream(Object o) {
-        return o instanceof List<?> l ? l.stream() : Stream.ofNullable(o);
+        return o instanceof Collection<?> c ? c.stream() : Stream.ofNullable(o);
     }
 }
