@@ -332,5 +332,9 @@ for r in data:
 		work_categories = {c["@id"] for c in entity["instanceOf"]["category"]}
 		assert work_categories == {"https://id.kb.se/term/rda/TactileText", "https://id.kb.se/term/rda/StillImage"}, entity
 
-		
+	# Ta bort bredare ny SAOGF-term 'Facklitteratur' som impliceras av smalare 'Personlig utveckling'
+	elif id == "https://libris-qa.kb.se/test/removeImpliedBroaderNewSAOGF":
+		work_categories = {c["@id"] for c in entity["instanceOf"]["category"]}
+		assert work_categories == {"https://id.kb.se/term/rda/Text", "https://id.kb.se/term/saogf/Personlig%20utveckling"}, entity
+
 print("\nAll tests passed!")
