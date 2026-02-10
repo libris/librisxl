@@ -14,9 +14,8 @@ import whelk.exception.InvalidQueryException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.DocumentUtil
 import whelk.util.FresnelUtil
-import whelk.util.FresnelUtil.NestedLensGroup
-import whelk.util.FresnelUtil.DerivedLensGroup
-import whelk.util.FresnelUtil.GlobalLensGroup
+import whelk.util.FresnelUtil.DerivedLens
+import whelk.util.FresnelUtil.GlobalLens
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -68,13 +67,13 @@ class ElasticSearch {
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
     private static final class Lenses {
-        public static final DerivedLensGroup CARD_ONLY = new DerivedLensGroup(
+        public static final DerivedLens CARD_ONLY = new DerivedLens(
                 FresnelUtil.LensGroupName.Card,
                 List.of(FresnelUtil.LensGroupName.Chip),
                 FresnelUtil.LensGroupName.SearchChip
         )
 
-        public static final DerivedLensGroup SEARCH_CARD_ONLY = new DerivedLensGroup(
+        public static final DerivedLens SEARCH_CARD_ONLY = new DerivedLens(
                 FresnelUtil.LensGroupName.SearchCard,
                 List.of(FresnelUtil.LensGroupName.Chip, FresnelUtil.LensGroupName.Card),
                 FresnelUtil.LensGroupName.SearchChip
@@ -603,7 +602,7 @@ class ElasticSearch {
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
         var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
 
-        def mainGraphLens = new GlobalLensGroup(FresnelUtil.LensGroupName.SearchCard);
+        def mainGraphLens = new GlobalLens(FresnelUtil.LensGroupName.SearchCard);
 
         // TODO: Vad blir effekten av TAKE_ALL_ALTERNATE?
         copy.data[GRAPH_KEY] = embellishedGraph.take(originalGraphSize).collect { whelk.fresnelUtil.applyLensAndGet(it, mainGraphLens, links) }
@@ -762,8 +761,8 @@ class ElasticSearch {
         if (graph) {
             def (record, thing) = graph
             thing[RECORD_KEY] = record
-            def searchCardThenSearchChip = new NestedLensGroup(FresnelUtil.LensGroupName.SearchCard)
-            def searchChipThroughout = new GlobalLensGroup(FresnelUtil.LensGroupName.SearchChip)
+            def searchCardThenSearchChip = new FresnelUtil.NestedLens(FresnelUtil.LensGroupName.SearchCard)
+            def searchChipThroughout = new FresnelUtil.GlobalLens(FresnelUtil.LensGroupName.SearchChip)
             def lensGroup = integralIds.contains(thing[ID_KEY]) ? searchCardThenSearchChip : searchChipThroughout
             def shrunkThing = fresnelUtil.applyLensAndGet(thing, lensGroup)
             def shrunkRecord = minimalRecord((Map) record) + ((Map) shrunkThing.remove(RECORD_KEY) ?: [:])
