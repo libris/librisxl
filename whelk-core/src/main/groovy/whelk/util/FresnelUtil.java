@@ -35,6 +35,7 @@ import static whelk.JsonLd.asList;
 import static whelk.util.FresnelUtil.LangCode.NO_LANG;
 import static whelk.util.FresnelUtil.LangCode.ORIGINAL_SCRIPT_FIRST;
 import static whelk.util.FresnelUtil.Options.NO_FALLBACK;
+import static whelk.util.FresnelUtil.Options.SKIP_MAP_VOCAB_TERMS;
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE;
 import static whelk.util.FresnelUtil.Options.TRACK_ORIGINAL;
 
@@ -110,6 +111,7 @@ public class FresnelUtil {
     public enum Options {
         TAKE_ALL_ALTERNATE,
         TRACK_ORIGINAL,
+        SKIP_MAP_VOCAB_TERMS,
         NO_FALLBACK
     }
 
@@ -157,15 +159,16 @@ public class FresnelUtil {
     }
 
     public Map<String, Object> getLensedThing(Object thing, LensGroupName lensGroupName) {
-        return new AppliedLens(thing, new NestedLens(lensGroupName), List.of()).getThing();
+        return getLensedThing(thing, new NestedLens(lensGroupName));
     }
 
     public Map<String, Object> getLensedThing(Object thing, Lens lens) {
-        return new AppliedLens(thing, lens, List.of()).getThing();
+        return getLensedThing(thing, lens, List.of());
     }
 
     public Map<String, Object> getLensedThing(Object thing, Lens lens, Collection<String> preserveLinks) {
-        return new AppliedLens(thing, lens, preserveLinks).getThing();
+        var options = List.of(TAKE_ALL_ALTERNATE, TRACK_ORIGINAL, SKIP_MAP_VOCAB_TERMS);
+        return new AppliedLens(thing, lens, preserveLinks, options).getThing();
     }
 
     public Lensed applyLens(Object thing, LensGroupName lens) {
@@ -305,9 +308,9 @@ public class FresnelUtil {
 
         private static final LensGroupName searchKeyLens = LensGroupName.SearchToken;
 
-        private AppliedLens(Object thing, Lens lens, Collection<String> preserveLinks) {
+        private AppliedLens(Object thing, Lens lens, Collection<String> preserveLinks, Collection<Options> options) {
             this.preserveLinks = preserveLinks;
-            this.lensed = applyLens(getCopyWithTmpIds(thing), lens, List.of(TAKE_ALL_ALTERNATE, TRACK_ORIGINAL));
+            this.lensed = applyLens(getCopyWithTmpIds(thing), lens, options);
             this.nodeTmpIdMap = buildNodeTmpIdMap(lensed);
         }
 
@@ -363,9 +366,12 @@ public class FresnelUtil {
                 // TODO: Only for certain entitites? Should be included in lens definition if wanted?
                 lensedThing.put(TYPE_KEY, n.thing.get(TYPE_KEY));
             }
-            if (RECORD_TYPE.equals(n.type) && n.thing.containsKey(THING_KEY)) {
-                // Always keep mainEntity link
-                lensedThing.put(THING_KEY, n.thing.get(THING_KEY));
+            if (RECORD_TYPE.equals(n.type)) {
+                var mainEntityId = getUnsafe(n.thing, THING_KEY, Map.of()).get(ID_KEY);
+                if (mainEntityId != null) {
+                    // Always keep mainEntity link
+                    lensedThing.put(THING_KEY, Map.of(ID_KEY, mainEntityId));
+                }
             }
 
             n.orderedSelection.forEach(s -> insert(lensedThing, s));
@@ -740,7 +746,9 @@ public class FresnelUtil {
         }
 
         private Object mapVocabTerm(Object value, Collection<Options> options) {
-            if (value instanceof String s) {
+            if (options.contains(SKIP_MAP_VOCAB_TERMS)) {
+                return value;
+            } else if (value instanceof String s) {
                 var def = jsonLd.vocabIndex.get(s);
                 return applyLens(def != null ? def : s, lens.next(), options, selectedLang);
             } else {
