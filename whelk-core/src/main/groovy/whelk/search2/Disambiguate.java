@@ -104,7 +104,9 @@ public class Disambiguate {
     }
 
     private Selector _mapQueryKey(Token token) {
-        if (token.value().contains(".")) {
+        var s = mapSingleKey(token);
+
+        if (s instanceof Key.UnrecognizedKey && token.value().contains(".")) {
             List<PathElement> path = new ArrayList<>();
             int currentOffset = token.offset();
             for (String key : token.value().split("\\.")) {
@@ -113,7 +115,8 @@ public class Disambiguate {
             }
             return new Path(path, token);
         }
-        return mapSingleKey(token);
+
+        return s;
     }
 
     private PathElement mapSingleKey(Token token) {

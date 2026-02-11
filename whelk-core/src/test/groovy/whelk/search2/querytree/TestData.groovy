@@ -29,6 +29,7 @@ class TestData {
                 'p12'             : ['p12'] as Set,
                 'p13'             : ['p13'] as Set,
                 'p14'             : ['p14'] as Set,
+                'ctx.p'           : ['ctxProp'] as Set,
                 'type'            : ['rdf:type'] as Set,
                 'rdf:type'        : ['rdf:type'] as Set,
                 'instanceof'      : ['instanceOf'] as Set,
@@ -168,6 +169,11 @@ class TestData {
                 ],
                 [
                         '@id'  : 'p14',
+                        '@type': 'DatatypeProperty',
+                        'domain': ['@id': 'T4']
+                ],
+                [
+                        '@id'  : 'ctxProp',
                         '@type': 'DatatypeProperty',
                         'domain': ['@id': 'T4']
                 ],
