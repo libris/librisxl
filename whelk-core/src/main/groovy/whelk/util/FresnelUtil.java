@@ -362,8 +362,7 @@ public class FresnelUtil {
             if (n.id != null) {
                 lensedThing.put(ID_KEY, n.id);
             }
-            if (n.type != null) {
-                // TODO: Only for certain entitites? Should be included in lens definition if wanted?
+            if (n.thing.containsKey(TYPE_KEY)) {
                 lensedThing.put(TYPE_KEY, n.thing.get(TYPE_KEY));
             }
             if (RECORD_TYPE.equals(n.type)) {
