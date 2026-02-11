@@ -146,6 +146,12 @@ class FresnelUtilSpec extends Specification {
                                                     "familyName",
                                                     "name"
                                             ]
+                                    ],
+                                    "Title" : [
+                                            "@type"          : "fresnel:Lens",
+                                            "classLensDomain": "Title",
+                                            "fresnel:extends": ["@id": "Title-chips"],
+                                            "showProperties" : ["fresnel:super"]
                                     ]
                             ]
                     ],
@@ -187,7 +193,7 @@ class FresnelUtilSpec extends Specification {
                                             "@id"            : "Title-chips",
                                             "@type"          : "fresnel:Lens",
                                             "classLensDomain": "Title",
-                                            "showProperties" : ["mainTitle", "title", "subtitle", "titleRemainder", "partNumber", "partName", "hasPart"]
+                                            "showProperties" : ["mainTitle", "title", "subtitle", "titleRemainder", "partNumber", "partName", ["fresnel:property": "hasPart", "fresnel:subLens": ["@id": "TitlePart-chips"]]]
                                     ],
                                     "TitlePart"   : [
                                             "@id"            : "TitlePart-chips",
@@ -293,11 +299,33 @@ class FresnelUtilSpec extends Specification {
                 "note"       : ["NOTE 1", "NOTE 2"]
         ]
 
+        when:
         var lensed = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
-        var result = fresnel.format(lensed, new FresnelUtil.LangCode('sv'))
+        var formatted = fresnel.format(lensed, new FresnelUtil.LangCode('sv'))
 
-        expect:
-        result.asString() == "NOTATION • etikett • NOTE 1, NOTE 2 • Το νησι των θησαυρων ’To nisi ton thisavron’"
+        then:
+        formatted.asString() == "NOTATION • etikett • NOTE 1, NOTE 2 • Το νησι των θησαυρων ’To nisi ton thisavron’"
+
+        when:
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip == [
+                "@type"      : "Thing",
+                "notation"   : "NOTATION",
+                "labelByLang": [
+                        "en": "label"
+                ],
+                "note"       : ["NOTE 1", "NOTE 2"],
+                "title"      : [
+                        "@type"          : "Title",
+                        "mainTitleByLang": [
+                                "el-Latn-t-el-Grek-x0-btj": "To nisi ton thisavron",
+                                "el"                      : "Το νησι των θησαυρων"
+                        ],
+                        "_str"           : ["To nisi ton thisavron", "Το νησι των θησαυρων"]
+                ]
+        ]
     }
 
     def "Heliogabalus"() {
@@ -318,10 +346,24 @@ class FresnelUtilSpec extends Specification {
                 'marc:titlesAndOtherWordsAssociatedWithAName': ['romersk kejsare']
         ]
 
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+        when:
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
-        expect:
-        result.asString() == "Heliogabalus, 203-222, romersk kejsare"
+        then:
+        formatted.asString() == "Heliogabalus, 203-222, romersk kejsare"
+
+        when:
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip == [
+                "@id"                                        : "https://libris-qa.kb.se/khw03jc347kgv4w#it",
+                "@type"                                      : "Person",
+                "name"                                       : "Heliogabalus",
+                "lifeSpan"                                   : "203-222",
+                "marc:titlesAndOtherWordsAssociatedWithAName": "romersk kejsare",
+                "_str"                                       : "Heliogabalus"
+        ]
     }
 
     def "complex title"() {
@@ -339,10 +381,27 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
-        expect:
-        result.asString() == "Teater-biblioteket • N:o 15 • En friare i lifsfara : skämt med sång i en akt"
+        when:
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+
+        then:
+        formatted.asString() == "Teater-biblioteket • N:o 15 • En friare i lifsfara : skämt med sång i en akt"
+
+        when:
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip == [
+                "@type"    : "Title",
+                "mainTitle": "Teater-biblioteket",
+                "hasPart"  : [
+                        "@type"     : "TitlePart",
+                        "partNumber": "N:o 15",
+                        "partName"  : "En friare i lifsfara : skämt med sång i en akt"
+                ],
+                "_str"     : "Teater-biblioteket N:o 15 En friare i lifsfara : skämt med sång i en akt"
+        ]
     }
 
     def "group transliteration for structured value"() {
@@ -358,10 +417,28 @@ class FresnelUtilSpec extends Specification {
                         "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]
         ]
 
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+        when:
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
-        expect:
-        result.asString() == "Νεφέλαι : Λυσιστράτη ’Nephelai : Lysistratē’"
+        then:
+        formatted.asString() == "Νεφέλαι : Λυσιστράτη ’Nephelai : Lysistratē’"
+
+        when:
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip == [
+                "@type"          : "Title",
+                "mainTitleByLang": [
+                        "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai",
+                        "grc"                            : "Νεφέλαι"
+                ],
+                "subtitleByLang" : [
+                        "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē",
+                        "grc"                            : "Λυσιστράτη"
+                ],
+                "_str"           : ["Nephelai Lysistratē", "Νεφέλαι Λυσιστράτη"]
+        ]
     }
 
     def "Handle RTL original script"() {
@@ -374,10 +451,23 @@ class FresnelUtilSpec extends Specification {
                         "ira-Latn-t-ira-Arab": "talysj"],
         ]
 
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+        when:
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
 
-        expect:
-        result.asString() == "⁧تالشی زَوُن⁩ ’talysj’"
+        then:
+        formatted.asString() == "⁧تالشی زَوُن⁩ ’talysj’"
+
+        when:
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip == [
+                "@type"          : "Title",
+                "mainTitleByLang": [
+                        "ira-Latn-t-ira-Arab": "talysj",
+                        "ira"                : "تالشی زَوُن"],
+                "_str"           : ["talysj", "تالشی زَوُن"]
+        ]
     }
 
     def "showProperties rdf:type"() {
@@ -386,6 +476,7 @@ class FresnelUtilSpec extends Specification {
 
         expect:
         fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip) == thing
 
         where:
         thing                                                  | locale | result
@@ -400,6 +491,7 @@ class FresnelUtilSpec extends Specification {
 
         expect:
         fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip) == thing
 
         where:
         thing                                        | locale | result
@@ -432,7 +524,37 @@ class FresnelUtilSpec extends Specification {
         ['@type': 'Work', 'hasTitle': [tt, kt2, kt]] | 'sv'   | 'key title 2 = key title'
     }
 
-    def "isniGroupDigits()"() {
+    def "Chip of alternate properties"() {
+        given:
+        var fresnel = new FresnelUtil(ld)
+        var thing = ['@type': 'Work', 'hasTitle': [tt, kt, kt2, vt]]
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+
+        expect:
+        chip == [
+                "@type"   : "Work",
+                "hasTitle": [[
+                                     "@type"    : "KeyTitle",
+                                     "mainTitle": "key title",
+                                     "_str"     : "key title"
+                             ], [
+                                     "@type"    : "KeyTitle",
+                                     "mainTitle": "key title 2",
+                                     "_str"     : "key title 2"
+                             ], [
+                                     "@type"    : "Title",
+                                     "mainTitle": "title",
+                                     "_str"     : "title"
+                             ], [
+                                     "@type"    : "VariantTitle",
+                                     "mainTitle": "variant title",
+                                     "_str"     : "variant title"
+                             ]],
+                "_str"    : "title"
+        ]
+    }
+
+    def "isniGroupDigits"() {
         given:
         var thing = [
                 '@type': 'ISNI',
@@ -452,7 +574,7 @@ class FresnelUtilSpec extends Specification {
                 '@type'       : 'Work',
                 'hasTitle'    : [
                         ['@type': 'Title', 'mainTitle': 'Titel'],
-                        ['@type': 'Variant', 'mainTitle': 'variant title']
+                        ['@type': 'VariantTitle', 'mainTitle': 'variant title']
                 ],
                 'language'    : [
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
@@ -464,9 +586,46 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
-        expect:
-        result.asString() == "Titel • Svenska • Namnsson, Namn, 1972-"
+
+        when:
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+
+        then:
+        formatted.asString() == "Titel • Svenska • Namnsson, Namn, 1972-"
+
+        when:
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+
+        then:
+        chip == [
+                "@type"       : "Work",
+                "hasTitle"    : [[
+                                         "@type"    : "Title",
+                                         "mainTitle": "Titel",
+                                         "_str"     : "Titel"
+                                 ], [
+                                         "@type"    : "VariantTitle",
+                                         "mainTitle": "variant title",
+                                         "_str"     : "variant title"
+                                 ]],
+                "language"    : [
+                        "@type"      : "Language",
+                        "labelByLang": [
+                                "en": "Swedish"
+                        ]
+                ],
+                "contribution": [
+                        "@type": "PrimaryContribution",
+                        "agent": [
+                                "@type"     : "Person",
+                                "familyName": "Namnsson",
+                                "givenName" : "Namn",
+                                "lifeSpan"  : "1972-",
+                                "_str"      : "Namn Namnsson"
+                        ]
+                ],
+                "_str"        : "Titel"
+        ]
     }
 
     def "derived lens"() {
@@ -490,15 +649,46 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var cardOnly = new FresnelUtil.DerivedLensGroup(
+        var cardOnly = new FresnelUtil.DerivedLens(
                 FresnelUtil.LensGroupName.Card,
                 [FresnelUtil.LensGroupName.Chip],
                 FresnelUtil.LensGroupName.Token
         )
 
-        var result = fresnel.applyLens(thing, cardOnly)
-        expect:
-        result.asString() == "Överzet Namnsson Namn 1972- Hästar"
+        when:
+        var lensed = fresnel.applyLens(thing, cardOnly)
+
+        then:
+        lensed.asString() == "Överzet Namnsson Namn 1972- Hästar"
+
+        when:
+        var lensedThing = fresnel.getLensedThing(thing, cardOnly)
+
+        then:
+        lensedThing == [
+                "@type"       : "Work",
+                "contribution": [[
+                                         "@type": "Contribution",
+                                         "agent": [
+                                                 "@type": "Person",
+                                                 "name" : "Överzet",
+                                                 "_str" : "Överzet"
+                                         ]
+                                 ], [
+                                         "@type": "PrimaryContribution",
+                                         "agent": [
+                                                 "@type"     : "Person",
+                                                 "familyName": "Namnsson",
+                                                 "givenName" : "Namn",
+                                                 "lifeSpan"  : "1972-",
+                                                 "_str"      : "Namn Namnsson"
+                                         ]
+                                 ]],
+                "subject"     : [
+                        "@type"    : "Topic",
+                        "prefLabel": "Hästar"
+                ]
+        ]
     }
 
     def "take all alternate"() {
@@ -522,11 +712,65 @@ class FresnelUtilSpec extends Specification {
         ]
         var fresnel = new FresnelUtil(ld)
 
-        var result = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Card, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
+        when:
+        var lensed = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Card, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
 
-        expect:
-        result.asString() == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Swedish Svenska Hästar"
+        then:
+        lensed.asString() == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Swedish Svenska Hästar"
+
+        when:
+        var lensedThing = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Card)
+
+        then:
+        lensedThing == [
+                "@type"       : "Work",
+                "hasTitle"    : [[
+                                         "@type"    : "Title",
+                                         "mainTitle": "Titel",
+                                         "_str"     : "Titel"
+                                 ], [
+                                         "@type"    : "VariantTitle",
+                                         "mainTitle": "variant title",
+                                         "_str"     : "variant title"
+                                 ]],
+                "contribution": [[
+                                         "@type": "Contribution",
+                                         "agent": [
+                                                 "@type": "Person",
+                                                 "name" : "Överzet",
+                                                 "_str" : "Överzet"
+                                         ],
+                                         "role" : "translator"
+                                 ], [
+                                         "@type": "PrimaryContribution",
+                                         "agent": [
+                                                 "@type"     : "Person",
+                                                 "familyName": "Namnsson",
+                                                 "givenName" : "Namn",
+                                                 "lifeSpan"  : "1972-",
+                                                 "_str"      : "Namn Namnsson"
+                                         ],
+                                         "role" : "author"
+                                 ]],
+                "language"    : [
+                        "@type"      : "Language",
+                        "labelByLang": [
+                                "en": "Swedish"
+                        ]
+                ],
+                "subject"     : [
+                        "@type"    : "Topic",
+                        "prefLabel": "Hästar"
+                ],
+                "_str"        : "Titel"
+        ]
     }
+
+    static var tt2 = ['@type': 'Title', 'mainTitle': 'Titel', 'subtitle': 'undertitel']
+    static var vt2 = ['@type': 'VariantTitle', 'mainTitleByLang': ['en': 'variant title']]
+    static var mt = ['@type': 'Title', 'mainTitle': 'Titel']
+    static var l = ['@type': 'Language', 'labelByLang': ['en': 'Swedish']]
+    static var l2 = ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish']]
 
     def "Handle FSL path in showProperties"() {
         // https://www.w3.org/2005/04/fresnel-info/fsl/
@@ -585,23 +829,25 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
 
         var lensed = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        var lensedThing = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
 
         expect:
-        lensed.asString() == result
+        lensed.asString() == str
+        lensedThing == asThing
 
         where:
-        fslPath                                    | result
-        "hasTitle"                                 | "Titel undertitel varianttitel variant title Swedish Svenska"
-        "hasTitle/Title/mainTitle"                 | "Titel Swedish Svenska"
-        "hasTitle[Title]"                          | "Titel undertitel Swedish Svenska"
-        "hasTitle[^Title]"                         | "Titel undertitel varianttitel variant title Swedish Svenska"
-        "hasTitle/VariantTitle/mainTitle"          | "varianttitel variant title Swedish Svenska"
-        "hasTitle/*/mainTitle"                     | "Titel varianttitel variant title Swedish Svenska"
-        "language/Language/code"                   | "sv Swedish Svenska"
-        "language/Language/mainTitle"              | "Swedish Svenska"
-        "language/Title/code"                      | "Swedish Svenska"
-        'in::instanceOf/*/responsibilityStatement' | 'av En Författare Swedish Svenska'
-        'in::instanceOf/*/meta/*/controlNumber'    | 'dz7666s5bdksvtls Swedish Svenska'
+        fslPath                                    | str                                                           | asThing
+        "hasTitle"                                 | "Titel undertitel varianttitel variant title Swedish Svenska" | ['@type': 'Work', 'hasTitle': [tt2, vt2], 'language': l]
+        "hasTitle/Title/mainTitle"                 | "Titel Swedish Svenska"                                       | ['@type': 'Work', 'hasTitle': mt, 'language': l]
+        "hasTitle[Title]"                          | "Titel undertitel Swedish Svenska"                            | ['@type': 'Work', 'hasTitle': tt2, 'language': l]
+        "hasTitle[^Title]"                         | "Titel undertitel varianttitel variant title Swedish Svenska" | ['@type': 'Work', 'hasTitle': [tt2, vt2], 'language': l]
+        "hasTitle/VariantTitle/mainTitle"          | "varianttitel variant title Swedish Svenska"                  | ['@type': 'Work', 'hasTitle': vt2, 'language': l]
+        "hasTitle/*/mainTitle"                     | "Titel varianttitel variant title Swedish Svenska"            | ['@type': 'Work', 'hasTitle': [mt, vt2], 'language': l]
+        "language/Language/code"                   | "sv Swedish Svenska"                                          | ['@type': 'Work', 'language': l2]
+        "language/Language/mainTitle"              | "Swedish Svenska"                                             | ['@type': 'Work', 'language': l]
+        "language/Title/code"                      | "Swedish Svenska"                                             | ['@type': 'Work', 'language': l]
+        'in::instanceOf/*/responsibilityStatement' | 'av En Författare Swedish Svenska'                            | ['@type': 'Work', 'language': l, '@reverse': ['instanceOf': ['@type': 'Instance', 'responsibilityStatement': 'av En Författare']]]
+        'in::instanceOf/*/meta/*/controlNumber'    | 'dz7666s5bdksvtls Swedish Svenska'                            | ['@type': 'Work', 'language': l, '@reverse': ['instanceOf': ['@type': 'Instance', 'meta': ['@type': 'Record', 'controlNumber': 'dz7666s5bdksvtls']]]]
     }
 
     def "Handle FSL paths as alternateProperties"() {
@@ -823,7 +1069,7 @@ class FresnelUtilSpec extends Specification {
 
                 ],
                 "lensGroups": [
-                        "chips":
+                        "chips"       :
                                 ["lenses": [
                                         "Instance": [
                                                 "@id"            : "Instance-chips",
@@ -859,7 +1105,7 @@ class FresnelUtilSpec extends Specification {
                                                 "showProperties" : ["hasTitle"]
                                         ],
                                 ]],
-                        "cards":
+                        "cards"       :
                                 ["lenses": [
                                         "Instance": [
                                                 "@id"            : "Instance-cards",
@@ -898,7 +1144,7 @@ class FresnelUtilSpec extends Specification {
                                                         "editionStatement"
                                                 ]
                                         ],
-                                        "Work": [
+                                        "Work"    : [
                                                 "fresnel:extends": ["@id": "Work-cards"],
                                                 "classLensDomain": "Instance",
                                                 "showProperties" : [
@@ -911,13 +1157,13 @@ class FresnelUtilSpec extends Specification {
         ]
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, vocab))
         var work = [
-                '@type'   : 'Work',
-                'hasTitle': [['@type': 'Title', 'mainTitle': 'Verkstitel']],
-                'language': [
+                '@type'     : 'Work',
+                'hasTitle'  : [['@type': 'Title', 'mainTitle': 'Verkstitel']],
+                'language'  : [
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ],
                 'originDate': '2025',
-                '@reverse': [
+                '@reverse'  : [
                         'instanceOf': [
                                 '@type'                  : 'Instance',
                                 'responsibilityStatement': 'av Någon',
@@ -927,6 +1173,8 @@ class FresnelUtilSpec extends Specification {
                         ]
                 ]
         ]
+
+        when:
         var chipStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Chip).asString()
         var cardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card).asString()
         var cardStrAlt = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card, [FresnelUtil.Options.TAKE_ALL_ALTERNATE]).asString()
@@ -935,7 +1183,7 @@ class FresnelUtilSpec extends Specification {
         var searchCardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.SearchCard).asString()
         var searchCardOnlyStr = fresnel.applyLens(work, SEARCH_CARD_ONLY).asString()
 
-        expect:
+        then:
         chipStr == "Verkstitel"
         cardStr == "Verkstitel Swedish Svenska Instanstitel av Någon"
         cardStrAlt == "Verkstitel Swedish Svenska Instanstitel Instanstitel 9789178034239 av Någon"
@@ -943,39 +1191,110 @@ class FresnelUtilSpec extends Specification {
         cardOnlyStrAlt == "Swedish Svenska Instanstitel Instanstitel 9789178034239 av Någon"
         searchCardStr == "Verkstitel Swedish Svenska Instanstitel av Någon upplagan 2025"
         searchCardOnlyStr == "upplagan 2025"
-    }
 
-    def "rebuild from lensed"() {
-        var fresnel = new FresnelUtil(ld)
-        var thing = [
-                "@type"      : "Thing",
-                "notation"   : "NOTATION",
-                "labelByLang": ["sv": "etikett", "en": "label"],
-                "title"      : [
-                        "@type"          : "Title",
-                        "mainTitleByLang": [
-                                "el"                      : "Το νησι των θησαυρων",
-                                "el-Latn-t-el-Grek-x0-btj": "To nisi ton thisavron"]],
-                "note"       : ["NOTE 1", "NOTE 2"]
-        ]
+        when:
+        var chip = fresnel.getLensedThing(work, FresnelUtil.LensGroupName.Chip)
+        var card = fresnel.getLensedThing(work, FresnelUtil.LensGroupName.Card)
+        var searchCard = fresnel.getLensedThing(work, FresnelUtil.LensGroupName.SearchCard)
+        var cardOnly = fresnel.getLensedThing(work, CARD_ONLY)
+        var searchCardOnly = fresnel.getLensedThing(work, SEARCH_CARD_ONLY)
 
-        var result = fresnel.applyLensAndGet(thing, new FresnelUtil.FinalLensGroup(FresnelUtil.LensGroupName.Chip))
-
-        expect:
-        result == [
-            "@type" : "Thing",
-            "notation" : "NOTATION",
-            "labelByLang" : [
-                "en" : "label"
-            ],
-            "note" : [ "NOTE 1", "NOTE 2" ],
-            "title" : [
-                "@type" : "Title",
-                "mainTitleByLang" : [
-                    "el-Latn-t-el-Grek-x0-btj" : "To nisi ton thisavron",
-                    "el" : "Το νησι των θησαυρων"
+        then:
+        chip == [
+                "@type"   : "Work",
+                "hasTitle": [
+                        "@type"    : "Title",
+                        "mainTitle": "Verkstitel"
                 ]
-            ]
+        ]
+        card == [
+                "@type"   : "Work",
+                "hasTitle": [
+                        "@type"    : "Title",
+                        "mainTitle": "Verkstitel"
+                ],
+                "language": [
+                        "@type"      : "Language",
+                        "labelByLang": [
+                                "en": "Swedish"
+                        ]
+                ],
+                "@reverse": [
+                        "instanceOf": [
+                                "@type"                  : "Instance",
+                                "hasTitle"               : [
+                                        "@type"    : "Title",
+                                        "mainTitle": "Instanstitel"
+                                ],
+                                "identifiedBy"           : [
+                                        "@type": "ISBN",
+                                        "value": "9789178034239"
+                                ],
+                                "responsibilityStatement": "av Någon"
+                        ]
+                ]
+        ]
+        searchCard == [
+                "@type"     : "Work",
+                "hasTitle"  : [
+                        "@type"    : "Title",
+                        "mainTitle": "Verkstitel"
+                ],
+                "language"  : [
+                        "@type"      : "Language",
+                        "labelByLang": [
+                                "en": "Swedish"
+                        ]
+                ],
+                "@reverse"  : [
+                        "instanceOf": [
+                                "@type"                  : "Instance",
+                                "hasTitle"               : [
+                                        "@type"    : "Title",
+                                        "mainTitle": "Instanstitel"
+                                ],
+                                "identifiedBy"           : [
+                                        "@type": "ISBN",
+                                        "value": "9789178034239"
+                                ],
+                                "responsibilityStatement": "av Någon",
+                                "editionStatement"       : "upplagan"
+                        ]
+                ],
+                "originDate": "2025"
+        ]
+        cardOnly == [
+                "@type"   : "Work",
+                "language": [
+                        "@type"      : "Language",
+                        "labelByLang": [
+                                "en": "Swedish"
+                        ]
+                ],
+                "@reverse": [
+                        "instanceOf": [
+                                "@type"                  : "Instance",
+                                "hasTitle"               : [
+                                        "@type"    : "Title",
+                                        "mainTitle": "Instanstitel"
+                                ],
+                                "identifiedBy"           : [
+                                        "@type": "ISBN",
+                                        "value": "9789178034239"
+                                ],
+                                "responsibilityStatement": "av Någon"
+                        ]
+                ]
+        ]
+        searchCardOnly == [
+                "@type"     : "Work",
+                "@reverse"  : [
+                        "instanceOf": [
+                                "@type"           : "Instance",
+                                "editionStatement": "upplagan"
+                        ]
+                ],
+                "originDate": "2025"
         ]
     }
 }
