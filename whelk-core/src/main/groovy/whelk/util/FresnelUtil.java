@@ -220,7 +220,7 @@ public class FresnelUtil {
     public List<?> fslSelect(Map<String, Object> thing, String fslSelector) {
         return new FslPath(fslSelector).select(thing)
                 .stream()
-                .map(Node.Selected::getValues)
+                .map(Node.Selected::getFlatValues)
                 .flatMap(List::stream)
                 .toList();
     }
@@ -370,7 +370,7 @@ public class FresnelUtil {
                 var mainEntityId = getUnsafe(n.thing, THING_KEY, Map.of()).get(ID_KEY);
                 if (mainEntityId != null) {
                     // Always keep mainEntity link
-                    lensedThing.put(THING_KEY, Map.of(ID_KEY, mainEntityId));
+                    lensedThing.put(THING_KEY, new HashMap<>(Map.of(ID_KEY, mainEntityId)));
                 }
             }
 
@@ -517,16 +517,15 @@ public class FresnelUtil {
 
     public sealed class Node extends Lensed permits IntermediateNode, LanguageContainer {
         record Selected(PropertyKey pKey, List<?> values) {
-            // TODO: Naming
-            List<Object> getValues() {
-                return getValues(values);
+            List<Object> getFlatValues() {
+                return getFlatValues(values);
             }
 
-            private List<Object> getValues(Object v) {
+            private List<Object> getFlatValues(Object v) {
                 return switch (v) {
-                    case Collection<?> c -> c.stream().flatMap(o -> getValues(o).stream()).toList();
-                    case IntermediateNode in -> getValues(in.selected());
-                    case Selected s -> getValues(s.values());
+                    case Collection<?> c -> c.stream().flatMap(o -> getFlatValues(o).stream()).toList();
+                    case IntermediateNode in -> getFlatValues(in.selected());
+                    case Selected s -> getFlatValues(s.values());
                     // TODO: LanguageContainer?
                     default -> List.of(v);
                 };
@@ -574,7 +573,7 @@ public class FresnelUtil {
                     for (var m : mergeProperties.merge()) {
                         n.select(thing, m, options);
                     }
-                    var values = n.orderedSelection.stream().map(Selected::values).flatMap(FresnelUtil::asStream).toList();
+                    var values = n.orderedSelection.stream().map(Selected::getFlatValues).flatMap(FresnelUtil::asStream).toList();
                     if (!values.isEmpty()) {
                         this.orderedSelection.add(new Selected(mergeProperties.use(), values));
                     }
@@ -894,7 +893,7 @@ public class FresnelUtil {
 
         @Override
         public boolean isEmpty() {
-            return orderedSelection.stream().allMatch(s -> s.getValues().isEmpty());
+            return orderedSelection.stream().allMatch(s -> s.getFlatValues().isEmpty());
         }
     }
 
