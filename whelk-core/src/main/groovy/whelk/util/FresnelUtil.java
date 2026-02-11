@@ -323,10 +323,17 @@ public class FresnelUtil {
         }
 
         private Map<String, Object> getThing(Lensed lensed) {
-            return switch (lensed) {
+            Map<String, Object> thing = switch (lensed) {
                 case Node n -> merge(getShared(n));
                 case TransliteratedNode t -> merge(t.transliterations.values());
             };
+            if (thing.containsKey(TYPE_KEY)) {
+                var _str = buildSearchStr(thing);
+                if (!_str.isEmpty()) {
+                    thing.put(JsonLd.SEARCH_KEY, unwrapSingle(_str));
+                }
+            }
+            return thing;
         }
 
         // FIXME: Naming, explain
@@ -365,12 +372,6 @@ public class FresnelUtil {
 //            if (!preserveLinks.isEmpty()) {
 //                restoreLinks(lensedThing, thing, preserveLinks);
 //            }
-            if (n.type != null) {
-                var _str = buildSearchStr(lensedThing);
-                if (!_str.isEmpty()) {
-                    lensedThing.put(JsonLd.SEARCH_KEY, _str.size() == 1 ? _str.iterator().next() : _str);
-                }
-            }
 
             // Redundant
             lensedThing.remove(Rdfs.RDF_TYPE);
@@ -416,18 +417,18 @@ public class FresnelUtil {
             });
         }
 
-        private Collection<String> buildSearchStr(Map<String, Object> thing) {
+        private List<String> buildSearchStr(Map<String, Object> thing) {
             var lensedForSearchStr = applyLens(thing, searchKeyLens, List.of(NO_FALLBACK));
             if (lensedForSearchStr.isEmpty()) {
                 return List.of();
             }
             var byLang = lensedForSearchStr.byLang();
             if (!byLang.isEmpty()) {
-                return byLang.values();
+                return new ArrayList<>(byLang.values());
             }
             var byScript = lensedForSearchStr.byScript();
             if (!byScript.isEmpty()) {
-                return byScript.values();
+                return new ArrayList<>(byScript.values());
             }
             var asString = lensedForSearchStr.asString();
             if (!asString.isEmpty()) {
