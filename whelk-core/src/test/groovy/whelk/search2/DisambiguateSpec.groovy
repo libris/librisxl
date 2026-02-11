@@ -35,6 +35,7 @@ class DisambiguateSpec extends Specification {
         'p'                 | new Property('p', jsonLd)
         'pLabel'            | new Property('p2', jsonLd)
         'pp'                | new Key.AmbiguousKey(new Token.Raw('pp'))
+        'ctx.p'             | new Property('ctxProp', jsonLd)
         'p3.p4'             | new Path(List.of(new Property('p3', jsonLd), new Property('p4', jsonLd)))
     }
 
