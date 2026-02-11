@@ -125,6 +125,12 @@ for (item in items) {
         if (source.oaipmhSetSpecs) {
             extraData = [oaipmhSetSpecs: source.remove('oaipmhSetSpecs')]
         }
+
+        if (cmd == "pre-convert") {
+            System.err.println(cmd.toUpperCase() + ':')
+            converter.conversion.marcRuleSets['bib'].postProcSteps = []
+        }
+
         result = converter.runConvert(source, sourceId, extraData)
         if (converter.linkFinder) {
             var doc = new Document(result)
