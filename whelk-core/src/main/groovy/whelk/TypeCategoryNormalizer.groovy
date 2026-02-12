@@ -24,6 +24,7 @@ class TypeCategoryNormalizer {
     Map<String, String> typeToCategory
 
     Map<String, Map<String, Object>> categories
+    Map<String, String> sameAsMap
     Map preferredCategory
     Map categoryMatches
 
@@ -118,13 +119,20 @@ class TypeCategoryNormalizer {
         typeToCategory = makeTypeToCategoryMapping()
         preferredCategory = new TreeMap()
         categoryMatches = new TreeMap()
+        sameAsMap = new HashMap()
 
         var sourceSchemes = [SCHEMES.marc, SCHEMES.tgm, SCHEMES.saogf, SCHEMES.barngf]
         var targetSchemes = [SCHEMES.kbrda, SCHEMES.saogf, SCHEMES.ktg, SCHEMES.saobf]
         var broaderSchemes = [SCHEMES.saogf, SCHEMES.barngf, SCHEMES.kbrda, SCHEMES.tgm, SCHEMES.ktg, SCHEMES.saobf]
 
         for (ctg in categories.values()) {
+
             String id = ctg[ID]
+
+            for (same in asList(ctg['sameAs'])) {
+                sameAsMap[same[ID]] = id
+            }
+
             String scheme = ctg.inScheme?[ID]
             if (!scheme) {
                 scheme = id.split('/[^/]+$')[0]
@@ -170,21 +178,52 @@ class TypeCategoryNormalizer {
 
     List reduceSymbols(List symbols) {
         symbols = symbols.stream()
-                .map(x -> x.containsKey(ID) && preferredCategory.containsKey(x[ID]) ? [(ID): preferredCategory[x[ID]]] : x)
+                .map(x -> x.containsKey(ID)
+                        ? [(ID): sameAsMap.getOrDefault(x[ID], x[ID])]
+                        : x)
+                .map(x -> x.containsKey(ID) && preferredCategory.containsKey(x[ID])
+                            ? [(ID): preferredCategory[x[ID]]]
+                            : x
+                )
                 .collect(Collectors.toList())
 
-        Set mostSpecific = symbols.stream()
-                .filter(x -> !(symbols.stream().anyMatch(y -> x[ID] != y[ID] && isImpliedBy(x, y))))
-                .collect(Collectors.toSet())
+        var mostSpecific = [:]
+        var blanks = []
+        for (Map x : symbols) {
+            if (ID !in x) {
+                blanks << x
+                continue
+            }
+            String xId = x[ID]
+            var implied = false
+            for (Map y : symbols) {
+                if (ID !in y) continue
+                String yId = y[ID]
+                if (xId != yId && isImpliedBy(xId, yId)) {
+                    implied = true
+                    break
+                }
+            }
+            if (!implied) {
+                mostSpecific[x[ID]] = x
+            }
+        }
 
-        return mostSpecific.toList()
+        return mostSpecific.values().toList() + blanks
     }
 
-    // Any kind of broad/matches base...
-    boolean isImpliedBy(Object x, Object y, Set visited = new HashSet()) {
-        String xId = x instanceof Map ? x[ID] : x
-        String yId = y instanceof Map ? y[ID] : y
+    // y is, or is related to, x via any kind of broader/broad|close-match..
+    boolean isImpliedBy(Object x, Object y) {
+        String xId = x instanceof Map ? x[ID] : x.toString()
+        String yId = y instanceof Map ? y[ID] : y.toString()
+        return isImpliedById(xId, yId)
+    }
 
+    boolean isImpliedById(String xId, String yId) {
+        return isImpliedByRecursive(xId, yId, new HashSet())
+    }
+
+    boolean isImpliedByRecursive(String xId, String yId, Set visited) {
         if (xId == null || yId == null) {
           return false
         }
@@ -198,7 +237,7 @@ class TypeCategoryNormalizer {
         List bases = categoryMatches[yId]
         for (var base in bases) {
             if (base !in visited) {
-              if (isImpliedBy(xId, base, visited + new HashSet())) {
+              if (isImpliedByRecursive(xId, base, visited + new HashSet())) {
                   return true
               }
             }
