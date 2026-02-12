@@ -776,24 +776,7 @@ public class Crud extends WhelkHttpServlet {
                     
                     log.info("If-Match: {}", ifMatch);
 
-                    // Type normalization
-                    // Support writing the old form of the data for ~1yr
-
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> thing = (Map<String, Object>) doc.getThing();
-
-                    if (thing.containsKey(JsonLd.WORK_KEY)) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> work = (Map<String, Object>) thing.get(JsonLd.WORK_KEY);
-                        if (work.size() == 1 && work.containsKey(JsonLd.ID_KEY)) {
-                            String id = (String) work.get(JsonLd.ID_KEY);
-                            var linkedWork = whelk.getStorage().getDocumentByIri(id);
-                            typeNormalizer.normalize(thing, linkedWork.getThing());
-                        } else { // Local work
-                            typeNormalizer.normalize(thing, work);
-                        }
-                    }
-
+                    this.normalizeBibTypes(doc);
                     whelk.storeAtomicUpdate(doc, false, true, "xl", activeSigel, ifMatch.documentCheckSum());
                 }
                 else {
@@ -820,6 +803,27 @@ public class Crud extends WhelkHttpServlet {
             }
         }
         return null;
+    }
+
+    /**
+     * Type normalization
+     * Support writing the legacy data format for ~one year.
+     */
+    private void normalizeBibTypes(Document doc) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> thing = (Map<String, Object>) doc.getThing();
+
+        if (thing.containsKey(JsonLd.WORK_KEY)) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> work = (Map<String, Object>) thing.get(JsonLd.WORK_KEY);
+            if (work.size() == 1 && work.containsKey(JsonLd.ID_KEY)) {
+                String id = (String) work.get(JsonLd.ID_KEY);
+                var linkedWork = whelk.getStorage().getDocumentByIri(id);
+                typeNormalizer.normalize(thing, linkedWork.getThing());
+            } else { // Local work
+                typeNormalizer.normalize(thing, work);
+            }
+        }
     }
 
     public static void sendCreateResponse(HttpServletResponse response, String locationRef, ETag eTag) {
