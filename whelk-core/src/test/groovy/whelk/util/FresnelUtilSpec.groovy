@@ -3,8 +3,8 @@ package whelk.util
 import spock.lang.Specification
 import whelk.JsonLd
 
-import static whelk.component.ElasticSearch.Lenses.CARD_ONLY
-import static whelk.component.ElasticSearch.Lenses.SEARCH_CARD_ONLY
+import static whelk.component.ElasticSearch.DerivedLenses.CARD_ONLY
+import static whelk.component.ElasticSearch.DerivedLenses.SEARCH_CARD_ONLY
 
 // TODO test resourceStyle, propertyStyle, valueStyle
 // TODO test card, full
@@ -193,7 +193,20 @@ class FresnelUtilSpec extends Specification {
                                             "@id"            : "Title-chips",
                                             "@type"          : "fresnel:Lens",
                                             "classLensDomain": "Title",
-                                            "showProperties" : ["mainTitle", "title", "subtitle", "titleRemainder", "partNumber", "partName", ["fresnel:property": "hasPart", "fresnel:subLens": ["@id": "TitlePart-chips"]]]
+                                            "showProperties" : [
+                                                    "mainTitle",
+                                                    "title",
+                                                    "subtitle",
+                                                    "titleRemainder",
+                                                    "partNumber",
+                                                    "partName",
+                                                    [
+                                                            "fresnel:property": "hasPart",
+                                                            "fresnel:subLens": [
+                                                                    "showProperties" : ["partNumber", "partName"]
+                                                            ]
+                                                    ]
+                                            ]
                                     ],
                                     "TitlePart"   : [
                                             "@id"            : "TitlePart-chips",
@@ -300,14 +313,14 @@ class FresnelUtilSpec extends Specification {
         ]
 
         when:
-        var lensed = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        var lensed = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
         var formatted = fresnel.format(lensed, new FresnelUtil.LangCode('sv'))
 
         then:
         formatted.asString() == "NOTATION • etikett • NOTE 1, NOTE 2 • Το νησι των θησαυρων ’To nisi ton thisavron’"
 
         when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip == [
@@ -347,13 +360,13 @@ class FresnelUtilSpec extends Specification {
         ]
 
         when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
 
         then:
         formatted.asString() == "Heliogabalus, 203-222, romersk kejsare"
 
         when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip == [
@@ -383,13 +396,13 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
 
         then:
         formatted.asString() == "Teater-biblioteket • N:o 15 • En friare i lifsfara : skämt med sång i en akt"
 
         when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip == [
@@ -418,13 +431,13 @@ class FresnelUtilSpec extends Specification {
         ]
 
         when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
 
         then:
         formatted.asString() == "Νεφέλαι : Λυσιστράτη ’Nephelai : Lysistratē’"
 
         when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip == [
@@ -452,13 +465,13 @@ class FresnelUtilSpec extends Specification {
         ]
 
         when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
 
         then:
         formatted.asString() == "⁧تالشی زَوُن⁩ ’talysj’"
 
         when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip == [
@@ -475,8 +488,8 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
-        fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip) == thing
+        fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN) == thing
 
         where:
         thing                                                  | locale | result
@@ -490,8 +503,8 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
-        fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip) == thing
+        fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN) == thing
 
         where:
         thing                                        | locale | result
@@ -510,7 +523,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode(locale)).asString() == result
+        fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode(locale)).asString() == result
 
         where:
         thing                                        | locale | result
@@ -528,7 +541,7 @@ class FresnelUtilSpec extends Specification {
         given:
         var fresnel = new FresnelUtil(ld)
         var thing = ['@type': 'Work', 'hasTitle': [tt, kt, kt2, vt]]
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         expect:
         chip == [
@@ -562,7 +575,7 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
 
         expect:
         result.asString() == "ISNI 0000 0001 0340 7488"
@@ -588,13 +601,13 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip), new FresnelUtil.LangCode('sv'))
+        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
 
         then:
         formatted.asString() == "Titel • Svenska • Namnsson, Namn, 1972-"
 
         when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip == [
@@ -649,10 +662,10 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var cardOnly = new FresnelUtil.DerivedLens(
-                FresnelUtil.LensGroupName.Card,
-                [FresnelUtil.LensGroupName.Chip],
-                FresnelUtil.LensGroupName.Token
+        var cardOnly = new FresnelUtil.Lens(
+                FresnelUtil.CARD_CHAIN,
+                FresnelUtil.Lenses.TOKEN,
+                List.of(FresnelUtil.CHIP_CHAIN)
         )
 
         when:
@@ -713,13 +726,13 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
 
         when:
-        var lensed = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Card, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
+        var lensed = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
 
         then:
         lensed.asString() == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Swedish Svenska Hästar"
 
         when:
-        var lensedThing = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Card)
+        var lensedThing = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN)
 
         then:
         lensedThing == [
@@ -828,8 +841,8 @@ class FresnelUtilSpec extends Specification {
         ]
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
 
-        var lensed = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
-        var lensedThing = fresnel.getLensedThing(thing, FresnelUtil.LensGroupName.Chip)
+        var lensed = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var lensedThing = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         expect:
         lensed.asString() == str
@@ -882,8 +895,8 @@ class FresnelUtilSpec extends Specification {
         ]
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
 
-        var takeFirst = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
-        var takeAllAlternate = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
+        var takeFirst = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var takeAllAlternate = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
 
         expect:
         takeFirst.asString() == takeFirstRes
@@ -907,7 +920,7 @@ class FresnelUtilSpec extends Specification {
                 ]
         ]
         var fresnel = new FresnelUtil(ld)
-        var chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        var chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         expect:
         chip.byLang() == res
@@ -935,7 +948,7 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip.byScript() == [:]
@@ -948,7 +961,7 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip.byScript() == ['grc': 'Νεφέλαι Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Swedish Svenska']
@@ -961,7 +974,7 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip.byScript() == ['grc': 'Νεφέλαι subtitle Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai subtitle Swedish Svenska']
@@ -976,7 +989,7 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Swedish Svenska']
@@ -991,7 +1004,7 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        chip = fresnel.applyLens(thing, FresnelUtil.LensGroupName.Chip)
+        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         then:
         chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Swedish Svenska']
@@ -1011,7 +1024,7 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, [FresnelUtil.Options.NO_FALLBACK])
+        searchToken = fresnel.applyLens(thing, FresnelUtil.Lenses.SEARCH_TOKEN, [FresnelUtil.Options.NO_FALLBACK])
 
         then:
         searchToken.asString() == "Titel"
@@ -1023,7 +1036,7 @@ class FresnelUtilSpec extends Specification {
                 'familyName': 'Namnsson',
                 'lifeSpan'  : '1990-'
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, [FresnelUtil.Options.NO_FALLBACK])
+        searchToken = fresnel.applyLens(thing, FresnelUtil.Lenses.SEARCH_TOKEN, [FresnelUtil.Options.NO_FALLBACK])
 
         then:
         searchToken.asString() == "Namn Namnsson"
@@ -1033,7 +1046,7 @@ class FresnelUtilSpec extends Specification {
                 '@type'    : 'Topic',
                 'prefLabel': 'Hästar'
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken, [FresnelUtil.Options.NO_FALLBACK])
+        searchToken = fresnel.applyLens(thing, FresnelUtil.Lenses.SEARCH_TOKEN, [FresnelUtil.Options.NO_FALLBACK])
 
         then:
         searchToken.asString() == ""
@@ -1043,7 +1056,7 @@ class FresnelUtilSpec extends Specification {
                 '@type'    : 'Topic',
                 'prefLabel': 'Hästar'
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.LensGroupName.SearchToken)
+        searchToken = fresnel.applyLens(thing, FresnelUtil.Lenses.SEARCH_TOKEN)
 
         then:
         searchToken.asString() == "Hästar"
@@ -1175,12 +1188,12 @@ class FresnelUtilSpec extends Specification {
         ]
 
         when:
-        var chipStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Chip).asString()
-        var cardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card).asString()
-        var cardStrAlt = fresnel.applyLens(work, FresnelUtil.LensGroupName.Card, [FresnelUtil.Options.TAKE_ALL_ALTERNATE]).asString()
+        var chipStr = fresnel.applyLens(work, FresnelUtil.NestedLenses.CHIP_TO_TOKEN).asString()
+        var cardStr = fresnel.applyLens(work, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN).asString()
+        var cardStrAlt = fresnel.applyLens(work, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN, [FresnelUtil.Options.TAKE_ALL_ALTERNATE]).asString()
         var cardOnlyStr = fresnel.applyLens(work, CARD_ONLY).asString()
         var cardOnlyStrAlt = fresnel.applyLens(work, CARD_ONLY, [FresnelUtil.Options.TAKE_ALL_ALTERNATE]).asString()
-        var searchCardStr = fresnel.applyLens(work, FresnelUtil.LensGroupName.SearchCard).asString()
+        var searchCardStr = fresnel.applyLens(work, FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP).asString()
         var searchCardOnlyStr = fresnel.applyLens(work, SEARCH_CARD_ONLY).asString()
 
         then:
@@ -1193,9 +1206,9 @@ class FresnelUtilSpec extends Specification {
         searchCardOnlyStr == "upplagan 2025"
 
         when:
-        var chip = fresnel.getLensedThing(work, FresnelUtil.LensGroupName.Chip)
-        var card = fresnel.getLensedThing(work, FresnelUtil.LensGroupName.Card)
-        var searchCard = fresnel.getLensedThing(work, FresnelUtil.LensGroupName.SearchCard)
+        var chip = fresnel.getLensedThing(work, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var card = fresnel.getLensedThing(work, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN)
+        var searchCard = fresnel.getLensedThing(work, FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP)
         var cardOnly = fresnel.getLensedThing(work, CARD_ONLY)
         var searchCardOnly = fresnel.getLensedThing(work, SEARCH_CARD_ONLY)
 
