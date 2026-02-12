@@ -54,7 +54,7 @@ public class Crud extends WhelkHttpServlet {
     public static final RestMetrics metrics = new RestMetrics();
 
     private JsonLdValidator validator;
-    private BibTypeNormalizer typeNormalizer;
+    private BibTypeNormalizer typeNormalizer = null;
     private TargetVocabMapper targetVocabMapper;
 
     private AccessControl accessControl = new AccessControl();
@@ -78,8 +78,13 @@ public class Crud extends WhelkHttpServlet {
     public void init(Whelk whelk) {
         siteSearch = new SiteSearch(whelk);
         validator = JsonLdValidator.from(whelk.getJsonld());
-        typeNormalizer = new BibTypeNormalizer(whelk.getResourceCache());
         converterUtils = new ConverterUtils(whelk);
+
+        try {
+            typeNormalizer = new BibTypeNormalizer(whelk.getResourceCache());
+        } catch (AssertionError | Exception e) {
+            log.error("BibTypeNormalizer failed to initialize: ${e.message}", e);
+        }
 
         cacheFetchedResource(whelk.getSystemContextUri());
         cacheFetchedResource(whelk.getVocabUri());
@@ -646,7 +651,7 @@ public class Crud extends WhelkHttpServlet {
         // try store document
         // return 201 or error
         boolean isUpdate = false;
-        Document savedDoc = saveDocument(newDoc, request, isUpdate);
+        Document savedDoc = saveDocument(newDoc, request, response, isUpdate);
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                     ETag.plain(savedDoc.getChecksum(whelk.getJsonld())));
@@ -730,7 +735,7 @@ public class Crud extends WhelkHttpServlet {
         }
         
         boolean isUpdate = true;
-        Document savedDoc = saveDocument(updatedDoc, request, isUpdate);
+        Document savedDoc = saveDocument(updatedDoc, request, response, isUpdate);
         if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
                     ETag.plain(savedDoc.getChecksum(whelk.getJsonld())));
@@ -757,7 +762,7 @@ public class Crud extends WhelkHttpServlet {
         }
     }
 
-    public Document saveDocument(Document doc, HttpServletRequest request, boolean isUpdate) {
+    public Document saveDocument(Document doc, HttpServletRequest request, HttpServletResponse response, boolean isUpdate) {
         try {
             if (doc != null) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER);
@@ -776,7 +781,7 @@ public class Crud extends WhelkHttpServlet {
                     
                     log.info("If-Match: {}", ifMatch);
 
-                    this.normalizeBibTypes(doc);
+                    this.normalizeBibTypes(doc, response);
                     whelk.storeAtomicUpdate(doc, false, true, "xl", activeSigel, ifMatch.documentCheckSum());
                 }
                 else {
@@ -809,7 +814,9 @@ public class Crud extends WhelkHttpServlet {
      * Type normalization
      * Support writing the legacy data format for ~one year.
      */
-    private void normalizeBibTypes(Document doc) {
+    private void normalizeBibTypes(Document doc, HttpServletResponse response) {
+        this.checkNormalizerState(response);
+
         @SuppressWarnings("unchecked")
         Map<String, Object> thing = (Map<String, Object>) doc.getThing();
 
@@ -822,6 +829,17 @@ public class Crud extends WhelkHttpServlet {
                 typeNormalizer.normalize(thing, linkedWork.getThing());
             } else { // Local work
                 typeNormalizer.normalize(thing, work);
+            }
+        }
+    }
+
+    private void checkNormalizerState(HttpServletResponse response) {
+        if (this.typeNormalizer == null) {
+            try {
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            } catch (IOException e) {
+                log.error("IOException during query: {}", e.toString(), e);
+                throw new WhelkRuntimeException("IOException during query.", e);
             }
         }
     }
