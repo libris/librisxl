@@ -80,6 +80,7 @@ public class Crud extends WhelkHttpServlet {
         validator = JsonLdValidator.from(whelk.getJsonld());
         converterUtils = new ConverterUtils(whelk);
 
+        //TODO: Not needed if asserts are moved from normalizer?
         try {
             typeNormalizer = new BibTypeNormalizer(whelk.getResourceCache());
         } catch (AssertionError | Exception e) {
@@ -781,6 +782,7 @@ public class Crud extends WhelkHttpServlet {
                     
                     log.info("If-Match: {}", ifMatch);
 
+                    //TODO: Check isLegacyType in method to be exposed in the normalizer
                     if (this.isLegacyType(doc)) {
                         this.normalizeBibTypes(doc);
                     }
@@ -842,8 +844,7 @@ public class Crud extends WhelkHttpServlet {
     }
 
     private boolean isLegacyType(Document doc) {
-//        return this.whelk.getJsonld().isCategoryPending(doc.getThingType());
-        return true;
+        return this.whelk.getJsonld().isCategoryPending(doc.getThingType());
     }
 
     public static void sendCreateResponse(HttpServletResponse response, String locationRef, ETag eTag) {
