@@ -757,7 +757,7 @@ class ElasticSearch {
             def (record, thing) = graph
             thing[RECORD_KEY] = record
             def lens = integralIds.contains(thing[ID_KEY])
-                    ? FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP
+                    ? FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP // Or just SEARCH_CARD?
                     : FresnelUtil.Lenses.SEARCH_CHIP
             def shrunkThing = fresnelUtil.getLensedThing(thing, lens)
             def shrunkRecord = minimalRecord((Map) record) + ((Map) shrunkThing.remove(RECORD_KEY) ?: [:])

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
@@ -59,8 +60,8 @@ public class FresnelUtil {
 
     public static final LensGroupChain CARD_CHAIN = new LensGroupChain(List.of(CARDS));
     public static final LensGroupChain CHIP_CHAIN = new LensGroupChain(List.of(CHIPS));
-    public static final LensGroupChain SEARCH_CARD_CHAIN = new LensGroupChain(List.of(SEARCH_CARDS, CARDS, SEARCH_CHIPS, CHIPS));
-    public static final LensGroupChain SEARCH_CHIP_CHAIN = new LensGroupChain(List.of(SEARCH_CHIPS, CHIPS));
+    public static final LensGroupChain SEARCH_CARD_CHAIN = new LensGroupChain(List.of(SEARCH_CARDS, CARDS, SEARCH_CHIPS, CHIPS, TOKENS));
+    public static final LensGroupChain SEARCH_CHIP_CHAIN = new LensGroupChain(List.of(SEARCH_CHIPS, CHIPS, TOKENS));
     public static final LensGroupChain SEARCH_TOKEN_CHAIN = new LensGroupChain(SEARCH_TOKENS);
     public static final LensGroupChain TOKEN_CHAIN = new LensGroupChain(List.of(TOKENS, CHIPS));
 
@@ -929,7 +930,10 @@ public class FresnelUtil {
                 var group = (Map<?, ?>) getUnsafe(jsonLd.displayData, "lensGroups", Map.of()).get(lensGroupName);
                 var lensDefinition = asMap(jsonLd.getLensFor(thing, group));
                 if (!lensDefinition.isEmpty()) {
-                    return new ShowPropertyParser().parse(lensDefinition);
+                    // FIXME
+                    if (!"Resource".equals(lensDefinition.get("classLensDomain")) && !"StructuredValue".equals(lensDefinition.get("classLensDomain"))) {
+                        return new ShowPropertyParser().parse(lensDefinition);
+                    }
                 }
             }
             return List.of();
