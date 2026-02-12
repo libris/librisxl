@@ -227,6 +227,9 @@ class CrudSpec extends Specification {
             '/' + id
         }
         request.getMethod() >> "GET"
+        request.getRequestURL() >> {
+            return new StringBuffer(id)
+        }
         storage.load(_, _) >> {
             return null
         }
@@ -252,6 +255,9 @@ class CrudSpec extends Specification {
             "*/*"
         }
         request.getMethod() >> "GET"
+        request.getRequestURL() >> {
+            return new StringBuffer(altId)
+        }
         storage.load(_, _) >> {
             return null
         }
@@ -324,6 +330,9 @@ class CrudSpec extends Specification {
             return 'version=1'
         }
         request.getMethod() >> "GET"
+        request.getRequestURL() >> {
+            return new StringBuffer(id)
+        }
         storage.load(_, _, _) >> {
             return null
         }

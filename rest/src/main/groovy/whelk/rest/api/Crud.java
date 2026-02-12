@@ -177,6 +177,16 @@ public class Crud extends WhelkHttpServlet {
         String loc = docAndLocation.getV2();
 
         if (doc == null && loc == null) {
+            // We don't have this. Perhaps we used to, and it is now archived?
+            String requestUrl = request.getHttpServletRequest().getRequestURL().toString();
+            int endIndex = requestUrl.indexOf("/data"); // We need to filter out /data.jsonld, /data.ttl etc.
+            if (endIndex != -1)
+                requestUrl = requestUrl.substring(0, endIndex);
+            if (whelk.getStorage().isArchivedIri( requestUrl )) {
+                throw new OtherStatusException("Document has been deleted.", HttpServletResponse.SC_GONE);
+            }
+
+            // guess not
             sendNotFound(request.getHttpServletRequest(), response);
         } else if (doc == null && loc != null) {
             if (request.getView() == CrudGetRequest.View.DATA) {
