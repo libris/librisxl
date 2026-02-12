@@ -651,7 +651,7 @@ public class Crud extends WhelkHttpServlet {
         // try store document
         // return 201 or error
         boolean isUpdate = false;
-        Document savedDoc = saveDocument(newDoc, request, response, isUpdate);
+        Document savedDoc = saveDocument(newDoc, request, isUpdate);
         if (savedDoc != null) {
             sendCreateResponse(response, savedDoc.getURI().toString(),
                     ETag.plain(savedDoc.getChecksum(whelk.getJsonld())));
@@ -735,7 +735,7 @@ public class Crud extends WhelkHttpServlet {
         }
         
         boolean isUpdate = true;
-        Document savedDoc = saveDocument(updatedDoc, request, response, isUpdate);
+        Document savedDoc = saveDocument(updatedDoc, request, isUpdate);
         if (savedDoc != null) {
             sendUpdateResponse(response, savedDoc.getURI().toString(),
                     ETag.plain(savedDoc.getChecksum(whelk.getJsonld())));
@@ -762,7 +762,7 @@ public class Crud extends WhelkHttpServlet {
         }
     }
 
-    public Document saveDocument(Document doc, HttpServletRequest request, HttpServletResponse response, boolean isUpdate) {
+    public Document saveDocument(Document doc, HttpServletRequest request, boolean isUpdate) {
         try {
             if (doc != null) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER);
@@ -781,7 +781,9 @@ public class Crud extends WhelkHttpServlet {
                     
                     log.info("If-Match: {}", ifMatch);
 
-                    this.normalizeBibTypes(doc, response);
+                    if (this.isLegacyType(doc)) {
+                        this.normalizeBibTypes(doc);
+                    }
                     whelk.storeAtomicUpdate(doc, false, true, "xl", activeSigel, ifMatch.documentCheckSum());
                 }
                 else {
@@ -814,8 +816,8 @@ public class Crud extends WhelkHttpServlet {
      * Type normalization
      * Support writing the legacy data format for ~one year.
      */
-    private void normalizeBibTypes(Document doc, HttpServletResponse response) {
-        this.checkNormalizerState(response);
+    private void normalizeBibTypes(Document doc) {
+        this.checkNormalizerState();
 
         @SuppressWarnings("unchecked")
         Map<String, Object> thing = (Map<String, Object>) doc.getThing();
@@ -833,15 +835,15 @@ public class Crud extends WhelkHttpServlet {
         }
     }
 
-    private void checkNormalizerState(HttpServletResponse response) {
+    private void checkNormalizerState() {
         if (this.typeNormalizer == null) {
-            try {
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            } catch (IOException e) {
-                log.error("IOException during query: {}", e.toString(), e);
-                throw new WhelkRuntimeException("IOException during query.", e);
-            }
+            throw new WhelkRuntimeException("Cannot save document, type normalizer is in a bad state.");
         }
+    }
+
+    private boolean isLegacyType(Document doc) {
+//        return this.whelk.getJsonld().isCategoryPending(doc.getThingType());
+        return true;
     }
 
     public static void sendCreateResponse(HttpServletResponse response, String locationRef, ETag eTag) {
