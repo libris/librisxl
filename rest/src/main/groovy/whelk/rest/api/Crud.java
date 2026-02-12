@@ -10,6 +10,7 @@ import whelk.JsonLd;
 import whelk.JsonLdValidator;
 import whelk.TargetVocabMapper;
 import whelk.Whelk;
+import whelk.converter.BibTypeNormalizer;
 import whelk.exception.ElasticIOException;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.UnexpectedHttpStatusException;
@@ -53,6 +54,7 @@ public class Crud extends WhelkHttpServlet {
     public static final RestMetrics metrics = new RestMetrics();
 
     private JsonLdValidator validator;
+    private BibTypeNormalizer typeNormalizer;
     private TargetVocabMapper targetVocabMapper;
 
     private AccessControl accessControl = new AccessControl();
@@ -76,6 +78,7 @@ public class Crud extends WhelkHttpServlet {
     public void init(Whelk whelk) {
         siteSearch = new SiteSearch(whelk);
         validator = JsonLdValidator.from(whelk.getJsonld());
+        typeNormalizer = new BibTypeNormalizer(whelk.getResourceCache());
         converterUtils = new ConverterUtils(whelk);
 
         cacheFetchedResource(whelk.getSystemContextUri());
@@ -772,6 +775,25 @@ public class Crud extends WhelkHttpServlet {
                             .orElseThrow(() -> new BadRequestException("Missing If-Match header in update"));
                     
                     log.info("If-Match: {}", ifMatch);
+
+                    // Type normalization
+                    // Support writing the old form of the data for ~1yr
+
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> thing = (Map<String, Object>) doc.getThing();
+
+                    if (thing.containsKey(JsonLd.WORK_KEY)) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> work = (Map<String, Object>) thing.get(JsonLd.WORK_KEY);
+                        if (work.size() == 1 && work.containsKey(JsonLd.ID_KEY)) {
+                            String id = (String) work.get(JsonLd.ID_KEY);
+                            var linkedWork = whelk.getStorage().getDocumentByIri(id);
+                            typeNormalizer.normalize(thing, linkedWork.getThing());
+                        } else { // Local work
+                            typeNormalizer.normalize(thing, work);
+                        }
+                    }
+
                     whelk.storeAtomicUpdate(doc, false, true, "xl", activeSigel, ifMatch.documentCheckSum());
                 }
                 else {
