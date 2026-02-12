@@ -14,8 +14,6 @@ import whelk.exception.InvalidQueryException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.DocumentUtil
 import whelk.util.FresnelUtil
-import whelk.util.FresnelUtil.DerivedLens
-import whelk.util.FresnelUtil.GlobalLens
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -66,17 +64,17 @@ class ElasticSearch {
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
 
-    private static final class Lenses {
-        public static final DerivedLens CARD_ONLY = new DerivedLens(
-                FresnelUtil.LensGroupName.Card,
-                List.of(FresnelUtil.LensGroupName.Chip),
-                FresnelUtil.LensGroupName.SearchChip
+    private static final class DerivedLenses {
+        public static final FresnelUtil.Lens CARD_ONLY = new FresnelUtil.Lens(
+                FresnelUtil.CARD_CHAIN,
+                FresnelUtil.Lenses.SEARCH_CHIP,
+                List.of(FresnelUtil.CHIP_CHAIN)
         )
 
-        public static final DerivedLens SEARCH_CARD_ONLY = new DerivedLens(
-                FresnelUtil.LensGroupName.SearchCard,
-                List.of(FresnelUtil.LensGroupName.Chip, FresnelUtil.LensGroupName.Card),
-                FresnelUtil.LensGroupName.SearchChip
+        public static final FresnelUtil.Lens SEARCH_CARD_ONLY = new FresnelUtil.Lens(
+                new FresnelUtil.LensGroupChain(FresnelUtil.SEARCH_CARDS),
+                FresnelUtil.Lenses.SEARCH_CHIP,
+                List.of(FresnelUtil.CHIP_CHAIN, FresnelUtil.CARD_CHAIN)
         )
     }
 
@@ -500,16 +498,16 @@ class ElasticSearch {
 
 
         try {
-            var topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.SearchToken, List.of(NO_FALLBACK));
+            var topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.Lenses.SEARCH_TOKEN, List.of(NO_FALLBACK));
             var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values() // The values follow the key order in whelk.jsonld.locales (see subMap method implementation)
                     ?: topLens.byScript().values()
                     ?: topLens.asString()
             if (topStr) {
                 searchCard[TOP_STR] = topStr
             }
-            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.LensGroupName.Chip, List.of(TAKE_ALL_ALTERNATE)).asString()
-            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, Lenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
-            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, Lenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
         } catch (Exception e) {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
@@ -602,10 +600,7 @@ class ElasticSearch {
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
         var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
 
-        def mainGraphLens = new GlobalLens(FresnelUtil.LensGroupName.SearchCard);
-
-        // TODO: Vad blir effekten av TAKE_ALL_ALTERNATE?
-        copy.data[GRAPH_KEY] = embellishedGraph.take(originalGraphSize).collect { whelk.fresnelUtil.applyLensAndGet(it, mainGraphLens, links) }
+        copy.data[GRAPH_KEY] = embellishedGraph.take(originalGraphSize).collect { whelk.fresnelUtil.getLensedThing(it, FresnelUtil.Lenses.SEARCH_CARD, links) }
 
         def integralIds = collectIntegralIds(copy.data, whelk.jsonld)
 
@@ -659,9 +654,9 @@ class ElasticSearch {
         }
 
         try {
-            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.LensGroupName.Chip, List.of(TAKE_ALL_ALTERNATE)).asString()
-            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, Lenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
-            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, Lenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
         } catch (Exception e) {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
@@ -761,10 +756,10 @@ class ElasticSearch {
         if (graph) {
             def (record, thing) = graph
             thing[RECORD_KEY] = record
-            def searchCardThenSearchChip = new FresnelUtil.NestedLens(FresnelUtil.LensGroupName.SearchCard)
-            def searchChipThroughout = new FresnelUtil.GlobalLens(FresnelUtil.LensGroupName.SearchChip)
-            def lensGroup = integralIds.contains(thing[ID_KEY]) ? searchCardThenSearchChip : searchChipThroughout
-            def shrunkThing = fresnelUtil.applyLensAndGet(thing, lensGroup)
+            def lens = integralIds.contains(thing[ID_KEY])
+                    ? FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP
+                    : FresnelUtil.Lenses.SEARCH_CHIP
+            def shrunkThing = fresnelUtil.getLensedThing(thing, lens)
             def shrunkRecord = minimalRecord((Map) record) + ((Map) shrunkThing.remove(RECORD_KEY) ?: [:])
             embellishData[GRAPH_KEY] = [shrunkRecord, shrunkThing]
         }
@@ -876,7 +871,7 @@ class ElasticSearch {
     }
 
     /**
-     * @return ISNIs with with four groups of four digits separated by space
+     * @return ISNIs with with four chain of four digits separated by space
      */
     static Collection<String> getFormattedIsnis(Collection<String> isnis) {
         isnis.findAll{ it.size() == 16 }.collect { Unicode.formatIsni(it) }

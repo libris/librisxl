@@ -432,7 +432,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 
     private Map<?, ?> toXsearchJson(Map<?, ?> item) {
         Function<Object, String> format = (Object o) -> whelk.getFresnelUtil().format(
-                whelk.getFresnelUtil().applyLens(o, FresnelUtil.LensGroupName.Chip),
+                whelk.getFresnelUtil().applyLens(o, FresnelUtil.NestedLenses.CHIP_TO_TOKEN),
                 new FresnelUtil.LangCode("sv")
         ).asString();
 
