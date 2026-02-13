@@ -37,7 +37,7 @@ System.err.println inDataFileName
 System.err.println outDataFileName
 System.err.println workDataFileName
 
-Closure normalizeTypes = script("${System.properties['typenormalization'] ?: 'algorithm'}.groovy")
+Closure normalizeTypes = script("${System.properties['typenormalization'] ?: 'simple-types-algorithm'}.groovy")
 
 Map workItems = [:]
 

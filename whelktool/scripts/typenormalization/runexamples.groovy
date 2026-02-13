@@ -1,4 +1,4 @@
-Closure normalizeTypes = script("${System.properties['typenormalization'] ?: 'algorithm'}.groovy")
+Closure normalizeTypes = script("${System.properties['typenormalization'] ?: 'simple-types-algorithm'}.groovy")
 
 var loadWorkItem = { String workId, Closure process ->
   selectByIds([workId], process)
