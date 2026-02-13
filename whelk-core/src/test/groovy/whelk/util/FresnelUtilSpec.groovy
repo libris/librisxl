@@ -372,6 +372,7 @@ class FresnelUtilSpec extends Specification {
         chip == [
                 "@id"                                        : "https://libris-qa.kb.se/khw03jc347kgv4w#it",
                 "@type"                                      : "Person",
+                'sameAs'                                     : [['@id': 'http://libris.kb.se/resource/auth/281943']],
                 "name"                                       : "Heliogabalus",
                 "lifeSpan"                                   : "203-222",
                 "marc:titlesAndOtherWordsAssociatedWithAName": "romersk kejsare",
