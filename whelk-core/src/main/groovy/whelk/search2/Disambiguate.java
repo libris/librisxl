@@ -106,14 +106,17 @@ public class Disambiguate {
     private Selector _mapQueryKey(Token token) {
         var s = mapSingleKey(token);
 
-        if (s instanceof Key.UnrecognizedKey && token.value().contains(".")) {
-            List<PathElement> path = new ArrayList<>();
-            int currentOffset = token.offset();
-            for (String key : token.value().split("\\.")) {
-                path.add(mapSingleKey(new Token.Raw(key, currentOffset)));
-                currentOffset += key.length() + 1;
+        if (s instanceof Key.UnrecognizedKey) {
+            boolean isPath = token.value().matches("^[^.]+(\\.[^.]+)+$");
+            if (isPath) {
+                List<PathElement> path = new ArrayList<>();
+                int currentOffset = token.offset();
+                for (String key : token.value().split("\\.")) {
+                    path.add(mapSingleKey(new Token.Raw(key, currentOffset)));
+                    currentOffset += key.length() + 1;
+                }
+                return new Path(path, token);
             }
-            return new Path(path, token);
         }
 
         return s;
