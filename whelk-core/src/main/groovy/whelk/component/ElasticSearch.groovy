@@ -611,7 +611,7 @@ class ElasticSearch {
             copy.centerOnVirtualMainEntity()
         }
         copy.setThingMeta(document.getCompleteId())
-        List<String> thingIds = document.getThingIdentifiers()
+        List<String> thingIds = copy.getThingIdentifiers()
         if (thingIds.isEmpty()) {
             log.warn("Missing mainEntity? In: " + document.getCompleteId())
             return copy.data

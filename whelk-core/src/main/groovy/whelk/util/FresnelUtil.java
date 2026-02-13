@@ -320,16 +320,35 @@ public class FresnelUtil {
         }
 
         public Map<String, Object> getThing() {
-            return getThing(lensed);
+            return buildThing(lensed);
         }
 
-        private Map<String, Object> getThing(Lensed lensed) {
+        private Map<String, Object> buildThing(Lensed lensed) {
             List<Node> nodes = getRelatedNodes(lensed);
 
-            Map<String, Object> lensedThing = merge(nodes);
+            Map<String, Object> origThing = nodes.getFirst().thing;
+
+            Map<String, Object> lensedThing = new LinkedHashMap<>();
+
+            if (origThing.containsKey(ID_KEY)) {
+                lensedThing.put(ID_KEY, origThing.get(ID_KEY));
+            }
+            if (origThing.containsKey(TYPE_KEY)) {
+                // Always keep type
+                lensedThing.put(TYPE_KEY, origThing.get(TYPE_KEY));
+            }
+            if (origThing.containsKey(THING_KEY)) {
+                // Always keep mainEntity link
+                lensedThing.put(THING_KEY, unwrapSingle(getIds(origThing, THING_KEY)));
+            }
+            if (origThing.containsKey(JSONLD_ALT_ID_KEY)) {
+                // Always keep sameAs links (is this necessary?)
+                lensedThing.put(JSONLD_ALT_ID_KEY, getIds(origThing, JSONLD_ALT_ID_KEY));
+            }
+
+            lensedThing.putAll(merge(nodes));
 
             if (!preserveLinks.isEmpty()) {
-                Map<String, Object> origThing = nodes.getFirst().thing;
                 restoreLinksWithTmpIds(lensedThing, origThing, preserveLinks);
             }
 
@@ -339,6 +358,10 @@ public class FresnelUtil {
                     lensedThing.put(JsonLd.SEARCH_KEY, unwrapSingle(_str));
                 }
             }
+
+            // Redundant
+            lensedThing.remove(Rdfs.RDF_TYPE);
+
             return lensedThing;
         }
 
@@ -357,45 +380,17 @@ public class FresnelUtil {
         private Map<String, Object> merge(Collection<Node> nodes) {
             Map<String, Object> mergedThing = new LinkedHashMap<>();
             for (Node n : nodes) {
-                buildThing(n).forEach((k, v) -> insert(mergedThing, k, v));
+                if (n instanceof LanguageContainer l) {
+                    mergedThing.putAll(l.filteredLangMap(fallbackLocales));
+                }
+                n.orderedSelection.forEach(s -> insert(mergedThing, s));
             }
             return mergedThing;
         }
 
-        private Map<String, Object> buildThing(Node n) {
-            if (n instanceof LanguageContainer l) {
-                return l.filteredLangMap(fallbackLocales);
-            }
-
-            Map<String, Object> lensedThing = new LinkedHashMap<>();
-
-            if (n.id != null) {
-                lensedThing.put(ID_KEY, n.id);
-            }
-            if (n.thing.containsKey(TYPE_KEY)) {
-                // Always keep type
-                lensedThing.put(TYPE_KEY, n.thing.get(TYPE_KEY));
-            }
-            if (RECORD_TYPE.equals(n.type)) {
-                // Always keep mainEntity link
-                lensedThing.put(THING_KEY, getIds(n.thing, THING_KEY));
-            }
-            if (n.thing.containsKey(JSONLD_ALT_ID_KEY)) {
-                // Always keep sameAs links (is this necessary?)
-                lensedThing.put(JSONLD_ALT_ID_KEY, getIds(n.thing, JSONLD_ALT_ID_KEY));
-            }
-
-            n.orderedSelection.forEach(s -> insert(lensedThing, s));
-
-            // Redundant
-            lensedThing.remove(Rdfs.RDF_TYPE);
-
-            return lensedThing;
-        }
-
         private void insert(Map<String, Object> thing, Node.Selected s) {
             for (var value : s.values()) {
-                var v = value instanceof Lensed l ? getThing(l) : value;
+                var v = value instanceof Lensed l ? buildThing(l) : value;
                 if (s.pKey() instanceof InversePropertyKey ipk) {
                     insert(asMap(thing.computeIfAbsent(REVERSE_KEY, k -> new HashMap<>())), ipk.inverseOf(), v);
                 } else if (s.pKey().hasLangAlias()) {
@@ -450,15 +445,15 @@ public class FresnelUtil {
             return List.of();
         }
 
-        private static Object getIds(Map<String, Object> thing, String key) {
-            var ids = new ArrayList<>();
+        private static List<Map<String, String>> getIds(Map<String, Object> thing, String key) {
+            List<Map<String, String>> ids = new ArrayList<>();
             for (var o : asList(thing.get(key))) {
-                var id = ((Map<?, ?>) o).get(ID_KEY);
+                var id = (String) ((Map<?, ?>) o).get(ID_KEY);
                 if (id != null) {
                     ids.add(new HashMap<>(Map.of(ID_KEY, id)));
                 }
             }
-            return unwrapSingle(ids);
+            return ids;
         }
 
         private String getTmpId(Node n) {
