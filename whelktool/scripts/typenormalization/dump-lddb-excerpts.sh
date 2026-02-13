@@ -9,6 +9,9 @@ PGSQL_USER=$2
 BASEDIR=$3
 
 ## Option A) Pick Specific Examples By IDs
+# IMPORTANT: use:
+#   XLIDS=$(./xlids-from-examples.sh representative-examples.txt),$(./xlids-from-examples.sh examples.txt)
+# to get values from our example lists.
 XLIDS="'p3n5x5g0m8jq33c4', 'dwpmt3dq02c3ldm', 'cwp2z0np1lc7ql3', 'k2vqr29w3zgcqrw', 'vd6mrs8650wpjz8', 'w77j9j1nts7lbpb0', 'wf7hs3v745v37c7', 'wd6339675g3dqdr', 'jsr018hfgnw8vwnj', '2ldlr5qd26w1zpd', 'gzrc3q9s59ftgdk'"
 BASENAME=stg-lddb-selection1
 

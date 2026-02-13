@@ -5,7 +5,7 @@ set -euo pipefail
 BASEPATH=$1
 BASE_URI=$2
 
-# Replace XL IDs but don't overwrite e.g. librarry IRIs from prod:
+# Replace XL IDs but don't overwrite e.g. library IRIs from prod:
 RM_XL_ID="s!https://libris(-\w+)?\.kb\.se/(\w{13,})!$BASE_URI\2!g"
 
 # 1. Create *self-described* dataset-filea (with relative id:s)
