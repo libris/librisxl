@@ -138,9 +138,7 @@ task integTest(type: Test) {
     outputs.upToDateWhen { false }
     testClassesDirs = sourceSets.integTest.output.classesDirs
     classpath = sourceSets.integTest.runtimeClasspath
-    systemProperties(
-        'xl.secret.properties': System.getProperty("xl.secret.properties")
-    )
+    System.properties.each { k, v -> if (k.startsWith('xl.')) systemProperty(k, v) }
     testLogging {
         showStandardStreams = true
         exceptionFormat = "full"
@@ -177,9 +175,7 @@ task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
     description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'whelk.converter.marc.MarcFrameCli'
-    System.properties.each { k, v ->
-      if (k.startsWith('xl.')) systemProperty(k, v)
-    }
+    System.properties.each { k, v -> if (k.startsWith('xl.')) systemProperty(k, v) }
     args(System.getProperty('args', "").split() as String[])
 }
 
@@ -193,17 +189,13 @@ task dataview(dependsOn: 'classes', type: JavaExec) {
     description "View JSON-LD data (USAGE: -Dargs='<card|chip|embellish|index> <source>')"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'whelk.util.DataViewCli'
-    systemProperties(
-        'xl.secret.properties': System.getProperty("xl.secret.properties")
-    )
+    System.properties.each { k, v -> if (k.startsWith('xl.')) systemProperty(k, v) }
     args(System.getProperty('args', "").split() as String[])
 }
 
 task testRelations(dependsOn: 'classes', type: JavaExec) {
     classpath = sourceSets.integTest.runtimeClasspath
     mainClass = 'Relations'
-    systemProperties(
-            'xl.secret.properties': System.getProperty("xl.secret.properties")
-    )
+    System.properties.each { k, v -> if (k.startsWith('xl.')) systemProperty(k, v) }
     args(System.getProperty('args', "").split() as String[])
 }
