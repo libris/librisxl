@@ -104,8 +104,8 @@ for r in data:
 
 	# Verkstyp ManuscriptNotatedMusic blir RDA NotatedMusic och SAOGF Handskrifter
 	elif id == "https://libris-qa.kb.se/test/manuscriptnotatedmusic":
-		assert work_category == [{"@id":"https://id.kb.se/term/rda/NotatedMusic"},{"@id":"https://id.kb.se/term/saogf/Handskrifter",
-		}], entity
+		work_categories = {c["@id"] for c in entity["instanceOf"]["category"]}
+		assert work_categories == {"https://id.kb.se/term/rda/NotatedMusic", "https://id.kb.se/term/saogf/Handskrifter"}, entity
 
 	# Verkstyp MixedMaterial blir ktg MixedMaterial
 	elif id == "https://libris-qa.kb.se/test/mixedmaterial":
