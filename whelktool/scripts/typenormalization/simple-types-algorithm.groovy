@@ -59,7 +59,7 @@ process { def doc, Closure loadWorkItem ->
                 loadWorkItem(loadedWorkId) { workIt ->
                     def (workRecord, work) = workIt.graph
 
-                    var changed = normalizeAndCheck(typeNormalizer, mainEntity, work)
+                    var changed = normalizeAndCheck(typeNormalizer, mainEntity, work, missingCategoryLog)
 
                     if (changed) {
                         doc.scheduleSave()
