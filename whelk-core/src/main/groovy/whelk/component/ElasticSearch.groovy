@@ -620,6 +620,8 @@ class ElasticSearch {
 
         Map searchCard = JsonLd.frame(thingId, copy.data)
 
+        FresnelUtil.restoreTmpLinks(searchCard)
+
         searchCard['_links'] = links
         searchCard['_outerEmbellishments'] = copy.getEmbellishments() - links
 
@@ -679,11 +681,6 @@ class ElasticSearch {
             }
 
             if (value instanceof Map) {
-                // Replace temporary _id keys with the formal @id key
-                if (value.containsKey('_id')) {
-                    return new DocumentUtil.Replace([(ID_KEY): value.get('_id')])
-                }
-
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
                 // -->
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
