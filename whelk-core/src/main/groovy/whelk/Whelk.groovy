@@ -607,6 +607,9 @@ class Whelk {
         } else if (document.getThingType() == 'Item') {
             e.setEmbellishLevels(['cards'])
             e.setFollowInverse(false)
+        } else if (document.getThingIdentifiers().contains(jsonld.getVocabId())) {
+            e.setEmbellishLevels(['chips'])
+            e.setFollowInverse(false)
         }
 
         if (features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
