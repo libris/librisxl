@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
@@ -28,6 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
+import static whelk.JsonLd.JSONLD_ALT_ID_KEY;
 import static whelk.JsonLd.RECORD_TYPE;
 import static whelk.JsonLd.REVERSE_KEY;
 import static whelk.JsonLd.THING_KEY;
@@ -162,7 +162,7 @@ public class FresnelUtil {
     private final Map<DerivedLensCacheKey, List<ShowProperty>> derivedLensCache = new ConcurrentHashMap<>();
     private final Map<LensCacheKey, List<ShowProperty>> lensCache = new ConcurrentHashMap<>();
 
-    private static final String TMP_ID = "_id";
+    private static final String TMP_ID_KEY = "_tmpId";
 
     public FresnelUtil(JsonLd jsonLd) {
         this.jsonLd = jsonLd;
@@ -223,6 +223,15 @@ public class FresnelUtil {
                 .map(Node.Selected::getFlatValues)
                 .flatMap(List::stream)
                 .toList();
+    }
+
+    public static void restoreTmpLinks(Map<?, ?> thing) {
+        DocumentUtil.traverse(thing, (value, path) -> {
+            if (value instanceof Map<?, ?> m && m.containsKey(TMP_ID_KEY)) {
+                return new DocumentUtil.Replace(new HashMap<>(Map.of(ID_KEY, m.get(TMP_ID_KEY))));
+            }
+            return new DocumentUtil.Nop();
+        });
     }
 
     private Object applyLens(
@@ -302,8 +311,6 @@ public class FresnelUtil {
         Lensed lensed;
         Map<String, List<Node>> nodeTmpIdMap;
 
-        Map<String, Object> thing;
-
         private static final Lens searchKeyLens = Lenses.SEARCH_TOKEN;
 
         private AppliedLens(Object thing, Lens lens, Collection<String> preserveLinks, Collection<Options> options) {
@@ -313,33 +320,38 @@ public class FresnelUtil {
         }
 
         public Map<String, Object> getThing() {
-            if (thing == null) {
-                this.thing = getThing(lensed);
-            }
-            return thing;
-        }
-
-        public void restoreLinks() {
-            // TODO
+            return getThing(lensed);
         }
 
         private Map<String, Object> getThing(Lensed lensed) {
-            Map<String, Object> thing = switch (lensed) {
-                case Node n -> merge(getShared(n));
-                case TransliteratedNode t -> merge(t.transliterations.values());
-            };
-            if (thing.containsKey(TYPE_KEY)) {
-                var _str = buildSearchStr(thing);
+            List<Node> nodes = getRelatedNodes(lensed);
+
+            Map<String, Object> lensedThing = merge(nodes);
+
+            if (!preserveLinks.isEmpty()) {
+                Map<String, Object> origThing = nodes.getFirst().thing;
+                restoreLinksWithTmpIds(lensedThing, origThing, preserveLinks);
+            }
+
+            if (lensedThing.containsKey(TYPE_KEY)) {
+                var _str = buildSearchStr(lensedThing);
                 if (!_str.isEmpty()) {
-                    thing.put(JsonLd.SEARCH_KEY, unwrapSingle(_str));
+                    lensedThing.put(JsonLd.SEARCH_KEY, unwrapSingle(_str));
                 }
             }
-            return thing;
+            return lensedThing;
         }
 
         // FIXME: Naming, explain
-        private List<Node> getShared(Node n) {
-            return nodeTmpIdMap.getOrDefault(getTmpId(n), List.of());
+        private List<Node> getRelatedNodes(Lensed l) {
+            return switch (l) {
+                case Node n -> nodeTmpIdMap.getOrDefault(getTmpId(n), List.of());
+                case TransliteratedNode t -> t.transliterations.values()
+                        .stream()
+                        .findFirst()
+                        .map(this::getRelatedNodes)
+                        .orElse(List.of());
+            };
         }
 
         private Map<String, Object> merge(Collection<Node> nodes) {
@@ -361,20 +373,19 @@ public class FresnelUtil {
                 lensedThing.put(ID_KEY, n.id);
             }
             if (n.thing.containsKey(TYPE_KEY)) {
+                // Always keep type
                 lensedThing.put(TYPE_KEY, n.thing.get(TYPE_KEY));
             }
             if (RECORD_TYPE.equals(n.type)) {
-                var mainEntityId = getUnsafe(n.thing, THING_KEY, Map.of()).get(ID_KEY);
-                if (mainEntityId != null) {
-                    // Always keep mainEntity link
-                    lensedThing.put(THING_KEY, new HashMap<>(Map.of(ID_KEY, mainEntityId)));
-                }
+                // Always keep mainEntity link
+                lensedThing.put(THING_KEY, getIds(n.thing, THING_KEY));
+            }
+            if (n.thing.containsKey(JSONLD_ALT_ID_KEY)) {
+                // Always keep sameAs links (is this necessary?)
+                lensedThing.put(JSONLD_ALT_ID_KEY, getIds(n.thing, JSONLD_ALT_ID_KEY));
             }
 
             n.orderedSelection.forEach(s -> insert(lensedThing, s));
-//            if (!preserveLinks.isEmpty()) {
-//                restoreLinks(lensedThing, thing, preserveLinks);
-//            }
 
             // Redundant
             lensedThing.remove(Rdfs.RDF_TYPE);
@@ -400,21 +411,20 @@ public class FresnelUtil {
             thing.put(key, unwrapSingle(uniqueValues));
         }
 
-        private static void restoreLinks(Map<String, Object> lensedThing, Map<?, ?> originalThing, Collection<String> preserveLinks) {
+        private static void restoreLinksWithTmpIds(Map<String, Object> lensedThing, Map<String, Object> originalThing, Collection<String> preserveLinks) {
             originalThing.forEach((k, v) -> {
-                var key = (String) k;
-                if (!lensedThing.containsKey(key)) {
+                if (!lensedThing.containsKey(k)) {
                     Object links = JsonLd.retainLinks(v, preserveLinks);
                     if (!ObjectUtils.isEmpty(links)) {
-                        DocumentUtil.traverse(List.of(links), (value, path) -> {
+                        List<?> tmpList = new ArrayList<>(List.of(links));
+                        DocumentUtil.traverse(tmpList, (value, path) -> {
                             if (value instanceof Map<?, ?> m && JsonLd.isLink(m)) {
                                 // Use a temporary ID key so these links are skipped during framing
-                                lensedThing.put(key, Map.of("_id", m.get(ID_KEY)));
-                                return new DocumentUtil.Replace(Map.of("_id", m.get(ID_KEY)));
+                                return new DocumentUtil.Replace(new HashMap<>(Map.of(TMP_ID_KEY, m.get(ID_KEY))));
                             }
                             return new DocumentUtil.Nop();
                         });
-                        lensedThing.put(key, links);
+                        lensedThing.put(k, tmpList.getFirst());
                     }
                 }
             });
@@ -440,8 +450,19 @@ public class FresnelUtil {
             return List.of();
         }
 
+        private static Object getIds(Map<String, Object> thing, String key) {
+            var ids = new ArrayList<>();
+            for (var o : asList(thing.get(key))) {
+                var id = ((Map<?, ?>) o).get(ID_KEY);
+                if (id != null) {
+                    ids.add(new HashMap<>(Map.of(ID_KEY, id)));
+                }
+            }
+            return unwrapSingle(ids);
+        }
+
         private String getTmpId(Node n) {
-            return (String) n.thing.get(TMP_ID);
+            return (String) n.thing.get(TMP_ID_KEY);
         }
 
         private Map<String, List<Node>> buildNodeTmpIdMap(Lensed lensed) {
@@ -455,8 +476,8 @@ public class FresnelUtil {
                 case Collection<?> c -> c.forEach(elem -> populateNodeIdMap(map, elem));
                 case TransliteratedNode t -> t.transliterations.values().forEach(elem -> populateNodeIdMap(map, elem));
                 case Node n -> {
-                    if (n.thing.containsKey(TMP_ID)) {
-                        map.computeIfAbsent((String) n.thing.get(TMP_ID), k -> new ArrayList<>()).add(n);
+                    if (n.thing.containsKey(TMP_ID_KEY)) {
+                        map.computeIfAbsent((String) n.thing.get(TMP_ID_KEY), k -> new ArrayList<>()).add(n);
                     }
                     n.orderedSelection.forEach(s -> populateNodeIdMap(map, s.values()));
                 }
@@ -471,7 +492,7 @@ public class FresnelUtil {
             DocumentUtil.traverse(copy, (value, path) -> {
                 if (value instanceof Map<?, ?>) {
                     Map<String, Object> m = asMap(value);
-                    m.put("_id", Integer.toString(i.addAndGet(1)));
+                    m.put(TMP_ID_KEY, Integer.toString(i.addAndGet(1)));
                 }
                 return new DocumentUtil.Nop();
             });
@@ -810,7 +831,7 @@ public class FresnelUtil {
         public List<LangCode> languages() {
             return selectedLang != null
                     ? List.of(selectedLang)
-                    : thing.keySet().stream().filter(Predicate.not(TMP_ID::equals)).map(LangCode::new).toList();
+                    : thing.keySet().stream().filter(Predicate.not(TMP_ID_KEY::equals)).map(LangCode::new).toList();
         }
 
         public List<String> get(LangCode langCode) {
