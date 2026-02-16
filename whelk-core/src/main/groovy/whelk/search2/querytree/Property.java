@@ -42,6 +42,7 @@ public non-sealed class Property extends PathElement {
     protected List<String> domain;
     protected List<String> range;
     protected String inverseOf;
+    protected String langAlias;
     protected boolean isVocabTerm;
 
     protected Property superProperty;
@@ -58,6 +59,7 @@ public non-sealed class Property extends PathElement {
     public Property(String name, JsonLd jsonLd) {
         this(jsonLd.vocabIndex.get(name), jsonLd);
         this.name = name;
+        this.langAlias =(String) jsonLd.langContainerAlias.get(name);
         this.isVocabTerm = jsonLd.isVocabTerm(name);
     }
 
@@ -116,7 +118,7 @@ public non-sealed class Property extends PathElement {
 
     @Override
     public String esField() {
-        return indexKey != null ? indexKey : substitutions.getOrDefault(name, name);
+        return indexKey != null ? indexKey : (hasLangAlias() ? "__" + name : substitutions.getOrDefault(name, name));
     }
 
     @Override
@@ -365,6 +367,10 @@ public non-sealed class Property extends PathElement {
     private boolean isPlatformTerm() {
         // FIXME: don't hardcode
         return isCategory("https://id.kb.se/vocab/platform", definition);
+    }
+
+    private boolean hasLangAlias() {
+        return langAlias != null;
     }
 
     private static boolean isComposite(Map<String, Object> definition) {
