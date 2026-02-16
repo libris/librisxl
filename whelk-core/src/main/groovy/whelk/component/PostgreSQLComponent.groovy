@@ -218,6 +218,13 @@ class PostgreSQLComponent {
               AND deleted = false
             """.stripIndent()
 
+    private static final String LOAD_ALL_DOCUMENTS_BY_TYPE = """
+            SELECT id, data, created, modified, deleted
+            FROM lddb 
+            WHERE data #>> '{@graph,1,@type}' = ? 
+              AND deleted = false
+            """.stripIndent()
+
     private static final String STATUS_OF_DOCUMENT = """
             SELECT t1.id AS id, created, modified, deleted 
             FROM lddb t1 
@@ -737,7 +744,7 @@ class PostgreSQLComponent {
              */
             try {
                 connection.setAutoCommit(false)
-                normalizeDocumentForStorage(doc, connection)
+                normalizeDocumentForStorage(doc)
 
                 if (collection == "hold") {
                     checkLinkedShelfMarkOwnership(doc, connection)
@@ -988,7 +995,7 @@ class PostgreSQLComponent {
             if (changedBy == null || minorUpdate)
                 changedBy = oldChangedBy
 
-            normalizeDocumentForStorage(doc, connection)
+            normalizeDocumentForStorage(doc)
 
             if (!writeIdenticalVersions && preUpdateDoc.getChecksum(jsonld).equals(doc.getChecksum(jsonld))) {
                 throw new CancelUpdateException()
@@ -2597,10 +2604,16 @@ class PostgreSQLComponent {
         }
     }
 
-    private void normalizeDocumentForStorage(Document doc, Connection connection) {
-        // Synthetic properties, should never be stored
-        DocumentUtil.findKey(doc.data, [JsonLd.REVERSE_KEY, JsonLd.Platform.COMPUTED_LABEL] ) { value, path ->
-            new DocumentUtil.Remove()
+    private void normalizeDocumentForStorage(Document doc) {
+        var syntheticPropsNeverStore = [
+                JsonLd.REVERSE_KEY,
+                JsonLd.Platform.COMPUTED_LABEL,
+                JsonLd.Platform.CATEGORY_BY_COLLECTION,
+        ]
+        DocumentUtil.findKey(doc.data, syntheticPropsNeverStore) { value, path ->
+            if (path.first() != JsonLd.CONTEXT_KEY) {
+                new DocumentUtil.Remove()
+            }
         }
 
         if (linkFinder != null) {
@@ -2677,6 +2690,53 @@ class PostgreSQLComponent {
                 }
 
                 ResultSet rs = loadAllStatement.executeQuery()
+
+                boolean more = rs.next()
+                if (!more) {
+                    try {
+                        connection.commit()
+                        connection.setAutoCommit(true)
+                    } finally {
+                        connection.close()
+                    }
+                }
+
+                return new Iterator<Document>() {
+                    @Override
+                    Document next() {
+                        Document doc
+                        doc = assembleDocument(rs)
+                        more = rs.next()
+                        if (!more) {
+                            try {
+                                connection.commit()
+                                connection.setAutoCommit(true)
+                            } finally {
+                                connection.close()
+                            }
+                        }
+                        return doc
+                    }
+
+                    @Override
+                    boolean hasNext() {
+                        return more
+                    }
+                }
+            }
+        }
+    }
+
+    Iterable<Document> loadAllByType(String type) {
+        return new Iterable<Document>() {
+            Iterator<Document> iterator() {
+                Connection connection = getOuterConnection()
+                connection.setAutoCommit(false)
+                PreparedStatement statement = connection.prepareStatement(LOAD_ALL_DOCUMENTS_BY_TYPE)
+                statement.setFetchSize(100)
+                statement.setString(1, type)
+
+                ResultSet rs = statement.executeQuery()
 
                 boolean more = rs.next()
                 if (!more) {

@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.search2.QueryUtil.matchAny;
 import static whelk.util.Jackson.mapper;
 
 public class ESSettings {
@@ -174,7 +175,7 @@ public class ESSettings {
                     return Map.of();
                 }
                 return Map.of("function_score",
-                        Map.of("query", matchAllClause(),
+                        Map.of("query", matchAny(),
                                 "functions", functions.stream().map(ScoreFunction::toEs).toList(),
                                 "score_mode", "sum",
                                 "boost_mode", "sum"));
@@ -212,7 +213,7 @@ public class ESSettings {
                 var queries = constants.stream().map(Constant::toEs).collect(Collectors.toList());
                 // Since the constant clauses are only for scoring, and we don't actually require any of the filters to match,
                 // include a match_all clause to make sure that the overall query never fails due to all constant queries failing.
-                queries.add(matchAllClause());
+                queries.add(matchAny());
                 return QueryUtil.shouldWrap(queries);
             }
 
@@ -223,10 +224,6 @@ public class ESSettings {
                         .toList();
                 return new ConstantScore(constants);
             }
-        }
-
-        private static Map<String, Object> matchAllClause() {
-            return Map.of("match_all", Map.of());
         }
 
         private static Stream<?> getAsStream(Map<?, ?> m, String k) {

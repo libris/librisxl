@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.search2.Query.NESTED_AGG_NAME;
+import static whelk.search2.Query.REVERSE_NESTED_AGG_NAME;
 import static whelk.search2.QueryParams.ApiParams.PREDICATES;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.util.DocumentUtil.getAtPath;
@@ -31,10 +32,11 @@ public class QueryResult {
     public record Aggregation(String property, String path, List<Bucket> buckets) {
     }
 
-    public record Bucket(String value, int count) {
+    public record Bucket(String value, int count, List<Aggregation> subAggregations) {
     }
 
     public final int numHits;
+
     public final List<Aggregation> aggs;
     public final List<Bucket> pAggs;
     public final List<Spell.Suggestion> spell;
@@ -43,13 +45,13 @@ public class QueryResult {
     private final List<String> debug;
 
     public QueryResult(Map<?, ?> esResponse, List<String> debug) {
-        Map<String, Object> mainQueryResponse = getMainResponse(esResponse);
+        Map<String, Object> response = normalizeResponse(esResponse);
         this.debug = debug;
-        this.numHits = getNumHits(mainQueryResponse);
-        this.esItems = collectEsItems(mainQueryResponse);
-        this.aggs = collectAggResult(getAggregations(mainQueryResponse));
-        this.spell = Spell.collectSuggestions(mainQueryResponse);
-        this.pAggs = collectPAggResult(getPAggregations(mainQueryResponse, getSecondaryResponse(esResponse)));
+        this.numHits = getNumHits(response);
+        this.esItems = collectEsItems(response);
+        this.aggs = collectAggResult(getAggregations(response));
+        this.spell = Spell.collectSuggestions(response);
+        this.pAggs = collectPAggResult(getPAggregations(response));
     }
 
     public List<Map<String, Object>> collectItems(Function<Map<String, Object>, Map<String, Object>> applyLens) {
@@ -82,7 +84,7 @@ public class QueryResult {
         return ((Map<?, ?>) aggs.getOrDefault("buckets", Map.of()))
                 .entrySet()
                 .stream()
-                .map(e -> new Bucket((String) e.getKey(), (int) ((Map<?, ?>) e.getValue()).get("doc_count")))
+                .map(e -> new Bucket((String) e.getKey(), (int) ((Map<?, ?>) e.getValue()).get("doc_count"), null))
                 .toList();
     }
 
@@ -92,9 +94,6 @@ public class QueryResult {
         for (var e : aggsMap.entrySet()) {
             var path = e.getKey();
             var aggs = (Map<?, ?>) e.getValue();
-            if (path.equals(QueryParams.ApiParams.PREDICATES)) {
-                continue;
-            }
             var property = aggs
                     .keySet()
                     .stream()
@@ -112,37 +111,44 @@ public class QueryResult {
 
             var buckets = ((List<?>) agg.get("buckets")).stream()
                     .map(Map.class::cast)
-                    .map(b -> new Bucket(String.valueOf(b.get("key")), (Integer) b.get("doc_count")))
+                    .map(b -> b.containsKey(REVERSE_NESTED_AGG_NAME)
+                                ? new Bucket(
+                                        String.valueOf(b.get("key")),
+                                        (Integer) castToStringObjectMap(b.get(REVERSE_NESTED_AGG_NAME)).get("doc_count"),
+                                        null)
+                                : new Bucket(
+                                        String.valueOf(b.get("key")),
+                                        (Integer) b.get("doc_count"),
+                                        subAggs(b))
+                            )
                     .toList();
-
             aggregations.add(new Aggregation(property, path, buckets));
         }
 
         return aggregations;
     }
 
-    private static Map<String, Object> getMainResponse(Map<?, ?> esResponse) {
-        return normalizeResponse(esResponse.get("responses") instanceof List<?> l
-                ? (Map<?, ?>) l.getFirst()
-                : esResponse);
+    private static List<Aggregation> subAggs(Map<?, ?> bucket) {
+        return bucket.size() > 2
+            ? collectAggResult(toSubAggsMap(bucket))
+            : null;
     }
 
-    private static Map<String, Object> getSecondaryResponse(Map<?, ?> esResponse) {
-        return normalizeResponse(esResponse.get("responses") instanceof List<?> l && l.size() > 1
-                ? (Map<?, ?>) l.get(1)
-                : Map.of());
+    private static Map<String, Object> toSubAggsMap(Map<?, ?> bucketMap) {
+        return castToStringObjectMap(bucketMap).entrySet().stream()
+                .filter(e -> !"key".equals(e.getKey()))
+                .filter(e -> !"doc_count".equals(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private static Map<String, Object> getAggregations(Map<String, Object> esResponse) {
-        var aggs = castToStringObjectMap(esResponse.get("aggregations"));
+        var aggs = new LinkedHashMap<>(castToStringObjectMap(esResponse.get("aggregations")));
         aggs.remove(PREDICATES);
         return aggs;
     }
 
-    private static Map<String, Object> getPAggregations(Map<String, Object> mainResponse, Map<String, Object> secondaryResponse) {
-        var aggs = ((Map<?, ?>) (secondaryResponse.isEmpty() ? mainResponse : secondaryResponse)
-                .getOrDefault("aggregations", Map.of()))
-                .get(PREDICATES);
+    private static Map<String, Object> getPAggregations(Map<String, Object> esResponse) {
+        var aggs = ((Map<?, ?>) esResponse.getOrDefault("aggregations", Map.of())).get(PREDICATES);
         return castToStringObjectMap(aggs);
     }
 

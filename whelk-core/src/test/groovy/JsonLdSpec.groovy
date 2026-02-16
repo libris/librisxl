@@ -18,7 +18,10 @@ class JsonLdSpec extends Specification {
     static final Map CONTEXT_DATA = [
         "@context": [
             "@vocab": "http://example.org/ns/",
-            "pfx": "http://example.org/pfx/"
+            "pfx": "http://example.org/pfx/",
+            "_indexTerm": [
+                "@container": "@index"
+            ]
         ]
     ]
 
@@ -631,6 +634,49 @@ class JsonLdSpec extends Specification {
         ['@type': 'X', 'a1': 'a1']                                     | 'chips' || ['@type': 'X', 'a1': 'a1']
         ['@type': 'X', 'a1ByLang': ['xx': 'a1']]                       | 'chips' || ['@type': 'X', 'a1ByLang': ['xx': 'a1']]
         ['@type': 'X', 'a1': 'a1', 'a1ByLang': ['xx': 'a1']]           | 'chips' || ['@type': 'X', 'a1': 'a1', 'a1ByLang': ['xx': 'a1']]
+    }
+
+    def "should handle @container @index terms when applying lenses"() {
+        given:
+        Map displayData = [
+                "lensGroups": [
+                        "chips": [
+                                "lenses": [
+                                        "Event": ["@type"         : "fresnel:Lens",
+                                                  "@id"           : "Event-chips",
+                                                  "showProperties": ["date",
+                                                                     "agent",
+                                                                     "place"]]]],
+                        "cards": [
+                                "lenses": [
+                                        "Instance": ["showProperties" : ["mediaType"]],
+                                        "Event"   : ["fresnel:extends": ["@id": "Event-chips"],
+                                                     "showProperties" : ["fresnel:super",
+                                                                         "bar"]]]]]]
+
+        Map input = ["@type"     : "Instance",
+                     "_indexTerm": [
+                             "a": ["@type": "Event", "date": "d1", "foo": "bar"],
+                             "b": [["@type": "Event", "date": "d2", "foo": "bar"],
+                                   ["@type": "Event", "date": "d3", "foo": "bar"]]
+                     ],
+                     "mediaType" : "foobar",
+                     "foo"       : "bar"]
+
+        Map expected = ["@type"     : "Instance",
+                        "_indexTerm": [
+                                "a": ["@type": "Event", "date": "d1"],
+                                "b": [["@type": "Event", "date": "d2"],
+                                      ["@type": "Event", "date": "d3"]]
+                        ],
+                        "mediaType" : "foobar",
+        ]
+
+        def ld = new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA)
+
+        expect:
+        Map output = ld.toCard(input)
+        output == expected
     }
 
     def "applyLensAsMapByLang"() {

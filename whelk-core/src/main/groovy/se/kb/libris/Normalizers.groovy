@@ -3,14 +3,13 @@ package se.kb.libris
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.JsonLd
+import whelk.Relations
 import whelk.Whelk
 import whelk.component.DocumentNormalizer
 import whelk.exception.InvalidQueryException
 import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
-import whelk.util.DocumentUtil
 import whelk.util.DocumentUtil.Remove
-import whelk.util.Romanizer
 
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
@@ -126,7 +125,7 @@ class Normalizers {
         return new Normalizer({ Document doc ->
             def (_record, thing, legacyWork) = doc.data[GRAPH_KEY]
 
-            boolean shouldMove = (legacyWork && isInstanceOf(jsonLd, legacyWork, 'Work')
+            boolean shouldMove = (legacyWork && isClassOrSubClassOf(jsonLd, legacyWork, 'Work')
                     && thing && thing['instanceOf'] && thing['instanceOf'][ID_KEY]
                     && thing['instanceOf'][ID_KEY] == legacyWork[ID_KEY])
 
@@ -180,6 +179,45 @@ class Normalizers {
         })
     }
 
+    static void removeBroaderCategories(Document doc, Relations relations, JsonLd jsonLd) {
+        var work = getWork(jsonLd, doc)
+        var instance = getInstance(jsonLd, doc)
+
+        //TODO: do this for all types? integral relations instead of instanceOf
+        if (!work && !instance) {
+            return
+        }
+        var workCategories = getNormalizedCategories(work, relations)
+        if (workCategories) {
+            work['category'] = workCategories
+        }
+        var instanceCategories = getNormalizedCategories(instance, relations)
+        if (instanceCategories) {
+            instance['category'] = instanceCategories
+        }
+    }
+
+    static List getNormalizedCategories(Map thing, Relations relations) {
+        var categories = thing?['category'] as ArrayList<Map<String, String>>
+        if (categories) {
+            var categoryIds = categories.collect { it[ID_KEY] }.findAll()
+            categories.removeIf { c ->
+                categoryIds.any { otherId -> otherId != c[ID_KEY]
+                        && relations.isImpliedBy(c[ID_KEY], otherId)
+                }
+            }
+            return categories
+        } else {
+            return null
+        }
+    }
+
+    static DocumentNormalizer broaderCategory(Relations relations, JsonLd jsonLd) {
+        return new Normalizer({ Document doc ->
+            removeBroaderCategories(doc, relations, jsonLd)
+        })
+    }
+
     static void loadDefinitions(BlankNodeLinker linker, Whelk whelk) {
         try {
             linker.loadDefinitions(whelk)
@@ -195,15 +233,23 @@ class Normalizers {
 
     static Map getWork(JsonLd jsonLd, Document doc) {
         def (_record, thing) = doc.data['@graph']
-        if (thing && isInstanceOf(jsonLd, thing, 'Work')) {
+        if (thing && isClassOrSubClassOf(jsonLd, thing, 'Work')) {
             return thing
-        } else if (thing && thing['instanceOf'] && isInstanceOf(jsonLd, thing['instanceOf'], 'Work')) {
+        } else if (thing && thing['instanceOf'] && isClassOrSubClassOf(jsonLd, thing['instanceOf'], 'Work')) {
             return thing['instanceOf']
         }
         return null
     }
 
-    static boolean isInstanceOf(JsonLd jsonLd, Map entity, String baseType) {
+    static Map getInstance(JsonLd jsonLd, Document doc) {
+        def (_record, thing) = doc.data['@graph']
+        if (thing && isClassOrSubClassOf(jsonLd, thing, 'Instance')) {
+            return thing
+        }
+        return null
+    }
+
+    static boolean isClassOrSubClassOf(JsonLd jsonLd, Map entity, String baseType) {
         def type = entity['@type']
         if (type == null)
             return false

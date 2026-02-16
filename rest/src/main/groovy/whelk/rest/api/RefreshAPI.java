@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS;
 import static whelk.util.Jackson.mapper;
 
 /**
@@ -110,5 +111,10 @@ public class RefreshAPI extends WhelkHttpServlet {
     void refreshQuietly(Document doc) {
         whelk.getStorage().refreshDerivativeTables(doc);
         whelk.elastic.index(doc, whelk);
+        if (whelk.getFeatures().isEnabled(INDEX_BLANK_WORKS)) {
+            for (var id : doc.getVirtualRecordIds()) {
+                whelk.elastic.index(doc.getVirtualRecord(id), whelk);
+            }
+        }
     }
 }

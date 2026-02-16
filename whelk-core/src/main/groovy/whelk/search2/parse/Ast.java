@@ -46,29 +46,33 @@ public class Ast {
     private static Node reduce(Parse.OrComb orComb) throws InvalidQueryException {
         // public record OrComb(List<AndComb> andCombs) {}
 
-        if (orComb.andCombs().size() > 1) {
-            List<Node> result = new ArrayList<>();
-            for (Parse.AndComb andComb : orComb.andCombs()) {
-                result.add(reduce(andComb));
+        return switch (orComb.andCombs().size()) {
+            case 0 -> new Or(List.of());
+            case 1 -> reduce(orComb.andCombs().getFirst());
+            default -> {
+                List<Node> result = new ArrayList<>();
+                for (Parse.AndComb andComb : orComb.andCombs()) {
+                    result.add(reduce(andComb));
+                }
+                yield new Or(result);
             }
-            return new Or(result);
-        } else {
-            return reduce(orComb.andCombs().getFirst());
-        }
+        };
     }
 
     private static Node reduce(Parse.AndComb andComb) throws InvalidQueryException {
         // public record AndComb(List<Term> ts) {}
 
-        if (andComb.ts().size() > 1) {
-            List<Node> result = new ArrayList<>();
-            for (Parse.Term t : andComb.ts()) {
-                result.add(reduce(t));
+        return switch (andComb.ts().size()) {
+            case 0 -> new And(List.of());
+            case 1 -> reduce(andComb.ts().getFirst());
+            default -> {
+                List<Node> result = new ArrayList<>();
+                for (Parse.Term t : andComb.ts()) {
+                    result.add(reduce(t));
+                }
+                yield new And(result);
             }
-            return new And(result);
-        } else {
-            return reduce(andComb.ts().getFirst());
-        }
+        };
     }
 
     private static Node reduce(Parse.Term term) throws InvalidQueryException {

@@ -17,6 +17,8 @@ import whelk.exception.WhelkRuntimeException;
 import whelk.history.History;
 import whelk.rest.api.CrudGetRequest.Lens;
 import whelk.rest.security.AccessControl;
+import whelk.util.DocumentUtil;
+import whelk.search2.QueryGenerator;
 import whelk.util.FresnelUtil;
 import groovy.lang.Tuple2;
 import whelk.util.http.BadRequestException;
@@ -87,6 +89,8 @@ public class Crud extends WhelkHttpServlet {
                 targetVocabMapper = new TargetVocabMapper(whelk.getJsonld(), contextDoc.data);
             }
         }
+
+        cacheLocalDevResources();
     }
 
     protected void cacheFetchedResource(String resourceUri) {
@@ -288,6 +292,26 @@ public class Crud extends WhelkHttpServlet {
                 whelk.getFresnelUtil().insertComputedLabels(items, new FresnelUtil.LangCode(request.computedLabelLocale()));
             } else {
                 whelk.getFresnelUtil().insertComputedLabels(data, new FresnelUtil.LangCode(request.computedLabelLocale()));
+            }
+        }
+
+        if (request.shouldGenerateBlankFindLinks()) {
+            if (!JsonLd.isFramed(data) ) {
+                // TODO? should we support this?
+                throw new BadRequestException("Cannot generate find links when not framed");
+            }
+            if (!request.shouldComputeLabels()) {
+                throw new BadRequestException("Cannot generate find links without computedLabel");
+            }
+
+            // FIXME FresnelUtil can't handle the whole search response because of @container @index in stats
+            // TODO at least compute labels in stats observations and search mappings predicate/object?
+            if (siteSearch.isSearchResource(request.getHttpServletRequest().getPathInfo())) {
+                @SuppressWarnings("unchecked")
+                List<Object> items = (List<Object>) data.get("items");
+                QueryGenerator.insertFindLinksOnBlankNodes(items, whelk);
+            } else {
+                QueryGenerator.insertFindLinksOnBlankNodes(data, whelk);
             }
         }
 
@@ -905,5 +929,28 @@ public class Crud extends WhelkHttpServlet {
             log.debug("Sending error {} : {} for {}", code, e.getMessage(), requestURI != null ? requestURI : "unknown");
         }
         HttpTools.sendError(response, code, e.getMessage(), e);
+    }
+
+    private void cacheLocalDevResources() {
+        // TODO Crud embellishes i.e. mutates these "cached resources"??
+
+        var devApps = SiteSearch.localDevAppsJsonLd();
+        if (devApps != null) {
+            @SuppressWarnings("unchecked")
+            var graph = (List<Map<?,?>>) DocumentUtil.getAtPath(devApps, List.of(JsonLd.GRAPH_KEY), Collections.emptyList());
+            for (var resource : graph) {
+                String id = (String) resource.get(JsonLd.ID_KEY);
+                log.info("Using local dev version of {}", id);
+                var doc = new Document(new HashMap<>(Map.of(JsonLd.GRAPH_KEY, new ArrayList<>(List.of(
+                        new HashMap<>(Map.of(
+                                JsonLd.ID_KEY, "<fake record>",
+                                JsonLd.TYPE_KEY, JsonLd.SYSTEM_RECORD_TYPE,
+                                JsonLd.THING_KEY, Map.of(JsonLd.ID_KEY, id)
+                        )),
+                        resource
+                )))));
+                cachedFetches.put(id, new Tuple2<>(doc, id));
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.querytree.FilterAlias;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,11 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class QueryParams {
     private final static int DEFAULT_LIMIT = 20;
-    private final static int MAX_LIMIT = 100;
+    private final static int MAX_LIMIT = 150;
     private final static int DEFAULT_OFFSET = 0;
 
     public static class ApiParams {
@@ -34,6 +34,7 @@ public class QueryParams {
         public static final String SUGGEST = "_suggest";
         public static final String CURSOR = "cursor";
         public static final String BOOST = "_boost";
+        public static final String MAPPING_ONLY = "_mappingOnly";
     }
 
     public static class Debug {
@@ -50,7 +51,7 @@ public class QueryParams {
     public final String lens;
     public final Spell spell;
     public final String computedLabelLocale;
-    public final Map<String, String[]> aliased;
+    public final List<FilterAlias.QueryDefinedAlias> aliased;
     public final int cursor;
     public final ESSettings.Boost boost;
 
@@ -59,6 +60,7 @@ public class QueryParams {
 
     public final boolean skipStats;
     public final boolean suggest;
+    public final boolean mappingOnly;
 
     public QueryParams(Map<String, String[]> apiParameters) throws InvalidQueryException {
         this.sortBy = Sort.fromString(getOptionalSingleNonEmpty(ApiParams.SORT, apiParameters).orElse(""));
@@ -70,13 +72,14 @@ public class QueryParams {
         this.lens = getOptionalSingleNonEmpty(ApiParams.LENS, apiParameters).orElse("cards");
         this.spell = new Spell(getOptionalSingleNonEmpty(ApiParams.SPELL, apiParameters).orElse(""));
         this.computedLabelLocale = getOptionalSingleNonEmpty(JsonLd.Platform.COMPUTED_LABEL, apiParameters).orElse(null);
-        this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse("");
-        this.r = getOptionalSingle(ApiParams.CUSTOM_SITE_FILTER, apiParameters).orElse("");
+        this.q = getOptionalSingle(ApiParams.QUERY, apiParameters).orElse(null);
+        this.r = getOptionalSingle(ApiParams.CUSTOM_SITE_FILTER, apiParameters).orElse(null);
         this.suggest = getOptionalSingle(ApiParams.SUGGEST, apiParameters).map("true"::equalsIgnoreCase).isPresent();
         this.cursor = getCursor(apiParameters);
         this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
         this.aliased = getAliased(apiParameters);
         this.boost = getOptionalSingle(ApiParams.BOOST, apiParameters).map(ESSettings::loadBoostSettings).orElse(null);
+        this.mappingOnly = getOptionalSingle(ApiParams.MAPPING_ONLY, apiParameters).map("true"::equalsIgnoreCase).isPresent();
     }
 
     public Map<String, String> getFullParamsMap() {
@@ -90,6 +93,7 @@ public class QueryParams {
                 ApiParams.OBJECT,
                 ApiParams.DEBUG,
                 ApiParams.STATS,
+                ApiParams.MAPPING_ONLY,
                 JsonLd.Platform.COMPUTED_LABEL));
     }
 
@@ -103,12 +107,12 @@ public class QueryParams {
         for (String param : apiParams) {
             switch (param) {
                 case ApiParams.QUERY -> {
-                    if (!q.isEmpty()) {
+                    if (q != null) {
                         params.put(ApiParams.QUERY, q);
                     }
                 }
                 case ApiParams.CUSTOM_SITE_FILTER -> {
-                    if (!r.isEmpty()) {
+                    if (r != null) {
                         params.put(ApiParams.CUSTOM_SITE_FILTER, r);
                     }
                 }
@@ -150,6 +154,11 @@ public class QueryParams {
                         params.put(ApiParams.STATS, "false");
                     }
                 }
+                case ApiParams.MAPPING_ONLY -> {
+                    if (mappingOnly) {
+                        params.put(ApiParams.MAPPING_ONLY, "true");
+                    }
+                }
             }
             if (param.equals(JsonLd.Platform.COMPUTED_LABEL) && computedLabelLocale != null) {
                 params.put(JsonLd.Platform.COMPUTED_LABEL, computedLabelLocale);
@@ -176,10 +185,15 @@ public class QueryParams {
                 .toList();
     }
 
-    private static Map<String, String[]> getAliased(Map<String, String[]> queryParameters) {
+    private static List<FilterAlias.QueryDefinedAlias> getAliased(Map<String, String[]> queryParameters) {
         return queryParameters.entrySet().stream()
-                .filter((entry) -> entry.getKey().startsWith(ApiParams.ALIAS))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .filter(entry -> entry.getKey().startsWith(ApiParams.ALIAS))
+                .map(entry -> new FilterAlias.QueryDefinedAlias(asqPrefix(entry.getKey()), entry.getValue()[0]))
+                .toList();
+    }
+
+    private static String asqPrefix(String queryParameter) {
+        return queryParameter.replaceFirst("_","");
     }
 
     private int getLimit(Map<String, String[]> queryParameters) throws InvalidQueryException {

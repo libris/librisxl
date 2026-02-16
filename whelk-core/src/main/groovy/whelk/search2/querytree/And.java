@@ -1,28 +1,50 @@
 package whelk.search2.querytree;
 
+import whelk.JsonLd;
+import whelk.search2.ESSettings;
+
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.stream.Stream;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import static whelk.search2.QueryUtil.mustWrap;
+import static whelk.search2.QueryUtil.nestedWrap;
 
-public final class And extends Group {
+public sealed class And extends Group {
     private final List<Node> children;
 
-    public And(List<Node> children) {
-        this(children, true);
+    public And(List<? extends Node> children) {
+        this.children = flattenChildren(children);
     }
 
-    // For test only
     public And(List<Node> children, boolean flattenChildren) {
         this.children = flattenChildren ? flattenChildren(children) : children;
     }
 
     @Override
+    public Map<String, Object> toEs(ESSettings esSettings) {
+        return mustWrap(childrenToEs(esSettings));
+    }
+
+    @Override
+    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        List<String> rdfSubjectTypesInGroup = rdfSubjectType().asList().stream().map(Type::type).toList();
+        return super.expand(jsonLd, rdfSubjectTypesInGroup.isEmpty() ? rdfSubjectTypes : rdfSubjectTypesInGroup);
+    }
+
+    @Override
     public Node getInverse() {
         return new Or(children.stream().map(Node::getInverse).toList());
+    }
+
+    @Override
+    public boolean implies(Node node, JsonLd jsonLd) {
+        return node instanceof And
+                ? node.children().stream().allMatch(child -> implies(child, jsonLd))
+                : children.stream().anyMatch(child -> child.implies(node, jsonLd));
     }
 
     @Override
@@ -46,39 +68,50 @@ public final class And extends Group {
     }
 
     @Override
-    public Map<String, Object> wrap(List<Map<String, Object>> esChildren) {
+    Map<String, Object> wrap(List<Map<String, Object>> esChildren) {
         return mustWrap(esChildren);
     }
 
     @Override
-    List<String> collectRulingTypes() {
+    public RdfSubjectType rdfSubjectType() {
         return children().stream()
-                .filter(n -> n.isTypeNode() || (n instanceof Or && n.children().stream().allMatch(Node::isTypeNode)))
-                .flatMap(n -> n instanceof Or ? n.children().stream() : Stream.of(n))
-                .map(PathValue.class::cast)
-                .map(PathValue::value)
-                .map(VocabTerm.class::cast)
-                .map(VocabTerm::jsonForm)
-                .toList();
-    }
-
-    @Override
-    boolean implies(Node a, Node b, BiFunction<Node, Node, Boolean> condition) {
-        if (a instanceof Group aGroup) {
-            return b instanceof Group bGroup
-                    ? bGroup.children().stream().allMatch(child -> implies(aGroup, child, condition))
-                    : aGroup.children().stream().anyMatch(child -> condition.apply(child, b));
-        } else {
-            return switch (b) {
-                case And and -> and.children().stream().allMatch(child -> condition.apply(a, child));
-                case Or or -> or.children().stream().anyMatch(child -> condition.apply(a, child));
-                default -> condition.apply(a, b);
-            };
-        }
+                .map(Node::rdfSubjectType)
+                .filter(Predicate.not(RdfSubjectType::isNoType))
+                .findFirst()
+                .orElse(RdfSubjectType.noType());
     }
 
     @Override
     public boolean equals(Object o) {
         return o instanceof And other && new HashSet<>(other.children()).equals(new HashSet<>(children));
+    }
+
+    @Override
+    public Node reduce(JsonLd jsonLd) {
+        return reduce(jsonLd, (a, b) -> pick(a, b, jsonLd));
+    }
+
+    private Optional<Node> pick(Node a, Node b, JsonLd jsonLd) {
+        if (a.implies(b, jsonLd)) {
+            return Optional.of(a);
+        }
+        if (b.implies(a, jsonLd)) {
+            return Optional.of(b);
+        }
+        return Optional.empty();
+    }
+
+    public static final class Nested extends And {
+        private final String stem;
+
+        public Nested(List<? extends Node> children, String stem) {
+            super(children);
+            this.stem = stem;
+        }
+
+        @Override
+        public Map<String, Object> toEs(ESSettings esSettings) {
+            return nestedWrap(stem, getCoreEsQuery(esSettings));
+        }
     }
 }

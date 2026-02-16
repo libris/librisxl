@@ -8,6 +8,7 @@ import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
+import whelk.FeatureFlags
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -19,7 +20,10 @@ import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
+import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
+import static whelk.FeatureFlags.Flag.EXPERIMENTAL_INDEX_HOLDING_ORGS
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
+import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
@@ -432,6 +436,16 @@ class ElasticSearch {
         }
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
+
+        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            // FIXME workaround for toCard breaking _categoryByCollection
+            // TODO we need these ids in _links / _outerEmbellishments anyway?
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, JsonLd.Platform.CATEGORY_BY_COLLECTION, 'find', '*', JsonLd.ID_KEY], [])
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'find', '*', JsonLd.ID_KEY], [])
+            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
+        }
+
         def graph = ((List) copy.data['@graph'])
         int originalSize = document.data['@graph'].size()
         copy.data['@graph'] =
@@ -495,7 +509,7 @@ class ElasticSearch {
             searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
             searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
         } catch (Exception e) {
-            log.error(e, e)
+            log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
         searchCard['_ids'] = (thingIds + document.getRecordIdentifiers())
@@ -531,6 +545,23 @@ class ElasticSearch {
                 }
                 value.putAll(flattened)
             }
+
+            if (whelk.features.isEnabled(EXPERIMENTAL_INDEX_HOLDING_ORGS)) {
+                if ('Item' != searchCard[TYPE_KEY]
+                        && path
+                        && "heldBy" == path.last()
+                        && !path.contains('hasComponent')
+                        && value instanceof Map
+                        && value[JsonLd.ID_KEY]
+                        && !value['isPartOf']) {
+                    var org = whelk.relations.getBy((String) value[JsonLd.ID_KEY], ['isPartOf'])
+                    if (!org.isEmpty()) {
+                        value['isPartOf'] = [(JsonLd.ID_KEY): org.first()]
+                    }
+                }
+            }
+
+            return DocumentUtil.NOP
         }
 
         // In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged

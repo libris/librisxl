@@ -9,20 +9,39 @@ class QuerySpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
     ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
-    AppParams appParams = TestData.getAppParams()
+
+    def appConfig1 = [
+            'statistics': [
+                    'sliceList': [
+                            ['dimensionChain': ['rdf:type']],
+                            ['dimensionChain': ['p2']],
+                            ['dimensionChain': ['p6']]
+                    ]
+            ]
+    ]
+    def appConfig2 = [
+            "statistics": [
+                    "sliceList": [
+                            ["dimensionChain": ["findCategory"], "slice": ["dimensionChain": ["identifyCategory"]]],
+                            ["dimensionChain": ["noneCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]],
+                            ["dimensionChain": ["hasInstanceCategory"], "itemLimit": 100]
+                    ]
+            ]
+    ]
+
+    AppParams appParams1 = new AppParams(appConfig1, jsonLd)
+    AppParams appParams2 = new AppParams(appConfig2, jsonLd)
 
     def "build agg query"() {
         given:
-        SelectedFilters selectedFilters = new SelectedFilters(QueryTree.empty(), appParams)
-        Map aggQuery = Query.buildAggQuery(appParams.statsRepr.sliceList(), jsonLd, [], esSettings, selectedFilters)
+        SelectedFacets selectedFacets = new SelectedFacets(QueryTree.newEmpty(), appParams1.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams1.sliceList, jsonLd, [], esSettings, selectedFacets)
 
         expect:
         aggQuery == [
                 "@type"    : [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "rdf:type": [
@@ -36,9 +55,7 @@ class QuerySpec extends Specification {
                 ],
                 "p2"       : [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "p2": [
@@ -52,9 +69,7 @@ class QuerySpec extends Specification {
                 ],
                 "p3.p4.@id": [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "p6": [
@@ -76,8 +91,9 @@ class QuerySpec extends Specification {
 
     def "build agg query with multi-selected"() {
         given:
-        SelectedFilters selectedFilters = new SelectedFilters(new QueryTree("type:(T1 OR T2)", disambiguate), appParams)
-        Map aggQuery = Query.buildAggQuery(appParams.statsRepr.sliceList(), jsonLd, [], esSettings, selectedFilters)
+        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree("type:(T1x OR T2x)", disambiguate), appParams1.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams1.sliceList, jsonLd, [], esSettings, selectedFacets)
+
 
         expect:
         aggQuery == [
@@ -94,9 +110,7 @@ class QuerySpec extends Specification {
                                 ]
                         ],
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ]
                 ],
                 "p2"       : [
@@ -117,7 +131,7 @@ class QuerySpec extends Specification {
                                                            "bool": [
                                                                    "filter": [
                                                                            "term": [
-                                                                                   "@type": "T1"
+                                                                                   "@type": "T1x"
                                                                            ]
                                                                    ]
                                                            ]
@@ -125,7 +139,7 @@ class QuerySpec extends Specification {
                                                            "bool": [
                                                                    "filter": [
                                                                            "term": [
-                                                                                   "@type": "T2"
+                                                                                   "@type": "T2x"
                                                                            ]
                                                                    ]
                                                            ]
@@ -158,7 +172,7 @@ class QuerySpec extends Specification {
                                                            "bool": [
                                                                    "filter": [
                                                                            "term": [
-                                                                                   "@type": "T1"
+                                                                                   "@type": "T1x"
                                                                            ]
                                                                    ]
                                                            ]
@@ -166,7 +180,7 @@ class QuerySpec extends Specification {
                                                            "bool": [
                                                                    "filter": [
                                                                            "term": [
-                                                                                   "@type": "T2"
+                                                                                   "@type": "T2x"
                                                                            ]
                                                                    ]
                                                            ]
@@ -179,16 +193,14 @@ class QuerySpec extends Specification {
 
     def "build agg query, omit incompatible"() {
         given:
-        SelectedFilters selectedFilters = new SelectedFilters(new QueryTree("type:((T1 OR T2) T3)", disambiguate), appParams)
-        Map aggQuery = Query.buildAggQuery(appParams.statsRepr.sliceList(), jsonLd, [], esSettings, selectedFilters)
+        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree("type:((T1x OR T2x) T3)", disambiguate), appParams1.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams1.sliceList, jsonLd, [], esSettings, selectedFacets)
 
         expect:
         aggQuery == [
                 "p2"       : [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "p2": [
@@ -202,9 +214,7 @@ class QuerySpec extends Specification {
                 ],
                 "p3.p4.@id": [
                         "filter": [
-                                "bool": [
-                                        "must": []
-                                ]
+                                "match_all": [:]
                         ],
                         "aggs"  : [
                                 "p6": [
@@ -221,6 +231,154 @@ class QuerySpec extends Specification {
                                 ]
                         ]
                 ]
+        ]
+    }
+
+    def "build agg query for categories"() {
+        given:
+        SelectedFacets selectedFacets = new SelectedFacets(QueryTree.newEmpty(), appParams2.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams2.sliceList, jsonLd, ['T2'], esSettings, selectedFacets)
+
+        expect:
+        aggQuery == [
+            "_categoryByCollection.find.@id" : [
+                "aggs" : [
+                    "librissearch:findCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "field" : "_categoryByCollection.find.@id",
+                            "size" : 10
+                        ],
+                        "aggs" : [
+                            "_categoryByCollection.identify.@id" : [
+                                "aggs" : [
+                                    "librissearch:identifyCategory" : [
+                                        "terms" : [
+                                            "order" : [
+                                                "_count" : "desc"
+                                            ],
+                                            "field" : "_categoryByCollection.identify.@id",
+                                            "size" : 10
+                                        ]
+                                    ]
+                                ],
+                                "filter" : [
+                                        "match_all": [:]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                "filter" : [
+                        "match_all": [:]
+                ]
+            ],
+            "@reverse.instanceOf.category.@id" : [
+                "aggs" : [
+                    "hasInstanceCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "field" : "@reverse.instanceOf.category.@id",
+                            "size" : 100
+                        ]
+                    ]
+                ],
+                "filter" : [
+                        "match_all": [:]
+                ]
+            ]
+        ]
+    }
+
+    def "build agg query for categories 2"() {
+        given:
+        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree('category:"https://id.kb.se/term/ktg/X"', disambiguate), appParams2.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams2.sliceList, jsonLd, [], esSettings, selectedFacets)
+
+        expect:
+        aggQuery == [
+            "_categoryByCollection.find.@id" : [
+                "aggs" : [
+                    "librissearch:findCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "size" : 10,
+                            "field" : "_categoryByCollection.find.@id"
+                        ],
+                        "aggs" : [
+                            "_categoryByCollection.identify.@id" : [
+                                "aggs" : [
+                                    "librissearch:identifyCategory" : [
+                                        "terms" : [
+                                            "order" : [
+                                                "_count" : "desc"
+                                            ],
+                                            "size" : 10,
+                                            "field" : "_categoryByCollection.identify.@id"
+                                        ]
+                                    ]
+                                ],
+                                "filter" : [
+                                        "match_all": [:]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                "filter" : [
+                        "match_all": [:]
+                ]
+            ],
+            "_categoryByCollection.@none.@id" : [
+                "aggs" : [
+                    "librissearch:noneCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "size" : 100,
+                            "field" : "_categoryByCollection.@none.@id"
+                        ]
+                    ]
+                ],
+                "filter" : [
+                    "bool" : [
+                        "filter" : [
+                            "term" : [
+                                "_categoryByCollection.find.@id" : "https://id.kb.se/term/ktg/X"
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            "@reverse.instanceOf.category.@id" : [
+                "aggs" : [
+                    "hasInstanceCategory" : [
+                        "terms" : [
+                            "order" : [
+                                "_count" : "desc"
+                            ],
+                            "size" : 100,
+                            "field" : "@reverse.instanceOf.category.@id"
+                        ]
+                    ]
+                ],
+                "filter" : [
+                    "bool" : [
+                        "filter" : [
+                            "term" : [
+                                "_categoryByCollection.find.@id" : "https://id.kb.se/term/ktg/X"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
         ]
     }
 }

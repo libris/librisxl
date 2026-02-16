@@ -185,18 +185,6 @@
             },
             "meta": {
                 "properties": {
-                    "created": {
-                      "type": "date",
-                      "copy_to": "_all"
-                    },
-                    "modified": {
-                      "type": "date",
-                      "copy_to": "_all"
-                    },
-                    "generationDate": {
-                      "type": "date",
-                      "copy_to": "_all"
-                    },
                     "encodingLevel": {
                       "type": "keyword",
                       "copy_to": "_all"
@@ -345,6 +333,14 @@
                     },
                     "match": "@type",
                     "match_mapping_type": "string"
+                }
+            },
+            {
+                "date_template": {
+                    "match": ["created", "modified", "generationDate"],
+                    "mapping": {
+                        "type": "date"
+                    }
                 }
             },
             {

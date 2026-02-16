@@ -3,13 +3,23 @@ package whelk.search2;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.querytree.And;
+import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQueryTree;
+import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.Link;
-import whelk.search2.querytree.PathValue;
+import whelk.search2.querytree.Node;
+import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
+import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.ReducedQueryTree;
+import whelk.search2.querytree.Term;
+import whelk.search2.querytree.Type;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,8 +34,8 @@ import static whelk.search2.QueryParams.ApiParams.SORT;
 import static whelk.search2.QueryUtil.makeFindUrl;
 
 public class ObjectQuery extends Query {
-    protected Link object;
-    protected List<Property> curatedPredicates;
+    protected final Link object;
+    private final List<Property> curatedPredicates;
 
     public ObjectQuery(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
         super(queryParams, appParams, vocabMappings, esSettings, whelk);
@@ -34,32 +44,59 @@ public class ObjectQuery extends Query {
     }
 
     @Override
-    protected Object doGetEsQueryDsl() {
-        applySiteFilters(queryTree, SearchMode.OBJECT_SEARCH);
-        queryTree.applyObjectFilter(object.iri());
+    protected Map<String, Object> doGetEsQueryDsl() {
+        JsonLd ld = whelk.getJsonld();
 
-        List<String> rulingTypes = queryTree.collectRulingTypes(whelk.getJsonld());
-        List<String> inferredSubjectTypes = rulingTypes.isEmpty() ? inferSubjectTypes() : List.of();
+        ReducedQueryTree queryTree = (ReducedQueryTree) getFullQueryTree().add(objectFilter());
 
-        var mainQuery = getEsQuery(queryTree, inferredSubjectTypes);
+        List<String> givenSubjectTypes = queryTree.getRdfSubjectTypesList();
 
-        if (queryParams.skipStats) {
-            return getEsQueryDsl(mainQuery);
+        Set<String> inferredSubjectTypes = new HashSet<>();
+        Map<Property, List<String>> predicateToSubjectTypes = new HashMap<>();
+
+        for (Property p : curatedPredicates) {
+            List<String> subjects = queryTree.getRdfSubjectTypesList().stream()
+                    .filter(t -> p.appearsOnType(t, ld) || p.indirectlyAppearsOnType(t, ld))
+                    .toList();
+            if (!subjects.isEmpty()) {
+                predicateToSubjectTypes.put(p, subjects);
+            } else {
+                inferredSubjectTypes.addAll(p.domain());
+                predicateToSubjectTypes.put(p, p.domain());
+            }
         }
 
-        var aggQuery = getEsAggQuery(inferredSubjectTypes);
-        aggQuery.putAll(getPAggQuery(rulingTypes));
-        var postFilter = getPostFilter(inferredSubjectTypes);
+        if (!inferredSubjectTypes.isEmpty()) {
+            List<Node> altTrees = new ArrayList<>();
+            altTrees.add(queryTree.tree());
+            inferredSubjectTypes.stream()
+                    .map(t -> new And(List.of(new Type(t, ld), objectFilter())))
+                    .map(QueryTree::new)
+                    .map(this::getFullQueryTree)
+                    .map(QueryTree::tree)
+                    .forEach(altTrees::add);
+            queryTree = new ReducedQueryTree(new Or(altTrees));
+        }
 
-        return getEsQueryDsl(mainQuery, aggQuery, postFilter);
+        ExpandedQueryTree expanded = queryTree.expand(ld);
+        EsQueryTree esQueryTree = new EsQueryTree(expanded, esSettings);
+        Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
+
+        if (queryParams.skipStats) {
+            esQueryDsl.put("aggs", getPAggQuery(predicateToSubjectTypes));
+            return esQueryDsl;
+        }
+
+        List<String> subjectTypes = Stream.concat(givenSubjectTypes.stream(), inferredSubjectTypes.stream()).toList();
+        var aggQuery = getEsAggQuery(subjectTypes);
+        aggQuery.putAll(getPAggQuery(predicateToSubjectTypes));
+        esQueryDsl.put("aggs", aggQuery);
+
+        return esQueryDsl;
     }
 
     @Override
     protected List<Map<String, Object>> predicateLinks() {
-        if (curatedPredicates == null) {
-            return Collections.emptyList();
-        }
-
         var result = new ArrayList<Map<String, Object>>();
 
         Map<String, Integer> counts = getQueryResult().pAggs.stream()
@@ -89,26 +126,30 @@ public class ObjectQuery extends Query {
         return result;
     }
 
-    protected Map<String, Object> getPAggQuery(List<String> rulingTypes) {
-        return buildPAggQuery(object, curatedPredicates, whelk.getJsonld(), rulingTypes, esSettings);
+    private Condition objectFilter() {
+        return new Condition("_links", Operator.EQUALS, new Term(object.iri()));
+    }
+
+    private Map<String, Object> getPAggQuery(Map<Property, List<String>> predicateToSubjectTypes) {
+        return buildPAggQuery(object, predicateToSubjectTypes, whelk.getJsonld(), esSettings);
     }
 
     private static Map<String, Object> buildPAggQuery(Link object,
-                                                      List<Property> curatedPredicates,
+                                                      Map<Property, List<String>> predicateToSubjectTypes,
                                                       JsonLd jsonLd,
-                                                      Collection<String> rulingTypes,
                                                       ESSettings esSettings)
     {
         Map<String, Object> query = new LinkedHashMap<>();
 
-        var filters = curatedPredicates
-                .stream()
-                .collect(Collectors.toMap(
-                        Property::name,
-                        p -> new PathValue(p, Operator.EQUALS, object)
-                                .expand(jsonLd, rulingTypes.isEmpty() ? p.domain() : rulingTypes)
-                                .toEs(esSettings))
-                );
+        var filters = new HashMap<>();
+
+        predicateToSubjectTypes.forEach((p, subjects) -> {
+            var filter = new Condition(p, Operator.EQUALS, object)
+                    .expand(jsonLd, subjects)
+                    .expandedRoot()
+                    .toEs(esSettings);
+            filters.put(p.name(), filter);
+        });
 
         if (!filters.isEmpty()) {
             query.put(QueryParams.ApiParams.PREDICATES, Map.of("filters", Map.of("filters", filters)));
@@ -117,35 +158,23 @@ public class ObjectQuery extends Query {
         return query;
     }
 
-    private List<String> inferSubjectTypes() {
-        var objectSuperTypes = whelk.getJsonld().getSuperClasses(object.getType());
-        return Stream.concat(Stream.of(object.getType()), objectSuperTypes.stream())
-                .map(whelk.getJsonld()::getInRange)
-                .flatMap(Set::stream)
-                .map(pKey -> new Property(pKey, whelk.getJsonld()))
-                .map(Property::domain)
-                .flatMap(List::stream)
-                .distinct()
-                .toList();
-    }
-
-
     private Link loadObject() throws InvalidQueryException {
-        var object = queryParams.object;
-        if (queryParams.object != null) {
-            Map<String, Object> thing = QueryUtil.loadThing(queryParams.object, whelk);
+        var o = queryParams.object;
+        if (o != null) {
+            Map<String, Object> thing = QueryUtil.loadThing(o, whelk);
             if (!thing.isEmpty()) {
-                return new Link(queryParams.object, thing);
+                return new Link(o, thing);
             }
         }
-        throw new InvalidQueryException("No resource with id " + object + " was found");
+        throw new InvalidQueryException("No resource with id " + o + " was found");
     }
 
     private List<Property> loadCuratedPredicates() {
-        return Stream.concat(Stream.of(object.getType()), whelk.getJsonld().getSuperClasses(object.getType()).stream())
-                .filter(appParams.relationFilters::containsKey)
-                .findFirst().map(appParams.relationFilters::get)
-                .map(predicates -> predicates.stream().map(p -> new Property(p, whelk.getJsonld())).toList())
+        return appParams.filters.relationFilter().stream()
+                .filter(r -> whelk.getJsonld().isSubClassOf(object.getType(), r.objectType()))
+                .findFirst()
+                .map(AppParams.RelationFilter::predicates)
+                .map(predicates -> predicates.stream().map(p -> Property.getProperty(p, whelk.getJsonld())).toList())
                 .orElse(Collections.emptyList());
     }
 }

@@ -140,7 +140,7 @@ public class XSearchServlet extends WhelkHttpServlet {
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
-        vocabMappings = new VocabMappings(whelk);
+        vocabMappings = VocabMappings.load(whelk);
         esSettings = new ESSettings(whelk);
 
         try {
@@ -213,7 +213,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             }
 
             QueryParams qp = new QueryParams(paramsAsIfSearch);
-            AppParams ap = new AppParams(new HashMap<>(), qp);
+            AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
             var results = new Query(qp, ap, vocabMappings, esSettings, whelk).collectResults();
 
             @SuppressWarnings("unchecked")

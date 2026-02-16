@@ -2,16 +2,11 @@ package whelk.search2.querytree;
 
 import whelk.search2.QueryUtil;
 
-public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.UnrecognizedKey, Token.Quoted, Token.Raw {
+public sealed interface Token permits Token.Quoted, Token.Raw {
     String value();
     int offset();
-
-    default String formatted() {
-        return value();
-    }
-    default boolean isQuoted() {
-        return false;
-    }
+    String formatted();
+    boolean isQuoted();
 
     record Raw(String value, int offset) implements Token {
         public Raw(String value) {
@@ -22,13 +17,29 @@ public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.U
         public String toString() {
             return value;
         }
+
+        @Override
+        public String formatted() {
+            return value;
+        }
+
+        @Override
+        public boolean isQuoted() {
+            return false;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Raw other && other.value().equals(value);
+        }
+
+        @Override
+        public int hashCode() {
+            return value.hashCode();
+        }
     }
     
     record Quoted(String value, int offset) implements Token {
-        public Quoted(String value) {
-            this(value, -1);
-        }
-
         @Override
         public String formatted() {
             return QueryUtil.quote(value);
@@ -42,6 +53,16 @@ public sealed interface Token permits Key.AmbiguousKey, Key.RecognizedKey, Key.U
         @Override
         public String toString() {
             return formatted();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Quoted other && other.value().equals(value);
+        }
+
+        @Override
+        public int hashCode() {
+            return formatted().hashCode();
         }
     }
 }

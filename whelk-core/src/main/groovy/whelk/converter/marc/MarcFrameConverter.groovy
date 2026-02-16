@@ -90,6 +90,11 @@ class MarcFrameConverter implements FormatConverter {
 
     Map runRevert(Map data) {
         initialize()
+        data = getRevertForm(data)
+        return conversion.revert(data)
+    }
+
+    Map getRevertForm(data) {
         if (data['@graph']) {
             def entryId = data['@graph'][0]['@id']
             data = JsonLd.frame(entryId, data, 3)
@@ -100,7 +105,7 @@ class MarcFrameConverter implements FormatConverter {
             record.mainEntity = thing
             data = record
         }
-        return conversion.revert(data)
+        return data
     }
 
     @Override
@@ -226,6 +231,9 @@ class MarcConversion {
             break
             case 'NormalizeWorkTitles':
             procStep = new NormalizeWorkTitlesStep(props)
+            break
+            case 'BibTypeNormalization':
+            procStep = new BibTypeNormalizationStep(props)
             break
             case null:
             return null
@@ -439,20 +447,14 @@ class MarcConversion {
         }
     }
 
-    Map revert(data) {
+    Map revert(Map data) {
         def marcRuleSet = getRuleSetFromJsonLd(data)
 
         if (doPostProcessing && !threadIsInsidePostProcessing.get()) {
             // Temporarily turn off to prevent recursive calls from postprocessing steps
             threadIsInsidePostProcessing.set(true)
             try {
-                applyInverses(data, data[marcRuleSet.thingLink])
-                marcRuleSet.postProcSteps.reverseEach {
-                    it.unmodify(data, data[marcRuleSet.thingLink])
-                }
-                sharedPostProcSteps.reverseEach {
-                    it.unmodify(data, data[marcRuleSet.thingLink])
-                }
+                unmodifyData(marcRuleSet, data)
             } finally {
                 threadIsInsidePostProcessing.set(false)
             }
@@ -507,6 +509,16 @@ class MarcConversion {
         }
 
         return marc
+    }
+
+    void unmodifyData(MarcRuleSet marcRuleSet, Map data) {
+        applyInverses(data, data[marcRuleSet.thingLink])
+        marcRuleSet.postProcSteps.reverseEach {
+            it.unmodify(data, data[marcRuleSet.thingLink])
+        }
+        sharedPostProcSteps.reverseEach {
+            it.unmodify(data, data[marcRuleSet.thingLink])
+        }
     }
 
     void applyInverses(Map record, Map thing) {
@@ -1512,6 +1524,16 @@ class MarcFixedFieldHandler {
 
             if (v instanceof List) {
                 v = v.findAll { it && width >= it.size() }
+                if (v.size() > 1 && tokensInOrder != null) {
+                  var vset = v as Set
+                  v = []
+                  for (String token : tokensInOrder) {
+                    if (token in vset) {
+                      v << token
+                      vset.remove(token)
+                    }
+                  }
+                }
                 if (itemPos != null) {
                     return itemPos < v.size() ? v[itemPos] : fixedDefault
                 } else {
@@ -1690,6 +1712,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
     String property
     String uriTemplate
     Pattern matchUriToken = null
+    List<String> tokensInOrder = null
     boolean parseZeroPaddedNumber
     DateTimeFormatter dateTimeFormat
     ZoneId timeZone
@@ -1730,6 +1753,9 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
         parseZeroPaddedNumber = (fieldDfn.parseZeroPaddedNumber == true)
         uriTemplate = fieldDfn.uriTemplate
         if (fieldDfn.matchUriToken) {
+            if (fieldDfn.matchUriToken.startsWith('^[') && fieldDfn.matchUriToken.endsWith(']$')) {
+              tokensInOrder = fieldDfn.matchUriToken[2..-3].collect { it }
+            }
             matchUriToken = Pattern.compile(fieldDfn.matchUriToken as String)
             if (fieldDfn.matchSpec) {
                 fieldDfn.matchSpec['matches'].each {
@@ -1873,7 +1899,7 @@ class MarcSimpleFieldHandler extends BaseMarcFieldHandler {
                         return revertToken(it, token)
                     }
                     if (it instanceof Map) {
-                        // TODO: def enumCandidates = relations.findDependers(id, MATCHING_LINKS) // TODO: of sought after enum type? Won't reduce selection as things are imolemented right now...
+                        // TODO: def enumCandidates = relations.findDependers(id, MATCHING_LINKS) // TODO: of sought after enum type? Won't reduce selection as things are implemented right now...
                         for (same in Util.asList(it['sameAs'])) {
                             token = findTokenFromId(same, uriTemplate, matchUriToken)
                             if (token) {

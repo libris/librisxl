@@ -75,6 +75,9 @@ class CrudSpec extends Specification {
             }
         }
         storage = GroovyMock(PostgreSQLComponent.class)
+        storage.loadAllByType(_) >> {
+            return Collections.emptyList()
+        }
         // We want to pass through calls in some cases
         accessControl = GroovySpy(AccessControl.class)
 

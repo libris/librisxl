@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.search.QueryDateTime;
 import whelk.search2.QueryUtil;
 
+import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
 public record DateTime(QueryDateTime dateTime, Token token) implements Value {
@@ -20,6 +21,11 @@ public record DateTime(QueryDateTime dateTime, Token token) implements Value {
     }
 
     @Override
+    public boolean isRangeOpCompatible() {
+        return true;
+    }
+
+    @Override
     public String toString() {
         return dateTime.toDateString();
     }
@@ -32,5 +38,13 @@ public record DateTime(QueryDateTime dateTime, Token token) implements Value {
     @Override
     public int hashCode() {
         return Objects.hashCode(toString());
+    }
+
+    public static DateTime parse(String s, Token token) {
+        try {
+            return new DateTime(QueryDateTime.parse(s), token);
+        } catch (DateTimeParseException ignored) {
+            return null;
+        }
     }
 }
