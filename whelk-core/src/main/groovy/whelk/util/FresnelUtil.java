@@ -392,7 +392,10 @@ public class FresnelUtil {
             for (var value : s.values()) {
                 var v = value instanceof Lensed l ? buildThing(l) : value;
                 if (s.pKey() instanceof InversePropertyKey ipk) {
-                    insert(asMap(thing.computeIfAbsent(REVERSE_KEY, k -> new HashMap<>())), ipk.inverseOf(), v);
+                    var k = ipk.inverseOf();
+                    var reverseMap = asMap(thing.computeIfAbsent(REVERSE_KEY, key -> new HashMap<>()));
+                    insert(reverseMap, k, v);
+                    reverseMap.put(k, asList(reverseMap.get(k))); // Store reverse relation values as List as other components rely on this assumption.
                 } else if (s.pKey().hasLangAlias()) {
                     insert(thing, value instanceof LanguageContainer ? s.pKey().langAlias() : s.pKey().name(), v);
                 } else {

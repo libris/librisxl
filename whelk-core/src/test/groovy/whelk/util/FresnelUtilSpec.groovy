@@ -830,14 +830,14 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Topic', 'prefLabel': "Hästar"],
                 ],
                 '@reverse': [
-                        'instanceOf': [
+                        'instanceOf': [[
                                 '@type'                  : 'Instance',
                                 'responsibilityStatement': 'av En Författare',
                                 'meta'                   : [
                                         '@type'        : 'Record',
                                         'controlNumber': 'dz7666s5bdksvtls'
                                 ]
-                        ]
+                        ]]
                 ]
         ]
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
@@ -860,8 +860,8 @@ class FresnelUtilSpec extends Specification {
         "language/Language/code"                   | "sv Swedish Svenska"                                          | ['@type': 'Work', 'language': l2]
         "language/Language/mainTitle"              | "Swedish Svenska"                                             | ['@type': 'Work', 'language': l]
         "language/Title/code"                      | "Swedish Svenska"                                             | ['@type': 'Work', 'language': l]
-        'in::instanceOf/*/responsibilityStatement' | 'av En Författare Swedish Svenska'                            | ['@type': 'Work', 'language': l, '@reverse': ['instanceOf': ['@type': 'Instance', 'responsibilityStatement': 'av En Författare']]]
-        'in::instanceOf/*/meta/*/controlNumber'    | 'dz7666s5bdksvtls Swedish Svenska'                            | ['@type': 'Work', 'language': l, '@reverse': ['instanceOf': ['@type': 'Instance', 'meta': ['@type': 'Record', 'controlNumber': 'dz7666s5bdksvtls']]]]
+        'in::instanceOf/*/responsibilityStatement' | 'av En Författare Swedish Svenska'                            | ['@type': 'Work', 'language': l, '@reverse': ['instanceOf': [['@type': 'Instance', 'responsibilityStatement': 'av En Författare']]]]
+        'in::instanceOf/*/meta/*/controlNumber'    | 'dz7666s5bdksvtls Swedish Svenska'                            | ['@type': 'Work', 'language': l, '@reverse': ['instanceOf': [['@type': 'Instance', 'meta': ['@type': 'Record', 'controlNumber': 'dz7666s5bdksvtls']]]]]
     }
 
     def "Handle FSL paths as alternateProperties"() {
@@ -1234,7 +1234,7 @@ class FresnelUtilSpec extends Specification {
                         ]
                 ],
                 "@reverse": [
-                        "instanceOf": [
+                        "instanceOf": [[
                                 "@type"                  : "Instance",
                                 "hasTitle"               : [
                                         "@type"    : "Title",
@@ -1245,7 +1245,7 @@ class FresnelUtilSpec extends Specification {
                                         "value": "9789178034239"
                                 ],
                                 "responsibilityStatement": "av Någon"
-                        ]
+                        ]]
                 ]
         ]
         searchCard == [
@@ -1261,7 +1261,7 @@ class FresnelUtilSpec extends Specification {
                         ]
                 ],
                 "@reverse"  : [
-                        "instanceOf": [
+                        "instanceOf": [[
                                 "@type"                  : "Instance",
                                 "hasTitle"               : [
                                         "@type"    : "Title",
@@ -1273,7 +1273,7 @@ class FresnelUtilSpec extends Specification {
                                 ],
                                 "responsibilityStatement": "av Någon",
                                 "editionStatement"       : "upplagan"
-                        ]
+                        ]]
                 ],
                 "originDate": "2025"
         ]
@@ -1286,7 +1286,7 @@ class FresnelUtilSpec extends Specification {
                         ]
                 ],
                 "@reverse": [
-                        "instanceOf": [
+                        "instanceOf": [[
                                 "@type"                  : "Instance",
                                 "hasTitle"               : [
                                         "@type"    : "Title",
@@ -1297,16 +1297,16 @@ class FresnelUtilSpec extends Specification {
                                         "value": "9789178034239"
                                 ],
                                 "responsibilityStatement": "av Någon"
-                        ]
+                        ]]
                 ]
         ]
         searchCardOnly == [
                 "@type"     : "Work",
                 "@reverse"  : [
-                        "instanceOf": [
+                        "instanceOf": [[
                                 "@type"           : "Instance",
                                 "editionStatement": "upplagan"
-                        ]
+                        ]]
                 ],
                 "originDate": "2025"
         ]
