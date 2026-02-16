@@ -653,6 +653,11 @@ class ElasticSearch {
         if (searchCard.containsKey(SEARCH_KEY)) {
             // TODO? Let _topStr just be _str instead? (Need to review boost configuration for _topStr vs _str in that case)
             searchCard[TOP_STR] = searchCard.remove(SEARCH_KEY)
+        } else {
+            var topStr = whelk.fresnelUtil.buildSearchStr(searchCard)
+            if (!topStr.isEmpty()) {
+                searchCard[TOP_STR] = topStr.size() == 1 ? topStr.getFirst() : topStr
+            }
         }
 
         try {

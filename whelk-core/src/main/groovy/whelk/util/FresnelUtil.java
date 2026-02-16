@@ -234,6 +234,26 @@ public class FresnelUtil {
         });
     }
 
+    public List<String> buildSearchStr(Map<String, Object> thing) {
+        var lensedForSearchStr = applyLens(thing, Lenses.SEARCH_TOKEN, List.of(Options.NO_FALLBACK));
+        if (lensedForSearchStr.isEmpty()) {
+            return List.of();
+        }
+        var byLang = lensedForSearchStr.byLang();
+        if (!byLang.isEmpty()) {
+            return new ArrayList<>(byLang.values());
+        }
+        var byScript = lensedForSearchStr.byScript();
+        if (!byScript.isEmpty()) {
+            return new ArrayList<>(byScript.values());
+        }
+        var asString = lensedForSearchStr.asString();
+        if (!asString.isEmpty()) {
+            return List.of(asString);
+        }
+        return List.of();
+    }
+
     private Object applyLens(
             Object value,
             Lens lens,
@@ -310,8 +330,6 @@ public class FresnelUtil {
         Collection<String> preserveLinks;
         Lensed lensed;
         Map<String, List<Node>> nodeTmpIdMap;
-
-        private static final Lens searchKeyLens = Lenses.SEARCH_TOKEN;
 
         private AppliedLens(Object thing, Lens lens, Collection<String> preserveLinks, Collection<Options> options) {
             this.preserveLinks = preserveLinks;
@@ -426,26 +444,6 @@ public class FresnelUtil {
                     }
                 }
             });
-        }
-
-        private List<String> buildSearchStr(Map<String, Object> thing) {
-            var lensedForSearchStr = applyLens(thing, searchKeyLens, List.of(Options.NO_FALLBACK));
-            if (lensedForSearchStr.isEmpty()) {
-                return List.of();
-            }
-            var byLang = lensedForSearchStr.byLang();
-            if (!byLang.isEmpty()) {
-                return new ArrayList<>(byLang.values());
-            }
-            var byScript = lensedForSearchStr.byScript();
-            if (!byScript.isEmpty()) {
-                return new ArrayList<>(byScript.values());
-            }
-            var asString = lensedForSearchStr.asString();
-            if (!asString.isEmpty()) {
-                return List.of(asString);
-            }
-            return List.of();
         }
 
         private static List<Map<String, String>> getIds(Map<String, Object> thing, String key) {
