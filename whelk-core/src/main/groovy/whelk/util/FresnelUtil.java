@@ -409,6 +409,11 @@ public class FresnelUtil {
         private void insert(Map<String, Object> thing, Node.Selected s) {
             for (var value : s.values()) {
                 var v = value instanceof Lensed l ? buildThing(l) : value;
+                if (v instanceof Map<?,?> m) {
+                    if (m.isEmpty() || (m.size() == 1 && m.containsKey(TYPE_KEY))) {
+                        continue;
+                    }
+                }
                 if (s.pKey() instanceof InversePropertyKey ipk) {
                     var k = ipk.inverseOf();
                     var reverseMap = asMap(thing.computeIfAbsent(REVERSE_KEY, key -> new HashMap<>()));
