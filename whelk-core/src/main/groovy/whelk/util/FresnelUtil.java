@@ -861,7 +861,8 @@ public class FresnelUtil {
         }
 
         public Map<String, Object> filteredLangMap(List<LangCode> fallbackLocales) {
-            return (selectedLang != null ? Stream.of(selectedLang) : fallbackLocales.stream())
+            return (selectedLang != null ? List.of(selectedLang) : (isTransliterated() ? languages() : fallbackLocales))
+                    .stream()
                     .map(LangCode::code)
                     .filter(thing::containsKey)
                     .collect(Collectors.toMap(Function.identity(), thing::get));
