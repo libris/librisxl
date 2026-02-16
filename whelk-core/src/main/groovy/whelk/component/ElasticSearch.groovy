@@ -32,6 +32,7 @@ import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
 import static whelk.util.FresnelUtil.Options.NO_FALLBACK
+import static whelk.util.FresnelUtil.Options.SKIP_ITEMS
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
 import static whelk.util.Jackson.mapper
 
@@ -661,9 +662,9 @@ class ElasticSearch {
         }
 
         try {
-            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE)).asString()
-            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
-            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS)).asString()
+            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS)).asString()
+            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS)).asString()
         } catch (Exception e) {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }

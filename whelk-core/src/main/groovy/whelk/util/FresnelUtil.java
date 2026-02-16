@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.JSONLD_ALT_ID_KEY;
-import static whelk.JsonLd.RECORD_TYPE;
 import static whelk.JsonLd.REVERSE_KEY;
 import static whelk.JsonLd.THING_KEY;
 import static whelk.JsonLd.TYPE_KEY;
@@ -123,6 +122,7 @@ public class FresnelUtil {
     public enum Options {
         TAKE_ALL_ALTERNATE,
         TRACK_ORIGINAL,
+        SKIP_ITEMS, // FIXME
         SKIP_MAP_VOCAB_TERMS,
         NO_FALLBACK
     }
@@ -625,6 +625,11 @@ public class FresnelUtil {
 
             for (Selected s : fslPath.select(thing)) {
                 var p = s.pKey();
+
+                if (options.contains(Options.SKIP_ITEMS) && p.name().equals("hasItem")) {
+                    // FIXME
+                    continue;
+                }
 
                 var nextLensGroup = getNextLensLevel(lens, thing, fslPath, options, p.isIntegral());
 
