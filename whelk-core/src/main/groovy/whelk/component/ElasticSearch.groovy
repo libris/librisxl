@@ -8,7 +8,6 @@ import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
-import whelk.FeatureFlags
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -23,13 +22,13 @@ import java.util.concurrent.LinkedBlockingQueue
 import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
 import static whelk.FeatureFlags.Flag.EXPERIMENTAL_INDEX_HOLDING_ORGS
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
+import static whelk.JsonLd.SEARCH_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
-import static whelk.util.FresnelUtil.Options.NO_FALLBACK
+import static whelk.util.FresnelUtil.Options.PRESERVE_LINKS
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
-import static whelk.util.FresnelUtil.Options.TAKE_FIRST_SHOW_PROPERTY
 import static whelk.util.Jackson.mapper
 
 @Log
@@ -429,7 +428,7 @@ class ElasticSearch {
     String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
         
-        whelk.embellish(copy, ['search-chips'])
+        whelk.embellish(copy, ['full'])
 
         if (log.isDebugEnabled()) {
             log.debug("Framing ${document.getShortId()}")
@@ -446,11 +445,11 @@ class ElasticSearch {
             links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
         }
 
-        def graph = ((List) copy.data['@graph'])
-        int originalSize = document.data['@graph'].size()
-        copy.data['@graph'] =
-                graph.take(originalSize) +
-                graph.drop(originalSize).collect { getShapeForEmbellishment(whelk, it) }
+//        def graph = ((List) copy.data['@graph'])
+//        int originalSize = document.data['@graph'].size()
+//        copy.data['@graph'] =
+//                graph.take(originalSize) +
+//                graph.drop(originalSize).collect { getShapeForEmbellishment(whelk, it) }
         setIdentifiers(copy)
         if (copy.isVirtual()) {
             copy.centerOnVirtualMainEntity()
@@ -464,10 +463,12 @@ class ElasticSearch {
         String thingId = thingIds.get(0)
 
         Map framedFull = JsonLd.frame(thingId, copy.data)
-        Map searchCard = toSearchCard(whelk, framedFull, links)
 
-        searchCard['_links'] = links
-        searchCard['_outerEmbellishments'] = copy.getEmbellishments() - links
+        Map searchCard2 = toSearchCard2(whelk, framedFull)
+//        Map searchCard = toSearchCard(whelk, framedFull, links)
+
+        searchCard2['_links'] = links
+        searchCard2['_outerEmbellishments'] = copy.getEmbellishments() - links
 
         Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
         var totalItems = incomingLinkCountByRelation.values().sum(0)
@@ -477,47 +478,42 @@ class ElasticSearch {
         // TODO what should be the key "itemOf.instanceOf"?
         // FIXME don't hardcode this
         var itemPath = ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"]
-        var itemCount = ((List) DocumentUtil.getAtPath(searchCard, itemPath, []))
+        var itemCount = ((List) DocumentUtil.getAtPath(searchCard2, itemPath, []))
                 .collect{ it['heldBy']?[JsonLd.ID_KEY] }.grep().unique().size()
         incomingLinkCountByRelation.put('itemOf.instanceOf', itemCount)
         
-        searchCard['reverseLinks'] = [
+        searchCard2['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
                 'totalItems': totalItems,
                 'totalItemsByRelation': incomingLinkCountByRelation
         ]
 
-        searchCard['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
-                framedFull,
+        searchCard2['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
+                searchCard2,
                 whelk.jsonld.locales as Set,
                 REMOVABLE_BASE_URIS,
                 document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
 
+
+        if (searchCard2.containsKey(SEARCH_KEY)) {
+            // TODO? Let _topStr just be _str instead? (Need to review boost configuration for _topStr vs _str in that case)
+            searchCard2[TOP_STR] = searchCard2.remove(SEARCH_KEY)
+        }
+
         try {
-            var topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.SearchToken, NO_FALLBACK)
-            if (topLens.isEmpty()) {
-                // If there is no search token, take first property of chip instead
-                topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.Chip, TAKE_FIRST_SHOW_PROPERTY)
-            }
-            var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values() // The values follow the key order in whelk.jsonld.locales (see subMap method implementation)
-                    ?: topLens.byScript().values()
-                    ?: topLens.asString()
-            if (topStr) {
-                searchCard[TOP_STR] = topStr
-            }
-            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.LensGroupName.Chip, TAKE_ALL_ALTERNATE).asString()
-            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
-            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(framedFull, Lenses.SEARCH_CARD_ONLY, TAKE_ALL_ALTERNATE).asString()
+            searchCard2[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard2, FresnelUtil.LensGroupName.Chip, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard2[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard2[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard2, Lenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
         } catch (Exception e) {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard['_ids'] = (thingIds + document.getRecordIdentifiers())
+        searchCard2['_ids'] = (thingIds + document.getRecordIdentifiers())
                 .collect { stripHash(lastPathSegment(it)) }
                 .unique()
                 .plus(whelk.fresnelUtil.fslSelect(framedFull, "meta/*/identifiedBy/*/value") as Collection<String>)
 
-        DocumentUtil.traverse(searchCard) { value, path ->
+        DocumentUtil.traverse(searchCard2) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
@@ -543,11 +539,13 @@ class ElasticSearch {
                         flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
                     }
                 }
-                value.putAll(flattened)
+                if (!flattened.isEmpty()) {
+                    value.putAll(flattened)
+                }
             }
 
             if (whelk.features.isEnabled(EXPERIMENTAL_INDEX_HOLDING_ORGS)) {
-                if ('Item' != searchCard[TYPE_KEY]
+                if ('Item' != searchCard2[TYPE_KEY]
                         && path
                         && "heldBy" == path.last()
                         && !path.contains('hasComponent')
@@ -568,58 +566,65 @@ class ElasticSearch {
         // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
         // we follow the advice and use a separate field.
         // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
-        searchCard["_es_id"] =  toElasticId(copy.getShortId())
+        searchCard2["_es_id"] =  toElasticId(copy.getShortId())
 
         if (log.isTraceEnabled()) {
-            log.trace("Framed data: ${searchCard}")
+            log.trace("Framed data: ${searchCard2}")
         }
 
-        return JsonOutput.toJson(searchCard)
+        return JsonOutput.toJson(searchCard2)
     }
     
     static String flattenedLangMapKey(key) {
         return '__' + key
     }
 
-    private static Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
-        boolean chipsify = false
-        boolean addSearchKey = true
-        boolean reduceKey = false
-        boolean searchCard = true
-        
-        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preserveLinks, searchCard)
+    private static Map toSearchCard2(Whelk whelk, Map thing) {
+        var lensed = whelk.fresnelUtil.applyLens(thing, FresnelUtil.LensGroupName.SearchCard, List.of(TAKE_ALL_ALTERNATE, PRESERVE_LINKS))
+        Map searchCard = lensed.getThingForIndex()
+        searchCard.put(JsonLd.RECORD_KEY, thing.get(JsonLd.RECORD_KEY))
+        return searchCard
     }
 
-    private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
-        Map e = toSearchCard(whelk, thing, Collections.EMPTY_SET)
-        recordToChip(whelk, e)
-        filterLanguages(whelk, e)
-        return e
-    }
-
-    private static void recordToChip(Whelk whelk, Map thing) {
-        if (thing[JsonLd.GRAPH_KEY]) {
-            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0], [] as Set, true)
-        }
-    }
-
-    private static void filterLanguages(Whelk whelk, Map thing) {
-        DocumentUtil.traverse(thing, { value, path ->
-            if (path && path.last() in whelk.jsonld.langContainerAliasInverted) {
-                Map<String, String> langContainer = value
-                var keep = langContainer.findAll { langTag, str -> langTag in whelk.jsonld.locales }
-                
-                var transformed = langContainer.findAll { langTag, str -> langTag.contains('-t-') }
-                keep.putAll(transformed)
-                transformed.keySet().each { tLangTag ->
-                    var original = langContainer.findAll { langTag, str -> tLangTag.contains(langTag) }
-                    keep.putAll(original)
-                }
-                
-                return new DocumentUtil.Replace(keep)
-            }
-        })
-    }
+//    private static Map toSearchCard(Whelk whelk, Map thing, Set<String> preserveLinks) {
+//        boolean chipsify = false
+//        boolean addSearchKey = true
+//        boolean reduceKey = false
+//        boolean searchCard = true
+//
+//        whelk.jsonld.toCard(thing, chipsify, addSearchKey, reduceKey, preserveLinks, searchCard)
+//    }
+//
+//    private static Map getShapeForEmbellishment(Whelk whelk, Map thing) {
+//        Map e = toSearchCard(whelk, thing, Collections.EMPTY_SET)
+//        recordToChip(whelk, e)
+//        filterLanguages(whelk, e)
+//        return e
+//    }
+//
+//    private static void recordToChip(Whelk whelk, Map thing) {
+//        if (thing[JsonLd.GRAPH_KEY]) {
+//            thing[JsonLd.GRAPH_KEY][0] = whelk.jsonld.toChip(thing[JsonLd.GRAPH_KEY][0], [] as Set, true)
+//        }
+//    }
+//
+//    private static void filterLanguages(Whelk whelk, Map thing) {
+//        DocumentUtil.traverse(thing, { value, path ->
+//            if (path && path.last() in whelk.jsonld.langContainerAliasInverted) {
+//                Map<String, String> langContainer = value
+//                var keep = langContainer.findAll { langTag, str -> langTag in whelk.jsonld.locales }
+//
+//                var transformed = langContainer.findAll { langTag, str -> langTag.contains('-t-') }
+//                keep.putAll(transformed)
+//                transformed.keySet().each { tLangTag ->
+//                    var original = langContainer.findAll { langTag, str -> tLangTag.contains(langTag) }
+//                    keep.putAll(original)
+//                }
+//
+//                return new DocumentUtil.Replace(keep)
+//            }
+//        })
+//    }
 
     private static setIdentifiers(Document doc) {
         DocumentUtil.findKey(doc.data, ["identifiedBy", "indirectlyIdentifiedBy"]) { value, path ->
