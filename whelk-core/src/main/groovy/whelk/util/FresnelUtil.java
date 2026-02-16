@@ -1537,9 +1537,9 @@ public class FresnelUtil {
                                              boolean isFirst,
                                              boolean isLast) {
             Decorated result = switch (value) {
+                case LanguageContainer lang -> formatLanguageContainer(lang, className, propertyName);
                 case Node node -> formatResource(node, isFirst, isLast);
                 case TransliteratedNode node -> formatTransliterated(node, isFirst, isLast);
-                case LanguageContainer lang -> formatLanguageContainer(lang, className, propertyName);
                 default -> {
                     var r = new DecoratedLiteral(value);
                     formats.valueStyle(className, propertyName).apply(r);
