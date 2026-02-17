@@ -78,6 +78,7 @@ class WhelkTool {
     Counter counter = new Counter()
 
     boolean skipIndex
+    boolean skipSparql
     boolean dryRun
     boolean noThreads = true
     int numThreads = -1
@@ -769,6 +770,7 @@ class WhelkTool {
 
     public void run() {
         whelk.setSkipIndex(skipIndex)
+        whelk.setSkipSparql(skipSparql)
         if (allowIdRemoval) {
             whelk.storage.doVerifyDocumentIdRetention = false
         }
@@ -784,6 +786,7 @@ class WhelkTool {
         log "Using script: $script"
         log "Using report dir: $reportsDir"
         if (skipIndex) log "  skipIndex"
+        if (skipSparql) log "  skipSparql"
         if (dryRun) log "  dryRun"
         if (stepWise) log "  stepWise"
         if (noThreads) log "  noThreads"
@@ -852,6 +855,7 @@ class WhelkTool {
         cli.h(longOpt: 'help', 'Print this help message and exit.')
         cli.r(longOpt: 'report', args: 1, argName: 'REPORT-DIR', 'Directory where reports are written (defaults to "reports").')
         cli.I(longOpt: 'skip-index', 'Do not index any changes, only write to storage.')
+        cli.Q(longOpt: 'skip-sparql', 'Do not update tripple store, only write to storage.')
         cli.d(longOpt: 'dry-run', 'Do not save any modifications.')
         cli.T(longOpt: 'no-threads', 'Do not use threads to parallellize batch processing.')
         cli.t(longOpt: 'num-threads', args: 1, argName: 'N', "Override default number of threads (${defaultNumThreads()}).")
@@ -896,6 +900,7 @@ class WhelkTool {
 
         def tool = new WhelkTool(preExistingWhelk, script, reportsDir, statsNumIds)
         tool.skipIndex = options.I
+        tool.skipSparql = options.Q
         tool.dryRun = options.d
         tool.stepWise = options.s
         tool.noThreads = options.T
