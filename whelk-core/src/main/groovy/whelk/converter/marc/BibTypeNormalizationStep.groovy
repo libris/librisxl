@@ -178,10 +178,23 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
       return resourceCache.jsonld.isSubClassOf(givenType, baseType)
     }
 
+    boolean isComplexSubjectWithFirstTermOfType(Map term, String baseType) {
+        if (term[TYPE] == 'ComplexSubject') {
+            def termComponentList = asList(term['termComponentList'])
+            if (termComponentList.size() > 0) {
+                return isSubClassOf(termComponentList[0][TYPE], type)
+            }
+        }
+        return false
+    }
+
     private void collectCategoryOfType(List<Map<String, Object>> categories, String type, Map<String, Map<String, Object>> result) {
         categories.each {
-            if (asList(it[TYPE]).any { t -> isSubClassOf(t, type) }) {
-                def key = it[ID] ?: '_:b' + result.size().toString() // or throw-away fake bnode id
+            if (
+                asList(it[TYPE]).any { t -> isSubClassOf(t, type) } ||
+                isComplexSubjectWithFirstTermOfType(it, type)
+            ) {
+                def key = it[ID] ?: '_:b' + result.size().toString() // id or throwaway fake blank id
                 result[key] = it
             }
             for (rel in matchRelations) {
