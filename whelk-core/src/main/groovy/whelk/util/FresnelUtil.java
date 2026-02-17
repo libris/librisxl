@@ -845,25 +845,20 @@ public class FresnelUtil {
         }
 
         public List<String> pick(LangCode langCode, List<LangCode> fallbackLocales) {
-            if (isTransliterated()) {
-                return get(selectedLang);
-            }
+            var languages = languages();
 
-            var values = get(langCode);
-
-            if (!values.isEmpty()) {
-                return values;
+            if (languages.contains(langCode)) {
+                return get(langCode);
             }
 
             for (LangCode fallbackLocale : fallbackLocales) {
-                values = get(fallbackLocale);
-                if (!values.isEmpty()) {
-                    return values;
+                if (languages.contains(fallbackLocale)) {
+                    return get(fallbackLocale);
                 }
             }
 
-            // random lang
-            return asStringList(thing.values().iterator().next());
+            var randomLang = languages.stream().findFirst();
+            return randomLang.map(this::get).orElse(Collections.emptyList());
         }
 
         public boolean isTransliterated() {
