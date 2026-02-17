@@ -13,7 +13,7 @@ import java.util.function.Predicate;
 import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 
-public sealed class And extends Group {
+public non-sealed class And extends Group {
     private final List<Node> children;
 
     public And(List<? extends Node> children) {
@@ -99,19 +99,5 @@ public sealed class And extends Group {
             return Optional.of(b);
         }
         return Optional.empty();
-    }
-
-    public static final class Nested extends And {
-        private final String stem;
-
-        public Nested(List<? extends Node> children, String stem) {
-            super(children);
-            this.stem = stem;
-        }
-
-        @Override
-        public Map<String, Object> toEs(ESSettings esSettings) {
-            return nestedWrap(stem, getCoreEsQuery(esSettings));
-        }
     }
 }
