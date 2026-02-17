@@ -127,7 +127,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
   List<Map<String, Object>> getDescriptions(Object refs) {
         return (List<Map<String, Object>>) asList(refs).findResults {
-            if (ID in it) typeCategoryNormalizer.categories[it[ID]]
+            ID in it ? typeCategoryNormalizer.categories[it[ID]] : it
         }
     }
 
@@ -181,7 +181,8 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     private void collectCategoryOfType(List<Map<String, Object>> categories, String type, Map<String, Map<String, Object>> result) {
         categories.each {
             if (asList(it[TYPE]).any { t -> isSubClassOf(t, type) }) {
-                result[it[ID]] = it
+                def key = it[ID] ?: '_:b' + result.size().toString() // or throw-away fake bnode id
+                result[key] = it
             }
             for (rel in matchRelations) {
                 collectCategoryOfType(getDescriptions(it[rel]), type, result)
