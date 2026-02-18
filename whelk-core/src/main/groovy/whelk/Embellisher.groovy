@@ -161,7 +161,7 @@ class Embellisher {
 
         def data = load(lens, toFetch)
         for (var d : data) {
-            var ids = new Document(d).getThingIdentifiers() as Set
+            var ids = plusWithoutHash(new Document(d).getThingIdentifiers()) as Set
             for (Link link : links.findAll{ ids.contains(it.iri) }) {
                 for (String id : ids) {
                     visited.add(link.withIri(id))
