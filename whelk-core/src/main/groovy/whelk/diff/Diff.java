@@ -49,6 +49,11 @@ public class Diff {
             return;
         }
 
+        if (oA == null && oB == null) {
+            // null == null, fine
+            return;
+        }
+
         if (!oA.getClass().equals(oB.getClass())) {
             result.add(Map.of("op", "replace", "path", formatRFC6901pointer(path), "value", oB));
             return;
