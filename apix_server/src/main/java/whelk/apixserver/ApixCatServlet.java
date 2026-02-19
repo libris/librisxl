@@ -207,7 +207,7 @@ public class ApixCatServlet extends HttpServlet
                 id = Utils.s_whelk.getStorage().getSystemIdByIri("http://libris.kb.se/" + collection + "/" + id);
 
             incomingDocument.deepReplaceId( Document.getBASE_URI().resolve(id).toString() );
-            Utils.s_whelk.storeAtomicUpdate(id, false, false, Utils.APIX_SYSTEM_CODE, 
+            Utils.s_whelk.storeAtomicUpdate(id, false, false, false, Utils.APIX_SYSTEM_CODE,
                     request.getRemoteUser(), (Document doc) -> doc.data = incomingDocument.data);
             s_logger.info("Successful update on : " + incomingDocument.getShortId());
             Utils.send303Response(response, Utils.APIX_BASEURI + "/0.1/cat/libris/" + collection + "/" + incomingDocument.getShortId());

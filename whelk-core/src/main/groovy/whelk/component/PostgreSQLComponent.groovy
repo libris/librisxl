@@ -732,7 +732,7 @@ class PostgreSQLComponent {
         }
     }
 
-    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted, boolean handleExceptions) {
+    boolean createDocument(Document doc, String changedIn, String changedBy, String collection, boolean deleted, boolean handleExceptions, boolean skipSparql) {
         log.debug("Saving ${doc.getShortId()}, ${changedIn}, ${changedBy}, ${collection}")
 
         return withDbConnection {
@@ -799,7 +799,7 @@ class PostgreSQLComponent {
                 insert.executeUpdate()
 
                 saveVersion(doc, connection, now, now, changedIn, changedBy, collection, deleted)
-                refreshDerivativeTables(doc, connection, deleted)
+                refreshDerivativeTables(doc, connection, deleted, skipSparql)
 
                 connection.commit()
                 connection.setAutoCommit(true)
@@ -834,7 +834,7 @@ class PostgreSQLComponent {
 
             long count = 0
             for (Document doc : loadAll(null, false, null, null)) {
-                refreshDerivativeTables(doc, connection, doc.getDeleted(), leaveCacheAlone)
+                refreshDerivativeTables(doc, connection, doc.getDeleted(), false, leaveCacheAlone)
 
                 ++count
                 if (count % 500 == 0)
@@ -867,7 +867,7 @@ class PostgreSQLComponent {
                 insert.executeUpdate()
 
                 saveVersion(doc, connection, now, now, changedIn, changedBy, collection, false)
-                refreshDerivativeTables(doc, connection, false)
+                refreshDerivativeTables(doc, connection, false, false)
 
                 connection.commit()
                 return true
@@ -934,12 +934,12 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, boolean skipSparql, String changedIn, String changedBy, String oldChecksum) {
         return withDbConnection {
             Connection connection = getMyConnection()
             connection.setAutoCommit(false)
             List<Runnable> postCommitActions = []
-            Document result = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum, connection, postCommitActions)
+            Document result = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, skipSparql, changedIn, changedBy, oldChecksum, connection, postCommitActions)
             connection.commit()
             connection.setAutoCommit(true)
             postCommitActions.each { it.run() }
@@ -947,14 +947,14 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    Document storeUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, boolean skipSparql, String changedIn, String changedBy, UpdateAgent updateAgent) {
         int retriesLeft = STALE_UPDATE_RETRIES
         while (true) {
             try {
                 Document doc = load(id)
                 String checksum = doc.getChecksum(jsonld)
                 updateAgent.update(doc)
-                Document updated = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, checksum)
+                Document updated = storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, skipSparql, changedIn, changedBy, checksum)
                 return updated
             }
             catch (StaleUpdateException e) {
@@ -969,7 +969,8 @@ class PostgreSQLComponent {
         }
     }
 
-    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum,
+    Document storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, boolean skipSparql,
+                               String changedIn, String changedBy, String oldChecksum,
                                Connection connection, List<Runnable> postCommitActions) {
         String id = doc.shortId
         log.debug("Saving (atomic update) ${id}")
@@ -1079,11 +1080,11 @@ class PostgreSQLComponent {
                 SortedSet<String> idsLinkingToOldId = getDependencyData(id, GET_DEPENDERS, connection)
                 for (String dependerId : idsLinkingToOldId) {
                     Document depender = load(dependerId)
-                    storeAtomicUpdate(depender, true, false, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
+                    storeAtomicUpdate(depender, true, false, skipSparql, changedIn, changedBy, depender.getChecksum(jsonld), connection, postCommitActions)
                 }
             }
 
-            refreshDerivativeTables(doc, connection, deleted)
+            refreshDerivativeTables(doc, connection, deleted, skipSparql)
 
             postCommitActions << { dependencyCache.invalidate(preUpdateDoc, doc) }
 
@@ -1169,14 +1170,14 @@ class PostgreSQLComponent {
         // We're ok.
     }
 
-    void refreshDerivativeTables(Document doc) {
+    void refreshDerivativeTables(Document doc, boolean skipSparql) {
         withDbConnection {
             Connection connection = getMyConnection()
-            refreshDerivativeTables(doc, connection, doc.deleted)
+            refreshDerivativeTables(doc, connection, doc.deleted, skipSparql)
         }
     }
 
-    void refreshDerivativeTables(Document doc, Connection connection, boolean deleted, boolean leaveCacheAlone = false) {
+    void refreshDerivativeTables(Document doc, Connection connection, boolean deleted, boolean skipSparql, boolean leaveCacheAlone = false) {
         saveIdentifiers(doc, connection, deleted)
         saveDependencies(doc, connection)
         
@@ -1191,7 +1192,7 @@ class PostgreSQLComponent {
             }
         }
 
-        if (sparqlQueueEnabled) {
+        if (sparqlQueueEnabled && !skipSparql) {
             sparqlQueueAdd(doc.getShortId(), connection)
         }
     }
@@ -1683,56 +1684,6 @@ class PostgreSQLComponent {
         insvers.setTimestamp(8, new Timestamp(modTime.getTime()))
         insvers.setBoolean(9, deleted)
         return insvers
-    }
-
-    boolean bulkStore(final List<Document> docs, String changedIn, String changedBy, String collection) {
-        return withDbConnection {
-            if (!docs || docs.isEmpty()) {
-                return true
-            }
-            log.trace("Bulk storing ${docs.size()} documents.")
-            Connection connection = getMyConnection()
-            connection.setAutoCommit(false)
-            PreparedStatement batch = connection.prepareStatement(INSERT_DOCUMENT)
-            PreparedStatement ver_batch = connection.prepareStatement(INSERT_DOCUMENT_VERSION)
-            try {
-                docs.each { doc ->
-                    doc.normalizeUnicode()
-                    if (linkFinder != null)
-                        linkFinder.normalizeIdentifiers(doc)
-                    Date now = new Date()
-                    doc.setCreated(now)
-                    doc.setModified(now)
-                    doc.setDeleted(false)
-                    if (versioning) {
-                        ver_batch = rigVersionStatement(ver_batch, doc, now, now, changedIn, changedBy, collection, false)
-                        ver_batch.addBatch()
-                    }
-                    batch = rigInsertStatement(batch, doc, now, changedIn, changedBy, collection, false)
-                    batch.addBatch()
-                }
-                batch.executeBatch()
-                ver_batch.executeBatch()
-                docs.each { doc ->
-                    boolean leaveCacheAlone = true
-                    refreshDerivativeTables(doc, connection, false, leaveCacheAlone)
-                }
-                clearEmbellishedCache(connection)
-                connection.commit()
-                log.debug("Stored ${docs.size()} documents in collection ${collection} (versioning: ${versioning})")
-                return true
-            } catch (Exception e) {
-                log.error("Failed to save batch: ${e.message}. Rolling back..", e)
-                if (e instanceof SQLException) {
-                    Exception nextException = ((SQLException) e).nextException
-                    log.error("Note: next exception was: ${nextException.message}.", nextException)
-                }
-                connection.rollback()
-            } finally {
-                close(batch, ver_batch)
-            }
-            return false
-        }
     }
 
     private void sparqlQueueAdd(String systemId, Connection connection) {
@@ -2812,11 +2763,11 @@ class PostgreSQLComponent {
         }
     }
 
-    void remove(String identifier, String changedIn, String changedBy) {
+    void remove(String identifier, String changedIn, String changedBy, boolean skipSparql) {
         if (versioning) {
             log.debug("Marking document with ID ${identifier} as deleted.")
             try {
-                storeUpdate(identifier, false, true, changedIn, changedBy,
+                storeUpdate(identifier, false, true, skipSparql, changedIn, changedBy,
                     { Document doc ->
                         doc.setDeleted(true)
                         // Add a tombstone marker (without removing anything) perhaps?

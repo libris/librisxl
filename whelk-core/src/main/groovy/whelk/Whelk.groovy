@@ -76,6 +76,7 @@ class Whelk {
     URI baseUri = null
     boolean skipIndex = false
     boolean skipIndexDependers = false
+    boolean skipSparql = false
 
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
@@ -482,7 +483,7 @@ class Whelk {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted, handleExceptions)
+        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted, skipSparql, handleExceptions)
         if (success) {
             indexAsyncOrSync {
                 elastic.index(document, this)
@@ -508,9 +509,10 @@ class Whelk {
      *
      * Returns true if anything was written.
      */
-    boolean storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, UpdateAgent updateAgent) {
+    boolean storeAtomicUpdate(String id, boolean minorUpdate, boolean writeIdenticalVersions, boolean skipSparql,
+                              String changedIn, String changedBy, UpdateAgent updateAgent) {
         Document preUpdateDoc = null
-        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, changedIn, changedBy, { Document doc ->
+        Document updated = storage.storeUpdate(id, minorUpdate, writeIdenticalVersions, skipSparql, changedIn, changedBy, { Document doc ->
             preUpdateDoc = doc.clone()
             updateAgent.update(doc)
             normalize(doc)
@@ -529,7 +531,7 @@ class Whelk {
     void storeAtomicUpdate(Document doc, boolean minorUpdate, boolean writeIdenticalVersions, String changedIn, String changedBy, String oldChecksum) {
         normalize(doc)
         Document preUpdateDoc = storage.load(doc.shortId)
-        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, changedIn, changedBy, oldChecksum)
+        Document updated = storage.storeAtomicUpdate(doc, minorUpdate, writeIdenticalVersions, skipSparql, changedIn, changedBy, oldChecksum)
 
         if (updated == null) {
             return
@@ -568,7 +570,7 @@ class Whelk {
             if (!force) {
                 assertNoDependers(doc)
             }
-            storage.remove(id, changedIn, changedBy)
+            storage.remove(id, changedIn, changedBy, skipSparql)
             indexAsyncOrSync {
                 elastic.remove(id)
                 if (features.isEnabled(INDEX_BLANK_WORKS)) {

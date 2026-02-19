@@ -240,7 +240,7 @@ public class Digidaily {
                     out.write(bibToBeSaved.getShortId() + "\tDIGI CREATED\n");
                 } else {
                     bibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null, true);
-                    Utils.s_whelk.storeAtomicUpdate(bibToBeSaved.getShortId(), false, false, 
+                    Utils.s_whelk.storeAtomicUpdate(bibToBeSaved.getShortId(), false, false, false,
                             Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), (Document doc) -> doc.data = bibToBeSaved.data);
                     out.write(bibToBeSaved.getShortId() + "\tDIGI UPDATED\n");
                 }
@@ -302,7 +302,7 @@ public class Digidaily {
                     MarcXmlRecordWriter marcXmlRecordWriter = new MarcXmlRecordWriter(baos);
                     marcXmlRecordWriter.writeRecord(eRecord);
                     Document printBibToBeSaved = Utils.convertToRDF(baos.toString("UTF-8"), "bib", null, true);
-                    Utils.s_whelk.storeAtomicUpdate(printBibToBeSaved.getShortId(), false, false, 
+                    Utils.s_whelk.storeAtomicUpdate(printBibToBeSaved.getShortId(), false, false, false,
                             Utils.APIX_SYSTEM_CODE, request.getRemoteUser(), (Document doc) -> doc.data = printBibToBeSaved.data);
                     out.write(printBibToBeSaved.getShortId() + "\tPRINT UPDATED\n");
                 }
