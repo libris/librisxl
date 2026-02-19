@@ -642,7 +642,11 @@ class ElasticSearch {
         ]
 
         // TODO: Fallback, clean strings (replicate parts of JsonLd.applyLensAsMapByLang)
-        searchCard['_sortKeyByLang'] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN).asStringByLang()
+        try {
+            searchCard['_sortKeyByLang'] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN).asStringByLang()
+        } catch (Exception e) {
+            log.error("Couldn't create sort key for {}: {}", document.shortId, e, e)
+        }
 
         if (searchCard.containsKey(SEARCH_KEY)) {
             // TODO? Let _topStr just be _str instead? (Need to review boost configuration for _topStr vs _str in that case)

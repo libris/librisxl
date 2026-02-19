@@ -170,11 +170,15 @@ public class FresnelUtil {
         this.formats = new Formats(getUnsafe(jsonLd.displayData, "formatters", null));
     }
 
-    public Map<String, Object> getLensedThing(Object thing, Lens lens) {
+    public Map<String, Object> getLensedThing(Map<String, Object> thing, Lens lens) {
         return getLensedThing(thing, lens, List.of());
     }
 
-    public Map<String, Object> getLensedThing(Object thing, Lens lens, Collection<String> preserveLinks) {
+    public Map<String, Object> getLensedThing(Map<String, Object> thing, Lens lens, Collection<String> preserveLinks) {
+        if (!thing.containsKey(TYPE_KEY)) {
+            logger.warn("Lens could not be applied to {} due to missing type", thing.get(ID_KEY));
+            return thing;
+        }
         var options = List.of(Options.TAKE_ALL_ALTERNATE, Options.TRACK_ORIGINAL, Options.SKIP_MAP_VOCAB_TERMS);
         return new AppliedLens(thing, lens, preserveLinks, options).getThing();
     }
@@ -668,7 +672,7 @@ public class FresnelUtil {
                 var deepLensed = build(in, l, opts);
                 return deepLensed.isEmpty() ? null : deepLensed;
             }
-            if (o instanceof Map<?,?> m) {
+            if (o instanceof Map<?, ?> m) {
                 return p.hasLangAlias()
                         ? asLangContainer(m, selectedLang)
                         : applyLens(m, l, opts, selectedLang);
@@ -692,7 +696,6 @@ public class FresnelUtil {
             if (selectedLang != null && !m.containsKey(selectedLang.code())) {
                 return null;
             }
-            var langContainer = new LanguageContainer(asMap(m), selectedLang);
             return new LanguageContainer(asMap(m), selectedLang);
         }
 
