@@ -20,7 +20,8 @@ class JsonLdSpec extends Specification {
             "@vocab": "http://example.org/ns/",
             "pfx": "http://example.org/pfx/",
             "_indexTerm": [
-                "@container": "@index"
+                "@container": "@index",
+                "@id": "forTerm"
             ]
         ]
     ]

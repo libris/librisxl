@@ -72,6 +72,7 @@ class JsonLd {
     static final class Category {
         public static final String DEPENDENT = 'dependent'
         public static final String INTEGRAL = 'integral'
+        public static final String PENDING = 'pending'
     }
 
 
@@ -778,6 +779,10 @@ class JsonLd {
 
     boolean isIntegral(String property) {
         getCategoryMembers(Category.INTEGRAL).contains(property)
+    }
+
+    boolean isCategoryPending(String property) {
+        getCategoryMembers(Category.PENDING).contains(property)
     }
 
     /**

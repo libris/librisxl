@@ -284,4 +284,41 @@ class LinearitySpec extends Specification {
         recreatedVersions.equals(versions)
     }
 
+    def "null preserved"() {
+        given:
+
+        def versions = [
+                [
+                        "a":["b", "c"]
+                ],
+                [
+                        "a":["b", null, "d", ["a": ["b", 2]]]
+                ],
+                [
+                        "a":["b", null, "d", ["a": ["b", 3]]]
+                ],
+                [
+                        "a":["b", null, "d", ["a": ["b", 3]]],
+                        "b": null
+                ],
+                [
+                        "a":["b", null, "d", ["a": ["b", 4]]],
+                        "b": null
+                ],
+        ]
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        for (int i = 0; i < diffs.size(); ++i) {
+            //System.err.println(mapper.writeValueAsString(diffs[i]))
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
 }

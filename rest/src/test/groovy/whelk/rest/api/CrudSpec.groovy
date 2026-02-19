@@ -7,6 +7,7 @@ import spock.lang.Unroll
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
+import whelk.ResourceCache
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ModelValidationException
@@ -112,6 +113,7 @@ class CrudSpec extends Specification {
             ["@id": "Work"],
         ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
+        whelk.setResourceCache(new ResourceCache(whelk.getJsonld()))
 
         // NB!! Mocking of static methods e.g. LegacyIntegrationTools.determineLegacyCollection
         // does not work if they are called directly from Crud class

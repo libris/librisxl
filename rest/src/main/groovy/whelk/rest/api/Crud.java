@@ -10,6 +10,7 @@ import whelk.JsonLd;
 import whelk.JsonLdValidator;
 import whelk.TargetVocabMapper;
 import whelk.Whelk;
+import whelk.converter.BibTypeNormalizer;
 import whelk.exception.ElasticIOException;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.UnexpectedHttpStatusException;
@@ -53,6 +54,7 @@ public class Crud extends WhelkHttpServlet {
     public static final RestMetrics metrics = new RestMetrics();
 
     private JsonLdValidator validator;
+    private BibTypeNormalizer typeNormalizer = null;
     private TargetVocabMapper targetVocabMapper;
 
     private AccessControl accessControl = new AccessControl();
@@ -77,6 +79,13 @@ public class Crud extends WhelkHttpServlet {
         siteSearch = new SiteSearch(whelk);
         validator = JsonLdValidator.from(whelk.getJsonld());
         converterUtils = new ConverterUtils(whelk);
+
+        //TODO: Not needed if asserts are moved from normalizer?
+        try {
+            typeNormalizer = new BibTypeNormalizer(whelk.getResourceCache());
+        } catch (AssertionError | Exception e) {
+            log.error("BibTypeNormalizer failed to initialize: ${e.message}", e);
+        }
 
         cacheFetchedResource(whelk.getSystemContextUri());
         cacheFetchedResource(whelk.getVocabUri());
@@ -772,6 +781,11 @@ public class Crud extends WhelkHttpServlet {
                             .orElseThrow(() -> new BadRequestException("Missing If-Match header in update"));
                     
                     log.info("If-Match: {}", ifMatch);
+
+                    //TODO: Check isLegacyType in method to be exposed in the normalizer
+                    if (this.isLegacyType(doc)) {
+                        this.normalizeBibTypes(doc);
+                    }
                     whelk.storeAtomicUpdate(doc, false, true, "xl", activeSigel, ifMatch.documentCheckSum());
                 }
                 else {
@@ -798,6 +812,39 @@ public class Crud extends WhelkHttpServlet {
             }
         }
         return null;
+    }
+
+    /**
+     * Type normalization
+     * Support writing the legacy data format for ~one year.
+     */
+    private void normalizeBibTypes(Document doc) {
+        this.checkNormalizerState();
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> thing = (Map<String, Object>) doc.getThing();
+
+        if (thing.containsKey(JsonLd.WORK_KEY)) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> work = (Map<String, Object>) thing.get(JsonLd.WORK_KEY);
+            if (work.size() == 1 && work.containsKey(JsonLd.ID_KEY)) {
+                String id = (String) work.get(JsonLd.ID_KEY);
+                var linkedWork = whelk.getStorage().getDocumentByIri(id);
+                typeNormalizer.normalize(thing, linkedWork.getThing());
+            } else { // Local work
+                typeNormalizer.normalize(thing, work);
+            }
+        }
+    }
+
+    private void checkNormalizerState() {
+        if (this.typeNormalizer == null) {
+            throw new WhelkRuntimeException("Cannot save document, type normalizer is in a bad state.");
+        }
+    }
+
+    private boolean isLegacyType(Document doc) {
+        return this.whelk.getJsonld().isCategoryPending(doc.getThingType());
     }
 
     public static void sendCreateResponse(HttpServletResponse response, String locationRef, ETag eTag) {
