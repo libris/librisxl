@@ -768,6 +768,12 @@ public class Crud extends WhelkHttpServlet {
             if (doc != null) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER);
                 String collection = doc.getLegacyCollection(whelk.getJsonld());
+
+                //TODO: Check isLegacyType in method to be exposed in the normalizer
+                if (this.isLegacyType(doc)) {
+                    this.normalizeBibTypes(doc);
+                }
+
                 if (isUpdate) {
                     // You are not allowed to change collection when updating a record
                     if (!collection.equals(whelk.getStorage().getCollectionBySystemID(doc.getShortId()))) {
@@ -782,10 +788,6 @@ public class Crud extends WhelkHttpServlet {
                     
                     log.info("If-Match: {}", ifMatch);
 
-                    //TODO: Check isLegacyType in method to be exposed in the normalizer
-                    if (this.isLegacyType(doc)) {
-                        this.normalizeBibTypes(doc);
-                    }
                     whelk.storeAtomicUpdate(doc, false, true, "xl", activeSigel, ifMatch.documentCheckSum());
                 }
                 else {
