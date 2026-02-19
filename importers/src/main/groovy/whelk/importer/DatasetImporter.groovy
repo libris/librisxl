@@ -381,7 +381,7 @@ class DatasetImporter {
         Document storedDoc = whelk.getDocument(incomingDoc.getShortId())
         WRITE_RESULT result
         if (storedDoc != null) {
-            boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, "xl", null, { doc ->
+            boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, false, "xl", null, { doc ->
                 doc.data = incomingDoc.data
             })
             if (updated) {

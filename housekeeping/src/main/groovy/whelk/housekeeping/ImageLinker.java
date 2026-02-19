@@ -297,7 +297,7 @@ public class ImageLinker extends HouseKeeper {
         }
 
         if (instanceId != null) {
-            whelk.storeAtomicUpdate(instanceId, true, false, "ImageLinker", "SEK",
+            whelk.storeAtomicUpdate(instanceId, true, false, false, "ImageLinker", "SEK",
                     (Document doc) -> {
                         doc.addImage(imageUri);
                         doc.setGenerationDate(new Date());
