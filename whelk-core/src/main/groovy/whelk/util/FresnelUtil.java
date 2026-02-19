@@ -239,19 +239,11 @@ public class FresnelUtil {
         if (lensedForSearchStr.isEmpty()) {
             return List.of();
         }
-        var byLang = lensedForSearchStr.byLang();
-        if (!byLang.isEmpty()) {
-            return new ArrayList<>(byLang.values());
-        }
-        var byScript = lensedForSearchStr.byScript();
+        var byScript = lensedForSearchStr.asStringByScript();
         if (!byScript.isEmpty()) {
-            return new ArrayList<>(byScript.values());
+            return byScript.values().stream().distinct().toList();
         }
-        var asString = lensedForSearchStr.asString();
-        if (!asString.isEmpty()) {
-            return List.of(asString);
-        }
-        return List.of();
+        return lensedForSearchStr.asStringByLang().values().stream().distinct().toList();
     }
 
     private Object applyLens(
@@ -504,34 +496,36 @@ public class FresnelUtil {
     // FIXME naming
     public sealed abstract class Lensed permits Node, TransliteratedNode {
         public String asString() {
-            return printTo(new StringBuilder()).toString();
+            return printTo(new StringBuilder(), null, null).toString();
         }
 
-        public Map<String, String> byLang() {
-            return cleanLangMap(byLang(new LinkedHashMap<>()));
+        public Map<String, String> asStringByLang() {
+            LinkedHashMap<String, String> m = new LinkedHashMap<>();
+            fallbackLocales.forEach(l -> {
+                var s = printTo(new StringBuilder(), l, null).toString();
+                if (!s.isEmpty()) {
+                    m.put(l.code(), s);
+                }
+            });
+            return m;
         }
 
-        public Map<String, String> byScript() {
-            return cleanLangMap(byScript(new LinkedHashMap<>()));
+        public Map<String, String> asStringByScript() {
+            LinkedHashMap<String, String> m = new LinkedHashMap<>();
+            collectScriptLangs().forEach(l -> {
+                var s = printTo(new StringBuilder(), null, l).toString();
+                if (!s.isEmpty()) {
+                    m.put(l.code(), s);
+                }
+            });
+            return m;
         }
 
         public abstract boolean isEmpty();
 
-        protected abstract StringBuilder printTo(StringBuilder s);
+        protected abstract StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang);
 
-        protected abstract Map<LangCode, StringBuilder> byLang(Map<LangCode, StringBuilder> stringsByLang);
-
-        protected abstract Map<LangCode, StringBuilder> byScript(Map<LangCode, StringBuilder> stringsByLang);
-
-        private Map<String, String> cleanLangMap(Map<LangCode, StringBuilder> stringsByLang) {
-            Map<String, String> result = new LinkedHashMap<>();
-            stringsByLang.forEach((lang, s) -> {
-                if (!lang.equals(LangCode.NO_LANG)) {
-                    result.put(lang.code(), s.toString());
-                }
-            });
-            return result;
-        }
+        protected abstract List<LangCode> collectScriptLangs();
     }
 
     public sealed class Node extends Lensed permits IntermediateNode, LanguageContainer {
@@ -698,6 +692,7 @@ public class FresnelUtil {
             if (selectedLang != null && !m.containsKey(selectedLang.code())) {
                 return null;
             }
+            var langContainer = new LanguageContainer(asMap(m), selectedLang);
             return new LanguageContainer(asMap(m), selectedLang);
         }
 
@@ -718,29 +713,30 @@ public class FresnelUtil {
         }
 
         @Override
-        public boolean isEmpty() {
-            return orderedSelection.isEmpty();
-        }
-
-        @Override
-        protected StringBuilder printTo(StringBuilder s) {
-            orderedSelection.forEach(p -> printTo(s, p.values()));
+        protected StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang) {
+            orderedSelection.forEach(p -> printTo(s, p.values(), lang, scriptLang));
             return s;
         }
 
         @Override
-        protected Map<LangCode, StringBuilder> byLang(Map<LangCode, StringBuilder> stringsByLang) {
-            orderedSelection.forEach(p -> byLang(stringsByLang, p.values()));
-            return stringsByLang;
+        protected List<LangCode> collectScriptLangs() {
+            return orderedSelection.stream()
+                    .map(Selected::getFlatValues)
+                    .flatMap(List::stream)
+                    .filter(Lensed.class::isInstance)
+                    .map(Lensed.class::cast)
+                    .map(Lensed::collectScriptLangs)
+                    .filter(Predicate.not(List::isEmpty))
+                    .findFirst()
+                    .orElse(List.of());
         }
 
         @Override
-        protected Map<LangCode, StringBuilder> byScript(Map<LangCode, StringBuilder> stringsByLang) {
-            orderedSelection.forEach(p -> byScript(stringsByLang, p.values()));
-            return stringsByLang;
+        public boolean isEmpty() {
+            return orderedSelection.isEmpty();
         }
 
-        private void printTo(StringBuilder s, Object value) {
+        private void printTo(StringBuilder s, Object value, LangCode lang, LangCode scriptLang) {
             if (value == null) {
                 return;
             }
@@ -748,27 +744,9 @@ public class FresnelUtil {
                 s.append(" ");
             }
             switch(value) {
-                case Collection<?> l -> l.forEach(v -> printTo(s, v));
-                case Lensed l -> l.printTo(s);
+                case Collection<?> l -> l.forEach(v -> printTo(s, v, lang, scriptLang));
+                case Lensed l -> l.printTo(s, lang, scriptLang);
                 default -> s.append(value);
-            }
-        }
-
-        private void byLang(Map<LangCode, StringBuilder> stringsByLangTag, Object value) {
-            stringsByLangTag.putIfAbsent(LangCode.NO_LANG, new StringBuilder());
-            switch (value) {
-                case Collection<?> c -> c.forEach(v -> byLang(stringsByLangTag, v));
-                case Lensed l -> l.byLang(stringsByLangTag);
-                default -> stringsByLangTag.values().forEach(s -> printTo(s, value));
-            }
-        }
-
-        private void byScript(Map<LangCode, StringBuilder> stringsByLangTag, Object value) {
-            stringsByLangTag.putIfAbsent(LangCode.NO_LANG, new StringBuilder());
-            switch (value) {
-                case Collection<?> c -> c.forEach(v -> byScript(stringsByLangTag, v));
-                case Lensed l -> l.byScript(stringsByLangTag);
-                default -> stringsByLangTag.values().forEach(s -> printTo(s, value));
             }
         }
 
@@ -797,34 +775,30 @@ public class FresnelUtil {
         }
 
         @Override
-        protected StringBuilder printTo(StringBuilder s) {
-            if(!s.isEmpty() && s.charAt(s.length() - 1) != ' ') {
-                s.append(" ");
+        protected StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang) {
+            if (lang == null && scriptLang == null) {
+                transliterations.values().forEach(n -> n.printTo(s, null, null));
+            } else if (scriptLang != null && transliterations.containsKey(scriptLang)) {
+                transliterations.get(scriptLang).printTo(s, lang, scriptLang);
+            } else {
+                transliterations.keySet()
+                        .stream()
+                        .max(LangCode.ORIGINAL_SCRIPT_FIRST) // Prefer romanized
+                        .map(transliterations::get)
+                        .ifPresent(n -> n.printTo(s, lang, scriptLang));
             }
-            transliterations.values().forEach(node -> node.printTo(s));
             return s;
         }
 
         @Override
-        protected Map<LangCode, StringBuilder> byLang(Map<LangCode, StringBuilder> stringsByLang) {
-            transliterations.values().forEach(node -> node.byLang(stringsByLang));
-            return stringsByLang;
-        }
-
-        @Override
-        protected Map<LangCode, StringBuilder> byScript(Map<LangCode, StringBuilder> stringsByLang) {
-            transliterations.forEach((lang, n) -> {
-                var noLang = new StringBuilder(stringsByLang.containsKey(LangCode.NO_LANG)
-                        ? stringsByLang.get(LangCode.NO_LANG).toString()
-                        : "");
-                var s = stringsByLang.computeIfAbsent(lang, l -> noLang);
-                n.printTo(s);
-            });
-            return stringsByLang;
+        protected List<LangCode> collectScriptLangs() {
+            return new ArrayList<>(transliterations.keySet());
         }
     }
 
     public final class LanguageContainer extends Node {
+        private List<LangCode> languages;
+
         public LanguageContainer(Map<String, Object> container) {
             this.thing = container;
         }
@@ -835,9 +809,12 @@ public class FresnelUtil {
         }
 
         public List<LangCode> languages() {
-            return selectedLang != null
-                    ? List.of(selectedLang)
-                    : thing.keySet().stream().filter(Predicate.not(TMP_ID_KEY::equals)).map(LangCode::new).toList();
+            if (languages == null) {
+                this.languages = selectedLang != null
+                        ? List.of(selectedLang)
+                        : thing.keySet().stream().filter(Predicate.not(TMP_ID_KEY::equals)).map(LangCode::new).toList();
+            }
+            return languages;
         }
 
         public List<String> get(LangCode langCode) {
@@ -845,20 +822,7 @@ public class FresnelUtil {
         }
 
         public List<String> pick(LangCode langCode, List<LangCode> fallbackLocales) {
-            var languages = languages();
-
-            if (languages.contains(langCode)) {
-                return get(langCode);
-            }
-
-            for (LangCode fallbackLocale : fallbackLocales) {
-                if (languages.contains(fallbackLocale)) {
-                    return get(fallbackLocale);
-                }
-            }
-
-            var randomLang = languages.stream().findFirst();
-            return randomLang.map(this::get).orElse(Collections.emptyList());
+            return pick(langCode, fallbackLocales, List::getFirst);
         }
 
         public boolean isTransliterated() {
@@ -866,7 +830,7 @@ public class FresnelUtil {
         }
 
         public Map<String, Object> filteredLangMap(List<LangCode> fallbackLocales) {
-            return (selectedLang != null ? List.of(selectedLang) : (isTransliterated() ? languages() : fallbackLocales))
+            return (isTransliterated() ? languages() : fallbackLocales)
                     .stream()
                     .map(LangCode::code)
                     .filter(thing::containsKey)
@@ -874,36 +838,59 @@ public class FresnelUtil {
         }
 
         @Override
-        protected StringBuilder printTo(StringBuilder s) {
-            languages().forEach(l -> super.printTo(s, get(l)));
+        protected StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang) {
+            List<String> values;
+            if (lang != null && scriptLang != null) {
+                // TODO? No use case at the moment
+                return s;
+            } else if (lang != null) {
+                values = pick(lang, List.of(), l -> isTransliterated() ? l.stream().max(LangCode.ORIGINAL_SCRIPT_FIRST).get() : null);
+            } else if (scriptLang != null) {
+                values = pick(scriptLang, fallbackLocales, l -> isTransliterated() ? null : l.getFirst());
+            } else {
+                values = languages().stream()
+                        .map(this::get)
+                        .flatMap(List::stream)
+                        .toList();
+            }
+
+            if (values.isEmpty()) {
+                return s;
+            }
+
+            if(!s.isEmpty() && s.charAt(s.length() - 1) != ' ') {
+                s.append(" ");
+            }
+
+            s.append(String.join(" ", values));
+
             return s;
         }
 
         @Override
-        protected Map<LangCode, StringBuilder> byLang(Map<LangCode, StringBuilder> stringsByLang) {
-            if (!isTransliterated()) {
-                StringBuilder noLang = stringsByLang.computeIfAbsent(LangCode.NO_LANG, l -> new StringBuilder());
-                languages().forEach(l -> super.printTo(stringsByLang.computeIfAbsent(l, k -> new StringBuilder(noLang.toString())), get(l)));
-            } else {
-                languages().forEach(l -> super.byLang(stringsByLang, get(l)));
-            }
-            return stringsByLang;
-        }
-
-        @Override
-        protected Map<LangCode, StringBuilder> byScript(Map<LangCode, StringBuilder> stringsByLang) {
-            if (isTransliterated()) {
-                StringBuilder noLang = stringsByLang.computeIfAbsent(LangCode.NO_LANG, l -> new StringBuilder());
-                languages().forEach(l -> super.printTo(stringsByLang.computeIfAbsent(l, k -> new StringBuilder(noLang.toString())), get(l)));
-            } else {
-                languages().forEach(l -> super.byScript(stringsByLang, get(l)));
-            }
-            return stringsByLang;
+        protected List<LangCode> collectScriptLangs() {
+            return isTransliterated() ? languages() : List.of();
         }
 
         @SuppressWarnings("unchecked")
         private List<String> asStringList(Object o) {
             return (List<String>) asList(o);
+        }
+
+        private List<String> pick(LangCode langCode, List<LangCode> fallbackLocales, Function<List<LangCode>, LangCode> fallbackPicker) {
+            if (languages().contains(langCode)) {
+                return get(langCode);
+            }
+
+            for (LangCode fallbackLocale : fallbackLocales) {
+                if (languages().contains(fallbackLocale)) {
+                    return get(fallbackLocale);
+                }
+            }
+
+            var fallbackLang = fallbackPicker.apply(languages());
+
+            return fallbackLang != null ? get(fallbackLang) : List.of();
         }
     }
 
@@ -1376,8 +1363,6 @@ public class FresnelUtil {
     }
 
     public record LangCode(String code) {
-        public static final LangCode NO_LANG = new LangCode("");
-
         public static final Comparator<LangCode> ORIGINAL_SCRIPT_FIRST = (a, b) -> {
             if ((a.isTransliterated() && b.isTransliterated()) || (!a.isTransliterated() && !b.isTransliterated())) {
                 return a.code.compareTo(b.code);

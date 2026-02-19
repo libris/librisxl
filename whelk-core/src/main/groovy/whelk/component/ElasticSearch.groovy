@@ -499,12 +499,9 @@ class ElasticSearch {
 
 
         try {
-            var topLens = whelk.fresnelUtil.applyLens(framedFull, FresnelUtil.Lenses.SEARCH_TOKEN, List.of(NO_FALLBACK));
-            var topStr = topLens.byLang().subMap(whelk.jsonld.locales).values() // The values follow the key order in whelk.jsonld.locales (see subMap method implementation)
-                    ?: topLens.byScript().values()
-                    ?: topLens.asString()
-            if (topStr) {
-                searchCard[TOP_STR] = topStr
+            var topStr = whelk.fresnelUtil.buildSearchStr(framedFull);
+            if (!topStr.isEmpty()) {
+                searchCard[TOP_STR] = topStr.size() == 1 ? topStr.first() : topStr;
             }
             searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE)).asString()
             searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
@@ -644,12 +641,8 @@ class ElasticSearch {
                 'totalItemsByRelation': incomingLinkCountByRelation
         ]
 
-        searchCard['_sortKeyByLang'] = whelk.jsonld.applyLensAsMapByLang(
-                searchCard,
-                whelk.jsonld.locales as Set,
-                REMOVABLE_BASE_URIS,
-                document.getThingInScheme() ? ['tokens', 'chips'] : ['chips'])
-
+        // TODO: Fallback, clean strings (replicate parts of JsonLd.applyLensAsMapByLang)
+        searchCard['_sortKeyByLang'] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN).asStringByLang()
 
         if (searchCard.containsKey(SEARCH_KEY)) {
             // TODO? Let _topStr just be _str instead? (Need to review boost configuration for _topStr vs _str in that case)
