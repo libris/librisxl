@@ -274,7 +274,7 @@ public class SerializerState {
               items.add(iv);
             }
           }
-          vo = (Map) items;
+          vo = ((List) items);
         }
       }
       String term = (String) this.termFor(key);

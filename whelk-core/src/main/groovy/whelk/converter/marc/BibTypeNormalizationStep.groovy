@@ -62,6 +62,10 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         }
 
         def work = instance.instanceOf
+        if (!work) {
+          // Does not look like an instance (cannot usefully unmodify); just skip.
+          return
+        }
 
         // Pick out the categories:
         var workCategories = getDescriptions(work.category)
@@ -125,7 +129,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         for (type in result) return type
     }
 
-  List<Map<String, Object>> getDescriptions(Object refs) {
+    List<Map<String, Object>> getDescriptions(Object refs) {
         return (List<Map<String, Object>>) asList(refs).findResults {
             ID in it ? typeCategoryNormalizer.categories[it[ID]] : it
         }
@@ -151,7 +155,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         collectCategoryOfType(categories, type, result)
         return result.values().findResults { ctg ->
             if (!abstractTermCategory || !asList(ctg['category']).any { it[ID] == abstractTermCategory}) {
-                new HashMap(ctg)
+                return new HashMap(ctg)
             }
         }
     }
