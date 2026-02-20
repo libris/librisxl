@@ -141,7 +141,7 @@ class SiteSearch {
                 // The query is broken. Often this means a bit of text (like a title) was copy-pasted as a query
                 // without regard for query language syntax. Let's just run the whole thing as a string search.
                 String[] qArr = queryParameters.get("_q");
-                // Escape any unquoted quotes. Totally intuitive, right? And yet not watertight, will actually fail on escaped backslash before quote in query.
+                // Escape any un-escaped quotes. Totally intuitive, right? And yet not watertight, will actually fail on escaped backslash before quote in query.
                 qArr[0] = qArr[0].replaceAll("[^\\\\]\"", "\\\\\"");
                 qArr[0] = "\"" + qArr[0] + "\""; // quote as a whole
                 return search2.doSearch(queryParameters); // It throws again? So be it - let the crud code return an error.
