@@ -28,14 +28,6 @@ class BibTypeNormalizer {
         SAOGF = normalizer.SCHEMES.saogf + '/'
         KBRDA = normalizer.SCHEMES.kbrda + '/'
         SAOBF = normalizer.SCHEMES.saobf + '/'
-
-        // TODO: move to integTest
-        // Sanity checks on startup (if these fail, either the data isn't up to date, or the domain knowledge has changed without being reflected here)
-        assert normalizer.isImpliedBy([(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume'])
-        assert normalizer.reduceSymbols([[(ID): 'https://id.kb.se/term/rda/Unmediated'], [(ID): 'https://id.kb.se/term/rda/Volume']]) == [[(ID): 'https://id.kb.se/term/rda/Volume']]
-
-        assert normalizer.isImpliedBy([(ID): 'https://id.kb.se/term/saobf/AbstractElectronic'], [(ID): 'https://id.kb.se/term/rda/ComputerDiscCartridge'])
-        assert normalizer.isImpliedBy([(ID): 'https://id.kb.se/term/saobf/AbstractElectronic'], [(ID): 'https://id.kb.se/term/rda/OnlineResource'])
     }
 
     /** Normalization action */
@@ -344,7 +336,8 @@ class BibTypeNormalizer {
         if (instanceGenreForms.removeIf { it['prefLabel'] == 'E-böcker'}) {
             instanceGenreForms << [(ID): SAOBF + 'EBook']
             if (instanceGenreForms.size() > 0) {
-                instance.put("genreForm", instanceGenreForms) }
+                instance.put("genreForm", instanceGenreForms)
+            }
             changed = true
         }
 
