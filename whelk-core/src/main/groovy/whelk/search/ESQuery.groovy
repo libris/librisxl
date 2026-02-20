@@ -49,8 +49,8 @@ class ESQuery {
     private static final String FILTERED_AGG_NAME = 'a'
     private static final String NESTED_AGG_NAME = 'n'
 
-    private static final String SPELL_CHECK_FIELD = '_sortKeyByLang.sv.trigram'
-    private static final String SPELL_CHECK_FIELD_REVERSE = '_sortKeyByLang.sv.reverse'
+    private static final String SPELL_CHECK_FIELD = '_chipStr.trigram'
+    private static final String SPELL_CHECK_FIELD_REVERSE = '_chipStr.reverse'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
