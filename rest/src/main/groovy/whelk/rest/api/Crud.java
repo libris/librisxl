@@ -10,6 +10,7 @@ import whelk.JsonLd;
 import whelk.JsonLdValidator;
 import whelk.TargetVocabMapper;
 import whelk.Whelk;
+import whelk.converter.BibTypeNormalizer;
 import whelk.exception.ElasticIOException;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.UnexpectedHttpStatusException;
@@ -17,6 +18,8 @@ import whelk.exception.WhelkRuntimeException;
 import whelk.history.History;
 import whelk.rest.api.CrudGetRequest.Lens;
 import whelk.rest.security.AccessControl;
+import whelk.util.DocumentUtil;
+import whelk.search2.QueryGenerator;
 import whelk.util.FresnelUtil;
 import groovy.lang.Tuple2;
 import whelk.util.http.BadRequestException;
@@ -51,6 +54,7 @@ public class Crud extends WhelkHttpServlet {
     public static final RestMetrics metrics = new RestMetrics();
 
     private JsonLdValidator validator;
+    private BibTypeNormalizer typeNormalizer = null;
     private TargetVocabMapper targetVocabMapper;
 
     private AccessControl accessControl = new AccessControl();
@@ -76,6 +80,13 @@ public class Crud extends WhelkHttpServlet {
         validator = JsonLdValidator.from(whelk.getJsonld());
         converterUtils = new ConverterUtils(whelk);
 
+        //TODO: Not needed if asserts are moved from normalizer?
+        try {
+            typeNormalizer = new BibTypeNormalizer(whelk.getResourceCache());
+        } catch (AssertionError | Exception e) {
+            log.error("BibTypeNormalizer failed to initialize: ${e.message}", e);
+        }
+
         cacheFetchedResource(whelk.getSystemContextUri());
         cacheFetchedResource(whelk.getVocabUri());
         cacheFetchedResource(whelk.getVocabDisplayUri());
@@ -87,6 +98,8 @@ public class Crud extends WhelkHttpServlet {
                 targetVocabMapper = new TargetVocabMapper(whelk.getJsonld(), contextDoc.data);
             }
         }
+
+        cacheLocalDevResources();
     }
 
     protected void cacheFetchedResource(String resourceUri) {
@@ -177,6 +190,16 @@ public class Crud extends WhelkHttpServlet {
         String loc = docAndLocation.getV2();
 
         if (doc == null && loc == null) {
+            // We don't have this. Perhaps we used to, and it is now archived?
+            String requestUrl = request.getHttpServletRequest().getRequestURL().toString();
+            int endIndex = requestUrl.indexOf("/data"); // We need to filter out /data.jsonld, /data.ttl etc.
+            if (endIndex != -1)
+                requestUrl = requestUrl.substring(0, endIndex);
+            if (whelk.getStorage().isArchivedIri( requestUrl )) {
+                throw new OtherStatusException("Document has been deleted.", HttpServletResponse.SC_GONE);
+            }
+
+            // guess not
             sendNotFound(request.getHttpServletRequest(), response);
         } else if (doc == null && loc != null) {
             if (request.getView() == CrudGetRequest.View.DATA) {
@@ -266,9 +289,8 @@ public class Crud extends WhelkHttpServlet {
 
     private Object getNegotiatedDataBody(CrudGetRequest request, Object contextData, Map<String, Object> data, String uri) {
         if (request.shouldComputeLabels()) {
-            if (!JsonLd.isFramed(data)) {
-                // TODO? should we support this? Requires more work in FresnelUtil
-                throw new BadRequestException("Cannot compute labels when not framed");
+            if (request.shouldEmbellish() && !JsonLd.isFramed(data)) {
+                throw new BadRequestException("Cannot compute labels when embellished but not framed");
             }
 
             // FIXME FresnelUtil can't handle the whole search response because of @container @index in stats
@@ -279,6 +301,26 @@ public class Crud extends WhelkHttpServlet {
                 whelk.getFresnelUtil().insertComputedLabels(items, new FresnelUtil.LangCode(request.computedLabelLocale()));
             } else {
                 whelk.getFresnelUtil().insertComputedLabels(data, new FresnelUtil.LangCode(request.computedLabelLocale()));
+            }
+        }
+
+        if (request.shouldGenerateBlankFindLinks()) {
+            if (!JsonLd.isFramed(data) ) {
+                // TODO? should we support this?
+                throw new BadRequestException("Cannot generate find links when not framed");
+            }
+            if (!request.shouldComputeLabels()) {
+                throw new BadRequestException("Cannot generate find links without computedLabel");
+            }
+
+            // FIXME FresnelUtil can't handle the whole search response because of @container @index in stats
+            // TODO at least compute labels in stats observations and search mappings predicate/object?
+            if (siteSearch.isSearchResource(request.getHttpServletRequest().getPathInfo())) {
+                @SuppressWarnings("unchecked")
+                List<Object> items = (List<Object>) data.get("items");
+                QueryGenerator.insertFindLinksOnBlankNodes(items, whelk);
+            } else {
+                QueryGenerator.insertFindLinksOnBlankNodes(data, whelk);
             }
         }
 
@@ -726,6 +768,12 @@ public class Crud extends WhelkHttpServlet {
             if (doc != null) {
                 String activeSigel = request.getHeader(XL_ACTIVE_SIGEL_HEADER);
                 String collection = doc.getLegacyCollection(whelk.getJsonld());
+
+                //TODO: Check isLegacyType in method to be exposed in the normalizer
+                if (this.isLegacyType(doc)) {
+                    this.normalizeBibTypes(doc);
+                }
+
                 if (isUpdate) {
                     // You are not allowed to change collection when updating a record
                     if (!collection.equals(whelk.getStorage().getCollectionBySystemID(doc.getShortId()))) {
@@ -739,6 +787,7 @@ public class Crud extends WhelkHttpServlet {
                             .orElseThrow(() -> new BadRequestException("Missing If-Match header in update"));
                     
                     log.info("If-Match: {}", ifMatch);
+
                     whelk.storeAtomicUpdate(doc, false, true, "xl", activeSigel, ifMatch.documentCheckSum());
                 }
                 else {
@@ -765,6 +814,39 @@ public class Crud extends WhelkHttpServlet {
             }
         }
         return null;
+    }
+
+    /**
+     * Type normalization
+     * Support writing the legacy data format for ~one year.
+     */
+    private void normalizeBibTypes(Document doc) {
+        this.checkNormalizerState();
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> thing = (Map<String, Object>) doc.getThing();
+
+        if (thing.containsKey(JsonLd.WORK_KEY)) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> work = (Map<String, Object>) thing.get(JsonLd.WORK_KEY);
+            if (work.size() == 1 && work.containsKey(JsonLd.ID_KEY)) {
+                String id = (String) work.get(JsonLd.ID_KEY);
+                var linkedWork = whelk.getStorage().getDocumentByIri(id);
+                typeNormalizer.normalize(thing, linkedWork.getThing());
+            } else { // Local work
+                typeNormalizer.normalize(thing, work);
+            }
+        }
+    }
+
+    private void checkNormalizerState() {
+        if (this.typeNormalizer == null) {
+            throw new WhelkRuntimeException("Cannot save document, type normalizer is in a bad state.");
+        }
+    }
+
+    private boolean isLegacyType(Document doc) {
+        return this.whelk.getJsonld().isCategoryPending(doc.getThingType());
     }
 
     public static void sendCreateResponse(HttpServletResponse response, String locationRef, ETag eTag) {
@@ -896,5 +978,28 @@ public class Crud extends WhelkHttpServlet {
             log.debug("Sending error {} : {} for {}", code, e.getMessage(), requestURI != null ? requestURI : "unknown");
         }
         HttpTools.sendError(response, code, e.getMessage(), e);
+    }
+
+    private void cacheLocalDevResources() {
+        // TODO Crud embellishes i.e. mutates these "cached resources"??
+
+        var devApps = SiteSearch.localDevAppsJsonLd();
+        if (devApps != null) {
+            @SuppressWarnings("unchecked")
+            var graph = (List<Map<?,?>>) DocumentUtil.getAtPath(devApps, List.of(JsonLd.GRAPH_KEY), Collections.emptyList());
+            for (var resource : graph) {
+                String id = (String) resource.get(JsonLd.ID_KEY);
+                log.info("Using local dev version of {}", id);
+                var doc = new Document(new HashMap<>(Map.of(JsonLd.GRAPH_KEY, new ArrayList<>(List.of(
+                        new HashMap<>(Map.of(
+                                JsonLd.ID_KEY, "<fake record>",
+                                JsonLd.TYPE_KEY, JsonLd.SYSTEM_RECORD_TYPE,
+                                JsonLd.THING_KEY, Map.of(JsonLd.ID_KEY, id)
+                        )),
+                        resource
+                )))));
+                cachedFetches.put(id, new Tuple2<>(doc, id));
+            }
+        }
     }
 }

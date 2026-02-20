@@ -11,10 +11,10 @@ public class Parse {
      *
      * <p>
      * ORCOMB: ANDCOMB ( "OR" ANDCOMB )*
-     * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
+     * GROUP: "(" ORCOMB | ANDCOMB | GROUP ")" | "(" ")"
      * ANDCOMB: TERM ( "AND" TERM | TERM )*
      * TERM: STRING | GROUP | UOPERATOR TERM | STRING BOPERATOR STRING | STRING BOPERATOREQ TERM
-     * UOPERATOR: "!" | "~" | "NOT" |
+     * UOPERATOR: "NOT"
      * BOPERATOR: "<" | ">" | "<=" | ">="
      * BOPERATOREQ: ":" | "="
      * STRING: ...
@@ -108,16 +108,9 @@ public class Parse {
             }
         }
 
-        // UOPERATOR: "!" | "~" | "NOT"
+        // UOPERATOR: "NOT"
         {
             if (!stack.isEmpty()) {
-                if (stack.getFirst() instanceof Lex.Symbol s &&
-                        s.name() == Lex.TokenName.OPERATOR &&
-                        (s.value().equals("!") || s.value().equals("~"))) {
-                    stack.pop();
-                    stack.push(new Uoperator(s, null));
-                    return true;
-                }
                 if (stack.getFirst() instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.KEYWORD &&
                         s.value().equals("not")) {
@@ -300,7 +293,7 @@ public class Parse {
             }
         }
 
-        // GROUP: "(" ORCOMB | ANDCOMB | GROUP ")"
+        // GROUP: "(" ORCOMB | ANDCOMB | GROUP ")" | "(" ")"
         {
             if (stack.size() >= 3) {
                 if (stack.get(0) instanceof Lex.Symbol s1 &&
@@ -332,6 +325,19 @@ public class Parse {
                         return true;
                     }
 
+                }
+            }
+            if (stack.size() >= 2) {
+                if (stack.get(0) instanceof Lex.Symbol s1 &&
+                        s1.name() == Lex.TokenName.OPERATOR &&
+                        s1.value().equals(")") &&
+                        stack.get(1) instanceof Lex.Symbol s2 &&
+                        s2.name() == Lex.TokenName.OPERATOR &&
+                        s2.value().equals("(")) {
+                    stack.pop();
+                    stack.pop();
+                    stack.push(new Group(null, new AndComb(List.of()), null));
+                    return true;
                 }
             }
         }

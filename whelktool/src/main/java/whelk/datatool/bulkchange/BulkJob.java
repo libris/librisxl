@@ -184,10 +184,11 @@ public class BulkJob implements Runnable {
     private void storeUpdate(Consumer<BulkJobDocument> updater) {
         var minorUpdate = true;
         var writeIdenticalVersions = false;
+        var skipSparql = false;
         var changedIn = "???";
         var changedBy = loadDocument().getDescriptionLastModifier();
         PostgreSQLComponent.UpdateAgent updateAgent = doc -> updater.accept(new BulkJobDocument(doc.data));
-        whelk.storeAtomicUpdate(systemId, minorUpdate, writeIdenticalVersions, changedIn, changedBy, updateAgent);
+        whelk.storeAtomicUpdate(systemId, minorUpdate, writeIdenticalVersions, skipSparql, changedIn, changedBy, updateAgent);
     }
 
     protected File reportDir() throws IOException {

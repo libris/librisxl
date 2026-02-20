@@ -31,7 +31,7 @@ class ImporterMain {
     }
 
     @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
-             flags='--skip-index --replace-main-ids --force-delete --skip-dependers')
+             flags='--skip-index --replace-main-ids --force-delete --skip-dependers --allow-id-removal')
     void dataset(Map flags, String sourceUrl, String datasetUri, String datasetDescPath=null) {
         Whelk whelk = Whelk.createLoadedSearchWhelk(props)
         if (flags['skip-index']) {
@@ -39,6 +39,9 @@ class ImporterMain {
         }
         if (flags['skip-dependers']) {
             whelk.setSkipIndexDependers(true)
+        }
+        if (flags['allow-id-removal']) {
+            whelk.storage.doVerifyDocumentIdRetention = false
         }
         new DatasetImporter(whelk, datasetUri, flags, datasetDescPath).importDataset(sourceUrl)
     }
@@ -66,7 +69,10 @@ class ImporterMain {
 
     @Command(args='[COLLECTION] [-t NUMBEROFTHREADS]')
     void reindex(String... args) {
-        def cli = new CliBuilder(usage: 'reindex [collection] -[ht]')
+        def cli = new CliBuilder(
+                usage: 'reindex [collection] -[ht]',
+                header: '\n[collection] = auth|bib|hold|none|@type:<type>\n'
+        )
         // Create the list of options.
         cli.with {
             h longOpt: 'help', 'Show usage information'

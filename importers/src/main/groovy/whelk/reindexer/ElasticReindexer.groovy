@@ -2,8 +2,10 @@ package whelk.reindexer
 
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
+import whelk.JsonLd
 import whelk.Whelk
 import whelk.util.BlockingThreadPool
+import whelk.util.Unicode
 
 @Log
 class ElasticReindexer {
@@ -73,9 +75,22 @@ class ElasticReindexer {
             log.info("Collection(s) to be indexed: ${collections}")
             threadPool = BlockingThreadPool.simplePool(numberOfThreads)
             collections.each { collection ->
-                log.info("Indexing collection ${collection}")
                 List<Document> documents = []
-                for (document in whelk.storage.loadAll(collection)) {
+                Iterable<Document> iterable;
+                if (collection.startsWith(JsonLd.TYPE_KEY+":")) {
+                    var type = Unicode.stripPrefix(collection, JsonLd.TYPE_KEY + ":")
+                    iterable = whelk.loadAllByType(type)
+                    log.info("Indexing type ${type}")
+                } else if (collection.startsWith("file://")) {
+                    String fileName = Unicode.stripPrefix(collection, "file://");
+                    var ids = new File(fileName).readLines().collect { it.strip() }
+                    iterable = whelk.storage.bulkLoad(ids).values()
+                    log.info("Indexing ${iterable.size()} docs from ${ids.size()} ids from file ${fileName}")
+                } else {
+                    iterable = whelk.storage.loadAll(collection)
+                    log.info("Indexing collection ${collection}")
+                }
+                for (document in iterable) {
                     if ( ! document.getDeleted() ) {
                         documents.add(document)
                         counter++

@@ -7,6 +7,7 @@ import spock.lang.Unroll
 import whelk.Document
 import whelk.IdType
 import whelk.JsonLd
+import whelk.ResourceCache
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.exception.ModelValidationException
@@ -75,6 +76,9 @@ class CrudSpec extends Specification {
             }
         }
         storage = GroovyMock(PostgreSQLComponent.class)
+        storage.loadAllByType(_) >> {
+            return Collections.emptyList()
+        }
         // We want to pass through calls in some cases
         accessControl = GroovySpy(AccessControl.class)
 
@@ -109,6 +113,7 @@ class CrudSpec extends Specification {
             ["@id": "Work"],
         ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
+        whelk.setResourceCache(new ResourceCache(whelk.getJsonld()))
 
         // NB!! Mocking of static methods e.g. LegacyIntegrationTools.determineLegacyCollection
         // does not work if they are called directly from Crud class
@@ -227,6 +232,9 @@ class CrudSpec extends Specification {
             '/' + id
         }
         request.getMethod() >> "GET"
+        request.getRequestURL() >> {
+            return new StringBuffer(id)
+        }
         storage.load(_, _) >> {
             return null
         }
@@ -252,6 +260,9 @@ class CrudSpec extends Specification {
             "*/*"
         }
         request.getMethod() >> "GET"
+        request.getRequestURL() >> {
+            return new StringBuffer(altId)
+        }
         storage.load(_, _) >> {
             return null
         }
@@ -324,6 +335,9 @@ class CrudSpec extends Specification {
             return 'version=1'
         }
         request.getMethod() >> "GET"
+        request.getRequestURL() >> {
+            return new StringBuffer(id)
+        }
         storage.load(_, _, _) >> {
             return null
         }
@@ -912,7 +926,7 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             Document doc = it.first()
             doc.setModified(new Date())
             return doc
@@ -938,7 +952,7 @@ class CrudSpec extends Specification {
         request.getContentType() >> {
             "application/ld+json"
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -961,7 +975,7 @@ class CrudSpec extends Specification {
         request.getContentType() >> {
             "application/x-www-form-urlencoded"
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
 
@@ -997,7 +1011,7 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             Document doc = it.first()
             doc.setModified(new Date())
             return doc
@@ -1101,7 +1115,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1153,7 +1167,7 @@ class CrudSpec extends Specification {
         request.getRequestURL() >> {
             return new StringBuffer(BASE_URI.toString())
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return true
         }
         when:
@@ -1210,7 +1224,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return true
         }
         when:
@@ -1267,7 +1281,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return true
         }
         storage.followDependers(_) >> {
@@ -1321,7 +1335,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1372,7 +1386,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1429,7 +1443,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1485,7 +1499,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         accessControl.checkDocumentToPost(_, _) >> {
@@ -1548,7 +1562,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return true
         }
         when:
@@ -1602,7 +1616,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1662,7 +1676,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return true
         }
         when:
@@ -1721,7 +1735,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return true
         }
         when:
@@ -1780,7 +1794,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
         }
         when:
@@ -1833,7 +1847,7 @@ class CrudSpec extends Specification {
         storage.getMainId(_) >> {
             return null
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -1861,7 +1875,7 @@ class CrudSpec extends Specification {
         request.getContentType() >> {
             "application/ld+json"
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -1884,7 +1898,7 @@ class CrudSpec extends Specification {
         request.getContentType() >> {
             "application/x-www-form-urlencoded"
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
 
@@ -1941,7 +1955,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             Document doc = new Document(newContent)
             doc.setModified(modifiedDate)
             doc.setCreated(createdDate)
@@ -2005,7 +2019,7 @@ class CrudSpec extends Specification {
         storage.getIdType(_) >> {
             return IdType.RecordSameAsId
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             Document doc = new Document(newContent)
             doc.setModified(modifiedDate)
             doc.setCreated(createdDate)
@@ -2199,7 +2213,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2270,7 +2284,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2337,7 +2351,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2404,7 +2418,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2470,7 +2484,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2537,7 +2551,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2602,7 +2616,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2673,7 +2687,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -2745,7 +2759,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -2806,7 +2820,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -2867,7 +2881,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -2940,7 +2954,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -3007,7 +3021,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -3077,7 +3091,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         accessControl.checkDocumentToPut(_, _, _, _) >> {
@@ -3142,7 +3156,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -3214,7 +3228,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -3273,7 +3287,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
@@ -3351,7 +3365,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:
@@ -3419,7 +3433,7 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_, _, _, _, _, _) >> {
+        storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
         when:

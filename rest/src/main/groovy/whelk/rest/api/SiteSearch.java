@@ -1,12 +1,15 @@
 package whelk.rest.api;
 
+import com.google.common.io.Files;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +73,15 @@ class SiteSearch {
         }
     }
 
-    protected Map getAndIndexDescription(String id) {
-        Map data = whelk.loadData(id);
+    protected Map<?, ?> getAndIndexDescription(String id) {
+        Map<?, ?> data = localDevAppsJsonLd();
+
+        if (data == null) {
+            data = whelk.loadData(id);
+        }
+
         if (data != null) {
-            Map desc = (Map) findInData(data, id);
+            var desc = (Map<?, ?>) findInData(data, id);
             if (desc != null) {
                 appsIndex.put(id, desc);
                 return desc;
@@ -121,7 +129,7 @@ class SiteSearch {
             }
             return toDataIndexDescription(appsIndex.get(activeSite + "data"), queryParameters);
         } else if (queryParameters.containsKey("_q") || queryParameters.containsKey("_o") || queryParameters.containsKey("_r")) {
-            String appId = "https://beta.libris.kb.se/";
+            String appId = activeSite.equals(getDefaultSite()) ? "https://beta.libris.kb.se/" : activeSite;
             Map appDesc = getAndIndexDescription(appId);
             if (appDesc != null) {
                 Map findDesc = getAndIndexDescription(appId + "find");
@@ -157,5 +165,22 @@ class SiteSearch {
         }
         List sliceList = (List) stats.get("sliceList");
         return sliceList != null ? search.buildStatsReprFromSliceSpec(sliceList) : null;
+    }
+
+    public static Map<?, ?> localDevAppsJsonLd() {
+        var appsOverride = System.getProperty("xl.test.apps.jsonld");
+        if (appsOverride == null || appsOverride.isEmpty()) {
+            return null;
+        }
+
+        log.info("Using {}", appsOverride);
+        try {
+            return mapper.readValue(
+                    Files.asCharSource(new File(appsOverride), StandardCharsets.UTF_8).read(),
+                    Map.class
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

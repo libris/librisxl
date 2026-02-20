@@ -2,6 +2,7 @@ package whelk;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import whelk.util.FresnelUtil;
 import whelk.util.Unicode;
 import whelk.util.http.HttpTools;
 
@@ -79,13 +80,6 @@ public class Dump {
             return;
         }
 
-        boolean isDownload = Collections.list(req.getParameterNames()).contains("download");
-        String offset = req.getParameter("offset");
-        if (offset == null && !isDownload) {
-            sendDumpEntryPoint(apiBaseUrl, selection, res);
-            return;
-        }
-
         String profile = req.getParameter("profile"); // May be null, meaning default (kbv)
         Document profileDoc = null;
         if (profile != null) {
@@ -94,6 +88,20 @@ public class Dump {
                 logger.info("Bad profile requested for EMM dump: {}", profile);
                 profile = null;
             }
+        }
+
+        String computedLabelLocale = req.getParameter(JsonLd.Platform.COMPUTED_LABEL);
+        if (computedLabelLocale != null && !whelk.getLocales().contains(computedLabelLocale)) {
+            HttpTools.sendError(res, HttpServletResponse.SC_BAD_REQUEST,
+                    String.format("Bad value for %s: %s", JsonLd.Platform.COMPUTED_LABEL, computedLabelLocale));
+            return;
+        }
+
+        boolean isDownload = Collections.list(req.getParameterNames()).contains("download");
+        String offset = req.getParameter("offset");
+        if (offset == null && !isDownload) {
+            sendDumpEntryPoint(apiBaseUrl, selection, profile, computedLabelLocale, res);
+            return;
         }
 
         String tmpDir = System.getProperty("java.io.tmpdir");
@@ -107,24 +115,24 @@ public class Dump {
         }
 
         if (isDownload) {
-            sendDumpDownloadResponse(whelk, targetVocabMapper, profile, profileDoc, selection, dumpFilePath, res);
+            sendDumpDownloadResponse(whelk, targetVocabMapper, profile, profileDoc, selection, computedLabelLocale, dumpFilePath, res);
         } else {
             long offsetNumeric = Long.parseLong(offset);
-            sendDumpPageResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, selection, dumpFilePath, offsetNumeric, res);
+            sendDumpPageResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, selection, computedLabelLocale, dumpFilePath, offsetNumeric, res);
         }
     }
 
-    private static void sendDumpEntryPoint(String apiBaseUrl, String selection, HttpServletResponse res) throws IOException {
+    private static void sendDumpEntryPoint(String apiBaseUrl, String selection, String profile, String computedLabelLocale, HttpServletResponse res) throws IOException {
         var responseObject = new LinkedHashMap<>();
         var contexts = new ArrayList<>();
         contexts.add("https://www.w3.org/ns/activitystreams");
         responseObject.put("@context", contexts);
         responseObject.put("type", "Collection");
-        responseObject.put("id", apiBaseUrl + "?selection=" + selection);
-        responseObject.put("url", apiBaseUrl + "?selection=" + selection + "&download=" + ND_JSON_LD_GZ_EXT);
+        responseObject.put("id", addParams(apiBaseUrl + "?selection=" + selection, profile, computedLabelLocale));
+        responseObject.put("url", addParams(apiBaseUrl + "?selection=" + selection, profile, computedLabelLocale) + "&download=" + ND_JSON_LD_GZ_EXT);
         var first = new LinkedHashMap<>();
         first.put("type", "CollectionPage");
-        first.put("id", apiBaseUrl + "?selection=" + selection + "&offset=0");
+        first.put("id",  addParams(apiBaseUrl + "?selection=" + selection + "&offset=0", profile, computedLabelLocale));
         responseObject.put("first", first);
 
         HttpTools.sendResponse(res, responseObject, AS2_CONTENT_TYPE);
@@ -159,7 +167,18 @@ public class Dump {
         HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
 
-    private static void sendDumpPageResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String apiBaseUrl, String selection, Path dumpFilePath, long offsetLines, HttpServletResponse res) throws IOException {
+    private static void sendDumpPageResponse(
+            Whelk whelk,
+            TargetVocabMapper targetVocabMapper,
+            String profile,
+            Document profileDoc,
+            String apiBaseUrl,
+            String selection,
+            String computedLabelLocale,
+            Path dumpFilePath,
+            long offsetLines,
+            HttpServletResponse res
+    ) throws IOException {
         ArrayList<String> recordIdsOnPage = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
         Long totalEntityCount = null;
 
@@ -221,14 +240,30 @@ public class Dump {
         }
 
         Instant dumpCreationTime = getDumpCreationTime(dumpFilePath);
-        sendFormattedResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, selection, recordIdsOnPage, res, offsetLines, totalEntityCount, dumpCreationTime);
+        sendFormattedResponse(whelk, targetVocabMapper, profile, profileDoc, apiBaseUrl, selection, computedLabelLocale, res, offsetLines, totalEntityCount, dumpCreationTime, recordIdsOnPage);
     }
 
-    private static void sendFormattedResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String apiBaseUrl, String selection, ArrayList<String> recordIdsOnPage, HttpServletResponse res, long offset, Long totalEntityCount, Instant dumpCreationTime) throws IOException{
+    private static void sendFormattedResponse(
+            Whelk whelk,
+            TargetVocabMapper targetVocabMapper,
+            String profile,
+            Document profileDoc,
+            String apiBaseUrl,
+            String selection,
+            String computedLabelLocale,
+            HttpServletResponse res,
+            long offset,
+            Long totalEntityCount,
+            Instant dumpCreationTime,
+            ArrayList<String> recordIdsOnPage
+    ) throws IOException {
         var responseObject = new LinkedHashMap<>();
 
         responseObject.put(JsonLd.CONTEXT_KEY, "https://www.w3.org/ns/activitystreams");
-        responseObject.put(JsonLd.ID_KEY, apiBaseUrl+"?selection="+selection+"&offset="+offset);
+
+        var id = apiBaseUrl+"?selection="+selection+"&offset="+offset;
+        responseObject.put(JsonLd.ID_KEY, addParams(id, profile, computedLabelLocale));
+
         responseObject.put("type", "CollectionPage");
         responseObject.put("startTime", ZonedDateTime.ofInstant(dumpCreationTime, ZoneOffset.UTC).toString());
         if (totalEntityCount == null)
@@ -240,15 +275,13 @@ public class Dump {
 
         var partOf = new LinkedHashMap<>();
         partOf.put("type", "Collection");
-        partOf.put("id", apiBaseUrl + "?selection=" + selection);
+        partOf.put("id", addParams(apiBaseUrl + "?selection=" + selection, profile, computedLabelLocale));
         responseObject.put("partOf", partOf);
 
         long nextOffset = offset + EmmChangeSet.TARGET_HITS_PER_PAGE;
         if (totalEntityCount == null || nextOffset < totalEntityCount) {
-            if (profile != null)
-                responseObject.put("next", apiBaseUrl+"?selection="+selection+"&offset="+nextOffset+"&profile="+profile);
-            else
-                responseObject.put("next", apiBaseUrl+"?selection="+selection+"&offset="+nextOffset);
+            var next = apiBaseUrl+"?selection="+selection+"&offset="+nextOffset;
+            responseObject.put("next", addParams(next, profile, computedLabelLocale));
         }
 
         var items = new ArrayList<>(EmmChangeSet.TARGET_HITS_PER_PAGE);
@@ -266,12 +299,6 @@ public class Dump {
 
         var docs = whelk.bulkLoad(recordIdsOnPage).values();
 
-        // add meta/controlNumber
-        for (Document doc : docs) {
-            String controlNumber = doc.getControlNumber();
-            Document._set(List.of("@graph",1,"meta","controlNumber"), controlNumber, doc.data);
-        }
-
         docs.removeIf(Document::getDeleted);
 
         if (selection.startsWith("itemAndInstance:")) {
@@ -279,13 +306,22 @@ public class Dump {
         }
 
         for (Document doc : docs) {
-            items.add(formatDoc(doc, contextDoc, targetVocabMapper, profile, profileDoc));
+            items.add(formatDoc(doc, contextDoc, targetVocabMapper, whelk.getFresnelUtil(), computedLabelLocale, profileDoc, profile));
         }
 
         HttpTools.sendResponse(res, responseObject, JSON_CONTENT_TYPE);
     }
 
-    private static void sendDumpDownloadResponse(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String selection, Path dumpFilePath, HttpServletResponse res) {
+    private static void sendDumpDownloadResponse(
+            Whelk whelk,
+            TargetVocabMapper targetVocabMapper,
+            String profile,
+            Document profileDoc,
+            String selection,
+            String computedLabelLocale,
+            Path dumpFilePath,
+            HttpServletResponse res
+    ) {
         String filename = Unicode.stripSuffix(dumpFilePath.getFileName().toString(), ".dump") + ND_JSON_LD_GZ_EXT;
         res.setHeader("Content-Disposition", "attachment; filename=" + filename);
         res.setHeader("Content-Type", "application/octet-stream");
@@ -331,11 +367,11 @@ public class Dump {
                     batch.add(line.trim());
 
                     if (batch.size() >= batchSize) {
-                        writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, selection, batch, contextDoc, os);
+                        writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, selection, computedLabelLocale, contextDoc, os, batch);
                         batch = new ArrayList<>(batchSize);
                     }
                 }
-                writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, selection, batch, contextDoc, os);
+                writeJsonLdLines(whelk, targetVocabMapper, profile, profileDoc, selection, computedLabelLocale, contextDoc, os, batch);
                 res.flushBuffer();
             }
         } catch (Exception e) {
@@ -347,7 +383,17 @@ public class Dump {
         }
     }
 
-    private static void writeJsonLdLines(Whelk whelk, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc, String selection, Collection<String> ids, Document contextDoc, OutputStream os) throws IOException {
+    private static void writeJsonLdLines(
+            Whelk whelk,
+            TargetVocabMapper targetVocabMapper,
+            String profile,
+            Document profileDoc,
+            String selection,
+            String computedLabelLocale,
+            Document contextDoc,
+            OutputStream os,
+            Collection<String> ids
+    ) throws IOException {
         var docs = whelk.bulkLoad(ids).values();
         docs.removeIf(Document::getDeleted);
 
@@ -356,7 +402,7 @@ public class Dump {
         }
 
         for (Document doc : docs) {
-            writeJsonLdLine(formatDoc(doc, contextDoc, targetVocabMapper, profile, profileDoc), os);
+            writeJsonLdLine(formatDoc(doc, contextDoc, targetVocabMapper, whelk.getFresnelUtil(), computedLabelLocale, profileDoc, profile), os);
         }
         os.flush();
     }
@@ -405,7 +451,15 @@ public class Dump {
         os.write("\n".getBytes(StandardCharsets.UTF_8));
     }
 
-    private static Object formatDoc(Document doc, Document contextDoc, TargetVocabMapper targetVocabMapper, String profile, Document profileDoc) {
+    private static Object formatDoc(
+            Document doc,
+            Document contextDoc,
+            TargetVocabMapper targetVocabMapper,
+            FresnelUtil fresnelUtil,
+            String computedLabelLocale,
+            Document profileDoc,
+            String profile
+    ) {
         var context = new ArrayList<>();
         context.add(null);
         context.add(contextDoc.getRecordIdentifiers().getFirst());
@@ -413,6 +467,10 @@ public class Dump {
         Document formattedDoc = doc; // Will be replaced if there's a profile
         if (profile != null && profileDoc != null) {
             formattedDoc = new Document((Map) targetVocabMapper.applyTargetVocabularyMap(profile, profileDoc.data, doc.data));
+        }
+
+        if  (computedLabelLocale != null) {
+            fresnelUtil.insertComputedLabels(doc.data, new FresnelUtil.LangCode(computedLabelLocale));
         }
 
         Map data = Map.of(
@@ -529,6 +587,16 @@ public class Dump {
                 dumpFilePath.toFile().delete();
             }
         }).start();
+    }
+
+    private static String addParams(String url, String profile, String computedLabelLocale) {
+        if (profile != null) {
+            url += "&profile=" + profile;
+        }
+        if (computedLabelLocale != null) {
+            url += "&" + JsonLd.Platform.COMPUTED_LABEL + "=" + computedLabelLocale;
+        }
+        return url;
     }
 
     private static PreparedStatement getAllDumpStatement(Connection connection) throws SQLException {

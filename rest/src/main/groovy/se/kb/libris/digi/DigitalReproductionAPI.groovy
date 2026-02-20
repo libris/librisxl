@@ -34,11 +34,13 @@ import static javax.servlet.http.HttpServletResponse.SC_PRECONDITION_FAILED
 import static se.kb.libris.digi.DigitalReproductionAPI.Type.ARRAY
 import static se.kb.libris.digi.DigitalReproductionAPI.Type.STRING
 
+// TODO clean up digital vs electronic when type normalization has landed in production
+
 /**
  Creates a record for a digital reproduction.
- Takes JSON-LD with an Electronic describing the reproduction as input.
+ Takes JSON-LD with a DigitalResource/Electronic describing the reproduction as input.
 
- - Validates that minimal required data is present in Electronic (all additional data is kept).
+ - Validates that minimal required data is present in DigitalResource/Electronic (all additional data is kept).
  - Extracts and links work entity from reproduction and original (physical thing)
  - Copies title from original
  - Adds DIGI and DST bibliographies if applicable
@@ -127,7 +129,12 @@ class DigitalReproductionAPI extends HttpServlet {
 
         def electronic = readJson(request)
 
-        check(electronic, ['@type'], 'Electronic')
+        try {
+            check(electronic, ['@type'], 'Electronic')
+        } catch (RequestException ignored) {
+            check(electronic, ['@type'], 'DigitalResource')
+        }
+
         check(electronic, ['reproductionOf', '@id'], STRING)
         check(electronic, ['production'], ARRAY)
         if (!isLink(getAtPath(electronic, ['production', 0]))) { // minimal valid shape, so just check the first one 
@@ -203,6 +210,9 @@ class ReproductionService {
         if (physicalThing['@type'] == 'Electronic') {
             throw badRequest("Thing linked in reproductionOf cannot be Electronic")
         }
+        if (physicalThing['@type'] == 'DigitalResource') {
+            throw badRequest("Thing linked in reproductionOf cannot be DigitalResource")
+        }
 
         def holdingsToCreate = getAtPath(electronicThing, ['@reverse', 'itemOf'], [])
         def badHeldBy = holdingsToCreate
@@ -227,7 +237,11 @@ class ReproductionService {
         }
         
         if (isOnline(electronicThing)) {
-            electronicThing.carrierType = asSet(electronicThing.carrierType) << ONLINE
+            if (electronicThing['@type'] == 'DigitalResource') {
+                electronicThing.category = asSet(electronicThing.category) << ONLINE
+            } else {
+                electronicThing.carrierType = asSet(electronicThing.carrierType) << ONLINE
+            }
         }
 
         def record = asMap(electronicThing.remove('meta'))

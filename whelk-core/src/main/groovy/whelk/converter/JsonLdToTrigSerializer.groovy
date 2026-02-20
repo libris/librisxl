@@ -63,6 +63,11 @@ class CleanedTrigSerializerState extends SerializerState {
         if (refobj !instanceof String) {
             return refobj
         }
+
+        if (refobj.startsWith('_:')) {
+          return refobj
+        }
+
         String iriString = refobj
         // [8] IRIREF ::= '<' ([^#x00-#x20<>"{}|^`\] | UCHAR)* '>'
         // https://www.w3.org/TR/n-triples/#grammar-production-IRIREF

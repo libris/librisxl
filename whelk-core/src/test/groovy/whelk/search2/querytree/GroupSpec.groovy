@@ -37,16 +37,15 @@ class GroupSpec extends Specification {
         !((Set) [or1]).contains(and1)
     }
 
-    def "reduce by condition"() {
+    def "reduce"() {
         given:
-        Group group = (Group) buildTree(_group, disambiguate)
-        Node reduced = group.reduceByCondition { a, b -> (a == b) }
+        Node reduced = buildTree(group, disambiguate).reduce(TestData.jsonLd)
 
         expect:
         reduced.toString() == result
 
         where:
-        _group                                    | result
+        group                                     | result
         'p1:v1 p2:v2'                             | 'p1:v1 p2:v2'
         'p1:v1 (p1:v1 OR p2:v2)'                  | 'p1:v1'
         'p1:v1 OR (p1:v1 p2:v2)'                  | 'p1:v1'
@@ -67,203 +66,10 @@ class GroupSpec extends Specification {
         '(p1:v1 p2:v2) OR (p3:v3 p4:v4) OR p1:v1' | 'p1:v1 OR (p3:v3 p4:v4)'
         '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'       | '(p1:v1 OR p2:v2) (p2:v2 OR p3:v3)'
         '(p1:v1 p2:v2) OR (p1:v1 p2:v2)'          | 'p1:v1 p2:v2'
-    }
-
-    def "To ES query: group nested"() {
-        given:
-        var tree = QueryTreeBuilder.buildTree("p3.p1:x p3.p4:y", disambiguate)
-        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
-
-        expect:
-        tree.toEs(esSettings) == [
-                "nested": [
-                        "path" : "p3",
-                        "query": [
-                                "bool": [
-                                        "must": [[
-                                                         "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "x",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
-                                                         ]
-                                                 ], [
-                                                         "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "y",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4^1.0"]
-                                                         ]
-                                                 ]]
-                                ]
-                        ]
-                ]
-        ]
-    }
-
-    def "To ES query: group nested (negated)"() {
-        given:
-        var tree = QueryTreeBuilder.buildTree("p3.p1:x p3.p4:y", disambiguate)
-        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
-
-        expect:
-        tree.toEs(esSettings) == [
-                "nested": [
-                        "path" : "p3",
-                        "query": [
-                                "bool": [
-                                        "must": [[
-                                                         "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "x",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
-                                                         ]
-                                                 ], [
-                                                         "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "y",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4^1.0"]
-                                                         ]
-                                                 ]]
-                                ]
-                        ]
-                ]
-        ]
-    }
-
-    def "To ES query: group nested 2"() {
-        given:
-        var tree = QueryTreeBuilder.buildTree("p3.p1:x p3.p4:y p2:e1", disambiguate)
-        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
-
-        expect:
-        tree.toEs(esSettings) == [
-                "bool": [
-                        "must": [[
-                                         "nested": [
-                                                 "query": [
-                                                         "bool": [
-                                                                 "must": [[
-                                                                                  "simple_query_string": [
-                                                                                          "default_operator": "AND",
-                                                                                          "query"           : "x",
-                                                                                          "analyze_wildcard": false,
-                                                                                          "fields"          : ["p3.p1^1.0"]
-                                                                                  ]
-                                                                          ], [
-                                                                                  "simple_query_string": [
-                                                                                          "default_operator": "AND",
-                                                                                          "query"           : "y",
-                                                                                          "analyze_wildcard": false,
-                                                                                          "fields"          : ["p3.p4^1.0"]
-                                                                                  ]
-                                                                          ]]
-                                                         ]
-                                                 ],
-                                                 "path" : "p3"
-                                         ]
-                                 ], [
-                                         "bool": [
-                                                 "filter": [
-                                                         "term": [
-                                                                 "p2": "E1"
-                                                         ]
-                                                 ]
-                                         ]
-                                 ]]
-                ]
-        ]
-    }
-
-    def "To ES query: group nested 3"() {
-        given:
-        var tree = QueryTreeBuilder.buildTree("p3.p1:x (p3.p4:y OR p3.p4:z)", disambiguate)
-        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
-
-        expect:
-        tree.toEs(esSettings) == [
-                "nested": [
-                        "path" : "p3",
-                        "query": [
-                                "bool": [
-                                        "must": [[
-                                                         "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "x",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
-                                                         ]
-                                                 ], [
-                                                         "bool": [
-                                                                 "should": [[
-                                                                                    "simple_query_string": [
-                                                                                            "default_operator": "AND",
-                                                                                            "query"           : "y",
-                                                                                            "analyze_wildcard": false,
-                                                                                            "fields"          : ["p3.p4^1.0"]
-                                                                                    ]
-                                                                            ], [
-                                                                                    "simple_query_string": [
-                                                                                            "default_operator": "AND",
-                                                                                            "query"           : "z",
-                                                                                            "analyze_wildcard": false,
-                                                                                            "fields"          : ["p3.p4^1.0"]
-                                                                                    ]
-                                                                            ]]
-                                                         ]
-                                                 ]]
-                                ]
-                        ]
-                ]
-        ]
-    }
-
-    def "To ES query: group nested 4"() {
-        given:
-        // TODO: Interpret "(p3.p1:x p3.p4:y) (p3.p1:a p3.p4:b)" differently, i.e. don't flatten and treat each group as a distinct nested clause?
-        var tree = QueryTreeBuilder.buildTree("p3.p1:x p3.p4:y p3.p1:a p3.p4:b", disambiguate)
-        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
-
-        expect:
-        tree.toEs(esSettings) == [
-                "nested": [
-                        "query": [
-                                "bool": [
-                                        "must": [[
-                                                         "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "x",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
-                                                         ]
-                                                 ], [
-                                                         "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "y",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4^1.0"]
-                                                         ]
-                                                 ], [
-                                                         "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "a",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p1^1.0"]
-                                                         ]
-                                                 ], [
-                                                         "simple_query_string": [
-                                                                 "default_operator": "AND",
-                                                                 "query"           : "b",
-                                                                 "analyze_wildcard": false,
-                                                                 "fields"          : ["p3.p4^1.0"]
-                                                         ]
-                                                 ]]
-                                ]
-                        ],
-                        "path" : "p3"
-                ]
-        ]
+        '(p1:v1 p2:v2) OR (p2:v2 p3:v3)'          | '(p1:v1 p2:v2) OR (p2:v2 p3:v3)'
+        'type:T1x type:T1'                        | 'type:T1x'
+        '(type:T1x OR p1:v1) (type:T1 OR p1:v1)'  | 'type:T1x OR p1:v1'
+        'type:T1x OR type:T1'                     | 'type:T1'
+        '(type:T1x p1:v1) OR (type:T1 p1:v1)'     | 'type:T1 p1:v1'
     }
 }

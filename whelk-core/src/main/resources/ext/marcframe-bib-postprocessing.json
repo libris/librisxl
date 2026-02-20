@@ -1,4 +1,5 @@
 [
+  {"@include": "marcframe-bib-postproc-typenormalization.json"},
   {
     "type": "RestructPropertyValuesAndFlag",
     "sourceLink": "marc:primaryProvisionActivity",

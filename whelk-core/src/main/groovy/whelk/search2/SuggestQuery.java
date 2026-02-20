@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,7 +26,7 @@ public class SuggestQuery extends Query {
         put("Bibliography", List.of("bibliography"));
         put("Library", List.of("itemHeldBy"));
         put("Subject", List.of("subject"));
-        put("GenreForm", List.of("genreForm"));
+        put("GenreForm", List.of("category"));
         put("Language", List.of("language", "originalLanguage"));
         put("BibliographicAgent", List.of("contributor", "subject"));
     }};
@@ -60,13 +58,15 @@ public class SuggestQuery extends Query {
                 .map(Map.class::cast)
                 .peek(item -> {
                     var qualifiers = getApplicablePredicates(item, propertyByKey).stream()
-                            .map(predicate -> {
-                                var predicateDefinition = predicate.lastProperty().map(Property::definition).orElse(Map.of());// TODO: Handle property paths?
+                            .map(selector -> {
                                 String formattedLink = new Link((String) item.get(ID_KEY)).queryForm();
                                 Link placeholderLink = new Link("http://PLACEHOLDER_LINK");
-                                PathValue placeholderNode = new PathValue(predicate, Operator.EQUALS, placeholderLink);
-                                String template = queryTree.replace(edited.node(), placeholderNode).toQueryString();
+                                Condition placeholderNode = new Condition(selector, Operator.EQUALS, placeholderLink);
+                                String template = qTree.replace(edited.node(), placeholderNode).toQueryString();
                                 int placeholderLinkStart = template.indexOf(placeholderLink.queryForm());
+                                if (placeholderLinkStart == -1) {
+                                    return null;
+                                }
                                 int placeholderLinkEnd = placeholderLinkStart + placeholderLink.queryForm().length();
                                 String q = template.substring(0, placeholderLinkStart) + formattedLink + template.substring(placeholderLinkEnd);
                                 int newCursorPos = placeholderLinkStart + formattedLink.length();
@@ -74,10 +74,11 @@ public class SuggestQuery extends Query {
                                     q += " ";
                                     newCursorPos += 1;
                                 }
-                                return Map.of("_predicate", predicateDefinition,
+                                return Map.of("_predicate", selector.definition(),
                                         "_q", QueryUtil.makeViewFindUrl(q, queryParams),
                                         "_cursor", newCursorPos);
                             })
+                            .filter(qualifier -> qualifier != null)
                             .toList();
                     item.put("_qualifiers", qualifiers);
                 })
@@ -89,17 +90,18 @@ public class SuggestQuery extends Query {
     }
 
     @Override
-    protected Object doGetEsQueryDsl() {
-        applySiteFilters(suggestQueryTree, SearchMode.SUGGEST);
-        var queryDsl = getEsQueryDsl(getEsQuery(suggestQueryTree, List.of()));
+    protected Map<String, Object> doGetEsQueryDsl() {
+        var queryTree = getFullQueryTree(suggestQueryTree).expand(whelk.getJsonld());
+        var esQueryTree = new EsQueryTree(queryTree, esSettings);
+        var queryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
         queryDsl.remove("sort");
         return queryDsl;
     }
 
-    private List<Path> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {
-        List<Path> applicablePredicates = new ArrayList<>();
-        if (edited.node() instanceof PathValue editedPv && propertySearch) {
-            applicablePredicates.add(editedPv.path());
+    private List<Selector> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {
+        List<Selector> applicablePredicates = new ArrayList<>();
+        if (edited.node() instanceof Condition condition && propertySearch) {
+            applicablePredicates.add(condition.selector());
         } else if (edited.node() instanceof FreeText) {
             var types = asList(item.get(TYPE_KEY));
             applicablePredicates = suggestPredicatesForType.entrySet()
@@ -109,8 +111,8 @@ public class SuggestQuery extends Query {
                     .findFirst()
                     .map(Map.Entry::getValue)
                     .map(predicates -> predicates.stream()
-                            .map(p -> propertyByKey.computeIfAbsent(p, x -> new Property(p, whelk.getJsonld())))
-                            .map(Path::new)
+                            .map(p -> propertyByKey.computeIfAbsent(p, x -> Property.getProperty(p, whelk.getJsonld())))
+                            .map(Selector.class::cast)
                             .toList())
                     .orElse(List.of());
         }
@@ -118,12 +120,12 @@ public class SuggestQuery extends Query {
     }
 
     private Edited getEdited() {
-        return queryTree.allDescendants().flatMap(node ->
+        return qTree.allDescendants().flatMap(node ->
                         switch (node) {
                             case FreeText ft -> ft.getCurrentlyEditedToken(queryParams.cursor)
                                     .map(token -> new Edited(ft, token))
                                     .stream();
-                            case PathValue pv -> pv.value() instanceof FreeText ft
+                            case Condition c -> c.value() instanceof FreeText ft
                                     ? ft.getCurrentlyEditedToken(queryParams.cursor)
                                     .map(token -> new Edited(node, token))
                                     .stream()
@@ -135,52 +137,42 @@ public class SuggestQuery extends Query {
     }
 
     private QueryTree getSuggestQueryTree() throws InvalidQueryException {
-        if (edited.node() instanceof PathValue pv && pv.operator().equals(Operator.EQUALS)) {
-            Optional<Property> property = pv.path().lastProperty();
-            if (property.isPresent()) {
-                Property p = property.get();
-                String searchableTypes = p.range().stream()
-                        .filter(type -> defaultBaseTypes.stream()
-                                .filter(Predicate.not("Work"::equals))
-                                .anyMatch(baseType -> baseType.equals(type) || whelk.getJsonld().getSubClasses(baseType).contains(type)))
-                        .collect(Collectors.joining(" OR "));
+        if (edited.node() instanceof Condition c && c.operator().equals(Operator.EQUALS)) {
+            Selector selector = c.selector();
+            String searchableTypes = selector.range().stream()
+                    .filter(type -> defaultBaseTypes.stream()
+                            .filter(Predicate.not("Work"::equals))
+                            .anyMatch(baseType -> whelk.getJsonld().isSubClassOf(type, baseType)))
+                    .collect(Collectors.joining(" OR "));
 
-                FreeText ft = (FreeText) pv.value();
-                FreeText prefixFt = editedTokenAsPrefix(ft);
+            FreeText ft = (FreeText) c.value();
+            FreeText prefixFt = editedTokenAsPrefix(ft);
 
-                // FIXME: The unquoting is only needed until frontend no longer relies on quoted values not being treated as such.
-                Function<FreeText, FreeText> unquote = f -> {
-                    List<Token> unquotedTokens = f.tokens().stream()
-                            .map(t -> t.isQuoted() ? new Token.Raw(t.value()) : t)
-                            .toList();
-                    return f.withTokens(unquotedTokens);
-                };
-
-                if (searchableTypes.isEmpty()) {
-                    // Make a query with the currently edited token treated as prefix to get suggestions
-                    // Also make a non-prefix query to get a higher relevancy score for exact matches
-                    Or or = new Or(List.of(pv.withValue(unquote.apply(prefixFt)), pv.withValue(unquote.apply(ft))));
-                    return queryTree.replace(pv, or);
-                }
-
-                this.propertySearch = true;
-                Or or = new Or(List.of(unquote.apply(prefixFt), unquote.apply(ft)));
-                Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
-                Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
-                return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
+            if (searchableTypes.isEmpty()) {
+                // Make a query with the currently edited token treated as prefix to get suggestions
+                // Also make a non-prefix query to get a higher relevancy score for exact matches
+                Or or = new Or(List.of(c.withValue(prefixFt), c));
+                return qTree.replace(c, or);
             }
-        } else if (edited.node() instanceof FreeText ft && queryTree.isSimpleFreeText()) {
+
+            this.propertySearch = true;
+            Or or = new Or(List.of(prefixFt, ft));
+            Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
+            Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
+            return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
+        } else if (edited.node() instanceof FreeText ft && qTree.isSimpleFreeText()) {
             String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
-            return (edited.token().isQuoted() ? queryTree : queryTree.replace(ft, new Or(List.of(editedTokenAsPrefix(ft), ft))))
+            return qTree.replace(ft, new Or(List.of(editedTokenAsPrefix(ft), ft)))
                     .add(typeFilter);
         }
-        return queryTree;
+        return qTree;
     }
 
     private FreeText editedTokenAsPrefix(FreeText ft) {
         List<Token> tokensCopy = new ArrayList<>(ft.tokens());
         int editedIdx = ft.tokens().indexOf(edited.token());
+        // TODO: Maintain quoting. Use https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-multi-match-query#type-bool-prefix ?
         Token editedAsPrefix = new Token.Raw(edited.token().value() + Operator.WILDCARD);
         tokensCopy.set(editedIdx, editedAsPrefix);
         return ft.withTokens(tokensCopy);

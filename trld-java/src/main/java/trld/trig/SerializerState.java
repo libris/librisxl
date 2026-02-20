@@ -265,7 +265,17 @@ public class SerializerState {
       /*@Nullable*/ String indexKey = (/*@Nullable*/ String) this.indexKeyFor(key);
       if (indexKey != null) {
         key = indexKey;
-        vo = (vo instanceof Map ? new ArrayList(((Map) vo).values()) : vo);
+        if (vo instanceof Map) {
+          List<Object> items = new ArrayList<>();
+          for (Object iv : ((Map) vo).values()) {
+            if (iv instanceof List) {
+              items.addAll((List) iv);
+            } else {
+              items.add(iv);
+            }
+          }
+          vo = ((List) items);
+        }
       }
       String term = (String) this.termFor(key);
       /*@Nullable*/ String revKey = (term == null ? this.revKeyFor(key) : null);
@@ -283,7 +293,7 @@ public class SerializerState {
       }
       List vs = (vo instanceof List ? (List) vo : (vo != null ? new ArrayList<>(Arrays.asList(new Object[] {(Object) vo})) : new ArrayList<>()));
       vs = ((List) vs.stream().filter((x) -> x != null).collect(Collectors.toList()));
-      if (vs.size() == 0) {
+      if ((vs.size() == 0 && !(isList))) {
         continue;
       }
       if (this.isLangContainer(key)) {

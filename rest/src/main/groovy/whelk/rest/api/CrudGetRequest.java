@@ -21,6 +21,7 @@ class CrudGetRequest {
     private final Lens lens;
     private final String profile;
     private final String computedLabelLocale;
+    private final boolean findBlank;
 
     private static final Pattern PATH_PATTERN = Pattern.compile("^/(.+?)(/(data|data-view|_changesets)(\\.(\\w+))?)?$");
 
@@ -36,6 +37,7 @@ class CrudGetRequest {
         profile = parseProfile(request);
 
         computedLabelLocale = parseComputedLabelLocale(request).orElse(null);
+        findBlank = Optional.ofNullable(request.getParameter("_findBlank")).map("true"::equalsIgnoreCase).orElse(false);
     }
 
     HttpServletRequest getHttpServletRequest() {
@@ -80,6 +82,10 @@ class CrudGetRequest {
 
     boolean shouldComputeLabels() {
         return computedLabelLocale != null;
+    }
+
+    boolean shouldGenerateBlankFindLinks() {
+        return findBlank;
     }
 
     String computedLabelLocale() {

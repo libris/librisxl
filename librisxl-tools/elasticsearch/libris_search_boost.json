@@ -84,6 +84,26 @@
           "missing": 0
         },
         "weight": 10
+      },
+      {
+        "type": "field_value_factor",
+        "params": {
+          "field": "reverseLinks.totalItemsByRelation.instanceOf.language",
+          "factor": 10,
+          "modifier": "ln1p",
+          "missing": 0
+        },
+        "weight": 10
+      },
+      {
+        "type": "field_value_factor",
+        "params": {
+          "field": "reverseLinks.totalItemsByRelation.isPartOf",
+          "factor": 10,
+          "modifier": "ln1p",
+          "missing": 0
+        },
+        "weight": 10
       }
     ],
     "score_mode": "sum",

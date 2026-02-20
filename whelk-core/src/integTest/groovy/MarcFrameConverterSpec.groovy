@@ -1,31 +1,26 @@
 package whelk.converter.marc
 
-import whelk.Whelk
 import spock.lang.*
 import whelk.filter.LinkFinder
 
+import whelk.Whelk
 
 @Unroll
 class MarcFrameConverterSpec extends Specification {
 
     static Whelk whelk = null
     static MarcFrameConverter converter = null
+    static Map marcframe
 
     static {
-        try {
-            whelk = Whelk.createLoadedSearchWhelk()
-        } catch (Exception e) {
-            System.err.println("Unable to instantiate whelk: $e")
-        }
-        converter = new MarcFrameConverter(null, whelk?.jsonld, whelk?.resourceCache) {
-            def config
-            void initialize(Map config) {
-                super.initialize(config)
-                this.config = config
-                super.conversion.doPostProcessing = false
-                super.conversion.flatLinkedForm = false
-                super.conversion.baseUri = new URI("/")
-            }
+        converter = MarcFrameCli.newMarcFrameConverter()
+        marcframe = converter.readConfig(converter.marcframeFile)
+        converter.conversion.doPostProcessing = false
+        converter.conversion.flatLinkedForm = false
+        converter.conversion.baseUri = new URI("/")
+
+        if (whelk) {
+            converter.linkFinder = new LinkFinder(whelk.storage)
         }
     }
 
@@ -36,15 +31,8 @@ class MarcFrameConverterSpec extends Specification {
     static postProcStepSpecs = []
 
     static {
-        if (whelk) {
-            converter.linkFinder = new LinkFinder(whelk.storage)
-            converter.ld = whelk.jsonld
-        } else {
-            MarcFrameCli.addJsonLd(converter)
-        }
-
         converter.conversion.sharedPostProcSteps.eachWithIndex { step, i ->
-            def dfn = converter.config.postProcessing
+            def dfn = marcframe.postProcessing
             dfn[i]._spec.each {
                 postProcStepSpecs << [step: step, spec: it]
             }
@@ -52,7 +40,7 @@ class MarcFrameConverterSpec extends Specification {
 
         ['bib', 'auth', 'hold'].each { marcType ->
             def ruleSets = converter.conversion.marcRuleSets
-            converter.config[marcType].each { tag, dfn ->
+            marcframe[marcType].each { tag, dfn ->
                 def ruleSet = ruleSets[marcType]
                 def thingLink = ruleSet.thingLink
 
