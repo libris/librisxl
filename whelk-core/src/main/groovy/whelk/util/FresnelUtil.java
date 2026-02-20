@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
@@ -107,6 +108,7 @@ public class FresnelUtil {
         // we currently we just treat everything as plain JSON keys there
         public static String showProperties = "showProperties";
         public static String alternateProperties = "alternateProperties";
+        public static String classLensDomain = "classLensDomain";
 
 
         public static String WILD_PROPERTY = "*";
@@ -117,11 +119,12 @@ public class FresnelUtil {
         public static String Resource = "Resource";
         public static String StructuredValue = "StructuredValue";
         public static String Identity = "Identity";
+
+        private static final Set<String> VALUES = Set.of(Resource, StructuredValue, Identity);
     }
 
     public enum Options {
         TAKE_ALL_ALTERNATE,
-        TRACK_ORIGINAL,
         SKIP_ITEMS, // FIXME
         SKIP_MAP_VOCAB_TERMS,
         NO_FALLBACK
@@ -170,46 +173,36 @@ public class FresnelUtil {
         this.formats = new Formats(getUnsafe(jsonLd.displayData, "formatters", null));
     }
 
-    public Map<String, Object> getLensedThing(Map<String, Object> thing, Lens lens) {
-        return getLensedThing(thing, lens, List.of());
+    public String asFormattedString(Object thing, Lens lens, String locale) {
+        return format(applyLens(thing, lens), new LangCode(locale)).asString();
     }
 
-    public Map<String, Object> getLensedThing(Map<String, Object> thing, Lens lens, Collection<String> preserveLinks) {
+    public String asString(Object thing, Lens lens, Collection<Options> options) {
+        return applyLens(thing, lens, options).asString();
+    }
+
+    public Map<String, String> asStringByLang(Object thing, Lens lens, List<String> locales) {
+        return applyLens(thing, lens).asStringByLang(locales.stream().map(LangCode::new).toList());
+    }
+
+    public Map<String, Object> mapThroughLens(Map<String, Object> thing, Lens lens) {
+        return mapThroughLens(thing, lens, List.of(), List.of(), false);
+    }
+
+    public Map<String, Object> mapThroughLens(Map<String, Object> thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
         if (!thing.containsKey(TYPE_KEY)) {
             logger.warn("Lens could not be applied to {} due to missing type", thing.get(ID_KEY));
             return thing;
         }
-        var options = List.of(Options.TAKE_ALL_ALTERNATE, Options.TRACK_ORIGINAL, Options.SKIP_MAP_VOCAB_TERMS);
-        return new AppliedLens(thing, lens, preserveLinks, options).getThing();
-    }
-
-    public Lensed applyLens(Object thing, Lens lens) {
-        return applyLens(thing, lens, List.of());
-    }
-
-    public Lensed applyLens(Object thing, Lens lens, Collection<Options> options) {
-        // TODO
-        if (!isTypedNode(thing)) {
-            throw new IllegalArgumentException("Thing is not typed node: " + thing);
-        }
-
-        return (Lensed) applyLens(thing, lens, options, null);
-    }
-
-    public Decorated format(Lensed lensed, LangCode locale) {
-        var f = new Formatter(locale);
-        return switch(lensed) {
-            case Node n -> f.displayDecorate(n);
-            case TransliteratedNode n -> f.displayDecorate(n);
-        };
+        return new LensMapper(thing, lens, options, preserveLinks, addSearchKey).toMap();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public void insertComputedLabels(Object data, LangCode locale) {
+    public void insertComputedLabels(Object data, String locale) {
         DocumentUtil.traverse(data, (var value, var path) -> {
             if (value instanceof Map node && node.containsKey(TYPE_KEY)) {
                 try {
-                    var label = format(applyLens(value, NestedLenses.CHIP_TO_TOKEN), locale).asString();
+                    var label = asFormattedString(value, NestedLenses.CHIP_TO_TOKEN, locale);
                     node.put(JsonLd.Platform.COMPUTED_LABEL, label);
                     // TODO Check if structured value and don't compute for sub-nodes?
                 } catch (Exception e) {
@@ -247,7 +240,20 @@ public class FresnelUtil {
         if (!byScript.isEmpty()) {
             return byScript.values().stream().distinct().toList();
         }
-        return lensedForSearchStr.asStringByLang().values().stream().distinct().toList();
+        return lensedForSearchStr.asStringByLang(fallbackLocales).values().stream().distinct().toList();
+    }
+
+    private Lensed applyLens(Object thing, Lens lens) {
+        return applyLens(thing, lens, List.of());
+    }
+
+    private Lensed applyLens(Object thing, Lens lens, Collection<Options> options) {
+        // TODO
+        if (!isTypedNode(thing)) {
+            throw new IllegalArgumentException("Thing is not typed node: " + thing);
+        }
+
+        return (Lensed) applyLens(thing, lens, options, null);
     }
 
     private Object applyLens(
@@ -281,7 +287,63 @@ public class FresnelUtil {
         return result;
     }
 
-    static class Format {
+    public static class Lens {
+        private final LensGroupChain lensGroupChain;
+        private final Lens subLens;
+        private final List<LensGroupChain> minus;
+
+        public Lens(LensGroupChain lensGroupChain) {
+            this(lensGroupChain, null);
+        }
+
+        public Lens(LensGroupChain lensGroupChain, Lens subLens) {
+            this(lensGroupChain, subLens, null);
+        }
+
+        public Lens(LensGroupChain lensGroupChain, Lens subLens, List<LensGroupChain> minus) {
+            this.lensGroupChain = lensGroupChain;
+            this.subLens = subLens;
+            this.minus = minus;
+        }
+
+        Lens next() {
+            return subLens != null ? subLens : this;
+        }
+
+        LensGroupChain lensGroupChain() {
+            return lensGroupChain;
+        }
+
+        Lens subLens() {
+            return subLens;
+        }
+
+        List<LensGroupChain> minus() {
+            return minus != null ? minus : List.of();
+        }
+
+        static Lens newEmpty() {
+            return new Lens(new LensGroupChain(List.of()));
+        }
+
+        boolean isDerived() {
+            return !minus().isEmpty();
+        }
+
+        boolean isNested() {
+            return subLens != null;
+        }
+    }
+
+    private Decorated format(Lensed lensed, LangCode locale) {
+        var f = new Formatter(locale);
+        return switch(lensed) {
+            case Node n -> f.displayDecorate(n);
+            case TransliteratedNode n -> f.displayDecorate(n);
+        };
+    }
+
+    private static class Format {
         static final Format DEFAULT_FORMAT = new Format();
 
         String id;
@@ -308,7 +370,7 @@ public class FresnelUtil {
             valueStyle = emptyStyle;
         }
 
-        public static Format parse(Map<?,?> f) {
+        static Format parse(Map<?,?> f) {
             Format format = new Format();
             format.classFormatDomain = getUnsafe(f, Fresnel.classFormatDomain, Collections.emptyList());
             format.propertyFormatDomain = getUnsafe(f, Fresnel.propertyFormatDomain, Collections.emptyList());
@@ -322,23 +384,27 @@ public class FresnelUtil {
         }
     }
 
-    private class AppliedLens {
-        Collection<String> preserveLinks;
-        Lensed lensed;
-        Map<String, List<Node>> nodeTmpIdMap;
+    private class LensMapper {
+        private final Collection<String> preserveLinks;
+        private final Lensed lensed;
+        private final Map<String, List<Node>> nodeTmpIdMap;
+        private final boolean addSearchKey;
 
-        private AppliedLens(Object thing, Lens lens, Collection<String> preserveLinks, Collection<Options> options) {
+        LensMapper(Object thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
             this.preserveLinks = preserveLinks;
             this.lensed = applyLens(getCopyWithTmpIds(thing), lens, options);
             this.nodeTmpIdMap = buildNodeTmpIdMap(lensed);
+            this.addSearchKey = addSearchKey;
         }
 
-        public Map<String, Object> getThing() {
-            return buildThing(lensed);
+        Map<String, Object> toMap() {
+            return build(lensed);
         }
 
-        private Map<String, Object> buildThing(Lensed lensed) {
-            List<Node> nodes = getRelatedNodes(lensed);
+        private Map<String, Object> build(Lensed lensed) {
+            // A single source object may produce multiple Node instances when lensed (e.g. for different transliterations)
+            // Collect all nodes that originated from the same source and rebuild them into one combined Map.
+            List<Node> nodes = getNodesFromSameSource(lensed);
 
             Map<String, Object> origThing = nodes.getFirst().thing;
 
@@ -360,13 +426,13 @@ public class FresnelUtil {
                 lensedThing.put(JSONLD_ALT_ID_KEY, getIds(origThing, JSONLD_ALT_ID_KEY));
             }
 
-            lensedThing.putAll(merge(nodes));
+            lensedThing.putAll(buildFromNodes(nodes));
 
             if (!preserveLinks.isEmpty()) {
                 restoreLinksWithTmpIds(lensedThing, origThing, preserveLinks);
             }
 
-            if (lensedThing.containsKey(TYPE_KEY)) {
+            if (lensedThing.containsKey(TYPE_KEY) && addSearchKey) {
                 var _str = buildSearchStr(lensedThing);
                 if (!_str.isEmpty()) {
                     lensedThing.put(JsonLd.SEARCH_KEY, unwrapSingle(_str));
@@ -379,19 +445,19 @@ public class FresnelUtil {
             return lensedThing;
         }
 
-        // FIXME: Naming, explain
-        private List<Node> getRelatedNodes(Lensed l) {
+        // F
+        private List<Node> getNodesFromSameSource(Lensed l) {
             return switch (l) {
                 case Node n -> nodeTmpIdMap.getOrDefault(getTmpId(n), List.of());
                 case TransliteratedNode t -> t.transliterations.values()
                         .stream()
                         .findFirst()
-                        .map(this::getRelatedNodes)
+                        .map(this::getNodesFromSameSource)
                         .orElse(List.of());
             };
         }
 
-        private Map<String, Object> merge(Collection<Node> nodes) {
+        private Map<String, Object> buildFromNodes(Collection<Node> nodes) {
             Map<String, Object> mergedThing = new LinkedHashMap<>();
             for (Node n : nodes) {
                 if (n instanceof LanguageContainer l) {
@@ -404,7 +470,7 @@ public class FresnelUtil {
 
         private void insert(Map<String, Object> thing, Node.Selected s) {
             for (var value : s.values()) {
-                var v = value instanceof Lensed l ? buildThing(l) : value;
+                var v = value instanceof Lensed l ? build(l) : value;
                 if (v instanceof Map<?,?> m) {
                     if (m.isEmpty() || (m.size() == 1 && m.containsKey(TYPE_KEY))) {
                         continue;
@@ -498,14 +564,14 @@ public class FresnelUtil {
     }
 
     // FIXME naming
-    public sealed abstract class Lensed permits Node, TransliteratedNode {
-        public String asString() {
+    private sealed abstract class Lensed permits Node, TransliteratedNode {
+        String asString() {
             return printTo(new StringBuilder(), null, null).toString();
         }
 
-        public Map<String, String> asStringByLang() {
+        Map<String, String> asStringByLang(List<LangCode> locales) {
             LinkedHashMap<String, String> m = new LinkedHashMap<>();
-            fallbackLocales.forEach(l -> {
+            locales.forEach(l -> {
                 var s = printTo(new StringBuilder(), l, null).toString();
                 if (!s.isEmpty()) {
                     m.put(l.code(), s);
@@ -514,7 +580,7 @@ public class FresnelUtil {
             return m;
         }
 
-        public Map<String, String> asStringByScript() {
+        Map<String, String> asStringByScript() {
             LinkedHashMap<String, String> m = new LinkedHashMap<>();
             collectScriptLangs().forEach(l -> {
                 var s = printTo(new StringBuilder(), null, l).toString();
@@ -525,14 +591,14 @@ public class FresnelUtil {
             return m;
         }
 
-        public abstract boolean isEmpty();
+        abstract boolean isEmpty();
 
-        protected abstract StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang);
+        abstract StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang);
 
-        protected abstract List<LangCode> collectScriptLangs();
+        abstract List<LangCode> collectScriptLangs();
     }
 
-    public sealed class Node extends Lensed permits IntermediateNode, LanguageContainer {
+    private sealed class Node extends Lensed permits IntermediateNode, LanguageContainer {
         record Selected(PropertyKey pKey, List<?> values) {
             List<Object> getFlatValues() {
                 return getFlatValues(values);
@@ -569,14 +635,12 @@ public class FresnelUtil {
         }
 
         void select(Map<String, Object> thing, List<ShowProperty> showProperties, Collection<Options> options) {
+            this.thing = thing;
             Stream.concat(Stream.of(new FslPath(TYPE_KEY), new FslPath(ID_KEY)), showProperties.stream())
                     .forEach(sp -> select(thing, sp, options));
         }
 
         private void select(Map<String, Object> thing, ShowProperty showProperty, Collection<Options> options) {
-            if (options.contains(Options.TRACK_ORIGINAL)) {
-                this.thing = thing;
-            }
             switch (showProperty) {
                 case AlternateProperties a -> {
                     for (var alternative : a.alternatives()) {
@@ -702,10 +766,13 @@ public class FresnelUtil {
         private Lens getNextLensLevel(Lens current, Map<String, Object> thing, FslPath fslPath, Collection<Options> options, boolean integral) {
             if (integral) {
                 if (current.isDerived()) {
+                    // TODO: General mechanism for nested derived lenses.
+                    // Derived nested lenses (A -> B) minus (C -> D) should behave level-wise, i.e.:
+                    // - (A - C) at the top level
+                    // - (B - D) at the nested level
                     List<LensGroupChain> handled = current.minus().stream()
                             .filter(l -> loadShowProperties(thing, l, options).contains(fslPath))
                             .toList();
-                    // FIXME: Clarify comment
                     // The integral thing may have already been handled by a deducted lens
                     // Thus we need to continue with a derived lens to avoid repetition at this level
                     return new Lens(current.lensGroupChain(), current.subLens(), handled);
@@ -716,13 +783,13 @@ public class FresnelUtil {
         }
 
         @Override
-        protected StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang) {
+        StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang) {
             orderedSelection.forEach(p -> printTo(s, p.values(), lang, scriptLang));
             return s;
         }
 
         @Override
-        protected List<LangCode> collectScriptLangs() {
+        List<LangCode> collectScriptLangs() {
             return orderedSelection.stream()
                     .map(Selected::getFlatValues)
                     .flatMap(List::stream)
@@ -735,7 +802,7 @@ public class FresnelUtil {
         }
 
         @Override
-        public boolean isEmpty() {
+        boolean isEmpty() {
             return orderedSelection.isEmpty();
         }
 
@@ -766,19 +833,19 @@ public class FresnelUtil {
         }
     }
 
-    public final class TransliteratedNode extends Lensed {
+    private final class TransliteratedNode extends Lensed {
         Map<LangCode, Node> transliterations = new HashMap<>();
         void add(LangCode langCode, Node node) {
             transliterations.put(langCode, node);
         }
 
         @Override
-        public boolean isEmpty() {
+        boolean isEmpty() {
             return transliterations.values().stream().allMatch(Node::isEmpty);
         }
 
         @Override
-        protected StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang) {
+        StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang) {
             if (lang == null && scriptLang == null) {
                 transliterations.values().forEach(n -> n.printTo(s, null, null));
             } else if (scriptLang != null && transliterations.containsKey(scriptLang)) {
@@ -794,24 +861,24 @@ public class FresnelUtil {
         }
 
         @Override
-        protected List<LangCode> collectScriptLangs() {
+        List<LangCode> collectScriptLangs() {
             return new ArrayList<>(transliterations.keySet());
         }
     }
 
-    public final class LanguageContainer extends Node {
+    private final class LanguageContainer extends Node {
         private List<LangCode> languages;
 
-        public LanguageContainer(Map<String, Object> container) {
+        LanguageContainer(Map<String, Object> container) {
             this.thing = container;
         }
 
-        public LanguageContainer(Map<String, Object> container, LangCode selectedLang) {
+        LanguageContainer(Map<String, Object> container, LangCode selectedLang) {
             this.thing = container;
             this.selectedLang = selectedLang;
         }
 
-        public List<LangCode> languages() {
+        List<LangCode> languages() {
             if (languages == null) {
                 this.languages = selectedLang != null
                         ? List.of(selectedLang)
@@ -820,19 +887,19 @@ public class FresnelUtil {
             return languages;
         }
 
-        public List<String> get(LangCode langCode) {
+        List<String> get(LangCode langCode) {
             return asStringList(thing.get(langCode.code()));
         }
 
-        public List<String> pick(LangCode langCode, List<LangCode> fallbackLocales) {
+        List<String> pick(LangCode langCode, List<LangCode> fallbackLocales) {
             return pick(langCode, fallbackLocales, List::getFirst);
         }
 
-        public boolean isTransliterated() {
+        boolean isTransliterated() {
             return thing.keySet().stream().anyMatch(LangCode::isTransliterated);
         }
 
-        public Map<String, Object> filteredLangMap(List<LangCode> fallbackLocales) {
+        Map<String, Object> filteredLangMap(List<LangCode> fallbackLocales) {
             return (isTransliterated() ? languages() : fallbackLocales)
                     .stream()
                     .map(LangCode::code)
@@ -841,7 +908,7 @@ public class FresnelUtil {
         }
 
         @Override
-        protected StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang) {
+        StringBuilder printTo(StringBuilder s, LangCode lang, LangCode scriptLang) {
             List<String> values;
             if (lang != null && scriptLang != null) {
                 // TODO? No use case at the moment
@@ -871,7 +938,7 @@ public class FresnelUtil {
         }
 
         @Override
-        protected List<LangCode> collectScriptLangs() {
+        List<LangCode> collectScriptLangs() {
             return isTransliterated() ? languages() : List.of();
         }
 
@@ -908,7 +975,7 @@ public class FresnelUtil {
         }
 
         @Override
-        public boolean isEmpty() {
+        boolean isEmpty() {
             return orderedSelection.stream().allMatch(s -> s.getFlatValues().isEmpty());
         }
     }
@@ -944,7 +1011,7 @@ public class FresnelUtil {
                 var lensDefinition = asMap(jsonLd.getLensFor(thing, group));
                 if (!lensDefinition.isEmpty()) {
                     // FIXME
-                    if (!"Resource".equals(lensDefinition.get("classLensDomain")) && !"StructuredValue".equals(lensDefinition.get("classLensDomain"))) {
+                    if (!Base.VALUES.contains((String) lensDefinition.get(Fresnel.classLensDomain))) {
                         return new ShowPropertyParser().parse(lensDefinition);
                     }
                 }
@@ -958,54 +1025,6 @@ public class FresnelUtil {
 
         var fallbackLens = options.contains(Options.NO_FALLBACK) ? FallbackLens.EMPTY : FallbackLens.DEFAULT;
         return new ShowPropertyParser().parse(fallbackLens.lens);
-    }
-
-    public static class Lens {
-        private final LensGroupChain lensGroupChain;
-        private final Lens subLens;
-        private final List<LensGroupChain> minus;
-
-        public Lens(LensGroupChain lensGroupChain) {
-            this(lensGroupChain, null);
-        }
-
-        public Lens(LensGroupChain lensGroupChain, Lens subLens) {
-            this(lensGroupChain, subLens, null);
-        }
-
-        public Lens(LensGroupChain lensGroupChain, Lens subLens, List<LensGroupChain> minus) {
-            this.lensGroupChain = lensGroupChain;
-            this.subLens = subLens;
-            this.minus = minus;
-        }
-
-        Lens next() {
-            return subLens != null ? subLens : this;
-        }
-
-        LensGroupChain lensGroupChain() {
-            return lensGroupChain;
-        }
-
-        Lens subLens() {
-            return subLens;
-        }
-
-        List<LensGroupChain> minus() {
-            return minus != null ? minus : List.of();
-        }
-
-        static Lens newEmpty() {
-            return new Lens(new LensGroupChain(List.of()));
-        }
-
-        boolean isDerived() {
-            return !minus().isEmpty();
-        }
-
-        boolean isNested() {
-            return subLens != null;
-        }
     }
 
     private class ShowPropertyParser {
@@ -1179,7 +1198,6 @@ public class FresnelUtil {
                     .toList();
         }
 
-
         private sealed abstract class LocationStep permits ArcStep, NodeStep {}
 
         private final class NodeStep extends LocationStep {
@@ -1301,11 +1319,11 @@ public class FresnelUtil {
     private class PropertyKey {
         String name;
 
-        public PropertyKey(String name) {
+        PropertyKey(String name) {
             this.name = name;
         }
 
-        public String name() {
+        String name() {
             return name;
         }
 
@@ -1313,7 +1331,7 @@ public class FresnelUtil {
             return jsonLd.langContainerAlias.containsKey(name);
         }
 
-        public String langAlias() {
+        String langAlias() {
             return (String) jsonLd.langContainerAlias.get(name);
         }
 
@@ -1365,8 +1383,8 @@ public class FresnelUtil {
         return jsonLd.isSubClassOf(firstType(thing), Base.Identity);
     }
 
-    public record LangCode(String code) {
-        public static final Comparator<LangCode> ORIGINAL_SCRIPT_FIRST = (a, b) -> {
+    private record LangCode(String code) {
+        static final Comparator<LangCode> ORIGINAL_SCRIPT_FIRST = (a, b) -> {
             if ((a.isTransliterated() && b.isTransliterated()) || (!a.isTransliterated() && !b.isTransliterated())) {
                 return a.code.compareTo(b.code);
             } else if (a.isTransliterated()) {
@@ -1376,11 +1394,11 @@ public class FresnelUtil {
             }
         };
 
-        public static boolean isTransliterated(String code) {
+        static boolean isTransliterated(String code) {
             return code.contains("-t-");
         }
 
-        private boolean isTransliterated() {
+        boolean isTransliterated() {
              return isTransliterated(code);
         }
     }
@@ -1426,11 +1444,11 @@ public class FresnelUtil {
             this.locale = locale;
         }
 
-        public Decorated displayDecorate(Node node) {
+        Decorated displayDecorate(Node node) {
             return formatResource(node, false, false);
         }
 
-        public Decorated displayDecorate(TransliteratedNode node) {
+        Decorated displayDecorate(TransliteratedNode node) {
             return formatTransliterated(node, false, false);
         }
 
@@ -1546,10 +1564,10 @@ public class FresnelUtil {
         }
     }
 
-    class Formats {
+    private class Formats {
         Map<String, Format> formatIndex = new HashMap<>();
 
-        public Formats (Map<String, Map<?, ?>> formats) {
+        Formats(Map<String, Map<?, ?>> formats) {
             parse(formats);
         }
 
@@ -1646,10 +1664,10 @@ public class FresnelUtil {
         }
     }
 
-    record FormatDetails(String contentBefore, String contentAfter, String contentFirst, String contentLast) {
-        public void apply(Decorated result,
-                          boolean isFirst,
-                          boolean isLast) {
+    private record FormatDetails(String contentBefore, String contentAfter, String contentFirst, String contentLast) {
+        void apply(Decorated result,
+                   boolean isFirst,
+                   boolean isLast) {
             if (isFirst && contentBefore != null) {
                 if (!"".equals(contentFirst)) {
                     // TODO decide if we should generate contentBefore or contentFirst here
@@ -1669,7 +1687,7 @@ public class FresnelUtil {
             }
         }
 
-        public static FormatDetails parse(Map<String, String> d) {
+        static FormatDetails parse(Map<String, String> d) {
             if (d == null) {
                 return null;
             }
@@ -1682,8 +1700,8 @@ public class FresnelUtil {
         }
     }
 
-    record Style(List<String> styles) {
-        public void apply(Decorated result) {
+    private record Style(List<String> styles) {
+        void apply(Decorated result) {
             var s = new ArrayList<String>();
             for (String style : styles) {
                 //if (STYLERS.containsKey(style)) {
@@ -1696,14 +1714,14 @@ public class FresnelUtil {
             result.style = s;
         }
 
-        public static Style parse(List<String> styles) {
+        static Style parse(List<String> styles) {
             if (styles == null) {
                 return null;
             }
             return new Style(styles);
         }
 
-        private void applyFunction(Decorated result, String name) {
+        void applyFunction(Decorated result, String name) {
             if (name.equals("isniGroupDigits()")) {
                 if (result instanceof DecoratedLiteral literal) {
                     literal.value = switch (literal.value) {
@@ -1719,8 +1737,8 @@ public class FresnelUtil {
         }
     }
 
-    public sealed static abstract class Decorated permits DecoratedLiteral, DecoratedNode, DecoratedProperty, DecoratedTransliterated {
-        public static class Fmt {
+    private sealed static abstract class Decorated permits DecoratedLiteral, DecoratedNode, DecoratedProperty, DecoratedTransliterated {
+        static class Fmt {
             public static String DISPLAY = "_display";
             public static String CONTENT_AFTER = "_contentAfter";
             public static String CONTENT_BEFORE = "_contentBefore";
@@ -1736,20 +1754,20 @@ public class FresnelUtil {
 
         int lastLen = 0;
 
-        public String asString() {
+        String asString() {
             return printTo(new StringBuilder()).toString();
         }
 
         abstract StringBuilder printTo(StringBuilder s);
 
-        protected void before(StringBuilder s) {
+        void before(StringBuilder s) {
             lastLen = s.length();
             if (contentBefore != null) {
                 s.append(contentBefore);
             }
         }
 
-        protected void after(StringBuilder s) {
+        void after(StringBuilder s) {
             if (s.length() == lastLen + (contentBefore == null ? 0 : contentBefore.length())) {
                 s.setLength(lastLen); // produced empty string -> erase contentBefore
             } else if (contentAfter != null) {
@@ -1759,7 +1777,7 @@ public class FresnelUtil {
 
         abstract Object asJsonLd();
 
-        protected void asJsonLd(Map<String, Object> result) {
+        void asJsonLd(Map<String, Object> result) {
             if (contentBefore != null) {
                 result.put(Fmt.CONTENT_BEFORE, contentBefore);
             }
@@ -1775,7 +1793,7 @@ public class FresnelUtil {
         }
     }
 
-    public final static class DecoratedNode extends Decorated {
+    private final static class DecoratedNode extends Decorated {
         String type;
         String id;
         String fallback;
@@ -1794,7 +1812,7 @@ public class FresnelUtil {
             return s;
         }
 
-        public Object asJsonLd() {
+        Object asJsonLd() {
             var result = new HashMap<String, Object>();
             result.put(TYPE_KEY, type);
             if (id != null) {
@@ -1807,11 +1825,11 @@ public class FresnelUtil {
         }
     }
 
-    public final static class DecoratedProperty extends Decorated {
+    private final static class DecoratedProperty extends Decorated {
         String key;
         List<Decorated> values; // TODO handle single value separately?
 
-        public DecoratedProperty(String key, List<Decorated> values) {
+        DecoratedProperty(String key, List<Decorated> values) {
             this.key = key;
             this.values = values;
         }
@@ -1824,7 +1842,7 @@ public class FresnelUtil {
             return s;
         }
 
-        public Object asJsonLd() {
+        Object asJsonLd() {
             var result = new HashMap<String, Object>();
             result.put(key, unwrapSingle(values.stream().map(Decorated::asJsonLd).toList()));
             super.asJsonLd(result);
@@ -1840,10 +1858,10 @@ public class FresnelUtil {
         }
     }
 
-    public final static class DecoratedLiteral extends Decorated {
+    private final static class DecoratedLiteral extends Decorated {
         Object value;
 
-        public DecoratedLiteral(Object value) {
+        DecoratedLiteral(Object value) {
             this.value = value;
         }
 
@@ -1855,7 +1873,7 @@ public class FresnelUtil {
             return s;
         }
 
-        public Object asJsonLd() {
+        Object asJsonLd() {
             var result = new HashMap<String, Object>();
             super.asJsonLd(result);
             if (result.isEmpty()) {
@@ -1867,7 +1885,7 @@ public class FresnelUtil {
         }
     }
 
-    public final static class DecoratedTransliterated extends Decorated {
+    private final static class DecoratedTransliterated extends Decorated {
         // TODO
         private static final String T_START = " ’";
         private static final String T_END = "’";
@@ -1875,11 +1893,11 @@ public class FresnelUtil {
 
         Map<LangCode, Decorated> scripts;
 
-        public DecoratedTransliterated(Map<LangCode, Decorated> scripts) {
+        DecoratedTransliterated(Map<LangCode, Decorated> scripts) {
             this.scripts = scripts;
         }
 
-        public DecoratedTransliterated(LanguageContainer container) {
+        DecoratedTransliterated(LanguageContainer container) {
             // TODO order
             scripts = new HashMap<>();
             for (var l : container.languages()) {
@@ -1920,7 +1938,7 @@ public class FresnelUtil {
             return s;
         }
 
-        public Object asJsonLd() {
+        Object asJsonLd() {
             var result = new HashMap<String, Object>();
 
             scripts.forEach((code, decorated) -> {

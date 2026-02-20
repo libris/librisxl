@@ -431,11 +431,9 @@ public class XSearchServlet extends WhelkHttpServlet {
     }
 
     private Map<?, ?> toXsearchJson(Map<?, ?> item) {
-        Function<Object, String> format = (Object o) -> whelk.getFresnelUtil().format(
-                whelk.getFresnelUtil().applyLens(o, FresnelUtil.NestedLenses.CHIP_TO_TOKEN),
-                new FresnelUtil.LangCode("sv")
-        ).asString();
-
+        Function<Object, String> format = (Object o) -> whelk.getFresnelUtil().asFormattedString(o,
+                FresnelUtil.NestedLenses.CHIP_TO_TOKEN,
+                "sv");
 
         var result = new LinkedHashMap<String, Object>();
         result.put("identifier", "http://libris.kb.se/bib/" + getAtPath(item, List.of("meta", "controlNumber")));

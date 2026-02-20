@@ -14,6 +14,7 @@ import whelk.exception.InvalidQueryException
 import whelk.exception.UnexpectedHttpStatusException
 import whelk.util.DocumentUtil
 import whelk.util.FresnelUtil
+import whelk.util.FresnelUtil.Lens
 import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
@@ -31,8 +32,8 @@ import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
-import static whelk.util.FresnelUtil.Options.NO_FALLBACK
 import static whelk.util.FresnelUtil.Options.SKIP_ITEMS
+import static whelk.util.FresnelUtil.Options.SKIP_MAP_VOCAB_TERMS
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
 import static whelk.util.Jackson.mapper
 
@@ -503,9 +504,9 @@ class ElasticSearch {
             if (!topStr.isEmpty()) {
                 searchCard[TOP_STR] = topStr.size() == 1 ? topStr.first() : topStr;
             }
-            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE)).asString()
-            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
-            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE)).asString()
+            searchCard[CHIP_STR] = whelk.fresnelUtil.asString(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE))
+            searchCard[CARD_STR] = whelk.fresnelUtil.asString(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE))
+            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.asString(searchCard, DerivedLenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE))
         } catch (Exception e) {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
@@ -598,11 +599,11 @@ class ElasticSearch {
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
         var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
 
-        copy.data[GRAPH_KEY] = embellishedGraph.take(originalGraphSize).collect { whelk.fresnelUtil.getLensedThing(it, FresnelUtil.Lenses.SEARCH_CARD, links) }
+        copy.data[GRAPH_KEY] = embellishedGraph.take(originalGraphSize).collect { toSearchCard2(whelk.fresnelUtil, (Map) it, (List) links) }
 
         def integralIds = collectIntegralIds(copy.data, whelk.jsonld)
 
-        copy.data[GRAPH_KEY] += embellishedGraph.drop(originalGraphSize).collect { toSearchChipOrCard(whelk.fresnelUtil, (Map) it, integralIds) }
+        copy.data[GRAPH_KEY] += embellishedGraph.drop(originalGraphSize).collect { getShapeForEmbellishment2(whelk.fresnelUtil, (Map) it, integralIds) }
 
         setIdentifiers(copy)
         if (copy.isVirtual()) {
@@ -641,9 +642,10 @@ class ElasticSearch {
                 'totalItemsByRelation': incomingLinkCountByRelation
         ]
 
-        // TODO: Fallback, clean strings (replicate parts of JsonLd.applyLensAsMapByLang)
+
         try {
-            searchCard['_sortKeyByLang'] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN).asStringByLang()
+            // TODO: Fallback, clean strings (replicate parts of JsonLd.applyLensAsMapByLang)
+            searchCard['_sortKeyByLang'] = whelk.fresnelUtil.asStringByLang(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, whelk.jsonld.locales)
         } catch (Exception e) {
             log.error("Couldn't create sort key for {}: {}", document.shortId, e, e)
         }
@@ -659,9 +661,9 @@ class ElasticSearch {
         }
 
         try {
-            searchCard[CHIP_STR] = whelk.fresnelUtil.applyLens(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS)).asString()
-            searchCard[CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS)).asString()
-            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.applyLens(searchCard, DerivedLenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS)).asString()
+            searchCard[CHIP_STR] = whelk.fresnelUtil.asString(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS))
+            searchCard[CARD_STR] = whelk.fresnelUtil.asString(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS))
+            searchCard[SEARCH_CARD_STR] = whelk.fresnelUtil.asString(searchCard, DerivedLenses.SEARCH_CARD_ONLY, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS))
         } catch (Exception e) {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
@@ -751,19 +753,30 @@ class ElasticSearch {
                 .toSet()
     }
 
-    private static Map toSearchChipOrCard(FresnelUtil fresnelUtil, Map embellishData, Set<String> integralIds) {
+    private static Map getShapeForEmbellishment2(FresnelUtil fresnelUtil, Map embellishData, Set<String> integralIds) {
         def graph = ((List) embellishData[GRAPH_KEY])
         if (graph) {
             def (record, thing) = graph
             thing[RECORD_KEY] = record
-            def lens = integralIds.contains(thing[ID_KEY])
-                    ? FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP // Or just SEARCH_CARD?
-                    : FresnelUtil.Lenses.SEARCH_CHIP
-            def shrunkThing = fresnelUtil.getLensedThing(thing, lens)
-            def shrunkRecord = minimalRecord((Map) record) + ((Map) shrunkThing.remove(RECORD_KEY) ?: [:])
-            embellishData[GRAPH_KEY] = [shrunkRecord, shrunkThing]
+            def shapedThing = integralIds.contains(thing[ID_KEY])
+                    ? toSearchCard2(fresnelUtil, thing) // Do we really want the full search card here?
+                    : toSearchChip(fresnelUtil, thing)
+            def shapedRecord = minimalRecord((Map) record) + ((Map) shapedThing.remove(RECORD_KEY) ?: [:])
+            embellishData[GRAPH_KEY] = [shapedRecord, shapedThing]
         }
         return embellishData
+    }
+
+    private static toSearchChip(FresnelUtil fresnelUtil, Map thing, List preserveLinks = []) {
+        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD, preserveLinks)
+    }
+
+    private static toSearchCard2(FresnelUtil fresnelUtil, Map thing, List preserveLinks = []) {
+        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD, preserveLinks)
+    }
+
+    private static mapThroughLensForIndex(FresnelUtil fresnelUtil, Map thing, Lens lens, List preserveLinks) {
+        return fresnelUtil.mapThroughLens(thing, lens, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks, true)
     }
 
     private static Map minimalRecord(Map record) {
