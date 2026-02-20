@@ -135,7 +135,16 @@ class SiteSearch {
                 Map findDesc = getAndIndexDescription(appId + "find");
                 queryParameters.put("_appConfig", new String[]{mapper.writeValueAsString(search2.buildAppConfig(findDesc))});
             }
-            return search2.doSearch(queryParameters);
+            try {
+                return search2.doSearch(queryParameters);
+            } catch (InvalidQueryException re) {
+                // The query is broken. Often this means a bit of text (like a title) was copy-pasted as a query
+                // without regard for query language syntax. Let's just run the whole thing as a string search.
+                String[] qArr = queryParameters.get("_q");
+                qArr[0] = qArr[0].replaceAll("\"", "\\\""); // escape any qutoes
+                qArr[0] = "\"" + qArr[0] + "\""; // quote as a whole
+                return search2.doSearch(queryParameters); // It throws again? So be it - let the crud code return an error.
+            }
         } else {
             if (queryParameters.get("_statsrepr") == null && searchSettings.get("statsfind") != null) {
                 queryParameters.put("_statsrepr", new String[]{mapper.writeValueAsString(searchSettings.get("statsfind"))});
