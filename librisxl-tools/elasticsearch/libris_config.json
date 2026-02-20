@@ -265,14 +265,6 @@
                             "keyword": {
                                 "type": "keyword",
                                 "normalizer": "custom_case_insensitive"
-                            },
-                            "trigram": {
-                                "type": "text",
-                                "analyzer": "trigram"
-                            },
-                            "reverse": {
-                                "type": "text",
-                                "analyzer": "reverse"
                             }
                         }
                     },
@@ -484,8 +476,34 @@
                 }
             },
             {
+                "chipStr-spell-and-ignore-length_template": {
+                    "match": "_chipStr",
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard",
+                                "similarity": "bm25-only-idf-ignore-tf"
+                            },
+                            "trigram": {
+                                "type": "text",
+                                "analyzer": "trigram"
+                            },
+                            "reverse": {
+                                "type": "text",
+                                "analyzer": "reverse"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "similarity": "bm25-only-idf-ignore-tf",
+                        "type": "text",
+                        "index": true
+                    }
+                }
+            },
+            {
                 "str-ignore-length_template": {
-                    "match": ["_chipStr", "_cardStr", "_searchCardStr"],
+                    "match": ["_cardStr", "_searchCardStr"],
                     "mapping": {
                         "fields": {
                             "exact": {
