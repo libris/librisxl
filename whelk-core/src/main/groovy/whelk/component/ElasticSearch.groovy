@@ -29,6 +29,7 @@ import static whelk.JsonLd.REVERSE_KEY
 import static whelk.JsonLd.SEARCH_KEY
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.WORK_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
@@ -599,15 +600,21 @@ class ElasticSearch {
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
         var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
 
-        copy.data[GRAPH_KEY] = embellishedGraph.take(originalGraphSize).collect { toSearchCard2(whelk.fresnelUtil, (Map) it, (List) links) }
+        FresnelUtil.LensMappingBatch lensedMainGraph = batchToSearchCard(whelk.fresnelUtil,
+                embellishedGraph.take(originalGraphSize) as List<Map<String, Object>>,
+                links)
+
+        copy.data[GRAPH_KEY] = lensedMainGraph.lensedThings()
 
         def integralIds = collectIntegralIds(copy.data, whelk.jsonld)
 
         copy.data[GRAPH_KEY] += embellishedGraph.drop(originalGraphSize).collect { getShapeForEmbellishment2(whelk.fresnelUtil, (Map) it, integralIds) }
 
         setIdentifiers(copy)
-        if (copy.isVirtual()) {
+        boolean isVirtualWork = copy.isVirtual()
+        if (isVirtualWork) {
             copy.centerOnVirtualMainEntity()
+
         }
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = copy.getThingIdentifiers()
@@ -618,8 +625,6 @@ class ElasticSearch {
         String thingId = thingIds.get(0)
 
         Map searchCard = JsonLd.frame(thingId, copy.data)
-
-        FresnelUtil.restoreTmpLinks(searchCard)
 
         searchCard['_links'] = links
         searchCard['_outerEmbellishments'] = copy.getEmbellishments() - links
@@ -686,6 +691,8 @@ class ElasticSearch {
             }
 
             if (value instanceof Map) {
+                lensedMainGraph.restoreLinks(value, isVirtualWork)
+
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
                 // -->
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
@@ -767,16 +774,20 @@ class ElasticSearch {
         return embellishData
     }
 
-    private static toSearchChip(FresnelUtil fresnelUtil, Map thing, List preserveLinks = []) {
-        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD, preserveLinks)
+    private static Map<String, Object> toSearchChip(FresnelUtil fresnelUtil, Map thing) {
+        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD)
     }
 
-    private static toSearchCard2(FresnelUtil fresnelUtil, Map thing, List preserveLinks = []) {
-        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD, preserveLinks)
+    private static Map<String, Object> toSearchCard2(FresnelUtil fresnelUtil, Map thing) {
+        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD)
     }
 
-    private static mapThroughLensForIndex(FresnelUtil fresnelUtil, Map thing, Lens lens, List preserveLinks) {
-        return fresnelUtil.mapThroughLens(thing, lens, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks, true)
+    private static Map<String, Object> mapThroughLensForIndex(FresnelUtil fresnelUtil, Map thing, Lens lens) {
+        return fresnelUtil.mapThroughLens(thing, lens, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], [], true)
+    }
+
+    private static FresnelUtil.LensMappingBatch batchToSearchCard(FresnelUtil fresnelUtil, List<Map<String, Object>> thing, Collection<String> preserveLinks) {
+        return fresnelUtil.mapBatchThroughLens(thing, FresnelUtil.Lenses.SEARCH_CARD, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks, true)
     }
 
     private static Map minimalRecord(Map record) {

@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import static whelk.JsonLd.JSONLD_ALT_ID_KEY;
 import static whelk.JsonLd.REVERSE_KEY;
 import static whelk.JsonLd.THING_KEY;
 import static whelk.JsonLd.TYPE_KEY;
+import static whelk.JsonLd.WORK_KEY;
 import static whelk.JsonLd.asList;
 
 // https://www.w3.org/2005/04/fresnel-info/manual/
@@ -190,11 +192,24 @@ public class FresnelUtil {
     }
 
     public Map<String, Object> mapThroughLens(Map<String, Object> thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
-        if (!thing.containsKey(TYPE_KEY)) {
-            logger.warn("Lens could not be applied to {} due to missing type", thing.get(ID_KEY));
-            return thing;
-        }
-        return new LensMapper(thing, lens, options, preserveLinks, addSearchKey).toMap();
+        return _mapThroughLens(thing, lens, options, preserveLinks, addSearchKey).thing();
+    }
+
+    public LensMappingBatch mapBatchThroughLens(List<Map<String, Object>> things, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
+        List<LensMappingResult> mappings = things.stream().map(t -> _mapThroughLens(t, lens, options, preserveLinks, addSearchKey)).toList();
+
+        List<Map<String, Object>> lensedThings = new ArrayList<>();
+        Map<String, List<FresnelUtil.LinkRestoration>> idToPreservedLinks = new HashMap<>();
+
+        mappings.forEach(lmr -> {
+            lensedThings.add(lmr.thing());
+            var id = (String) lmr.thing().get(ID_KEY);
+            if (id != null) {
+                idToPreservedLinks.put(id, lmr.preservedLinks());
+            }
+        });
+
+        return new LensMappingBatch(lensedThings, idToPreservedLinks);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -222,15 +237,6 @@ public class FresnelUtil {
                 .toList();
     }
 
-    public static void restoreTmpLinks(Map<?, ?> thing) {
-        DocumentUtil.traverse(thing, (value, path) -> {
-            if (value instanceof Map<?, ?> m && m.containsKey(TMP_ID_KEY)) {
-                return new DocumentUtil.Replace(new HashMap<>(Map.of(ID_KEY, m.get(TMP_ID_KEY))));
-            }
-            return new DocumentUtil.Nop();
-        });
-    }
-
     public List<String> buildSearchStr(Map<String, Object> thing) {
         var lensedForSearchStr = applyLens(thing, Lenses.SEARCH_TOKEN, List.of(Options.NO_FALLBACK));
         if (lensedForSearchStr.isEmpty()) {
@@ -243,48 +249,35 @@ public class FresnelUtil {
         return lensedForSearchStr.asStringByLang(fallbackLocales).values().stream().distinct().toList();
     }
 
-    private Lensed applyLens(Object thing, Lens lens) {
-        return applyLens(thing, lens, List.of());
-    }
+    public static class LensMappingBatch {
+        private final List<Map<String, Object>> lensedThings;
+        private final Map<String, List<LinkRestoration>> preservedLinksMap;
 
-    private Lensed applyLens(Object thing, Lens lens, Collection<Options> options) {
-        // TODO
-        if (!isTypedNode(thing)) {
-            throw new IllegalArgumentException("Thing is not typed node: " + thing);
+        LensMappingBatch(List<Map<String, Object>> lensedThings, Map<String, List<LinkRestoration>> preservedLinksMap) {
+            this.lensedThings = lensedThings;
+            this.preservedLinksMap = preservedLinksMap;
         }
 
-        return (Lensed) applyLens(thing, lens, options, null);
-    }
-
-    private Object applyLens(
-            Object value,
-            Lens lens,
-            Collection<Options> options,
-            LangCode selectedLang
-    ) {
-        if (!(value instanceof Map<?, ?>)) {
-            // literal
-            return value;
+        public List<Map<String, Object>> lensedThings() {
+            return lensedThings;
         }
 
-        var thing = asMap(value);
-
-        List<LangCode> scripts = selectedLang == null ? scriptAlternatives(thing) : Collections.emptyList();
-        if (!scripts.isEmpty()) {
-            TransliteratedNode n = new TransliteratedNode();
-            for (var script : scripts) {
-                n.add(script, (Node) applyLens(thing, lens, options, script));
+        public void restoreLinks(Map<String, Object> thing, boolean isVirtualRecord) {
+            var id = (String) thing.get(ID_KEY);
+            if (id != null) {
+                if (id.endsWith("#work") && isVirtualRecord) {
+                    // FIXME
+                    preservedLinksMap.getOrDefault(id.replace("#work", "#it"), List.of())
+                            .stream()
+                            .map(lr -> !lr.path().isEmpty() && WORK_KEY.equals(lr.path().getFirst())
+                                    ? new LinkRestoration(lr.path().subList(1, lr.path().size()), lr.key(), lr.links())
+                                    : lr)
+                            .forEach(lr -> lr.restoreTo(thing));
+                } else {
+                    preservedLinksMap.getOrDefault(id, List.of()).forEach(lr -> lr.restoreTo(thing));
+                }
             }
-            return n;
         }
-
-        var result = new Node(lens, selectedLang);
-
-        List<ShowProperty> showProperties = loadShowProperties(thing, lens, options);
-
-        result.select(thing, showProperties, options);
-
-        return result;
     }
 
     public static class Lens {
@@ -333,6 +326,50 @@ public class FresnelUtil {
         boolean isNested() {
             return subLens != null;
         }
+    }
+
+    private Lensed applyLens(Object thing, Lens lens) {
+        return applyLens(thing, lens, List.of());
+    }
+
+    private Lensed applyLens(Object thing, Lens lens, Collection<Options> options) {
+        // TODO
+        if (!isTypedNode(thing)) {
+            throw new IllegalArgumentException("Thing is not typed node: " + thing);
+        }
+
+        return (Lensed) applyLens(thing, lens, options, null);
+    }
+
+    private Object applyLens(
+            Object value,
+            Lens lens,
+            Collection<Options> options,
+            LangCode selectedLang
+    ) {
+        if (!(value instanceof Map<?, ?>)) {
+            // literal
+            return value;
+        }
+
+        var thing = asMap(value);
+
+        List<LangCode> scripts = selectedLang == null ? scriptAlternatives(thing) : Collections.emptyList();
+        if (!scripts.isEmpty()) {
+            TransliteratedNode n = new TransliteratedNode();
+            for (var script : scripts) {
+                n.add(script, (Node) applyLens(thing, lens, options, script));
+            }
+            return n;
+        }
+
+        var result = new Node(lens, selectedLang);
+
+        List<ShowProperty> showProperties = loadShowProperties(thing, lens, options);
+
+        result.select(thing, showProperties, options);
+
+        return result;
     }
 
     private Decorated format(Lensed lensed, LangCode locale) {
@@ -384,11 +421,33 @@ public class FresnelUtil {
         }
     }
 
+    private LensMappingResult _mapThroughLens(Map<String, Object> thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
+        if (!thing.containsKey(TYPE_KEY)) {
+            // Throw exception? Return empty Map?
+            logger.warn("Lens could not be applied to {} due to missing type", thing.get(ID_KEY));
+            return new LensMappingResult(thing, List.of());
+        }
+        return new LensMapper(thing, lens, options, preserveLinks, addSearchKey).map();
+    }
+
+    private record LensMappingResult(Map<String, Object> thing, List<LinkRestoration> preservedLinks) {}
+
+    private record LinkRestoration(List<Object> path, String key, Object links) {
+        public void restoreTo(Map<String, Object> thing) {
+            var node = DocumentUtil.getAtPath(thing, path);
+            asMap(node).put(key, links);
+        }
+    }
+
     private class LensMapper {
         private final Collection<String> preserveLinks;
         private final Lensed lensed;
         private final Map<String, List<Node>> nodeTmpIdMap;
         private final boolean addSearchKey;
+
+        private static final String TMP_PREFIX = "_tmp_";
+
+        private final Set<String> tmpKeys = new HashSet<>();
 
         LensMapper(Object thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
             this.preserveLinks = preserveLinks;
@@ -397,8 +456,10 @@ public class FresnelUtil {
             this.addSearchKey = addSearchKey;
         }
 
-        Map<String, Object> toMap() {
-            return build(lensed);
+        LensMappingResult map() {
+            Map<String, Object> lensedThing = build(lensed);
+            List<LinkRestoration> preservedLinks = collectPreservedLinks(lensedThing);
+            return new LensMappingResult(lensedThing, preservedLinks);
         }
 
         private Map<String, Object> build(Lensed lensed) {
@@ -429,7 +490,7 @@ public class FresnelUtil {
             lensedThing.putAll(buildFromNodes(nodes));
 
             if (!preserveLinks.isEmpty()) {
-                restoreLinksWithTmpIds(lensedThing, origThing, preserveLinks);
+                tmpRestoreLinks(lensedThing, origThing, preserveLinks);
             }
 
             if (lensedThing.containsKey(TYPE_KEY) && addSearchKey) {
@@ -445,7 +506,6 @@ public class FresnelUtil {
             return lensedThing;
         }
 
-        // F
         private List<Node> getNodesFromSameSource(Lensed l) {
             return switch (l) {
                 case Node n -> nodeTmpIdMap.getOrDefault(getTmpId(n), List.of());
@@ -494,23 +554,34 @@ public class FresnelUtil {
             thing.put(key, unwrapSingle(uniqueValues));
         }
 
-        private static void restoreLinksWithTmpIds(Map<String, Object> lensedThing, Map<String, Object> originalThing, Collection<String> preserveLinks) {
+        private List<LinkRestoration> collectPreservedLinks(Map<String, Object> thing) {
+            List<LinkRestoration> preservedLinks = new ArrayList<>();
+            DocumentUtil.findKey(thing, tmpKeys, (value, path) -> {
+                preservedLinks.add(new LinkRestoration(List.copyOf(path.subList(0, path.size() - 1)), toOrigKey((String) path.getLast()), value));
+                return new DocumentUtil.Remove();
+            });
+            return preservedLinks;
+        }
+
+        private void tmpRestoreLinks(Map<String, Object> lensedThing, Map<String, Object> originalThing, Collection<String> preserveLinks) {
             originalThing.forEach((k, v) -> {
                 if (!lensedThing.containsKey(k)) {
                     Object links = JsonLd.retainLinks(v, preserveLinks);
                     if (!ObjectUtils.isEmpty(links)) {
-                        List<?> tmpList = new ArrayList<>(List.of(links));
-                        DocumentUtil.traverse(tmpList, (value, path) -> {
-                            if (value instanceof Map<?, ?> m && JsonLd.isLink(m)) {
-                                // Use a temporary ID key so these links are skipped during framing
-                                return new DocumentUtil.Replace(new HashMap<>(Map.of(TMP_ID_KEY, m.get(ID_KEY))));
-                            }
-                            return new DocumentUtil.Nop();
-                        });
-                        lensedThing.put(k, tmpList.getFirst());
+                        var tmpKey = toTmpKey(k);
+                        lensedThing.put(tmpKey, links);
+                        tmpKeys.add(tmpKey);
                     }
                 }
             });
+        }
+
+        private static String toTmpKey(String key) {
+            return TMP_PREFIX + key;
+        }
+
+        private static String toOrigKey(String key) {
+            return key.replace(TMP_PREFIX, "");
         }
 
         private static List<Map<String, String>> getIds(Map<String, Object> thing, String key) {
@@ -1011,7 +1082,7 @@ public class FresnelUtil {
                 var lensDefinition = asMap(jsonLd.getLensFor(thing, group));
                 if (!lensDefinition.isEmpty()) {
                     // FIXME
-                    if (!Base.VALUES.contains((String) lensDefinition.get(Fresnel.classLensDomain))) {
+                    if (!Base.VALUES.contains((String) lensDefinition.getOrDefault(Fresnel.classLensDomain, ""))) {
                         return new ShowPropertyParser().parse(lensDefinition);
                     }
                 }
