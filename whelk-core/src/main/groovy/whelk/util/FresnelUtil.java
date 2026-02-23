@@ -268,7 +268,7 @@ public class FresnelUtil {
 
         public void restoreLinks(Map<String, Object> thing, boolean isVirtualRecord) {
             var id = (String) thing.get(ID_KEY);
-            if (id != null) {
+            if (id != null && !JsonLd.isLink(thing)) {
                 if (id.endsWith("#work") && isVirtualRecord) {
                     // FIXME
                     preservedLinksMap.getOrDefault(id.replace("#work", "#it"), List.of())
@@ -502,9 +502,13 @@ public class FresnelUtil {
             }
 
             if (lensedThing.containsKey(TYPE_KEY) && addSearchKey) {
-                var _str = buildSearchStr(lensedThing);
-                if (!_str.isEmpty()) {
-                    lensedThing.put(JsonLd.SEARCH_KEY, unwrapSingle(_str));
+                try {
+                    var _str = buildSearchStr(lensedThing);
+                    if (!_str.isEmpty()) {
+                        lensedThing.put(JsonLd.SEARCH_KEY, unwrapSingle(_str));
+                    }
+                } catch (Exception e) {
+                    logger.warn("Couldn't create search key for node with type {} and ID {}", lensedThing.get(TYPE_KEY), lensedThing.get(ID_KEY));
                 }
             }
 

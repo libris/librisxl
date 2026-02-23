@@ -629,7 +629,7 @@ class ElasticSearch {
     }
 
     private static Map<String, Object> toSearchChip(FresnelUtil fresnelUtil, Map thing) {
-        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD)
+        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CHIP)
     }
 
     private static Map<String, Object> toSearchCard(FresnelUtil fresnelUtil, Map thing) {
