@@ -38,9 +38,25 @@ public class QueryTreeBuilder {
     }
 
     private static Ast getAst(String queryString) throws InvalidQueryException {
-        LinkedList<Lex.Symbol> lexedSymbols = Lex.lexQuery(queryString);
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols);
-        return new Ast(parseTree);
+        try {
+            LinkedList<Lex.Symbol> lexedSymbols = Lex.lexQuery(queryString);
+            Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols);
+            return new Ast(parseTree);
+        } catch (InvalidQueryException iqe) {
+            // The query did not lex/parse. Let's assume it's a copy-pasted title or the like, and just treat it
+            // like a string query (removing anything that isn't just a string).
+
+            String unquotedQueryString = queryString.replaceAll("\"", ""); // These aren't just parse problems, but can throw in the lexing too.
+            LinkedList<Lex.Symbol> lexedSymbols = Lex.lexQuery(unquotedQueryString);
+            LinkedList<Lex.Symbol> simplifiedQuery = new LinkedList<>();
+            while (!lexedSymbols.isEmpty()) {
+                Lex.Symbol symbol = lexedSymbols.pop();
+                if (symbol.name().equals(Lex.TokenName.STRING))
+                    simplifiedQuery.add(symbol);
+            }
+            Parse.OrComb parseTree = Parse.parseQuery(simplifiedQuery);
+            return new Ast(parseTree);
+        }
     }
 
     private static Node buildFromGroup(Ast.Group group, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
