@@ -179,6 +179,10 @@ public class FresnelUtil {
         return format(applyLens(thing, lens), new LangCode(locale)).asString();
     }
 
+    public String asString(Object thing, Lens lens) {
+        return applyLens(thing, lens, List.of()).asString();
+    }
+
     public String asString(Object thing, Lens lens, Collection<Options> options) {
         return applyLens(thing, lens, options).asString();
     }
@@ -188,7 +192,7 @@ public class FresnelUtil {
     }
 
     public Map<String, Object> mapThroughLens(Map<String, Object> thing, Lens lens) {
-        return mapThroughLens(thing, lens, List.of(), List.of(), false);
+        return mapThroughLens(thing, lens, List.of(Options.TAKE_ALL_ALTERNATE, Options.SKIP_MAP_VOCAB_TERMS), List.of(), false);
     }
 
     public Map<String, Object> mapThroughLens(Map<String, Object> thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
@@ -466,6 +470,10 @@ public class FresnelUtil {
             // A single source object may produce multiple Node instances when lensed (e.g. for different transliterations)
             // Collect all nodes that originated from the same source and rebuild them into one combined Map.
             List<Node> nodes = getNodesFromSameSource(lensed);
+
+            if (nodes.isEmpty()) {
+                nodes = List.of((Node) lensed);
+            }
 
             Map<String, Object> origThing = nodes.getFirst().thing;
 

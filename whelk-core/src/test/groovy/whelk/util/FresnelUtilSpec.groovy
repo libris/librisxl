@@ -244,7 +244,7 @@ class FresnelUtilSpec extends Specification {
                                                     "marc:arrangedStatementForMusic",
                                                     "originDate"
                                             ]
-                                    ],
+                                    ]
                             ]],
                     "cards"        :
                             ["lenses": [
@@ -278,7 +278,7 @@ class FresnelUtilSpec extends Specification {
                                                     "isPartOf",
                                                     ["inverseOf": "instanceOf"]
                                             ]
-                                    ],
+                                    ]
                             ]]
             ],
             "formatters": [
@@ -311,18 +311,11 @@ class FresnelUtilSpec extends Specification {
                                 "el-Latn-t-el-Grek-x0-btj": "To nisi ton thisavron"]],
                 "note"       : ["NOTE 1", "NOTE 2"]
         ]
+        var formattedString = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, 'sv')
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
-        when:
-        var lensed = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-        var formatted = fresnel.format(lensed, new FresnelUtil.LangCode('sv'))
-
-        then:
-        formatted.asString() == "NOTATION • etikett • NOTE 1, NOTE 2 • Το νησι των θησαυρων ’To nisi ton thisavron’"
-
-        when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-
-        then:
+        expect:
+        formattedString == "NOTATION • etikett • NOTE 1, NOTE 2 • Το νησι των θησαυρων ’To nisi ton thisavron’"
         chip == [
                 "@type"      : "Thing",
                 "notation"   : "NOTATION",
@@ -336,7 +329,6 @@ class FresnelUtilSpec extends Specification {
                                 "el-Latn-t-el-Grek-x0-btj": "To nisi ton thisavron",
                                 "el"                      : "Το νησι των θησαυρων"
                         ],
-                        "_str"           : ["To nisi ton thisavron", "Το νησι των θησαυρων"]
                 ]
         ]
     }
@@ -358,17 +350,11 @@ class FresnelUtilSpec extends Specification {
                 'identifiedBy'                               : [['@type': 'VIAF', 'value': '24583475'], ['@type': 'ISNI', 'value': '0000000103407488']],
                 'marc:titlesAndOtherWordsAssociatedWithAName': ['romersk kejsare']
         ]
+        var formattedString = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, 'sv')
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
-        when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
-
-        then:
-        formatted.asString() == "Heliogabalus, 203-222, romersk kejsare"
-
-        when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-
-        then:
+        expect:
+        formattedString == "Heliogabalus, 203-222, romersk kejsare"
         chip == [
                 "@id"                                        : "https://libris-qa.kb.se/khw03jc347kgv4w#it",
                 "@type"                                      : "Person",
@@ -376,7 +362,6 @@ class FresnelUtilSpec extends Specification {
                 "name"                                       : "Heliogabalus",
                 "lifeSpan"                                   : "203-222",
                 "marc:titlesAndOtherWordsAssociatedWithAName": "romersk kejsare",
-                "_str"                                       : "Heliogabalus"
         ]
     }
 
@@ -396,16 +381,11 @@ class FresnelUtilSpec extends Specification {
 
         var fresnel = new FresnelUtil(ld)
 
-        when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
+        var formattedString = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, 'sv')
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
-        then:
-        formatted.asString() == "Teater-biblioteket • N:o 15 • En friare i lifsfara : skämt med sång i en akt"
-
-        when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-
-        then:
+        expect:
+        formattedString == "Teater-biblioteket • N:o 15 • En friare i lifsfara : skämt med sång i en akt"
         chip == [
                 "@type"    : "Title",
                 "mainTitle": "Teater-biblioteket",
@@ -413,8 +393,7 @@ class FresnelUtilSpec extends Specification {
                         "@type"     : "TitlePart",
                         "partNumber": "N:o 15",
                         "partName"  : "En friare i lifsfara : skämt med sång i en akt"
-                ],
-                "_str"     : "Teater-biblioteket N:o 15 En friare i lifsfara : skämt med sång i en akt"
+                ]
         ]
     }
 
@@ -431,16 +410,11 @@ class FresnelUtilSpec extends Specification {
                         "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]
         ]
 
-        when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
+        var formattedString = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, 'sv')
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
-        then:
-        formatted.asString() == "Νεφέλαι : Λυσιστράτη ’Nephelai : Lysistratē’"
-
-        when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-
-        then:
+        expect:
+        formattedString == "Νεφέλαι : Λυσιστράτη ’Nephelai : Lysistratē’"
         chip == [
                 "@type"          : "Title",
                 "mainTitleByLang": [
@@ -451,7 +425,6 @@ class FresnelUtilSpec extends Specification {
                         "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē",
                         "grc"                            : "Λυσιστράτη"
                 ],
-                "_str"           : ["Nephelai Lysistratē", "Νεφέλαι Λυσιστράτη"]
         ]
     }
 
@@ -465,32 +438,28 @@ class FresnelUtilSpec extends Specification {
                         "ira-Latn-t-ira-Arab": "talysj"],
         ]
 
-        when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
+        var formattedString = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, 'sv')
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
-        then:
-        formatted.asString() == "⁧تالشی زَوُن⁩ ’talysj’"
-
-        when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-
-        then:
+        expect:
+        formattedString == "⁧تالشی زَوُن⁩ ’talysj’"
         chip == [
                 "@type"          : "Title",
                 "mainTitleByLang": [
                         "ira-Latn-t-ira-Arab": "talysj",
-                        "ira"                : "تالشی زَوُن"],
-                "_str"           : ["talysj", "تالشی زَوُن"]
+                        "ira"                : "تالشی زَوُن"]
         ]
     }
 
     def "showProperties rdf:type"() {
         given:
         var fresnel = new FresnelUtil(ld)
+        var formattedString = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, locale)
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode(locale)).asString() == result
-        fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN) == thing
+        formattedString == result
+        chip == thing
 
         where:
         thing                                                  | locale | result
@@ -502,10 +471,12 @@ class FresnelUtilSpec extends Specification {
     def "@type @vocab terms"() {
         given:
         var fresnel = new FresnelUtil(ld)
+        var formattedString = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, locale)
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode(locale)).asString() == result
-        fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN) == thing
+        formattedString == result
+        chip == thing
 
         where:
         thing                                        | locale | result
@@ -522,9 +493,10 @@ class FresnelUtilSpec extends Specification {
     def "alternateProperties + range restriction"() {
         given:
         var fresnel = new FresnelUtil(ld)
+        var formattedString = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, locale)
 
         expect:
-        fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode(locale)).asString() == result
+        formattedString == result
 
         where:
         thing                                        | locale | result
@@ -542,7 +514,7 @@ class FresnelUtilSpec extends Specification {
         given:
         var fresnel = new FresnelUtil(ld)
         var thing = ['@type': 'Work', 'hasTitle': [tt, kt, kt2, vt]]
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         expect:
         chip == [
@@ -550,21 +522,16 @@ class FresnelUtilSpec extends Specification {
                 "hasTitle": [[
                                      "@type"    : "KeyTitle",
                                      "mainTitle": "key title",
-                                     "_str"     : "key title"
                              ], [
                                      "@type"    : "KeyTitle",
                                      "mainTitle": "key title 2",
-                                     "_str"     : "key title 2"
                              ], [
                                      "@type"    : "Title",
                                      "mainTitle": "title",
-                                     "_str"     : "title"
                              ], [
                                      "@type"    : "VariantTitle",
                                      "mainTitle": "variant title",
-                                     "_str"     : "variant title"
-                             ]],
-                "_str"    : "title"
+                             ]]
         ]
     }
 
@@ -576,10 +543,10 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
-        var result = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
+        var formattedString = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, 'sv')
 
         expect:
-        result.asString() == "ISNI 0000 0001 0340 7488"
+        formattedString == "ISNI 0000 0001 0340 7488"
     }
 
     def "chips vs tokens"() {
@@ -600,27 +567,19 @@ class FresnelUtilSpec extends Specification {
         ]
 
         var fresnel = new FresnelUtil(ld)
+        var formatted = fresnel.asFormattedString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, 'sv')
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
-        when:
-        var formatted = fresnel.format(fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN), new FresnelUtil.LangCode('sv'))
-
-        then:
-        formatted.asString() == "Titel • Svenska • Namnsson, Namn, 1972-"
-
-        when:
-        var chip = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-
-        then:
+        expect:
+        formatted == "Titel • Svenska • Namnsson, Namn, 1972-"
         chip == [
                 "@type"       : "Work",
                 "hasTitle"    : [[
                                          "@type"    : "Title",
                                          "mainTitle": "Titel",
-                                         "_str"     : "Titel"
                                  ], [
                                          "@type"    : "VariantTitle",
                                          "mainTitle": "variant title",
-                                         "_str"     : "variant title"
                                  ]],
                 "language"    : [
                         "@type"      : "Language",
@@ -635,10 +594,8 @@ class FresnelUtilSpec extends Specification {
                                 "familyName": "Namnsson",
                                 "givenName" : "Namn",
                                 "lifeSpan"  : "1972-",
-                                "_str"      : "Namn Namnsson"
                         ]
-                ],
-                "_str"        : "Titel"
+                ]
         ]
     }
 
@@ -669,24 +626,15 @@ class FresnelUtilSpec extends Specification {
                 List.of(FresnelUtil.CHIP_CHAIN)
         )
 
-        when:
-        var lensed = fresnel.applyLens(thing, cardOnly)
-
-        then:
-        lensed.asString() == "Överzet Namnsson Namn 1972- Hästar"
-
-        when:
-        var lensedThing = fresnel.getLensedThing(thing, cardOnly)
-
-        then:
-        lensedThing == [
+        expect:
+        fresnel.asString(thing, cardOnly) == "Överzet Namnsson Namn 1972- Hästar"
+        fresnel.mapThroughLens(thing, cardOnly) == [
                 "@type"       : "Work",
                 "contribution": [[
                                          "@type": "Contribution",
                                          "agent": [
                                                  "@type": "Person",
                                                  "name" : "Överzet",
-                                                 "_str" : "Överzet"
                                          ]
                                  ], [
                                          "@type": "PrimaryContribution",
@@ -694,8 +642,7 @@ class FresnelUtilSpec extends Specification {
                                                  "@type"     : "Person",
                                                  "familyName": "Namnsson",
                                                  "givenName" : "Namn",
-                                                 "lifeSpan"  : "1972-",
-                                                 "_str"      : "Namn Namnsson"
+                                                 "lifeSpan"  : "1972-"
                                          ]
                                  ]],
                 "subject"     : [
@@ -725,34 +672,25 @@ class FresnelUtilSpec extends Specification {
                 ]
         ]
         var fresnel = new FresnelUtil(ld)
+        var asString = fresnel.asString(thing, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
+        var asCard = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN)
 
-        when:
-        var lensed = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
-
-        then:
-        lensed.asString() == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Swedish Svenska Hästar"
-
-        when:
-        var lensedThing = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN)
-
-        then:
-        lensedThing == [
+        expect:
+        asString == "Titel Titel variant title Överzet translator Namnsson Namn 1972- author Swedish Svenska Hästar"
+        asCard == [
                 "@type"       : "Work",
                 "hasTitle"    : [[
                                          "@type"    : "Title",
                                          "mainTitle": "Titel",
-                                         "_str"     : "Titel"
                                  ], [
                                          "@type"    : "VariantTitle",
                                          "mainTitle": "variant title",
-                                         "_str"     : "variant title"
                                  ]],
                 "contribution": [[
                                          "@type": "Contribution",
                                          "agent": [
                                                  "@type": "Person",
                                                  "name" : "Överzet",
-                                                 "_str" : "Överzet"
                                          ],
                                          "role" : "translator"
                                  ], [
@@ -762,7 +700,6 @@ class FresnelUtilSpec extends Specification {
                                                  "familyName": "Namnsson",
                                                  "givenName" : "Namn",
                                                  "lifeSpan"  : "1972-",
-                                                 "_str"      : "Namn Namnsson"
                                          ],
                                          "role" : "author"
                                  ]],
@@ -775,8 +712,7 @@ class FresnelUtilSpec extends Specification {
                 "subject"     : [
                         "@type"    : "Topic",
                         "prefLabel": "Hästar"
-                ],
-                "_str"        : "Titel"
+                ]
         ]
     }
 
@@ -842,15 +778,15 @@ class FresnelUtilSpec extends Specification {
         ]
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
 
-        var lensed = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-        var lensedThing = fresnel.getLensedThing(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var str = fresnel.asString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var chip = fresnel.mapThroughLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
 
         expect:
-        lensed.asString() == str
-        lensedThing == asThing
+        str == strRes
+        chip == chipRes
 
         where:
-        fslPath                                    | str                                                           | asThing
+        fslPath                                    | strRes                                                        | chipRes
         "hasTitle"                                 | "Titel undertitel varianttitel variant title Swedish Svenska" | ['@type': 'Work', 'hasTitle': [tt2, vt2], 'language': l]
         "hasTitle/Title/mainTitle"                 | "Titel Swedish Svenska"                                       | ['@type': 'Work', 'hasTitle': mt, 'language': l]
         "hasTitle[Title]"                          | "Titel undertitel Swedish Svenska"                            | ['@type': 'Work', 'hasTitle': tt2, 'language': l]
@@ -896,12 +832,12 @@ class FresnelUtilSpec extends Specification {
         ]
         var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
 
-        var takeFirst = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-        var takeAllAlternate = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
+        var takeFirst = fresnel.asString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var takeAllAlternate = fresnel.asString(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
 
         expect:
-        takeFirst.asString() == takeFirstRes
-        takeAllAlternate.asString() == takeAllAlternateRes
+        takeFirst == takeFirstRes
+        takeAllAlternate == takeAllAlternateRes
 
         where:
         fslPaths                                                           | takeFirstRes          | takeAllAlternateRes
@@ -917,14 +853,14 @@ class FresnelUtilSpec extends Specification {
                 '@type'   : 'Work',
                 'hasTitle': title,
                 'language': [
-                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']]
                 ]
         ]
         var fresnel = new FresnelUtil(ld)
-        var chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var byLang = fresnel.asStringByLang(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, ['sv', 'en'])
 
         expect:
-        chip.byLang() == res
+        byLang == res
 
         where:
         title                                                                                                      | res
@@ -932,27 +868,47 @@ class FresnelUtilSpec extends Specification {
         [['@type': 'VariantTitle', 'mainTitle': 'variant title']]                                                  | ['sv': 'variant title Svenska', 'en': 'variant title Swedish']
         [['@type': 'Title', 'mainTitleByLang': ['sv': 'Titel', 'en': 'Title']]]                                    | ['sv': 'Titel Svenska', 'en': 'Title Swedish']
         [['@type': 'Title', 'mainTitleByLang': ['sv': 'Titel', 'en': 'Title'], 'subtitle': 'subtitle']]            | ['sv': 'Titel subtitle Svenska', 'en': 'Title subtitle Swedish']
-        [['@type': 'Title', 'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"]]] | ['sv': 'Nephelai Νεφέλαι Svenska', 'en': 'Nephelai Νεφέλαι Swedish']
+        [['@type': 'Title', 'mainTitleByLang': ['grc': "Νεφέλαι", 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai']]] | ['sv': 'Nephelai Svenska', 'en': 'Nephelai Swedish']
     }
 
-    def "Split up strings by script language"() {
+    def "Split up strings by language 2"() {
         given:
         var fresnel = new FresnelUtil(ld)
         var thing
-        var chip
+        var lens
+        var locales = ['sv', 'en']
+
+        when:
+        thing = ['@type': 'Language', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']]
+        lens = FresnelUtil.NestedLenses.CHIP_TO_TOKEN
+
+        then:
+        fresnel.asStringByLang(thing, lens, locales) == ['sv': 'Svenska', 'en': 'Swedish']
+
+
+        when:
+        thing = ['@type': 'Title', 'mainTitleByLang': ['grc': 'Νεφέλαι', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai']]
+        lens = FresnelUtil.NestedLenses.CHIP_TO_TOKEN
+
+        then:
+        fresnel.asStringByLang(thing, lens, locales) == ['sv': 'Nephelai', 'en': 'Nephelai']
+
 
         when:
         thing = [
                 '@type'   : 'Work',
-                'hasTitle': [['@type': 'Title', 'mainTitle': 'Titel'], ['@type': 'VariantTitle', 'mainTitle': 'variant title']],
+                'hasTitle': [['@type'          : 'Title',
+                              'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"],
+                              'subtitleByLang' : ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]]],
                 'language': [
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        lens = FresnelUtil.NestedLenses.CHIP_TO_TOKEN
 
         then:
-        chip.byScript() == [:]
+        fresnel.asStringByLang(thing, lens, locales) == ['sv': 'Nephelai Lysistratē Svenska', 'en': 'Nephelai Lysistratē Swedish']
+
 
         when:
         thing = [
@@ -962,23 +918,53 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        lens = FresnelUtil.Lenses.SEARCH_TOKEN
 
         then:
-        chip.byScript() == ['grc': 'Νεφέλαι Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Swedish Svenska']
+        fresnel.asStringByLang(thing, lens, locales) == ['sv': 'Nephelai', 'en': 'Nephelai']
+    }
+
+    def "Split up strings by script language"() {
+        given:
+        var fresnel = new FresnelUtil(ld)
+        fresnel.fallbackLocales = [new FresnelUtil.LangCode('sv'), new FresnelUtil.LangCode('en')]
+        var thing
+        var lens
+
+        when:
+        thing = ['@type': 'Title', 'mainTitle': 'Titel']
+        lens = FresnelUtil.NestedLenses.CHIP_TO_TOKEN
+
+        then:
+        fresnel.applyLens(thing, lens).asStringByScript() == [:]
+
+
+        when:
+        thing = ['@type'          : 'Title',
+                 'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"],
+                 'subtitleByLang' : ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]]
+
+        lens = FresnelUtil.NestedLenses.CHIP_TO_TOKEN
+
+        then:
+        fresnel.applyLens(thing, lens).asStringByScript() == ['grc': 'Νεφέλαι Λυσιστράτη', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē']
+
 
         when:
         thing = [
                 '@type'   : 'Work',
-                'hasTitle': [['@type': 'Title', 'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"], 'subtitle': 'subtitle']],
+                'hasTitle': ['@type'          : 'Title',
+                             'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"],
+                             'subtitleByLang' : ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]],
                 'language': [
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        lens = FresnelUtil.NestedLenses.CHIP_TO_TOKEN
 
         then:
-        chip.byScript() == ['grc': 'Νεφέλαι subtitle Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai subtitle Swedish Svenska']
+        fresnel.applyLens(thing, lens).asStringByScript() == ['grc': 'Νεφέλαι Λυσιστράτη Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Svenska']
+
 
         when:
         thing = [
@@ -990,32 +976,16 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        lens = FresnelUtil.Lenses.SEARCH_TOKEN
 
         then:
-        chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Swedish Svenska']
-
-        when:
-        thing = [
-                '@type'   : 'Work',
-                'hasTitle': [['@type'          : 'Title',
-                              'mainTitleByLang': ["grc": "Νεφέλαι", "grc-Latn-t-grc-Grek-x0-skr-1980": "Nephelai"],
-                              'subtitleByLang' : ["grc": "Λυσιστράτη", "grc-Latn-t-grc-Grek-x0-skr-1980": "Lysistratē"]]],
-                'language': [
-                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
-                ]
-        ]
-        chip = fresnel.applyLens(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-
-        then:
-        chip.byScript() == ['grc': 'Νεφέλαι Λυσιστράτη Swedish Svenska', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai Lysistratē Swedish Svenska']
+        fresnel.applyLens(thing, lens).asStringByScript() == ['grc': 'Νεφέλαι', 'grc-Latn-t-grc-Grek-x0-skr-1980': 'Nephelai']
     }
 
     def "search-tokens"() {
         given:
         var fresnel = new FresnelUtil(ld)
         var thing
-        var searchToken
 
         when:
         thing = [
@@ -1025,10 +995,9 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ]
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.Lenses.SEARCH_TOKEN, [FresnelUtil.Options.NO_FALLBACK])
 
         then:
-        searchToken.asString() == "Titel"
+        fresnel.asString(thing, FresnelUtil.Lenses.SEARCH_TOKEN, [FresnelUtil.Options.NO_FALLBACK]) == "Titel"
 
         when:
         thing = [
@@ -1037,30 +1006,27 @@ class FresnelUtilSpec extends Specification {
                 'familyName': 'Namnsson',
                 'lifeSpan'  : '1990-'
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.Lenses.SEARCH_TOKEN, [FresnelUtil.Options.NO_FALLBACK])
 
         then:
-        searchToken.asString() == "Namn Namnsson"
+        fresnel.asString(thing, FresnelUtil.Lenses.SEARCH_TOKEN, [FresnelUtil.Options.NO_FALLBACK]) == "Namn Namnsson"
 
         when:
         thing = [
                 '@type'    : 'Topic',
                 'prefLabel': 'Hästar'
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.Lenses.SEARCH_TOKEN, [FresnelUtil.Options.NO_FALLBACK])
 
         then:
-        searchToken.asString() == ""
+        fresnel.asString(thing, FresnelUtil.Lenses.SEARCH_TOKEN, [FresnelUtil.Options.NO_FALLBACK]) == ""
 
         when:
         thing = [
                 '@type'    : 'Topic',
                 'prefLabel': 'Hästar'
         ]
-        searchToken = fresnel.applyLens(thing, FresnelUtil.Lenses.SEARCH_TOKEN)
 
         then:
-        searchToken.asString() == "Hästar"
+        fresnel.asString(thing, FresnelUtil.Lenses.SEARCH_TOKEN) == "Hästar"
     }
 
     def "inverse integral"() {
@@ -1188,16 +1154,21 @@ class FresnelUtilSpec extends Specification {
                 ]
         ]
 
-        when:
-        var chipStr = fresnel.applyLens(work, FresnelUtil.NestedLenses.CHIP_TO_TOKEN).asString()
-        var cardStr = fresnel.applyLens(work, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN).asString()
-        var cardStrAlt = fresnel.applyLens(work, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN, [FresnelUtil.Options.TAKE_ALL_ALTERNATE]).asString()
-        var cardOnlyStr = fresnel.applyLens(work, CARD_ONLY).asString()
-        var cardOnlyStrAlt = fresnel.applyLens(work, CARD_ONLY, [FresnelUtil.Options.TAKE_ALL_ALTERNATE]).asString()
-        var searchCardStr = fresnel.applyLens(work, FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP).asString()
-        var searchCardOnlyStr = fresnel.applyLens(work, SEARCH_CARD_ONLY).asString()
+        var chipStr = fresnel.asString(work, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var cardStr = fresnel.asString(work, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN)
+        var cardStrAlt = fresnel.asString(work, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
+        var cardOnlyStr = fresnel.asString(work, CARD_ONLY)
+        var cardOnlyStrAlt = fresnel.asString(work, CARD_ONLY, [FresnelUtil.Options.TAKE_ALL_ALTERNATE])
+        var searchCardStr = fresnel.asString(work, FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP)
+        var searchCardOnlyStr = fresnel.asString(work, SEARCH_CARD_ONLY)
 
-        then:
+        var chip = fresnel.mapThroughLens(work, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
+        var card = fresnel.mapThroughLens(work, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN)
+        var searchCard = fresnel.mapThroughLens(work, FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP)
+        var cardOnly = fresnel.mapThroughLens(work, CARD_ONLY)
+        var searchCardOnly = fresnel.mapThroughLens(work, SEARCH_CARD_ONLY)
+
+        expect:
         chipStr == "Verkstitel"
         cardStr == "Verkstitel Swedish Svenska Instanstitel av Någon"
         cardStrAlt == "Verkstitel Swedish Svenska Instanstitel Instanstitel 9789178034239 av Någon"
@@ -1206,14 +1177,6 @@ class FresnelUtilSpec extends Specification {
         searchCardStr == "Verkstitel Swedish Svenska Instanstitel av Någon upplagan 2025"
         searchCardOnlyStr == "upplagan 2025"
 
-        when:
-        var chip = fresnel.getLensedThing(work, FresnelUtil.NestedLenses.CHIP_TO_TOKEN)
-        var card = fresnel.getLensedThing(work, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN)
-        var searchCard = fresnel.getLensedThing(work, FresnelUtil.NestedLenses.SEARCH_CARD_TO_SEARCH_CHIP)
-        var cardOnly = fresnel.getLensedThing(work, CARD_ONLY)
-        var searchCardOnly = fresnel.getLensedThing(work, SEARCH_CARD_ONLY)
-
-        then:
         chip == [
                 "@type"   : "Work",
                 "hasTitle": [
@@ -1309,6 +1272,89 @@ class FresnelUtilSpec extends Specification {
                         ]]
                 ],
                 "originDate": "2025"
+        ]
+    }
+
+    def "search card"() {
+        given:
+        var thing = [
+                '@id': 'https://libris.kb.se/1234',
+                '@type'       : 'Work',
+                'hasTitle'    : [
+                        ['@type': 'Title', 'mainTitle': 'Titel', 'hasPart': ['@type': 'TitlePart', 'partName': 'del', 'partNumber': '1']],
+                        ['@type': 'VariantTitle', 'mainTitle': 'variant title']
+                ],
+                'language'    : [
+                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                ],
+                'contribution': [
+                        ['@type': 'Contribution', 'role': 'translator', 'agent': ['@type': 'Person', 'name': 'Överzet']],
+                        ['@type': 'PrimaryContribution', 'role': 'author', 'agent': ['@type': 'Person', 'givenName': 'Namn', 'familyName': 'Namnsson', 'lifeSpan': "1972-"]],
+                ],
+                'x': ['@id': 'https://id.kb.se/x']
+        ]
+        var fresnel = new FresnelUtil(ld)
+        var searchCardBatch = fresnel.mapBatchThroughLens([thing], FresnelUtil.Lenses.SEARCH_CARD, [FresnelUtil.Options.TAKE_ALL_ALTERNATE], ['https://id.kb.se/x'], true)
+        var searchCard = searchCardBatch.lensedThings().first()
+        searchCardBatch.restoreLinks(searchCard, false)
+
+        expect:
+        searchCard == [
+                "@id"         : "https://libris.kb.se/1234",
+                "@type"       : "Work",
+                'hasTitle'    : [
+                        ['@type': 'Title', 'mainTitle': 'Titel', 'hasPart': ['@type': 'TitlePart', 'partNumber': '1', 'partName': 'del'], '_str': 'Titel 1 del'],
+                        ['@type': 'VariantTitle', 'mainTitle': 'variant title', '_str': 'variant title']
+                ],
+                'contribution': [
+                        ['@type': 'Contribution', 'role': 'translator', 'agent': ['@type': 'Person', 'name': 'Överzet', '_str': 'Överzet']],
+                        ['@type': 'PrimaryContribution', 'role': 'author', 'agent': ['@type': 'Person', 'givenName': 'Namn', 'familyName': 'Namnsson', 'lifeSpan': "1972-", '_str': 'Namn Namnsson']]
+                ],
+                'language'    : ['@type': 'Language', 'labelByLang': ['en': 'Swedish']],
+                "_str"        : 'Titel',
+                'x'           : ['@id': 'https://id.kb.se/x']
+        ]
+    }
+
+    def "merge properties"() {
+        given:
+        def displayData = [
+                "@context"  : [
+                ],
+                "lensGroups": [
+                        "cards"       :
+                                ["lenses": [
+                                        "Work"    : [
+                                                "@id"            : "Work-cards",
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Work",
+                                                "showProperties" : [
+                                                        "mainTitle",
+                                                        [
+                                                            "fresnel:mergeProperties": ["x", "y"],
+                                                            "fresnel:use": "z"
+                                                        ]
+                                                ]
+                                        ]
+                                ]]
+                ]
+        ]
+        var thing = [
+                '@id': 'https://libris.kb.se/1234',
+                '@type'       : 'Work',
+                'mainTitle': 'Titel',
+                'x': 'a',
+                'y': ['b', 'c']
+        ]
+        var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
+        var card = fresnel.mapThroughLens(thing, FresnelUtil.Lenses.SEARCH_CARD)
+
+        expect:
+        card == [
+            "@id" : "https://libris.kb.se/1234",
+            "@type" : "Work",
+            "mainTitle" : "Titel",
+            "z" : [ "a", "b", "c" ]
         ]
     }
 }
