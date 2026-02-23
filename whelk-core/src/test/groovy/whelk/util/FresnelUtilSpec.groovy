@@ -361,7 +361,7 @@ class FresnelUtilSpec extends Specification {
                 'sameAs'                                     : [['@id': 'http://libris.kb.se/resource/auth/281943']],
                 "name"                                       : "Heliogabalus",
                 "lifeSpan"                                   : "203-222",
-                "marc:titlesAndOtherWordsAssociatedWithAName": "romersk kejsare",
+                "marc:titlesAndOtherWordsAssociatedWithAName": ["romersk kejsare"],
         ]
     }
 
@@ -389,11 +389,11 @@ class FresnelUtilSpec extends Specification {
         chip == [
                 "@type"    : "Title",
                 "mainTitle": "Teater-biblioteket",
-                "hasPart"  : [
+                "hasPart"  : [[
                         "@type"     : "TitlePart",
-                        "partNumber": "N:o 15",
-                        "partName"  : "En friare i lifsfara : skämt med sång i en akt"
-                ]
+                        "partNumber": ["N:o 15"],
+                        "partName"  : ["En friare i lifsfara : skämt med sång i en akt"]
+                ]]
         ]
     }
 
@@ -581,13 +581,13 @@ class FresnelUtilSpec extends Specification {
                                          "@type"    : "VariantTitle",
                                          "mainTitle": "variant title",
                                  ]],
-                "language"    : [
+                "language"    : [[
                         "@type"      : "Language",
                         "labelByLang": [
                                 "en": "Swedish"
-                        ]
+                        ]]
                 ],
-                "contribution": [
+                "contribution": [[
                         "@type": "PrimaryContribution",
                         "agent": [
                                 "@type"     : "Person",
@@ -595,7 +595,7 @@ class FresnelUtilSpec extends Specification {
                                 "givenName" : "Namn",
                                 "lifeSpan"  : "1972-",
                         ]
-                ]
+                ]]
         ]
     }
 
@@ -645,10 +645,10 @@ class FresnelUtilSpec extends Specification {
                                                  "lifeSpan"  : "1972-"
                                          ]
                                  ]],
-                "subject"     : [
+                "subject"     : [[
                         "@type"    : "Topic",
                         "prefLabel": "Hästar"
-                ]
+                ]]
         ]
     }
 
@@ -703,16 +703,16 @@ class FresnelUtilSpec extends Specification {
                                          ],
                                          "role" : "author"
                                  ]],
-                "language"    : [
+                "language"    : [[
                         "@type"      : "Language",
                         "labelByLang": [
                                 "en": "Swedish"
                         ]
-                ],
-                "subject"     : [
+                ]],
+                "subject"     : [[
                         "@type"    : "Topic",
                         "prefLabel": "Hästar"
-                ]
+                ]]
         ]
     }
 
@@ -787,17 +787,17 @@ class FresnelUtilSpec extends Specification {
 
         where:
         fslPath                                    | strRes                                                        | chipRes
-        "hasTitle"                                 | "Titel undertitel varianttitel variant title Swedish Svenska" | ['@type': 'Work', 'hasTitle': [tt2, vt2], 'language': l]
-        "hasTitle/Title/mainTitle"                 | "Titel Swedish Svenska"                                       | ['@type': 'Work', 'hasTitle': mt, 'language': l]
-        "hasTitle[Title]"                          | "Titel undertitel Swedish Svenska"                            | ['@type': 'Work', 'hasTitle': tt2, 'language': l]
-        "hasTitle[^Title]"                         | "Titel undertitel varianttitel variant title Swedish Svenska" | ['@type': 'Work', 'hasTitle': [tt2, vt2], 'language': l]
-        "hasTitle/VariantTitle/mainTitle"          | "varianttitel variant title Swedish Svenska"                  | ['@type': 'Work', 'hasTitle': vt2, 'language': l]
-        "hasTitle/*/mainTitle"                     | "Titel varianttitel variant title Swedish Svenska"            | ['@type': 'Work', 'hasTitle': [mt, vt2], 'language': l]
-        "language/Language/code"                   | "sv Swedish Svenska"                                          | ['@type': 'Work', 'language': l2]
-        "language/Language/mainTitle"              | "Swedish Svenska"                                             | ['@type': 'Work', 'language': l]
-        "language/Title/code"                      | "Swedish Svenska"                                             | ['@type': 'Work', 'language': l]
-        'in::instanceOf/*/responsibilityStatement' | 'av En Författare Swedish Svenska'                            | ['@type': 'Work', 'language': l, '@reverse': ['instanceOf': [['@type': 'Instance', 'responsibilityStatement': 'av En Författare']]]]
-        'in::instanceOf/*/meta/*/controlNumber'    | 'dz7666s5bdksvtls Swedish Svenska'                            | ['@type': 'Work', 'language': l, '@reverse': ['instanceOf': [['@type': 'Instance', 'meta': ['@type': 'Record', 'controlNumber': 'dz7666s5bdksvtls']]]]]
+        "hasTitle"                                 | "Titel undertitel varianttitel variant title Swedish Svenska" | ['@type': 'Work', 'hasTitle': [tt2, vt2], 'language': [l]]
+        "hasTitle/Title/mainTitle"                 | "Titel Swedish Svenska"                                       | ['@type': 'Work', 'hasTitle': [mt], 'language': [l]]
+        "hasTitle[Title]"                          | "Titel undertitel Swedish Svenska"                            | ['@type': 'Work', 'hasTitle': [tt2], 'language': [l]]
+        "hasTitle[^Title]"                         | "Titel undertitel varianttitel variant title Swedish Svenska" | ['@type': 'Work', 'hasTitle': [tt2, vt2], 'language': [l]]
+        "hasTitle/VariantTitle/mainTitle"          | "varianttitel variant title Swedish Svenska"                  | ['@type': 'Work', 'hasTitle': [vt2], 'language': [l]]
+        "hasTitle/*/mainTitle"                     | "Titel varianttitel variant title Swedish Svenska"            | ['@type': 'Work', 'hasTitle': [mt, vt2], 'language': [l]]
+        "language/Language/code"                   | "sv Swedish Svenska"                                          | ['@type': 'Work', 'language': [l2]]
+        "language/Language/mainTitle"              | "Swedish Svenska"                                             | ['@type': 'Work', 'language': [l]]
+        "language/Title/code"                      | "Swedish Svenska"                                             | ['@type': 'Work', 'language': [l]]
+        'in::instanceOf/*/responsibilityStatement' | 'av En Författare Swedish Svenska'                            | ['@type': 'Work', 'language': [l], '@reverse': ['instanceOf': [['@type': 'Instance', 'responsibilityStatement': 'av En Författare']]]]
+        'in::instanceOf/*/meta/*/controlNumber'    | 'dz7666s5bdksvtls Swedish Svenska'                            | ['@type': 'Work', 'language': [l], '@reverse': ['instanceOf': [['@type': 'Instance', 'meta': ['@type': 'Record', 'controlNumber': 'dz7666s5bdksvtls']]]]]
     }
 
     def "Handle FSL paths as alternateProperties"() {
@@ -1179,30 +1179,30 @@ class FresnelUtilSpec extends Specification {
 
         chip == [
                 "@type"   : "Work",
-                "hasTitle": [
+                "hasTitle": [[
                         "@type"    : "Title",
                         "mainTitle": "Verkstitel"
-                ]
+                ]]
         ]
         card == [
                 "@type"   : "Work",
-                "hasTitle": [
+                "hasTitle": [[
                         "@type"    : "Title",
                         "mainTitle": "Verkstitel"
-                ],
-                "language": [
+                ]],
+                "language": [[
                         "@type"      : "Language",
                         "labelByLang": [
                                 "en": "Swedish"
                         ]
-                ],
+                ]],
                 "@reverse": [
                         "instanceOf": [[
                                 "@type"                  : "Instance",
-                                "hasTitle"               : [
+                                "hasTitle"               : [[
                                         "@type"    : "Title",
                                         "mainTitle": "Instanstitel"
-                                ],
+                                ]],
                                 "identifiedBy"           : [
                                         "@type": "ISBN",
                                         "value": "9789178034239"
@@ -1213,23 +1213,23 @@ class FresnelUtilSpec extends Specification {
         ]
         searchCard == [
                 "@type"     : "Work",
-                "hasTitle"  : [
+                "hasTitle"  : [[
                         "@type"    : "Title",
                         "mainTitle": "Verkstitel"
-                ],
-                "language"  : [
+                ]],
+                "language"  : [[
                         "@type"      : "Language",
                         "labelByLang": [
                                 "en": "Swedish"
                         ]
-                ],
+                ]],
                 "@reverse"  : [
                         "instanceOf": [[
                                 "@type"                  : "Instance",
-                                "hasTitle"               : [
+                                "hasTitle"               : [[
                                         "@type"    : "Title",
                                         "mainTitle": "Instanstitel"
-                                ],
+                                ]],
                                 "identifiedBy"           : [
                                         "@type": "ISBN",
                                         "value": "9789178034239"
@@ -1242,19 +1242,19 @@ class FresnelUtilSpec extends Specification {
         ]
         cardOnly == [
                 "@type"   : "Work",
-                "language": [
+                "language": [[
                         "@type"      : "Language",
                         "labelByLang": [
                                 "en": "Swedish"
                         ]
-                ],
+                ]],
                 "@reverse": [
                         "instanceOf": [[
                                 "@type"                  : "Instance",
-                                "hasTitle"               : [
+                                "hasTitle"               : [[
                                         "@type"    : "Title",
                                         "mainTitle": "Instanstitel"
-                                ],
+                                ]],
                                 "identifiedBy"           : [
                                         "@type": "ISBN",
                                         "value": "9789178034239"
@@ -1310,7 +1310,7 @@ class FresnelUtilSpec extends Specification {
                         ['@type': 'Contribution', 'role': 'translator', 'agent': ['@type': 'Person', 'name': 'Överzet', '_str': 'Överzet']],
                         ['@type': 'PrimaryContribution', 'role': 'author', 'agent': ['@type': 'Person', 'givenName': 'Namn', 'familyName': 'Namnsson', 'lifeSpan': "1972-", '_str': 'Namn Namnsson']]
                 ],
-                'language'    : ['@type': 'Language', 'labelByLang': ['en': 'Swedish']],
+                'language'    : [['@type': 'Language', 'labelByLang': ['en': 'Swedish']]],
                 "_str"        : 'Titel',
                 'x'           : ['@id': 'https://id.kb.se/x']
         ]

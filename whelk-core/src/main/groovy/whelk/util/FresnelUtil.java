@@ -495,7 +495,9 @@ public class FresnelUtil {
                 lensedThing.put(JSONLD_ALT_ID_KEY, getIds(origThing, JSONLD_ALT_ID_KEY));
             }
 
-            lensedThing.putAll(buildFromNodes(nodes));
+            buildFromNodes(nodes).forEach((k, v) -> {
+                lensedThing.put(k, origThing.get(k) instanceof List<?> ? v : unwrapSingle(v));
+            });
 
             if (!preserveLinks.isEmpty()) {
                 tmpRestoreLinks(lensedThing, origThing, preserveLinks);
@@ -563,7 +565,7 @@ public class FresnelUtil {
 
         private void insert(Map<String, Object> thing, String key, Object value) {
             List<Object> uniqueValues = Stream.concat(asStream(thing.get(key)), asStream(value)).distinct().collect(Collectors.toList());
-            thing.put(key, unwrapSingle(uniqueValues));
+            thing.put(key, uniqueValues);
         }
 
         private List<LinkRestoration> collectPreservedLinks(Map<String, Object> thing) {
