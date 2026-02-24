@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.Whelk;
 import whelk.diff.Diff;
+import whelk.diff.Patch;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -100,7 +101,7 @@ public class HistoryArchiver extends HouseKeeper {
     }
 
 
-    private String generateArchiveLogFor(List<String> ids) throws IOException, SQLException {
+    private String generateArchiveLogFor(List<String> ids) throws Exception {
         // The archive log is gzipped json.lines, one line per record. So that it can be
         // easily appended to an existing archive log file, and 'grep':ed in for finding
         // individual records and their history.
@@ -119,6 +120,22 @@ public class HistoryArchiver extends HouseKeeper {
             List<List> diffs = new ArrayList<>();
             for (int i = 0; i < versions.size()-1; ++i) {
                 diffs.add( Diff.diff(versions.get(i).data, versions.get(i+1).data) );
+            }
+
+            // Do a final sanity check: That the diff-history we've produced CAN in fact recreate
+            // the full original history.
+            List<Map<?,?>> versionsData = new ArrayList<>();
+            for (Document doc : versions) {
+                versionsData.add(doc.data);
+            }
+            List<Map<?,?>> recreatedVersionsData = new ArrayList<>();
+            recreatedVersionsData.add(versions.getFirst().data);
+            for (int i = 0; i < diffs.size(); ++i) {
+                recreatedVersionsData.add( Patch.patch( versions.get(i).data, mapper.writeValueAsString(diffs.get(i))) );
+            }
+            if (!recreatedVersionsData.equals(versionsData)) {
+                logger.error("CRITIAL: SANITY TEST FAILED! WAS ABOUT TO ARCHIVE HISTORY WHICH FAILED TO REPRODUCE FROM ORIGINAL + DIFFS! DEVELOPER ACTION REQUIRED! record: " + id);
+                throw new Exception("CRITIAL: Cannot archive history, because there is a bug in the diff/patch-code!");
             }
 
             Map recordHistory = Map.of(
