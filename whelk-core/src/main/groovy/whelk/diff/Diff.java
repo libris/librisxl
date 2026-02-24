@@ -119,7 +119,7 @@ public class Diff {
             } else if (countDiff < 0) {
                 for (int i = b.size(); i < a.size(); ++i) {
                     List missingPath = new ArrayList(path);
-                    missingPath.add(i);
+                    missingPath.add(b.size());
                     result.add(Map.of("op", "remove", "path", formatRFC6901pointer(missingPath)));
                 }
             }
