@@ -346,4 +346,104 @@ class LinearitySpec extends Specification {
         recreatedVersions.equals(versions)
     }
 
+    def "multiple att to same list"() {
+        given:
+
+        def versions = [
+                [
+                        "a":["b"]
+                ],
+                [
+                        "a":["b", "c", "d"]
+                ]
+        ]
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        for (int i = 0; i < diffs.size(); ++i) {
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
+    def "list madness"() {
+        given:
+
+        def versions = [
+                [
+                        "a":["b", "c"]
+                ],
+                [
+                        "a":["d"]
+                ]
+        ]
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        for (int i = 0; i < diffs.size(); ++i) {
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
+    def "list madness2"() {
+        given:
+
+        def versions = [
+                [
+                        "a":["b", "c"]
+                ],
+                [
+                        "a":["d", "e", "f"]
+                ]
+        ]
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        for (int i = 0; i < diffs.size(); ++i) {
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
+    def "list madness3"() {
+        given:
+
+        def versions = [
+                [
+                        "a":["b", "c"]
+                ],
+                [
+                        "a":["b", "e", "f", "c"]
+                ]
+        ]
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        for (int i = 0; i < diffs.size(); ++i) {
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
 }
