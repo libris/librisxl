@@ -258,10 +258,6 @@
                         "type": "icu_collation_keyword",
                         "language": "sv",
                         "fields": {
-                            "suggest": {
-                                "type": "search_as_you_type",
-                                "analyzer": "softmatcher_unique"
-                            },
                             "keyword": {
                                 "type": "keyword",
                                 "normalizer": "custom_case_insensitive"
@@ -280,10 +276,6 @@
                         "type": "icu_collation_keyword",
                         "language": "en",
                         "fields": {
-                            "suggest": {
-                                "type": "search_as_you_type",
-                                "analyzer": "softmatcher_unique"
-                            },
                             "keyword": {
                                 "type": "keyword",
                                 "normalizer": "custom_case_insensitive"
