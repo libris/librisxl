@@ -192,15 +192,15 @@ public class FresnelUtil {
     }
 
     public Map<String, Object> mapThroughLens(Map<String, Object> thing, Lens lens) {
-        return mapThroughLens(thing, lens, List.of(Options.TAKE_ALL_ALTERNATE, Options.SKIP_MAP_VOCAB_TERMS), List.of(), false);
+        return mapThroughLens(thing, lens, List.of(Options.TAKE_ALL_ALTERNATE, Options.SKIP_MAP_VOCAB_TERMS), List.of());
     }
 
-    public Map<String, Object> mapThroughLens(Map<String, Object> thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
-        return _mapThroughLens(thing, lens, options, preserveLinks, addSearchKey).thing();
+    public Map<String, Object> mapThroughLens(Map<String, Object> thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks) {
+        return _mapThroughLens(thing, lens, options, preserveLinks).thing();
     }
 
-    public LensMappingBatch mapBatchThroughLens(List<Map<String, Object>> things, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
-        List<LensMappingResult> mappings = things.stream().map(t -> _mapThroughLens(t, lens, options, preserveLinks, addSearchKey)).toList();
+    public LensMappingBatch mapBatchThroughLens(List<Map<String, Object>> things, Lens lens, Collection<Options> options, Collection<String> preserveLinks) {
+        List<LensMappingResult> mappings = things.stream().map(t -> _mapThroughLens(t, lens, options, preserveLinks)).toList();
 
         List<Map<String, Object>> lensedThings = new ArrayList<>();
         Map<String, List<FresnelUtil.LinkRestoration>> idToPreservedLinks = new HashMap<>();
@@ -242,6 +242,9 @@ public class FresnelUtil {
     }
 
     public List<String> buildSearchStr(Map<String, Object> thing) {
+        if (!thing.containsKey(TYPE_KEY)) {
+            return List.of();
+        }
         var lensedForSearchStr = applyLens(thing, Lenses.SEARCH_TOKEN, List.of(Options.NO_FALLBACK));
         if (lensedForSearchStr.isEmpty()) {
             return List.of();
@@ -425,13 +428,13 @@ public class FresnelUtil {
         }
     }
 
-    private LensMappingResult _mapThroughLens(Map<String, Object> thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
+    private LensMappingResult _mapThroughLens(Map<String, Object> thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks) {
         if (!thing.containsKey(TYPE_KEY)) {
             // Throw exception? Return empty Map?
             logger.warn("Lens could not be applied to {} due to missing type", thing.get(ID_KEY));
             return new LensMappingResult(thing, List.of());
         }
-        return new LensMapper(thing, lens, options, preserveLinks, addSearchKey).map();
+        return new LensMapper(thing, lens, options, preserveLinks).map();
     }
 
     private record LensMappingResult(Map<String, Object> thing, List<LinkRestoration> preservedLinks) {}
@@ -447,17 +450,15 @@ public class FresnelUtil {
         private final Collection<String> preserveLinks;
         private final Lensed lensed;
         private final Map<String, List<Node>> nodeTmpIdMap;
-        private final boolean addSearchKey;
 
         private static final String TMP_PREFIX = "_tmp_";
 
         private final Set<String> tmpKeys = new HashSet<>();
 
-        LensMapper(Object thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks, boolean addSearchKey) {
+        LensMapper(Object thing, Lens lens, Collection<Options> options, Collection<String> preserveLinks) {
             this.preserveLinks = preserveLinks;
             this.lensed = applyLens(getCopyWithTmpIds(thing), lens, options);
             this.nodeTmpIdMap = buildNodeTmpIdMap(lensed);
-            this.addSearchKey = addSearchKey;
         }
 
         LensMappingResult map() {
@@ -501,17 +502,6 @@ public class FresnelUtil {
 
             if (!preserveLinks.isEmpty()) {
                 tmpRestoreLinks(lensedThing, origThing, preserveLinks);
-            }
-
-            if (lensedThing.containsKey(TYPE_KEY) && addSearchKey) {
-                try {
-                    var _str = buildSearchStr(lensedThing);
-                    if (!_str.isEmpty()) {
-                        lensedThing.put(JsonLd.SEARCH_KEY, unwrapSingle(_str));
-                    }
-                } catch (Exception e) {
-                    logger.warn("Couldn't create search key for node with type {} and ID {}", lensedThing.get(TYPE_KEY), lensedThing.get(ID_KEY));
-                }
             }
 
             // Redundant

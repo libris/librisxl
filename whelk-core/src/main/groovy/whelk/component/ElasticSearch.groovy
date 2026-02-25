@@ -509,16 +509,6 @@ class ElasticSearch {
             log.error("Couldn't create sort key for {}: {}", document.shortId, e, e)
         }
 
-        if (searchCard.containsKey(SEARCH_KEY)) {
-            // TODO? Let _topStr just be _str instead? (Need to review boost configuration for _topStr vs _str in that case)
-            searchCard[TOP_STR] = searchCard.remove(SEARCH_KEY)
-        } else {
-            var topStr = whelk.fresnelUtil.buildSearchStr(searchCard)
-            if (!topStr.isEmpty()) {
-                searchCard[TOP_STR] = topStr.size() == 1 ? topStr.getFirst() : topStr
-            }
-        }
-
         try {
             searchCard[CHIP_STR] = whelk.fresnelUtil.asString(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS))
             searchCard[CARD_STR] = whelk.fresnelUtil.asString(searchCard, DerivedLenses.CARD_ONLY, List.of(TAKE_ALL_ALTERNATE, SKIP_ITEMS))
@@ -545,6 +535,15 @@ class ElasticSearch {
             }
 
             if (value instanceof Map) {
+                try {
+                    var _str = whelk.fresnelUtil.buildSearchStr(value);
+                    if (!_str.isEmpty()) {
+                        value.put(path.isEmpty() ? TOP_STR : JsonLd.SEARCH_KEY, _str.size() == 1 ? _str.first() : _str);
+                    }
+                } catch (Exception ignored) {
+                    log.warn("Couldn't create search key for node with type {} in document {}", value.get(TYPE_KEY), document.shortId);
+                }
+
                 lensedMainGraph.restoreLinks(value, isVirtualWork)
 
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
@@ -637,11 +636,11 @@ class ElasticSearch {
     }
 
     private static Map<String, Object> mapThroughLensForIndex(FresnelUtil fresnelUtil, Map thing, Lens lens) {
-        return fresnelUtil.mapThroughLens(thing, lens, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], [], true)
+        return fresnelUtil.mapThroughLens(thing, lens, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], [])
     }
 
     private static FresnelUtil.LensMappingBatch batchToSearchCard(FresnelUtil fresnelUtil, List<Map<String, Object>> thing, Collection<String> preserveLinks) {
-        return fresnelUtil.mapBatchThroughLens(thing, FresnelUtil.Lenses.SEARCH_CARD, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks, true)
+        return fresnelUtil.mapBatchThroughLens(thing, FresnelUtil.Lenses.SEARCH_CARD, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks)
     }
 
     private static Map minimalRecord(Map record) {
