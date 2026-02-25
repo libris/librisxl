@@ -1,7 +1,9 @@
 package whelk.util
 
 import spock.lang.Specification
+import whelk.Document
 import whelk.JsonLd
+import whelk.Whelk
 
 import static whelk.component.ElasticSearch.DerivedLenses.CARD_ONLY
 import static whelk.component.ElasticSearch.DerivedLenses.SEARCH_CARD_ONLY
@@ -1299,7 +1301,7 @@ class FresnelUtilSpec extends Specification {
                 'x': ['@id': 'https://id.kb.se/x']
         ]
         var fresnel = new FresnelUtil(ld)
-        var searchCardBatch = fresnel.mapBatchThroughLens([thing], FresnelUtil.Lenses.SEARCH_CARD, [FresnelUtil.Options.TAKE_ALL_ALTERNATE], ['https://id.kb.se/x'], true)
+        var searchCardBatch = fresnel.mapBatchThroughLens([thing], FresnelUtil.Lenses.SEARCH_CARD, [FresnelUtil.Options.TAKE_ALL_ALTERNATE], ['https://id.kb.se/x'])
         var searchCard = searchCardBatch.lensedThings().first()
         searchCardBatch.restoreLinks(searchCard, false)
 
@@ -1308,15 +1310,14 @@ class FresnelUtilSpec extends Specification {
                 "@id"         : "https://libris.kb.se/1234",
                 "@type"       : "Work",
                 'hasTitle'    : [
-                        ['@type': 'Title', 'mainTitle': 'Titel', 'hasPart': ['@type': 'TitlePart', 'partNumber': '1', 'partName': 'del'], '_str': 'Titel 1 del'],
-                        ['@type': 'VariantTitle', 'mainTitle': 'variant title', '_str': 'variant title']
+                        ['@type': 'Title', 'mainTitle': 'Titel', 'hasPart': ['@type': 'TitlePart', 'partNumber': '1', 'partName': 'del']],
+                        ['@type': 'VariantTitle', 'mainTitle': 'variant title']
                 ],
                 'contribution': [
-                        ['@type': 'Contribution', 'role': 'translator', 'agent': ['@type': 'Person', 'name': 'Överzet', '_str': 'Överzet']],
-                        ['@type': 'PrimaryContribution', 'role': 'author', 'agent': ['@type': 'Person', 'givenName': 'Namn', 'familyName': 'Namnsson', 'lifeSpan': "1972-", '_str': 'Namn Namnsson']]
+                        ['@type': 'Contribution', 'role': 'translator', 'agent': ['@type': 'Person', 'name': 'Överzet']],
+                        ['@type': 'PrimaryContribution', 'role': 'author', 'agent': ['@type': 'Person', 'givenName': 'Namn', 'familyName': 'Namnsson', 'lifeSpan': "1972-"]]
                 ],
                 'language'    : [['@type': 'Language', 'labelByLang': ['en': 'Swedish']]],
-                "_str"        : 'Titel',
                 'x'           : ['@id': 'https://id.kb.se/x']
         ]
     }
