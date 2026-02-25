@@ -563,7 +563,7 @@ public non-sealed class Property extends PathElement {
         private List<Selector> getComponents(JsonLd jsonLd) {
             List<Selector> components = new ArrayList<>();
 
-            ((List<?>) definition.get(PROPERTY_CHAIN_AXIOM))
+            ((List<?>) definition.getOrDefault(PROPERTY_CHAIN_AXIOM, List.of()))
                     .stream()
                     .filter(Map.class::isInstance)
                     .filter(l -> ((Map<?,?>) l).containsKey(JsonLd.LIST_KEY) )
