@@ -835,6 +835,7 @@ public class FresnelUtil {
                         var nextLensGroup = s.pKey().isIntegral() ? lens : lens.next();
                         var values = s.values().stream()
                                 .map(v -> build(v, nextLensGroup, s.pKey(), options))
+                                .filter(Objects::nonNull)
                                 .toList();
                         return new Selected(s.pKey(), values);
                     }).toList();
@@ -1270,17 +1271,24 @@ public class FresnelUtil {
             ArcStep nextArcStep = new ArcStep(pathRemainder.removeFirst());
             NodeStep nextNodeStep = new NodeStep(pathRemainder.removeFirst());
 
-            return nextArcStep.select(currentEntity, nextNodeStep.allowedTypes()).stream()
-                    .map(s -> {
-                        var values = s.values().stream()
-                                .map(v -> {
-                                    var m = asMap(v);
-                                    return new IntermediateNode(select(m, pathRemainder), m);
-                                })
-                                .toList();
-                        return new Node.Selected(s.pKey(), values);
-                    })
-                    .toList();
+            List<Node.Selected> selection = new ArrayList<>();
+
+            nextArcStep.select(currentEntity, nextNodeStep.allowedTypes())
+                    .forEach(selected -> {
+                        var values = new ArrayList<>();
+                        selected.values().forEach(v -> {
+                            var m = asMap(v);
+                            var s = select(m, pathRemainder);
+                            if (!s.isEmpty()) {
+                                values.add(new IntermediateNode(s, m));
+                            }
+                        });
+                        if (!values.isEmpty()) {
+                            selection.add(new Node.Selected(selected.pKey(), values));
+                        }
+                    });
+
+            return selection;
         }
 
         private sealed abstract class LocationStep permits ArcStep, NodeStep {}
