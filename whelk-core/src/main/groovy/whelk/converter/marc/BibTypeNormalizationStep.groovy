@@ -15,15 +15,18 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     BibTypeNormalizer bibTypeNormaliser
 
     // Injected configuration
-    List<String> matchRelations
-    List<String> newWorkTypes
+    List<String> matchRelations = Collections.emptyList()
+    List<String> newWorkTypes = Collections.emptyList()
     String defaultWorkLegacyType
     String componentPartCategory
-    String abstractTermCategory
+    List<String> keepMatchingWithCategories = Collections.emptyList()
+
     Map<String, Set<String>> marcTypeMappings  // TODO: turn JSON set value to Set! (for speed)
 
     Set<String> issuanceTypeSet = new HashSet()
     Map<String, String> categoryTypeMap = new HashMap()
+
+    Set<String> keepMatchingWithCategoriesSet = new HashSet()
 
     void init() {
         if (!checkRequired()) {
@@ -37,6 +40,8 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         typeCategoryNormalizer.typeToCategory.each { type, cat ->
             categoryTypeMap[cat] = type
         }
+
+        keepMatchingWithCategoriesSet.addAll(keepMatchingWithCategories)
     }
 
     TypeCategoryNormalizer getTypeCategoryNormalizer() {
@@ -89,7 +94,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     }
 
     void reshapeToLegacyWork(Map work, Map someInstance, List workCategories, List instanceCategories) {
-        work.contentType = getCategoryOfType(workCategories, 'ContentType')
+        work.contentType = getCategoryOfType(workCategories, 'ContentType', true)
         work.genreForm = getCategoryOfType(workCategories, 'GenreForm')
         work[TYPE] = getWorkType(workCategories) ?: defaultWorkLegacyType
     }
@@ -104,8 +109,8 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     }
 
     void reshapeToLegacyInstance(Map work, Map instance, List workCategories, List instanceCategories) {
-        instance.mediaType = getCategoryOfType(instanceCategories, 'MediaType')
-        instance.carrierType = getCategoryOfType(instanceCategories, 'CarrierType')
+        instance.mediaType = getCategoryOfType(instanceCategories, 'MediaType', true)
+        instance.carrierType = getCategoryOfType(instanceCategories, 'CarrierType', true)
 
         // TODO: Keeping for now; until we've finalized InstanceGenreForm->ManifestationForm?
         instance.genreForm = getCategoryOfType(instanceCategories, 'GenreForm')
@@ -131,7 +136,9 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     List<Map<String, Object>> getDescriptions(Object refs) {
         return (List<Map<String, Object>>) asList(refs).findResults {
-            ID in it ? typeCategoryNormalizer.categories[it[ID]] : it
+            ID in it && it[ID] in typeCategoryNormalizer.categories
+                ? new HashMap(typeCategoryNormalizer.categories[it[ID]])
+                : it
         }
     }
 
@@ -145,19 +152,6 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
             }
         }
         return null
-    }
-
-    // TODO: optimize by returning result *Map* (check only id in keys unless more is needed)
-    // - also: LinkedHashMap, ordered by most specific (broader last; also see typeCategoryNormalizer.preferredCategory?)
-    // - Note that MarcFrameConverter now uses a fixed field preference order though (based on matchUriToken).
-    Collection<Map<String, Object>> getCategoryOfType(List<Map<String, Object>> categories, String type) {
-        var result = new LinkedHashMap()
-        collectCategoryOfType(categories, type, result)
-        return result.values().findResults { ctg ->
-            if (!abstractTermCategory || !asList(ctg['category']).any { it[ID] == abstractTermCategory}) {
-                return new HashMap(ctg)
-            }
-        }
     }
 
     boolean isSubClassOf(Object givenType, String baseType) {
@@ -192,17 +186,36 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         return false
     }
 
-    private void collectCategoryOfType(List<Map<String, Object>> categories, String type, Map<String, Map<String, Object>> result) {
-        categories.each {
+    // TODO: optimize by returning result *Map* (check only id in keys unless more is needed)
+    Collection<Map<String, Object>> getCategoryOfType(List<Map<String, Object>> categories, String type, boolean keepImplied=false) {
+        var result = new LinkedHashMap()
+        collectCategoryOfType(categories, type, keepImplied, result)
+        return result.values().toList()
+    }
+
+    private void collectCategoryOfType(List<Map<String, Object>> categories, String type, boolean keepImplied, Map<String, Map<String, Object>> result) {
+        for (Map<String, Object> ctg : categories) {
             if (
-                asList(it[TYPE]).any { t -> isSubClassOf(t, type) } ||
-                isComplexSubjectWithFirstTermOfType(it, type)
+                asList(ctg[TYPE]).any { t -> isSubClassOf(t, type) }
+                || isComplexSubjectWithFirstTermOfType(ctg, type)
             ) {
-                def key = it[ID] ?: '_:b' + result.size().toString() // id or throwaway fake blank id
-                result[key] = it
+                def key = ctg[ID] ?: '_:b' + result.size().toString() // id or throwaway fake blank id
+                result[key] = ctg
             }
             for (rel in matchRelations) {
-                collectCategoryOfType(getDescriptions(it[rel]), type, result)
+                var implied = getDescriptions(ctg[rel])
+                if (!keepImplied) {
+                    implied.each {
+                        var keep = ID in it
+                            && keepMatchingWithCategoriesSet
+                            && asList(it['inCollection']).any { it[ID] in keepMatchingWithCategoriesSet }
+                        if (!keep) {
+                            // Make MarcFrameConverter skip these for regular fields
+                            it['_revertedBy'] = 'BibTypeNormalizationStep'
+                        }
+                    }
+                }
+                collectCategoryOfType(implied, type, keepImplied, result)
             }
         }
     }
