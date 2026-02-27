@@ -2,16 +2,17 @@ package whelk.search2.querytree
 
 import spock.lang.Specification
 import whelk.JsonLd
-import whelk.search2.AppParams
 import whelk.search2.Disambiguate
-import whelk.search2.ESSettings
-import whelk.search2.Query
+import whelk.search2.Operator
 import whelk.search2.QueryParams
-import whelk.search2.SelectedFacets
 
 class QueryTreeSpec extends Specification {
-    Disambiguate disambiguate = TestData.getDisambiguate()
-    JsonLd jsonLd = TestData.getJsonLd()
+    static Disambiguate disambiguate = TestData.getDisambiguate()
+    static JsonLd jsonLd = TestData.getJsonLd()
+
+    static var p1 = new Property("p1", jsonLd)
+    static var p1v1 = new Condition(p1, Operator.EQUALS, new FreeText("v1"))
+    static var p1v2 = new Condition(p1, Operator.EQUALS, new FreeText("v2"))
 
     def "back to query string"() {
         expect:
@@ -73,6 +74,33 @@ class QueryTreeSpec extends Specification {
         "category:\"https://id.kb.se/term/ktg/X\""         | "category:\"https://id.kb.se/term/ktg/X\""
         "category:\"https://id.kb.se/term/ktg/Y\""         | "category:\"https://id.kb.se/term/ktg/Y\""
         "category:\"https://id.kb.se/term/ktg/Z\""         | "category:\"https://id.kb.se/term/ktg/Z\""
+    }
+
+    def "treat as free text when key is invalid free text"() {
+        expect:
+        new QueryTree(input, disambiguate).tree() == parsed
+
+        where:
+        input                          | parsed
+        "k:v"                          | new FreeText("k:v")
+        "k=v"                          | new FreeText("k=v")
+        "k : v"                        | new FreeText("k : v")
+        "k :v"                         | new FreeText("k :v")
+        "k: v"                         | new FreeText("k: v")
+        "k:()"                         | new FreeText("k:()")
+        "k : ()"                       | new FreeText("k : ()")
+        "k :()"                        | new FreeText("k :()")
+        "k: ()"                        | new FreeText("k: ()")
+        "k:(v)"                        | new FreeText("k:(v)")
+        "k:(k : v)"                    | new FreeText("k:(k : v)")
+        "k:(x OR (a b))"               | new FreeText("k:(x OR (a b))")
+        "x k:(x OR (a b)  ) y"         | new FreeText("x k:(x OR (a b)  ) y")
+        "p1:v1 k:v x"                  | new And([p1v1, new FreeText("k:v x")])
+        "k:v x p1:v1"                  | new And([new FreeText("k:v x"), p1v1])
+        "k:(v) p1:v1"                  | new And([new FreeText("k:(v)"), p1v1])
+        "k:(a (b OR c)) p1:v1"         | new And([new FreeText("k:(a (b OR c))"), p1v1])
+        "p1:v1 x k:(a (b OR c)) p1:v2" | new And([p1v1, new FreeText("x k:(a (b OR c))"), p1v2])
+//        "p1:(p1:v1)"           | new Condition([p1, new FreeText("p1:v1")])
     }
 
     def "to search mapping"() {
