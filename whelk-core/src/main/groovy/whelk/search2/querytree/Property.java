@@ -106,6 +106,9 @@ public non-sealed class Property extends PathElement {
         if (RECORD_KEY.equals(propertyKey)) {
             return new Meta(jsonLd, queryKey);
         }
+        if ("textQuery".equals(propertyKey)) {
+            return new TextQuery(jsonLd, queryKey);
+        }
         return new Property(propertyKey, jsonLd, queryKey);
     }
 
@@ -422,6 +425,10 @@ public non-sealed class Property extends PathElement {
     public static final class TextQuery extends Property {
         public TextQuery(JsonLd jsonLd) {
             super("textQuery", jsonLd);
+        }
+
+        public TextQuery(JsonLd jsonLd, Key.RecognizedKey key) {
+            super("textQuery", jsonLd, key);
         }
     }
 
