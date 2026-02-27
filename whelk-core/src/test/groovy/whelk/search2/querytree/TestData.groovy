@@ -42,7 +42,8 @@ class TestData {
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
                 'nonecategory'    : ['librissearch:noneCategory'] as Set,
                 'p3p1'            : ['p3p1'] as Set,
-                'bibliography'    : ['bibliography'] as Set
+                'bibliography'    : ['bibliography'] as Set,
+                'meta'            : ['meta'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
