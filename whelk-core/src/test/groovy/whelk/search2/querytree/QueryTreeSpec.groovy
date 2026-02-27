@@ -76,7 +76,10 @@ class QueryTreeSpec extends Specification {
         "category:\"https://id.kb.se/term/ktg/Z\""         | "category:\"https://id.kb.se/term/ktg/Z\""
     }
 
-    def "treat as free text when key is invalid free text"() {
+    def "treat invalid code segment as free text"() {
+        given:
+        var tree = new QueryTree(input, disambiguate).tree()
+
         expect:
         new QueryTree(input, disambiguate).tree() == parsed
 
@@ -100,7 +103,8 @@ class QueryTreeSpec extends Specification {
         "k:(v) p1:v1"                  | new And([new FreeText("k:(v)"), p1v1])
         "k:(a (b OR c)) p1:v1"         | new And([new FreeText("k:(a (b OR c))"), p1v1])
         "p1:v1 x k:(a (b OR c)) p1:v2" | new And([p1v1, new FreeText("x k:(a (b OR c))"), p1v2])
-//        "p1:(p1:v1)"           | new Condition([p1, new FreeText("p1:v1")])
+        "p1:(p1:v1)"                   | new FreeText("p1:(p1:v1)")
+        "p1:(p1:v1 p1:v2) x p1:v1"     | new And([new FreeText("p1:(p1:v1 p1:v2) x"), p1v1])
     }
 
     def "to search mapping"() {

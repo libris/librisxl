@@ -24,17 +24,14 @@ public class QueryTreeBuilder {
         return buildTree(getAst(queryString).tree, disambiguate, null, null, queryString);
     }
 
-    private static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, Selector selector, Operator operator, String q) throws InvalidQueryException {
+    private static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, MappedCode mc, Operator operator, String q) throws InvalidQueryException {
         return switch (astNode) {
-            case Ast.Group g -> buildFromGroup(g, disambiguate, selector, operator, q);
-            case Ast.Not n -> buildFromNot(n, disambiguate, selector, operator, q);
-            case Ast.Leaf l -> buildFromLeaf(l, disambiguate, selector, operator);
-            case Ast.Code c -> {
-                if (selector != null) {
-                    throw new InvalidQueryException("Codes within code groups are not allowed.");
-                }
-                yield buildFromCode(c, disambiguate, q);
-            }
+            case Ast.Group g -> buildFromGroup(g, disambiguate, mc, operator, q);
+            case Ast.Not n -> buildFromNot(n, disambiguate, mc, operator, q);
+            case Ast.Leaf l -> buildFromLeaf(l, disambiguate, mc, operator);
+            case Ast.Code c -> mc != null
+                    ? asFreeText(mc.astCode(), q, disambiguate.getTextQueryProperty()) // Codes within code groups are not allowed, treat the whole code segment as free text
+                    : buildFromCode(c, disambiguate, q);
         };
     }
 
@@ -44,10 +41,10 @@ public class QueryTreeBuilder {
         return new Ast(parseTree);
     }
 
-    private static Node buildFromGroup(Ast.Group group, Disambiguate disambiguate, Selector selector, Operator operator, String q) throws InvalidQueryException {
+    private static Node buildFromGroup(Ast.Group group, Disambiguate disambiguate, MappedCode mc, Operator operator, String q) throws InvalidQueryException {
         if (group.operands().isEmpty()) {
-            return selector != null
-                    ? new Condition(selector, operator, new Any.EmptyGroup())
+            return mc != null
+                    ? new Condition(mc.selector(), operator, new Any.EmptyGroup())
                     : new Any.EmptyGroup();
         }
 
@@ -58,18 +55,23 @@ public class QueryTreeBuilder {
         for (int i = 0; i < group.operands().size(); i++) {
             Ast.Node o = group.operands().get(i);
             if (o instanceof Ast.Leaf leaf) {
-                Node node = buildFromLeaf(leaf, disambiguate, selector, operator);
+                Node node = buildFromLeaf(leaf, disambiguate, mc, operator);
                 switch (node) {
                     case FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
                     case Condition c when c.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
                     default -> children.add(node);
                 }
-            } else if (o instanceof Ast.Code c) {
-                /*
-                 * Normally, only Ast.Leaf nodes produce FreeText. However, Ast.Code may also
-                 * yield FreeText when the key is invalid, so we must handle those cases here
-                 * as well when merging free-text tokens.
-                 */
+            }
+            /*
+             * Normally, only Ast.Leaf nodes produce FreeText. However, Ast.Code may also
+             * yield FreeText when the key is invalid, so we must handle those cases here
+             * as well when merging free-text tokens.
+             */
+            else if (o instanceof Ast.Code c) {
+                if (mc != null) {
+                    // Codes within code groups are not allowed, return the whole code group as free text
+                    return asFreeText(mc.astCode(), q, disambiguate.getTextQueryProperty());
+                }
                 Node node = buildFromCode(c, disambiguate, q);
                 if (node instanceof FreeText ft) {
                     freeTextTokens.add(ft.tokens().getFirst());
@@ -77,7 +79,7 @@ public class QueryTreeBuilder {
                     children.add(node);
                 }
             } else {
-                children.add(buildTree(o, disambiguate, selector, operator, q));
+                children.add(buildTree(o, disambiguate, mc, operator, q));
             }
             if (!freeTextTokens.isEmpty() && freeTextStartIdx == -1) {
                 freeTextStartIdx = i;
@@ -91,7 +93,7 @@ public class QueryTreeBuilder {
             };
 
             FreeText freeText = new FreeText(disambiguate.getTextQueryProperty(), freeTextTokens, connective);
-            Node node = selector != null ? new Condition(selector, operator, freeText) : freeText;
+            Node node = mc != null ? new Condition(mc.selector(), operator, freeText) : freeText;
 
             if (children.isEmpty()) {
                 return node;
@@ -106,13 +108,13 @@ public class QueryTreeBuilder {
         };
     }
 
-    private static Node buildFromNot(Ast.Not not, Disambiguate disambiguate, Selector selector, Operator operator, String q) throws InvalidQueryException {
-        return buildTree(not.operand(), disambiguate, selector, operator, q).getInverse();
+    private static Node buildFromNot(Ast.Not not, Disambiguate disambiguate, MappedCode mc, Operator operator, String q) throws InvalidQueryException {
+        return buildTree(not.operand(), disambiguate, mc, operator, q).getInverse();
     }
 
-    private static Node buildFromLeaf(Ast.Leaf leaf, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
-        if (selector != null) {
-            return buildCondition(selector, operator, leaf, disambiguate);
+    private static Node buildFromLeaf(Ast.Leaf leaf, Disambiguate disambiguate, MappedCode mc, Operator operator) throws InvalidQueryException {
+        if (mc != null) {
+            return buildCondition(mc.selector(), operator, leaf, disambiguate);
         }
 
         Lex.Symbol symbol = leaf.value();
@@ -128,9 +130,9 @@ public class QueryTreeBuilder {
     }
 
     private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate, String q) throws InvalidQueryException {
-        Selector selector = disambiguate.mapQueryKey(getToken(c.code()));
-        return selector.isValid()
-                ? buildTree(c.operand(), disambiguate, selector, c.operator(), q)
+        MappedCode mc = MappedCode.from(c, disambiguate);
+        return mc.selector().isValid()
+                ? buildTree(c.operand(), disambiguate, mc, c.operator(), q)
                 : asFreeText(c, q, disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
     }
 
@@ -142,6 +144,12 @@ public class QueryTreeBuilder {
         Value value = disambiguate.mapValueForSelector(selector, token).orElse(new FreeText(token));
         Condition condition = new Condition(selector, operator, value);
         return condition.isTypeNode() ? condition.asTypeNode() : condition;
+    }
+
+    private record MappedCode(Ast.Code astCode, Selector selector) {
+        static MappedCode from(Ast.Code c, Disambiguate disambiguate) {
+            return new MappedCode(c, disambiguate.mapQueryKey(getToken(c.code())));
+        }
     }
 
     private static Token getToken(Lex.Symbol symbol) {
