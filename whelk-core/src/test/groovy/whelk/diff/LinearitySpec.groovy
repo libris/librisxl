@@ -445,5 +445,4 @@ class LinearitySpec extends Specification {
         expect:
         recreatedVersions.equals(versions)
     }
-
 }
