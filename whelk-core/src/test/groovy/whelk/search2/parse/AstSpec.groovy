@@ -141,18 +141,6 @@ class AstSpec extends Specification {
         )
     }
 
-    def "Fail code of code"() {
-        given:
-        def input = "AAA:(BBB:CCC)"
-        def lexedSymbols = Lex.lexQuery(input)
-        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
-
-        when:
-        Ast.buildFrom(parseTree)
-        then:
-        thrown InvalidQueryException
-    }
-
     def "empty group as string"() {
         given:
         def input = "AAA OR ()"

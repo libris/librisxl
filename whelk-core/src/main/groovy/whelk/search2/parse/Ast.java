@@ -38,9 +38,7 @@ public class Ast {
     }
 
     public static Node buildFrom(Parse.OrComb orComb) throws InvalidQueryException {
-        Node ast = reduce(orComb);
-        Analysis.checkSemantics(ast);
-        return ast;
+        return reduce(orComb);
     }
 
     private static Node reduce(Parse.OrComb orComb) throws InvalidQueryException {
