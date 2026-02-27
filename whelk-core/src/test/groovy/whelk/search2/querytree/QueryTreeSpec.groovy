@@ -77,34 +77,37 @@ class QueryTreeSpec extends Specification {
     }
 
     def "treat invalid code segment as free text"() {
-        given:
-        var tree = new QueryTree(input, disambiguate).tree()
-
         expect:
         new QueryTree(input, disambiguate).tree() == parsed
 
         where:
         input                          | parsed
-        "k:v"                          | new FreeText("k:v")
-        "k=v"                          | new FreeText("k=v")
-        "k : v"                        | new FreeText("k : v")
-        "k :v"                         | new FreeText("k :v")
-        "k: v"                         | new FreeText("k: v")
-        "k:()"                         | new FreeText("k:()")
-        "k : ()"                       | new FreeText("k : ()")
-        "k :()"                        | new FreeText("k :()")
-        "k: ()"                        | new FreeText("k: ()")
-        "k:(v)"                        | new FreeText("k:(v)")
-        "k:(k : v)"                    | new FreeText("k:(k : v)")
-        "k:(x OR (a b))"               | new FreeText("k:(x OR (a b))")
-        "x k:(x OR (a b)  ) y"         | new FreeText("x k:(x OR (a b)  ) y")
-        "p1:v1 k:v x"                  | new And([p1v1, new FreeText("k:v x")])
-        "k:v x p1:v1"                  | new And([new FreeText("k:v x"), p1v1])
-        "k:(v) p1:v1"                  | new And([new FreeText("k:(v)"), p1v1])
-        "k:(a (b OR c)) p1:v1"         | new And([new FreeText("k:(a (b OR c))"), p1v1])
-        "p1:v1 x k:(a (b OR c)) p1:v2" | new And([p1v1, new FreeText("x k:(a (b OR c))"), p1v2])
-        "p1:(p1:v1)"                   | new FreeText("p1:(p1:v1)")
-        "p1:(p1:v1 p1:v2) x p1:v1"     | new And([new FreeText("p1:(p1:v1 p1:v2) x"), p1v1])
+        "k:v"                              | new FreeText("k:v")
+        "k=v"                              | new FreeText("k=v")
+        "k : v"                            | new FreeText("k : v")
+        "k :v"                             | new FreeText("k :v")
+        "k: v"                             | new FreeText("k: v")
+        "k:()"                             | new FreeText("k:()")
+        "k : ()"                           | new FreeText("k : ()")
+        "k :()"                            | new FreeText("k :()")
+        "k: ()"                            | new FreeText("k: ()")
+        "k:(v)"                            | new FreeText("k:(v)")
+        "k:(v )"                           | new FreeText("k:(v )")
+        "k:( v )"                          | new FreeText("k:( v )")
+        "k:( v)"                           | new FreeText("k:( v)")
+        "k:( \"v\" )"                      | new FreeText("k:( \"v\" )")
+        "k:(\"v\" )"                       | new FreeText("k:(\"v\" )")
+        "k:( \"v\")"                       | new FreeText("k:( \"v\")")
+        "k:(k : v)"                        | new FreeText("k:(k : v)")
+        "k:(x OR (a b))"                   | new FreeText("k:(x OR (a b))")
+        "x k:(x OR (a b)  ) y"             | new FreeText("x k:(x OR (a b)  ) y")
+        "p1:v1 k:v x"                      | new And([p1v1, new FreeText("k:v x")])
+        "k:v x p1:v1"                      | new And([new FreeText("k:v x"), p1v1])
+        "k:(v) p1:v1"                      | new And([new FreeText("k:(v)"), p1v1])
+        "k:(a (b OR c)) p1:v1"             | new And([new FreeText("k:(a (b OR c))"), p1v1])
+        "p1:v1 x k:(\"a\" (b OR c)) p1:v2" | new And([p1v1, new FreeText("x k:(\"a\" (b OR c))"), p1v2])
+        "p1:(p1:v1)"                       | new FreeText("p1:(p1:v1)")
+        "p1:(p1:v1 p1:v2) x p1:v1"         | new And([new FreeText("p1:(p1:v1 p1:v2) x"), p1v1])
     }
 
     def "to search mapping"() {

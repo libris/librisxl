@@ -25,6 +25,9 @@ public class Lex {
     }
 
     public record Symbol(TokenName name, String value, int offset) {
+        public boolean isQuoted() {
+            return TokenName.QUOTED_STRING.equals(name);
+        }
     }
 
     public static LinkedList<Symbol> lexQuery(String queryString) throws InvalidQueryException {

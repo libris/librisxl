@@ -160,34 +160,74 @@ public class QueryTreeBuilder {
 
     private static FreeText asFreeText(Ast.Code c, String q, Property.TextQuery textQuery) {
         int from = c.code().offset();
-        EndPosition rightMostTokenEnd = findRightMostTokenEnd(c, -1, 0);
-        int to = findSegmentEnd(q, rightMostTokenEnd);
+        SymbolPosition rightMostSymbol = findRightmostSymbol(c, null, 0);
+        int to = findSegmentEndIdx(q, rightMostSymbol);
         String s = q.substring(from, to);
         return new FreeText(textQuery, new Token.Raw(s, from));
     }
+    
+    private record SymbolPosition(Lex.Symbol symbol, int nestedLevel) {}
 
-    private record EndPosition(int idx, int nestedLevel) {}
-
-    private static EndPosition findRightMostTokenEnd(Ast.Node n, int currentRightMost, int currentLevel) {
+    private static SymbolPosition findRightmostSymbol(Ast.Node n, Lex.Symbol currentRightmost, int currentLevel) {
         return switch (n) {
             case Ast.Group g -> g.operands().isEmpty()
-                    ? new EndPosition(currentRightMost, currentLevel + 1)
-                    : findRightMostTokenEnd(g.operands().getLast(), currentRightMost, currentLevel + 1);
-            case Ast.Code c -> findRightMostTokenEnd(c.operand(), c.code().offset() + c.code().value().length(), currentLevel);
-            case Ast.Leaf l -> new EndPosition(l.value().offset() + l.value().value().length(), currentLevel);
-            case Ast.Not not -> findRightMostTokenEnd(not.operand(), currentRightMost, currentLevel);
+                    ? new SymbolPosition(currentRightmost, currentLevel + 1)
+                    : findRightmostSymbol(g.operands().getLast(), currentRightmost, currentLevel + 1);
+            case Ast.Code c -> findRightmostSymbol(c.operand(), c.code(), currentLevel);
+            case Ast.Leaf l -> new SymbolPosition(l.value(), currentLevel);
+            case Ast.Not not -> findRightmostSymbol(not.operand(), currentRightmost, currentLevel);
         };
     }
 
-    private static int findSegmentEnd(String q, EndPosition rightMostTokenEnd) {
-        var level = rightMostTokenEnd.nestedLevel();
-        var endIdx = rightMostTokenEnd.idx();
+    private static int findSegmentEndIdx(String q, SymbolPosition symbolPosition) {
+        var level = symbolPosition.nestedLevel();
+        var symbol = symbolPosition.symbol();
+        var endIdx = symbol.offset() + symbol.value().length();
         if (level > 0) {
             var closing = findNthCharOccurrence(q.substring(endIdx), level, c -> c == ')');
             return closing == -1 ? q.length() : endIdx + closing + 1;
         }
+        // Single token within brackets, for example k:(v)
+        if (isInBrackets(symbol, q)) {
+            var closing = findNthCharOccurrence(q.substring(endIdx), 1, c -> c == ')');
+            return endIdx + closing + 1;
+        }
         var nextWhitespace = findNthCharOccurrence(q.substring(endIdx), 1, Character::isWhitespace);
         return nextWhitespace == -1 ? q.length() : endIdx + nextWhitespace;
+    }
+
+    private static boolean isInBrackets(Lex.Symbol symbol, String q) {
+        int start = symbol.offset();
+        int end = symbol.offset() + symbol.value().length();
+
+        if (symbol.isQuoted()) {
+            end += 2;
+        }
+
+        boolean foundOpening = false;
+
+        for (int i = start - 1; i >= 0; i--) {
+            var c = q.charAt(i);
+            if (Character.isWhitespace(c)) {
+                continue;
+            }
+            if (c == '(') {
+                foundOpening = true;
+            }
+            break;
+        }
+
+        if (foundOpening) {
+            for (int i = end; i < q.length(); i++) {
+                var c = q.charAt(i);
+                if (Character.isWhitespace(c)) {
+                    continue;
+                }
+                return c == ')';
+            }
+        }
+
+        return false;
     }
 
     private static int findNthCharOccurrence(String s, int n, Predicate<Character> charTest) {
