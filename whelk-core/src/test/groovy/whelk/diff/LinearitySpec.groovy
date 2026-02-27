@@ -321,4 +321,29 @@ class LinearitySpec extends Specification {
         recreatedVersions.equals(versions)
     }
 
+    def "multiple remove from same list"() {
+        given:
+
+        def versions = [
+                [
+                        "a":["b", "c", "d",]
+                ],
+                [
+                        "a":["b"]
+                ]
+        ]
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        for (int i = 0; i < diffs.size(); ++i) {
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
 }

@@ -266,28 +266,15 @@ class ESQuery {
                     'query': [
                             'bool': [
                                     'must'  : [
-                                            'multi_match': [
-                                                    'query' : q,
-                                                    'type'  : 'bool_prefix',
-                                                    'fields': [
-                                                            "_sortKeyByLang.${suggest}.suggest".toString(),
-                                                            "_sortKeyByLang.${suggest}.suggest._2gram".toString(),
-                                                            "_sortKeyByLang.${suggest}.suggest._3gram".toString()
-                                                    ]
-                                            ]
-                                    ],
-                                    'should': [
                                             'prefix': [
                                                     ("_sortKeyByLang.${suggest}.keyword".toString()): [
-                                                            'value': q,
-                                                            'boost': 100
+                                                            'value': q
                                                     ]
                                             ]
                                     ]
                             ]
                     ],
                     'sort' : [
-                            '_score'                                        : 'desc',
                             ("_sortKeyByLang.${suggest}.keyword".toString()): 'asc'
                     ]
             ]
