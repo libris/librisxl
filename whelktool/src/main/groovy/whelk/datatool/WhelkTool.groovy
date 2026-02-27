@@ -539,8 +539,8 @@ class WhelkTool {
  *      So! You want to create new records with you script, huh? Good for you! Now before you just add that pesky --allow-loud and
  *      charge ahead, CAREFULLY consider the following, and BE SURE you UNDERSTAND THE RISKS here: 
  *
- *      1. When you create a record, that will not *in and off itself* cause any MARC to be exported (even though it's "loud")
- *      2. Linking to a record in a silent script (without --allow-loud) also will not *in and off itself* cause exports.
+ *      1. When you create a record, that will not *in and of itself* cause any MARC to be exported (even though it's "loud")
+ *      2. Linking to a record in a silent script (without --allow-loud) also will not *in and of itself* cause exports.
  *
  *      So you're OK, right?
  *      NO! YOU ARE NOT OK!
