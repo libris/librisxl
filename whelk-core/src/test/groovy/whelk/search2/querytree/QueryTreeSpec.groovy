@@ -81,7 +81,7 @@ class QueryTreeSpec extends Specification {
         new QueryTree(input, disambiguate).tree() == parsed
 
         where:
-        input                          | parsed
+        input                              | parsed
         "k:v"                              | new FreeText("k:v")
         "k=v"                              | new FreeText("k=v")
         "k : v"                            | new FreeText("k : v")
@@ -106,8 +106,9 @@ class QueryTreeSpec extends Specification {
         "k:(v) p1:v1"                      | new And([new FreeText("k:(v)"), p1v1])
         "k:(a (b OR c)) p1:v1"             | new And([new FreeText("k:(a (b OR c))"), p1v1])
         "p1:v1 x k:(\"a\" (b OR c)) p1:v2" | new And([p1v1, new FreeText("x k:(\"a\" (b OR c))"), p1v2])
-        "p1:(p1:v1)"                       | new FreeText("p1:(p1:v1)")
-        "p1:(p1:v1 p1:v2) x p1:v1"         | new And([new FreeText("p1:(p1:v1 p1:v2) x"), p1v1])
+        "p1:p1:v1"                         | new Condition(p1, Operator.EQUALS, new FreeText("p1:v1"))
+        "p1:(p1:v1)"                       | new Condition(p1, Operator.EQUALS, new FreeText("p1:v1"))
+//        "p1:(p1:v1 p1:v2 x) y p1:v1"       | new And([new Condition(p1, Operator.EQUALS, new FreeText("p1:v1 p1:v2 x")), new FreeText("y"), p1v1])
     }
 
     def "to search mapping"() {

@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 public class QueryTreeBuilder {
     public static Node buildTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
@@ -152,81 +151,78 @@ public class QueryTreeBuilder {
 
     private static FreeText asFreeText(Ast.Code c, String q, Property.TextQuery textQuery) {
         int from = c.code().offset();
-        SymbolPosition rightMostSymbol = findRightmostSymbol(c, null, 0);
-        int to = findSegmentEndIdx(q, rightMostSymbol);
+        int to = findSegmentEndIdx(c, q);
         String s = q.substring(from, to);
         return new FreeText(textQuery, new Token.Raw(s, from));
     }
 
-    private record SymbolPosition(Lex.Symbol symbol, int nestedLevel) {}
+    private static int findSegmentEndIdx(Ast.Code c, String q) {
+        Rightmost rightmost = findRightmost(c, 0, q);
+        var depth = rightmost.parenDepth();
+        var rightmostSymbol = rightmost.symbol() != null ? rightmost.symbol() : c.code();
+        var rightmostEnd = endIdx(rightmostSymbol);
+        if (depth > 0) {
+            int closing = findNthClosingParenthesis(q.substring(rightmostEnd), depth);
+            if (closing == -1) {
+                // Unreachable
+                throw new IllegalStateException("Unbalanced parentheses after AST parsing");
+            }
+            return rightmostEnd + closing + 1;
+        }
+        return rightmostEnd;
+    }
 
-    private static SymbolPosition findRightmostSymbol(Ast.Node n, Lex.Symbol currentRightmost, int currentLevel) {
+    private static int endIdx(Lex.Symbol symbol) {
+        return symbol.offset() + symbol.value().length() + (symbol.isQuoted() ? 2 : 0);
+    }
+
+    private record Rightmost(Lex.Symbol symbol, int parenDepth) {}
+
+    private static Rightmost findRightmost(Ast.Node n, int parenDepth, String q) {
         return switch (n) {
-            case Ast.Group g -> g.operands().isEmpty()
-                    ? new SymbolPosition(currentRightmost, currentLevel + 1)
-                    : findRightmostSymbol(g.operands().getLast(), currentRightmost, currentLevel + 1);
-            case Ast.Code c -> findRightmostSymbol(c.operand(), c.code(), currentLevel);
-            case Ast.Leaf l -> new SymbolPosition(l.value(), currentLevel);
-            case Ast.Not not -> findRightmostSymbol(not.operand(), currentRightmost, currentLevel);
+            case Ast.Group g -> {
+                int nextDepth = parenDepth + 1;
+                yield g.operands().isEmpty()
+                        ? new Rightmost(null, nextDepth)
+                        : findRightmost(g.operands().getLast(), nextDepth, q);
+            }
+            case Ast.Code c -> {
+                int nextDepth = parenDepth + (isAtomicWrappedInParentheses(c.operand(), q) ? 1 : 0);
+                yield findRightmost(c.operand(), nextDepth, q);
+            }
+            case Ast.Leaf l -> new Rightmost(l.value(), parenDepth);
+            case Ast.Not not -> findRightmost(not.operand(), parenDepth, q);
         };
     }
 
-    private static int findSegmentEndIdx(String q, SymbolPosition symbolPosition) {
-        var level = symbolPosition.nestedLevel();
-        var symbol = symbolPosition.symbol();
-        var endIdx = symbol.offset() + symbol.value().length();
-        if (level > 0) {
-            var closing = findNthCharOccurrence(q.substring(endIdx), level, c -> c == ')');
-            return closing == -1 ? q.length() : endIdx + closing + 1;
-        }
-        // Single token within brackets, for example k:(v)
-        if (isInBrackets(symbol, q)) {
-            var closing = findNthCharOccurrence(q.substring(endIdx), 1, c -> c == ')');
-            return endIdx + closing + 1;
-        }
-        var nextWhitespace = findNthCharOccurrence(q.substring(endIdx), 1, Character::isWhitespace);
-        return nextWhitespace == -1 ? q.length() : endIdx + nextWhitespace;
+    private static boolean isAtomicWrappedInParentheses(Ast.Node operand, String q) {
+        return switch (operand) {
+            // We only need to check for an opening parenthesis since unbalanced parentheses won't pass AST parsing
+            case Ast.Leaf l -> isPrecededByOpeningParen(l.value(), q);
+            case Ast.Code c -> isPrecededByOpeningParen(c.code(), q);
+            default -> false;
+        };
     }
 
-    private static boolean isInBrackets(Lex.Symbol symbol, String q) {
+    private static boolean isPrecededByOpeningParen(Lex.Symbol symbol, String q) {
         int start = symbol.offset();
-        int end = symbol.offset() + symbol.value().length();
-
-        if (symbol.isQuoted()) {
-            end += 2;
-        }
-
-        boolean foundOpening = false;
 
         for (int i = start - 1; i >= 0; i--) {
             var c = q.charAt(i);
             if (Character.isWhitespace(c)) {
                 continue;
             }
-            if (c == '(') {
-                foundOpening = true;
-            }
-            break;
-        }
-
-        if (foundOpening) {
-            for (int i = end; i < q.length(); i++) {
-                var c = q.charAt(i);
-                if (Character.isWhitespace(c)) {
-                    continue;
-                }
-                return c == ')';
-            }
+            return c == '(';
         }
 
         return false;
     }
 
-    private static int findNthCharOccurrence(String s, int n, Predicate<Character> charTest) {
+    private static int findNthClosingParenthesis(String s, int n) {
         int count = 0;
 
         for (int i = 0; i < s.length(); i++) {
-            if (charTest.test(s.charAt(i))) {
+            if (s.charAt(i) == ')') {
                 if (++count == n) {
                     return i;
                 }
