@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.component.ElasticSearch;
 import whelk.search2.QueryUtil;
 import whelk.util.Restrictions;
 
@@ -118,7 +119,9 @@ public non-sealed class Property extends PathElement {
 
     @Override
     public String esField() {
-        return indexKey != null ? indexKey : (hasLangAlias() ? "__" + name : substitutions.getOrDefault(name, name));
+        return indexKey != null
+                ? indexKey
+                : (hasLangAlias() ? ElasticSearch.flattenedLangMapKey(name) : substitutions.getOrDefault(name, name));
     }
 
     @Override
