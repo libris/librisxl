@@ -40,11 +40,7 @@ public record DateTime(QueryDateTime dateTime, Token token) implements Value {
         return Objects.hashCode(toString());
     }
 
-    public static DateTime parse(String s, Token token) {
-        try {
-            return new DateTime(QueryDateTime.parse(s), token);
-        } catch (DateTimeParseException ignored) {
-            return null;
-        }
+    public static DateTime parse(String s, Token token) throws DateTimeParseException {
+        return new DateTime(QueryDateTime.parse(s), token);
     }
 }

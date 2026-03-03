@@ -5,6 +5,7 @@ import whelk.JsonLd;
 import whelk.search2.querytree.*;
 import whelk.util.Restrictions;
 
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -169,7 +170,11 @@ public class Disambiguate {
             if (yearRange != null) {
                 return Optional.of(yearRange);
             }
-            return Optional.ofNullable(DateTime.parse(value, token));
+            try {
+                return Optional.of(DateTime.parse(value, token));
+            } catch (DateTimeParseException e) {
+                return Optional.of(token != null ? InvalidValue.forbidden(token) : InvalidValue.forbidden(value));
+            }
         }
         if (property.isType() || property.isVocabTerm()) {
             for (String ns : nsPrecedenceOrder) {
