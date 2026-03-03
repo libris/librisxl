@@ -9,8 +9,11 @@ import whelk.search2.parse.Lex;
 import whelk.search2.parse.Parse;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -24,14 +27,12 @@ public class QueryTreeBuilder {
         return buildTree(getAst(queryString).tree, disambiguate, null, null, queryString);
     }
 
-    private static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, MappedCode mc, Operator operator, String q) throws InvalidQueryException {
+    private static Node buildTree(Ast.Node astNode, Disambiguate disambiguate, Selector selector, Operator operator, String q) throws InvalidQueryException {
         return switch (astNode) {
-            case Ast.Group g -> buildFromGroup(g, disambiguate, mc, operator, q);
-            case Ast.Not n -> buildFromNot(n, disambiguate, mc, operator, q);
-            case Ast.Leaf l -> buildFromLeaf(l, disambiguate, mc, operator);
-            case Ast.Code c -> mc != null
-                    ? asFreeText(mc.astCode(), q, disambiguate.getTextQueryProperty()) // Codes within code groups are not allowed, treat the whole code segment as free text
-                    : buildFromCode(c, disambiguate, q);
+            case Ast.Group g -> buildFromGroup(g, disambiguate, selector, operator, q);
+            case Ast.Not n -> buildFromNot(n, disambiguate, selector, operator, q);
+            case Ast.Leaf l -> buildFromLeaf(l, disambiguate, selector, operator);
+            case Ast.Code c -> buildFromCode(c, disambiguate, selector, q);
         };
     }
 
@@ -41,65 +42,57 @@ public class QueryTreeBuilder {
         return new Ast(parseTree);
     }
 
-    private static Node buildFromGroup(Ast.Group group, Disambiguate disambiguate, MappedCode mc, Operator operator, String q) throws InvalidQueryException {
+    private static Node buildFromGroup(Ast.Group group, Disambiguate disambiguate, Selector selector, Operator operator, String q) throws InvalidQueryException {
         if (group.operands().isEmpty()) {
-            return mc != null
-                    ? new Condition(mc.selector(), operator, new Any.EmptyGroup())
+            return selector != null
+                    ? new Condition(selector, operator, new Any.EmptyGroup())
                     : new Any.EmptyGroup();
         }
 
+        record MergedFreeText(List<Token> tokens, int insertAt) {}
+
+        Property.TextQuery textQuery = disambiguate.getTextQueryProperty();
+
         List<Node> children = new ArrayList<>();
-        List<Token> freeTextTokens = new ArrayList<>();
-        int freeTextStartIdx = -1;
+        Map<Selector, MergedFreeText> mergedFreeTextBySelector = new HashMap<>();
+
+        Query.Connective connective = switch (group) {
+            case Ast.And ignored -> Query.Connective.AND;
+            case Ast.Or ignored -> Query.Connective.OR;
+        };
+
+        Predicate<FreeText> isMergeCompatible = ft -> ft.connective().equals(connective) || ft.tokens().size() < 2;
 
         for (int i = 0; i < group.operands().size(); i++) {
-            Ast.Node o = group.operands().get(i);
-            if (o instanceof Ast.Leaf leaf) {
-                Node node = buildFromLeaf(leaf, disambiguate, mc, operator);
-                switch (node) {
-                    case FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
-                    case Condition c when c.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
-                    default -> children.add(node);
-                }
-            }
-            /*
-             * Normally, only Ast.Leaf nodes produce FreeText. However, Ast.Code may also
-             * yield FreeText when the key is invalid, so we must handle those cases here
-             * as well when merging free-text tokens.
-             */
-            else if (o instanceof Ast.Code c) {
-                if (mc != null) {
-                    // Codes within code groups are not allowed, return the whole code group as free text
-                    return asFreeText(mc.astCode(), q, disambiguate.getTextQueryProperty());
-                }
-                Node node = buildFromCode(c, disambiguate, q);
-                if (node instanceof FreeText ft) {
-                    freeTextTokens.add(ft.tokens().getFirst());
-                } else {
-                    children.add(node);
-                }
-            } else {
-                children.add(buildTree(o, disambiguate, mc, operator, q));
-            }
-            if (!freeTextTokens.isEmpty() && freeTextStartIdx == -1) {
-                freeTextStartIdx = i;
+            int idx = i;
+            Ast.Node operand = group.operands().get(i);
+            Node builtNode = buildTree(operand, disambiguate, selector, operator, q);
+            switch (builtNode) {
+                case FreeText ft when isMergeCompatible.test(ft) ->
+                        mergedFreeTextBySelector.computeIfAbsent(textQuery, k -> new MergedFreeText(new ArrayList<>(), idx))
+                                .tokens()
+                                .addAll(ft.tokens());
+                case Condition c when c.selector().equals(selector) && c.value() instanceof FreeText ft && isMergeCompatible.test(ft) ->
+                        mergedFreeTextBySelector.computeIfAbsent(c.selector(), k -> new MergedFreeText(new ArrayList<>(), idx))
+                                .tokens()
+                                .addAll(ft.tokens());
+                default -> children.add(builtNode);
             }
         }
 
-        if (!freeTextTokens.isEmpty()) {
-            Query.Connective connective = switch (group) {
-                case Ast.And ignored -> Query.Connective.AND;
-                case Ast.Or ignored -> Query.Connective.OR;
-            };
+        mergedFreeTextBySelector.entrySet().stream()
+                .sorted(Comparator.comparingInt(e -> e.getValue().insertAt()))
+                .forEach(e -> {
+                    Selector s = e.getKey();
+                    List<Token> tokens = e.getValue().tokens();
+                    int insertAt = e.getValue().insertAt();
+                    FreeText ft = new FreeText(textQuery, tokens, connective);
+                    Node n = s.equals(textQuery) ? ft : new Condition(s, operator, ft);
+                    children.add(Math.min(insertAt, children.size()), n);
+                });
 
-            FreeText freeText = new FreeText(disambiguate.getTextQueryProperty(), freeTextTokens, connective);
-            Node node = mc != null ? new Condition(mc.selector(), operator, freeText) : freeText;
-
-            if (children.isEmpty()) {
-                return node;
-            }
-
-            children.add(freeTextStartIdx, node);
+        if (children.size() == 1) {
+            return children.getFirst();
         }
 
         return switch (group) {
@@ -108,13 +101,13 @@ public class QueryTreeBuilder {
         };
     }
 
-    private static Node buildFromNot(Ast.Not not, Disambiguate disambiguate, MappedCode mc, Operator operator, String q) throws InvalidQueryException {
-        return buildTree(not.operand(), disambiguate, mc, operator, q).getInverse();
+    private static Node buildFromNot(Ast.Not not, Disambiguate disambiguate, Selector selector, Operator operator, String q) throws InvalidQueryException {
+        return buildTree(not.operand(), disambiguate, selector, operator, q).getInverse();
     }
 
-    private static Node buildFromLeaf(Ast.Leaf leaf, Disambiguate disambiguate, MappedCode mc, Operator operator) throws InvalidQueryException {
-        if (mc != null) {
-            return buildCondition(mc.selector(), operator, leaf, disambiguate);
+    private static Node buildFromLeaf(Ast.Leaf leaf, Disambiguate disambiguate, Selector selector, Operator operator) throws InvalidQueryException {
+        if (selector != null) {
+            return buildCondition(selector, operator, leaf, disambiguate);
         }
 
         Lex.Symbol symbol = leaf.value();
@@ -129,10 +122,14 @@ public class QueryTreeBuilder {
         return new FreeText(disambiguate.getTextQueryProperty(), getToken(symbol));
     }
 
-    private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate, String q) throws InvalidQueryException {
-        MappedCode mc = MappedCode.from(c, disambiguate);
-        return mc.selector().isValid()
-                ? buildTree(c.operand(), disambiguate, mc, c.operator(), q)
+    private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate, Selector selector, String q) throws InvalidQueryException {
+        if (selector != null) {
+            // Nested selectors are not allowed, return the inner code segment as free text
+            return new Condition(selector, c.operator(), asFreeText(c, q, disambiguate.getTextQueryProperty()));
+        }
+        selector = disambiguate.mapQueryKey(getToken(c.code()));
+        return selector.isValid()
+                ? buildTree(c.operand(), disambiguate, selector, c.operator(), q)
                 : asFreeText(c, q, disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
     }
 
@@ -146,12 +143,6 @@ public class QueryTreeBuilder {
         return condition.isTypeNode() ? condition.asTypeNode() : condition;
     }
 
-    private record MappedCode(Ast.Code astCode, Selector selector) {
-        static MappedCode from(Ast.Code c, Disambiguate disambiguate) {
-            return new MappedCode(c, disambiguate.mapQueryKey(getToken(c.code())));
-        }
-    }
-
     private static Token getToken(Lex.Symbol symbol) {
         return symbol.name() == Lex.TokenName.QUOTED_STRING
                 ? new Token.Quoted(symbol.value(), symbol.offset() + 1)
@@ -160,81 +151,78 @@ public class QueryTreeBuilder {
 
     private static FreeText asFreeText(Ast.Code c, String q, Property.TextQuery textQuery) {
         int from = c.code().offset();
-        SymbolPosition rightMostSymbol = findRightmostSymbol(c, null, 0);
-        int to = findSegmentEndIdx(q, rightMostSymbol);
+        int to = findSegmentEndIdx(c, q);
         String s = q.substring(from, to);
         return new FreeText(textQuery, new Token.Raw(s, from));
     }
-    
-    private record SymbolPosition(Lex.Symbol symbol, int nestedLevel) {}
 
-    private static SymbolPosition findRightmostSymbol(Ast.Node n, Lex.Symbol currentRightmost, int currentLevel) {
+    private static int findSegmentEndIdx(Ast.Code c, String q) {
+        Rightmost rightmost = findRightmost(c, 0, q);
+        var depth = rightmost.parenDepth();
+        var rightmostSymbol = rightmost.symbol() != null ? rightmost.symbol() : c.code();
+        var rightmostEnd = endIdx(rightmostSymbol);
+        if (depth > 0) {
+            int closing = findNthClosingParenthesis(q.substring(rightmostEnd), depth);
+            if (closing == -1) {
+                // Unreachable
+                throw new IllegalStateException("Unbalanced parentheses after AST parsing");
+            }
+            return rightmostEnd + closing + 1;
+        }
+        return rightmostEnd;
+    }
+
+    private static int endIdx(Lex.Symbol symbol) {
+        return symbol.offset() + symbol.value().length() + (symbol.isQuoted() ? 2 : 0);
+    }
+
+    private record Rightmost(Lex.Symbol symbol, int parenDepth) {}
+
+    private static Rightmost findRightmost(Ast.Node n, int parenDepth, String q) {
         return switch (n) {
-            case Ast.Group g -> g.operands().isEmpty()
-                    ? new SymbolPosition(currentRightmost, currentLevel + 1)
-                    : findRightmostSymbol(g.operands().getLast(), currentRightmost, currentLevel + 1);
-            case Ast.Code c -> findRightmostSymbol(c.operand(), c.code(), currentLevel);
-            case Ast.Leaf l -> new SymbolPosition(l.value(), currentLevel);
-            case Ast.Not not -> findRightmostSymbol(not.operand(), currentRightmost, currentLevel);
+            case Ast.Group g -> {
+                int nextDepth = parenDepth + 1;
+                yield g.operands().isEmpty()
+                        ? new Rightmost(null, nextDepth)
+                        : findRightmost(g.operands().getLast(), nextDepth, q);
+            }
+            case Ast.Code c -> {
+                int nextDepth = parenDepth + (isAtomicWrappedInParentheses(c.operand(), q) ? 1 : 0);
+                yield findRightmost(c.operand(), nextDepth, q);
+            }
+            case Ast.Leaf l -> new Rightmost(l.value(), parenDepth);
+            case Ast.Not not -> findRightmost(not.operand(), parenDepth, q);
         };
     }
 
-    private static int findSegmentEndIdx(String q, SymbolPosition symbolPosition) {
-        var level = symbolPosition.nestedLevel();
-        var symbol = symbolPosition.symbol();
-        var endIdx = symbol.offset() + symbol.value().length();
-        if (level > 0) {
-            var closing = findNthCharOccurrence(q.substring(endIdx), level, c -> c == ')');
-            return closing == -1 ? q.length() : endIdx + closing + 1;
-        }
-        // Single token within brackets, for example k:(v)
-        if (isInBrackets(symbol, q)) {
-            var closing = findNthCharOccurrence(q.substring(endIdx), 1, c -> c == ')');
-            return endIdx + closing + 1;
-        }
-        var nextWhitespace = findNthCharOccurrence(q.substring(endIdx), 1, Character::isWhitespace);
-        return nextWhitespace == -1 ? q.length() : endIdx + nextWhitespace;
+    private static boolean isAtomicWrappedInParentheses(Ast.Node operand, String q) {
+        return switch (operand) {
+            // We only need to check for an opening parenthesis since unbalanced parentheses won't pass AST parsing
+            case Ast.Leaf l -> isPrecededByOpeningParen(l.value(), q);
+            case Ast.Code c -> isPrecededByOpeningParen(c.code(), q);
+            default -> false;
+        };
     }
 
-    private static boolean isInBrackets(Lex.Symbol symbol, String q) {
+    private static boolean isPrecededByOpeningParen(Lex.Symbol symbol, String q) {
         int start = symbol.offset();
-        int end = symbol.offset() + symbol.value().length();
-
-        if (symbol.isQuoted()) {
-            end += 2;
-        }
-
-        boolean foundOpening = false;
 
         for (int i = start - 1; i >= 0; i--) {
             var c = q.charAt(i);
             if (Character.isWhitespace(c)) {
                 continue;
             }
-            if (c == '(') {
-                foundOpening = true;
-            }
-            break;
-        }
-
-        if (foundOpening) {
-            for (int i = end; i < q.length(); i++) {
-                var c = q.charAt(i);
-                if (Character.isWhitespace(c)) {
-                    continue;
-                }
-                return c == ')';
-            }
+            return c == '(';
         }
 
         return false;
     }
 
-    private static int findNthCharOccurrence(String s, int n, Predicate<Character> charTest) {
+    private static int findNthClosingParenthesis(String s, int n) {
         int count = 0;
 
         for (int i = 0; i < s.length(); i++) {
-            if (charTest.test(s.charAt(i))) {
+            if (s.charAt(i) == ')') {
                 if (++count == n) {
                     return i;
                 }
