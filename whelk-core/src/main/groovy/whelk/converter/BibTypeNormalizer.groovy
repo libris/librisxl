@@ -299,7 +299,7 @@ class BibTypeNormalizer {
             //carrierTypes = nonBrailleCarrierTypes
         }
 
-        if (looksLikeVolume(instance)) {
+        if (!isElectronic && looksLikeVolume(instance)) {
             carrierTypes << [(ID): KBRDA + 'Volume']
         }
 

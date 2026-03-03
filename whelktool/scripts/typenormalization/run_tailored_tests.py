@@ -337,4 +337,16 @@ for r in data:
 		work_categories = {c["@id"] for c in entity["instanceOf"]["category"]}
 		assert work_categories == {"https://id.kb.se/term/rda/Text", "https://id.kb.se/term/saogf/Avhandlingar"}, entity
 
+	# Looks Like Volume
+	elif id == "https://libris-qa.kb.se/test/lookslikevolume":
+		assert work_category == [{"@id":"https://id.kb.se/term/rda/Text"}], entity
+		assert instance_type == "PhysicalResource", entity
+		assert instance_category == [{"@id":"https://id.kb.se/term/saobf/Print"}, {"@id":"https://id.kb.se/term/rda/Volume"}], entity
+
+	# Not A Volume
+	elif id == "https://libris-qa.kb.se/test/electronicvolume":
+		assert work_category == [{"@id":"https://id.kb.se/term/rda/Text"}], entity
+		assert instance_type == "PhysicalResource", entity
+		assert instance_category == [{"@id":"https://id.kb.se/term/saobf/ElectronicStorageMedium"}], entity
+
 print("\nAll tests passed!")
