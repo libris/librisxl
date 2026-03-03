@@ -77,8 +77,8 @@ class DisambiguateSpec extends Specification {
         'p12'      | '1990-2000'                             | new YearRange('1990', '2000', null)
         'p12'      | '1990-'                                 | new YearRange('1990', "", null)
         'p12'      | '-1990'                                 | new YearRange("", '1990', null)
-        'p12'      | 'xyz'                                   | null
-        'p12'      | '19900101'                              | null
-        'p12'      | '1990/01/01'                            | null
+        'p12'      | 'xyz'                                   | InvalidValue.forbidden('xyz')
+        'p12'      | '19900101'                              | InvalidValue.forbidden('19900101')
+        'p12'      | '1990/01/01'                            | InvalidValue.forbidden('1990/01/01')
     }
 }
