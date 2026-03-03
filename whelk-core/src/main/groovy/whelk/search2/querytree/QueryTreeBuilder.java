@@ -9,9 +9,13 @@ import whelk.search2.parse.Lex;
 import whelk.search2.parse.Parse;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class QueryTreeBuilder {
     public static Node buildTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
@@ -45,54 +49,50 @@ public class QueryTreeBuilder {
                     : new Any.EmptyGroup();
         }
 
+        record MergedFreeText(List<Token> tokens, int insertAt) {}
+
+        Property.TextQuery textQuery = disambiguate.getTextQueryProperty();
+
         List<Node> children = new ArrayList<>();
-        List<Token> freeTextTokens = new ArrayList<>();
-        int freeTextStartIdx = -1;
+        Map<Selector, MergedFreeText> mergedFreeTextBySelector = new HashMap<>();
+
+        Query.Connective connective = switch (group) {
+            case Ast.And ignored -> Query.Connective.AND;
+            case Ast.Or ignored -> Query.Connective.OR;
+        };
+
+        Predicate<FreeText> isMergeCompatible = ft -> ft.connective().equals(connective) || ft.tokens().size() < 2;
 
         for (int i = 0; i < group.operands().size(); i++) {
-            Ast.Node o = group.operands().get(i);
-            if (o instanceof Ast.Leaf leaf) {
-                Node node = buildFromLeaf(leaf, disambiguate, selector, operator);
-                switch (node) {
-                    case FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
-                    case Condition c when c.value() instanceof FreeText ft -> freeTextTokens.add(ft.tokens().getFirst());
-                    default -> children.add(node);
-                }
-            }
-            /*
-             * Normally, only Ast.Leaf nodes produce FreeText. However, Ast.Code may also
-             * yield FreeText when the key is invalid, so we must handle those cases here
-             * as well when merging free-text tokens.
-             */
-            else if (o instanceof Ast.Code c) {
-                Node node = buildFromCode(c, disambiguate, selector, q);
-                if (node instanceof FreeText ft) {
-                    freeTextTokens.add(ft.tokens().getFirst());
-                } else {
-                    children.add(node);
-                }
-            } else {
-                children.add(buildTree(o, disambiguate, selector, operator, q));
-            }
-            if (!freeTextTokens.isEmpty() && freeTextStartIdx == -1) {
-                freeTextStartIdx = i;
+            int idx = i;
+            Ast.Node operand = group.operands().get(i);
+            Node builtNode = buildTree(operand, disambiguate, selector, operator, q);
+            switch (builtNode) {
+                case FreeText ft when isMergeCompatible.test(ft) ->
+                        mergedFreeTextBySelector.computeIfAbsent(textQuery, k -> new MergedFreeText(new ArrayList<>(), idx))
+                                .tokens()
+                                .addAll(ft.tokens());
+                case Condition c when c.selector().equals(selector) && c.value() instanceof FreeText ft && isMergeCompatible.test(ft) ->
+                        mergedFreeTextBySelector.computeIfAbsent(c.selector(), k -> new MergedFreeText(new ArrayList<>(), idx))
+                                .tokens()
+                                .addAll(ft.tokens());
+                default -> children.add(builtNode);
             }
         }
 
-        if (!freeTextTokens.isEmpty()) {
-            Query.Connective connective = switch (group) {
-                case Ast.And ignored -> Query.Connective.AND;
-                case Ast.Or ignored -> Query.Connective.OR;
-            };
+        mergedFreeTextBySelector.entrySet().stream()
+                .sorted(Comparator.comparingInt(e -> e.getValue().insertAt()))
+                .forEach(e -> {
+                    Selector s = e.getKey();
+                    List<Token> tokens = e.getValue().tokens();
+                    int insertAt = e.getValue().insertAt();
+                    FreeText ft = new FreeText(textQuery, tokens, connective);
+                    Node n = s.equals(textQuery) ? ft : new Condition(s, operator, ft);
+                    children.add(Math.min(insertAt, children.size()), n);
+                });
 
-            FreeText freeText = new FreeText(disambiguate.getTextQueryProperty(), freeTextTokens, connective);
-            Node node = selector != null ? new Condition(selector, operator, freeText) : freeText;
-
-            if (children.isEmpty()) {
-                return node;
-            }
-
-            children.add(freeTextStartIdx, node);
+        if (children.size() == 1) {
+            return children.getFirst();
         }
 
         return switch (group) {

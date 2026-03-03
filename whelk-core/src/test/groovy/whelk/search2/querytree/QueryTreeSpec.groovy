@@ -41,6 +41,7 @@ class QueryTreeSpec extends Specification {
         "p1:\"x OR y\""                                    | "p1:\"x OR y\""
         "p1:(x y)"                                         | "p1:(x y)"
         "p1:(x OR y)"                                      | "p1:(x OR y)"
+        "p1:(x OR y z)"                                    | "p1:x OR p1:(y z)"
         "NOT p1:(x OR y)"                                  | "NOT p1:(x OR y)"
         "NOT p1:(NOT x)"                                   | "p1:x"
         "p2:e1"                                            | "p2:e1"
@@ -106,9 +107,12 @@ class QueryTreeSpec extends Specification {
         "k:(v) p1:v1"                      | new And([new FreeText("k:(v)"), p1v1])
         "k:(a (b OR c)) p1:v1"             | new And([new FreeText("k:(a (b OR c))"), p1v1])
         "p1:v1 x k:(\"a\" (b OR c)) p1:v2" | new And([p1v1, new FreeText("x k:(\"a\" (b OR c))"), p1v2])
+        "k:p1:v1"                          | new FreeText("k:p1:v1")
+        "p1:k:v1"                          | new Condition(p1, Operator.EQUALS, new FreeText("k:v1"))
+        "p1:k:\"v1\""                      | new Condition(p1, Operator.EQUALS, new FreeText("k:\"v1\""))
         "p1:p1:v1"                         | new Condition(p1, Operator.EQUALS, new FreeText("p1:v1"))
         "p1:(p1:v1)"                       | new Condition(p1, Operator.EQUALS, new FreeText("p1:v1"))
-//        "p1:(p1:v1 p1:v2 x) y p1:v1"       | new And([new Condition(p1, Operator.EQUALS, new FreeText("p1:v1 p1:v2 x")), new FreeText("y"), p1v1])
+        "p1:(p1:v1 p1:v2 x) y p1:v1"       | new And([new Condition(p1, Operator.EQUALS, new FreeText("p1:v1 p1:v2 x")), new FreeText("y"), p1v1])
     }
 
     def "to search mapping"() {
