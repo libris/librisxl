@@ -508,6 +508,15 @@
                         "copy_to": "_all"
                     }
                 }
+            },
+            {
+                "lang_container_template": {
+                    "match": "*ByLang",
+                    "mapping": {
+                        "type": "object",
+                        "enabled": false
+                    }
+                }
             }
         ]
     }
