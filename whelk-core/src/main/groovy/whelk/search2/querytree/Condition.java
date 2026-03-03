@@ -57,6 +57,9 @@ public sealed class Condition implements Node permits Type {
 
     @Override
     public Map<String, Object> toEs(ESSettings esSettings) {
+        if (selector instanceof Property.TextQuery && value instanceof FreeText ft) {
+            return ft.toEs(esSettings);
+        }
         return getEsNestedQuery(esSettings).orElse(getCoreEsQuery(esSettings));
     }
 

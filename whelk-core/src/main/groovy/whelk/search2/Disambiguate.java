@@ -162,6 +162,9 @@ public class Disambiguate {
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {
+        if (property instanceof Property.TextQuery textQuery) {
+            return Optional.of(new FreeText(textQuery, token));
+        }
         if (value.equals(Operator.WILDCARD)) {
             return Optional.of(new Any.Wildcard());
         }
