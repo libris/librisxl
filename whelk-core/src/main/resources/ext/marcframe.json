@@ -1074,7 +1074,7 @@
         "[9]": {
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
-          "matchUriToken": "^[abcdefghijm]$",
+          "matchUriToken": "^[cdefghijmab]$",
           "silentRevert": false
         },
         "[10]": null,
@@ -1568,7 +1568,7 @@
         "[1]": {
           "addLink": "carrierType",
           "uriTemplate": "https://id.kb.se/marc/ComputerMaterialType-{_}",
-          "matchUriToken": "^[abcdefhjkmor]$",
+          "matchUriToken": "^[abcfhjkmorde]$",
           "silentRevert": false
         },
         "[2]": null,
@@ -2471,7 +2471,7 @@
           "aboutEntity": "?work",
           "addLink": "genreForm",
           "uriTemplate": "https://id.kb.se/marc/ComputerTypeOfFileType-{_}",
-          "matchUriToken": "^[abcdefghijm]$",
+          "matchUriToken": "^[cdefghijmab]$",
           "NOTE:lcMarc2bfCodeMap": "computerFileType",
           "silentRevert": false
         },
