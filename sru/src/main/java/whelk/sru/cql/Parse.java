@@ -31,14 +31,12 @@ public class Parse {
      * identifier 	::= 	charString1 | charString2
      */
 
-    // helper (not part of grammar)
-    //public record Pair(Object c, Object t) {} // [comparitorSymbol term]
-
     // CST nodes
     public record CqlQuery() {}
     public record Identifier(Lex.Symbol s) {}
     public record Term(Identifier i, Lex.Symbol k) {}
     public record Modifier(Term t1, Lex.Symbol s, Term t2) {}
+    public record ModifierList(List<Modifier> l) {}
 
 
     public static CqlQuery parseQuery(LinkedList<Lex.Symbol> symbols) throws InvalidQueryException {
@@ -49,7 +47,7 @@ public class Parse {
             do {
                 Lex.Symbol lookahead = null;
                 if (!symbols.isEmpty())
-                    lookahead = symbols.getFirst();
+                    lookahead = symbols.get(0);
                 reductionWasPossible = reduce(stack, lookahead);
 
 
@@ -67,8 +65,8 @@ public class Parse {
             while (reductionWasPossible);
         }
 
-        if (stack.size() == 1 && stack.getFirst() instanceof CqlQuery) {
-            return (CqlQuery) stack.getFirst();
+        if (stack.size() == 1 && stack.get(0) instanceof CqlQuery) {
+            return (CqlQuery) stack.get(0);
         }
 
         throw new InvalidQueryException("Syntax error");
@@ -84,7 +82,7 @@ public class Parse {
         // TEMP! TEST THE TESTING! NOT REAL PARSING!
         /*{
             if (!stack.isEmpty()) {
-                if (stack.getFirst() instanceof Term) {
+                if (stack.get(0) instanceof Term) {
                     stack.pop();
                     stack.push(new CqlQuery());
                     return true;
@@ -93,12 +91,27 @@ public class Parse {
         }*/
         //------------------------------------------
 
+        // modifierList 	::= 	modifierList modifier | modifier
+        {
+            if (stack.size() >= 2 && stack.get(0) instanceof Modifier m && stack.get(1) instanceof ModifierList l) {
+                stack.pop();
+                l.l.add(m);
+                return true;
+            } else if (stack.size() == 1 && stack.get(0) instanceof Modifier m) {
+                stack.pop();
+                ArrayList<Modifier> l = new ArrayList<>(1);
+                l.add(m);
+                stack.push(new ModifierList(l));
+                return true;
+            }
+        }
+
         // modifier 	::= 	'/' term [comparitorSymbol term]
         {
             List<String> comparitorSymbols = List.of("=", ">", "<", ">=", "<=", "<>", "=="); // Not optimal, should perhaps be defined externally for performance
             boolean lookaheadIsCompSymb = lookahead instanceof Lex.Symbol la && la.name() == Lex.TokenName.OPERATOR && comparitorSymbols.contains(la.value());
             if (
-                    stack.size() == 4 &&
+                    stack.size() >= 4 &&
                     stack.get(0) instanceof Term t2 &&
                     stack.get(1) instanceof Lex.Symbol c &&
                     c.name() == Lex.TokenName.OPERATOR &&
@@ -112,8 +125,9 @@ public class Parse {
                 stack.pop();
                 stack.pop();
                 stack.push(new Modifier(t1, c, t2));
+                return true;
             } else if (
-                    stack.size() == 2 &&
+                    stack.size() >= 2 &&
                     stack.get(0) instanceof Term t &&
                     stack.get(1) instanceof Lex.Symbol s &&
                     s.name() == Lex.TokenName.OPERATOR &&
@@ -123,18 +137,19 @@ public class Parse {
                 stack.pop();
                 stack.pop();
                 stack.push(new Modifier(t, null, null));
+                return true;
             }
         }
 
         // term 	::= 	identifier | 'and' | 'or' | 'not' | 'prox'
         {
             if (!stack.isEmpty()) {
-                if (stack.getFirst() instanceof Identifier i) {
+                if (stack.get(0) instanceof Identifier i) {
                     stack.pop();
                     stack.push(new Term(i, null));
                     return true;
                 }
-                else if (stack.getFirst() instanceof Lex.Symbol s && s.name() == Lex.TokenName.KEYWORD) {
+                else if (stack.get(0) instanceof Lex.Symbol s && s.name() == Lex.TokenName.KEYWORD) {
                     stack.pop();
                     stack.push(new Term(null, s));
                     return true;
@@ -145,7 +160,7 @@ public class Parse {
         // identifier 	::= 	charString1 | charString2
         {
             if (!stack.isEmpty()) {
-                if (stack.getFirst() instanceof Lex.Symbol s &&
+                if (stack.get(0) instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.STRING) {
                     stack.pop();
                     stack.push(new Identifier(s));
