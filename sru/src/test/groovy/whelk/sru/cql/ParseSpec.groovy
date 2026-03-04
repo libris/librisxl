@@ -9,11 +9,13 @@ class ParseSpec extends Specification {
 
     def "normal parse"() {
         given:
-        def input = "AAA"
+        def input = "/relevant=hej"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.CqlQuery parseTree = Parse.parseQuery(lexedSymbols)
 
         expect:
-        parseTree != null
+        parseTree == new Parse.CqlQuery(
+
+        )
     }
 }
