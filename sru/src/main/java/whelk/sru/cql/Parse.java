@@ -31,12 +31,15 @@ public class Parse {
      * identifier 	::= 	charString1 | charString2
      */
 
+    final static List<String> comparitorSymbols = List.of("=", ">", "<", ">=", "<=", "<>", "=="); // Not optimal, should perhaps be defined externally for performance
+
     // CST nodes
     public record CqlQuery() {}
     public record Identifier(Lex.Symbol s) {}
     public record Term(Identifier i, Lex.Symbol k) {}
-    public record Modifier(Term t1, Lex.Symbol s, Term t2) {}
+    public record Modifier(Term t1, ComparitorSymbol c, Term t2) {}
     public record ModifierList(List<Modifier> l) {}
+    public record ComparitorSymbol(Lex.Symbol s) {}
 
 
     public static CqlQuery parseQuery(LinkedList<Lex.Symbol> symbols) throws InvalidQueryException {
@@ -108,14 +111,11 @@ public class Parse {
 
         // modifier 	::= 	'/' term [comparitorSymbol term]
         {
-            List<String> comparitorSymbols = List.of("=", ">", "<", ">=", "<=", "<>", "=="); // Not optimal, should perhaps be defined externally for performance
             boolean lookaheadIsCompSymb = lookahead instanceof Lex.Symbol la && la.name() == Lex.TokenName.OPERATOR && comparitorSymbols.contains(la.value());
             if (
                     stack.size() >= 4 &&
                     stack.get(0) instanceof Term t2 &&
-                    stack.get(1) instanceof Lex.Symbol c &&
-                    c.name() == Lex.TokenName.OPERATOR &&
-                    comparitorSymbols.contains( c.value() ) &&
+                    stack.get(1) instanceof ComparitorSymbol c &&
                     stack.get(2) instanceof Term t1 &&
                     stack.get(3) instanceof Lex.Symbol s &&
                     s.name() == Lex.TokenName.OPERATOR &&
@@ -164,6 +164,18 @@ public class Parse {
                         s.name() == Lex.TokenName.STRING) {
                     stack.pop();
                     stack.push(new Identifier(s));
+                    return true;
+                }
+            }
+        }
+
+        // comparitorSymbol 	::= 	'=' | '>' | '<' | '>=' | '<=' | '<>' | '=='
+        {
+            if (!stack.isEmpty()) {
+                if (stack.get(0) instanceof Lex.Symbol s &&
+                        s.name() == Lex.TokenName.OPERATOR && comparitorSymbols.contains(s.value())) {
+                    stack.pop();
+                    stack.push(new ComparitorSymbol(s));
                     return true;
                 }
             }
