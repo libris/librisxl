@@ -152,18 +152,16 @@ public class Lex {
             TokenName name;
 
             // These words (when not quoted) are keywords
-            // TODO: The spec *seems* to say case should be *completely* irrelevant, probably meaning "SorTbY" etc should also be ok. Fix later.
+            // TODO: The spec *seems* to say case should be *completely* irrelevant, probably meaning "aNd" etc should also be ok. Fix later.
             switch (symbolValue.toString()) {
                 case "and":
                 case "or":
                 case "not":
                 case "prox":
-                case "sortby":
                 case "AND":
                 case "OR":
                 case "NOT":
                 case "PROX":
-                case "SORTBY":
                     name = TokenName.KEYWORD;
                     symbolValue = new StringBuilder(symbolValue.toString().toLowerCase());
                     break;
