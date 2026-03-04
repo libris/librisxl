@@ -1,3 +1,4 @@
+apply plugin: 'groovy'
 apply plugin: 'java-library'
 apply plugin: 'com.gradleup.shadow'
 
@@ -35,8 +36,8 @@ dependencies {
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
-    // Testing
-    testImplementation 'junit:junit:4.12'
+    // profiling and test
+    testImplementation "org.spockframework:spock-core:${spockVersion}"
 }
 
 shadowJar {
@@ -58,6 +59,25 @@ jar {
 
     archiveClassifier = "nonfat"
     enabled = false
+}
+
+sourceSets {
+    main {
+        java { srcDirs = [] }
+        groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+    }
+    test {
+        groovy { srcDir 'src/test/groovy/' }
+    }
+}
+
+test.testLogging {
+    showStandardStreams = true
+    exceptionFormat = "full"
+}
+
+test {
+    useJUnitPlatform()
 }
 
 task(appRun, dependsOn: "classes", type: JavaExec) {
