@@ -139,10 +139,11 @@ public class Parse {
 
         // comparitor 	::= 	comparitorSymbol | term - 'and' - 'or' - 'not' - 'prox'
         {
-            List<String> exceptions = List.of("and", "or", "not", "prox");
+            //List<String> exceptions = List.of("and", "or", "not", "prox");
             if (
                     stack.size() >= 2 && stack.get(0) instanceof Term t &&
-                    !exceptions.contains(t.i.s.value()) &&
+                    //!exceptions.contains(t.i.s.value()) &&
+                            t.k == null && // not a keyword!
                     stack.get(1) instanceof Term // This term will not be popped, but we need check for it to distinguish between the comparitor and searchClause cases (this f*****g grammar)
             ) {
                 stack.pop();

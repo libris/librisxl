@@ -11,6 +11,8 @@ class ParseSpec extends Specification {
         given:
         //def input = "/relevant=hej"
         def input = "hej hej hej hej"
+        //def input = "hej and hej hej"
+        //def input = "dc.title any fish or dc.creator any sanderson"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.CqlQuery parseTree = Parse.parseQuery(lexedSymbols)
 
