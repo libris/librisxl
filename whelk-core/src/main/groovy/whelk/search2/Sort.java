@@ -27,7 +27,7 @@ public class Sort {
     private record ParameterOrder(String parameter, Order order) {
         public Map<String, Object> toSortClause(Function<String, String> getSortField) {
             // TODO nested?
-            return Map.of(getSortField.apply(parameter), Map.of("order", order));
+            return Map.of(getSortField.apply(parameter), Map.of("order", order, "missing", "_last"));
         }
 
         public String asString() {
