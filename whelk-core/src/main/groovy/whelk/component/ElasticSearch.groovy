@@ -501,10 +501,8 @@ class ElasticSearch {
                 'totalItemsByRelation': incomingLinkCountByRelation
         ]
 
-
         try {
-            // TODO: Fallback, clean strings (replicate parts of JsonLd.applyLensAsMapByLang)
-            searchCard['_sortKeyByLang'] = whelk.fresnelUtil.asStringByLang(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, whelk.jsonld.locales, [])
+            searchCard['_sortKeyByLang'] = buildSortKeyByLang(searchCard, whelk)
         } catch (Exception e) {
             log.error("Couldn't create sort key for {}: {}", document.shortId, e, e)
         }
@@ -598,6 +596,33 @@ class ElasticSearch {
     
     static String flattenedLangMapKey(key) {
         return '__' + key
+    }
+
+    private static Map<String, String> buildSortKeyByLang(Map<String, Object> thing, Whelk whelk) {
+        List<String> locales =  whelk.jsonld.locales
+
+        Map<String, String> searchKeyByLang = whelk.fresnelUtil.asStringByLang(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, whelk.jsonld.locales, [])
+                .collectEntries {k, v -> [k, cleanForSort(v)] }
+                .findAll {!((String) it.value).isEmpty() }
+
+        if (!searchKeyByLang.isEmpty() && searchKeyByLang.size() < locales.size()) {
+            // If we have at least one value but not for all locales,
+            // duplicate the first available value as a fallback.
+            // Example:
+            //   {"sv": "xyz"}  ->  {"sv": "xyz", "en": "xyz"}
+            String fallback = searchKeyByLang.values().first()
+            locales.each { searchKeyByLang.putIfAbsent(it, fallback) }
+        }
+
+        return searchKeyByLang
+    }
+
+    private static String cleanForSort(String s) {
+        // (Copied from JsonLd.applyLensAsMapByLang)
+        // Remove leading non-alphanumeric characters.
+        // \p{L} = Lu, Ll, Lt, Lm, Lo; but we don't want Lm as it includes modifier letters like
+        // MODIFIER LETTER PRIME (ʹ) that are sometimes erroneously used.
+        return s.replaceFirst(/^[^\p{Lu}\p{Ll}\p{Lt}\p{Lo}\p{N}]+/, "")
     }
 
     private static void addSearchStr(Map<String, Object> thing, Whelk whelk, Lens lens, String key) {
