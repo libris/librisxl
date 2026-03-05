@@ -179,6 +179,10 @@ class BibTypeNormalizer {
 
         String wtype = getType(work)
 
+        if (wtype in normalizer.newWorkTypes) {
+            return false;
+        }
+
         if (wtype == 'Text') {
             if (!asList(work.get("contentType")).findAll { (it[ID] == KBRDA + "TactileText") }) {
                 // If there is NO contentType "TactileText", add "Text"
