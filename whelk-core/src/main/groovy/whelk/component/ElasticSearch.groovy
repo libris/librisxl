@@ -26,12 +26,12 @@ import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.REVERSE_KEY
-import static whelk.JsonLd.SEARCH_KEY
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
+import static whelk.util.FresnelUtil.Options.NO_FALLBACK
 import static whelk.util.FresnelUtil.Options.SKIP_ITEMS
 import static whelk.util.FresnelUtil.Options.SKIP_MAP_VOCAB_TERMS
 import static whelk.util.FresnelUtil.Options.TAKE_ALL_ALTERNATE
@@ -504,7 +504,7 @@ class ElasticSearch {
 
         try {
             // TODO: Fallback, clean strings (replicate parts of JsonLd.applyLensAsMapByLang)
-            searchCard['_sortKeyByLang'] = whelk.fresnelUtil.asStringByLang(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, whelk.jsonld.locales)
+            searchCard['_sortKeyByLang'] = whelk.fresnelUtil.asStringByLang(searchCard, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, whelk.jsonld.locales, [])
         } catch (Exception e) {
             log.error("Couldn't create sort key for {}: {}", document.shortId, e, e)
         }
@@ -536,9 +536,10 @@ class ElasticSearch {
 
             if (value instanceof Map) {
                 try {
-                    var _str = whelk.fresnelUtil.buildSearchStr(value);
-                    if (!_str.isEmpty()) {
-                        value.put(path.isEmpty() ? TOP_STR : JsonLd.SEARCH_KEY, _str.size() == 1 ? _str.first() : _str);
+                    if (path.isEmpty()) {
+                        addSearchStr(value, whelk, FresnelUtil.Lenses.TOP_SEARCH_TOKEN, TOP_STR)
+                    } else {
+                        addSearchStr(value, whelk, FresnelUtil.Lenses.SEARCH_TOKEN, JsonLd.SEARCH_KEY)
                     }
                 } catch (Exception ignored) {
                     log.warn("Couldn't create search key for node with type {} in document {}", value.get(TYPE_KEY), document.shortId);
@@ -597,6 +598,21 @@ class ElasticSearch {
     
     static String flattenedLangMapKey(key) {
         return '__' + key
+    }
+
+    private static void addSearchStr(Map<String, Object> thing, Whelk whelk, Lens lens, String key) {
+        if (!thing[TYPE_KEY]) {
+            return
+        }
+
+        var langMap = whelk.fresnelUtil.asStringByScript(thing, lens, List.of(NO_FALLBACK))
+                ?: whelk.fresnelUtil.asStringByLang(thing, lens, whelk.jsonld.locales, List.of(NO_FALLBACK))
+
+        var values = langMap.values().toList().unique()
+
+        if (!values.isEmpty()) {
+            thing.put(key, values.size() == 1 ? values.first() : values)
+        }
     }
 
     private static Set<String> collectIntegralIds(Map data, JsonLd jsonLd) {

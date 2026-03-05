@@ -44,6 +44,7 @@ import static whelk.JsonLd.asList;
 // TODO fallback style for things that fall outside the class hierarchy?
 // TODO defer language selection?
 // TODO bad data - blank nodes without type?
+// TODO? Move search lens stuff to Elasticsearch class (or config file)?
 
 public class FresnelUtil {
     public static final String CARDS = "cards";
@@ -52,6 +53,7 @@ public class FresnelUtil {
     public static final String SEARCH_CARDS = "search-cards";
     public static final String SEARCH_CHIPS = "search-chips";
     public static final String SEARCH_TOKENS = "search-tokens";
+    public static final String TOP_SEARCH_TOKENS = "top-search-tokens";
     public static final String TOKENS = "tokens";
 
     public record LensGroupChain(List<String> chain) {
@@ -65,12 +67,14 @@ public class FresnelUtil {
     public static final LensGroupChain SEARCH_CARD_CHAIN = new LensGroupChain(List.of(SEARCH_CARDS, CARDS, SEARCH_CHIPS, CHIPS, TOKENS));
     public static final LensGroupChain SEARCH_CHIP_CHAIN = new LensGroupChain(List.of(SEARCH_CHIPS, CHIPS, TOKENS));
     public static final LensGroupChain SEARCH_TOKEN_CHAIN = new LensGroupChain(SEARCH_TOKENS);
+    public static final LensGroupChain TOP_SEARCH_TOKEN_CHAIN = new LensGroupChain(List.of(TOP_SEARCH_TOKENS, SEARCH_TOKENS));
     public static final LensGroupChain TOKEN_CHAIN = new LensGroupChain(List.of(TOKENS, CHIPS));
 
     public static final class Lenses {
         public static final Lens SEARCH_CARD = new Lens(SEARCH_CARD_CHAIN);
         public static final Lens SEARCH_CHIP = new Lens(SEARCH_CHIP_CHAIN);
         public static final Lens SEARCH_TOKEN = new Lens(SEARCH_TOKEN_CHAIN);
+        public static final Lens TOP_SEARCH_TOKEN = new Lens(TOP_SEARCH_TOKEN_CHAIN);
         public static final Lens TOKEN = new Lens(TOKEN_CHAIN);
     }
 
@@ -187,8 +191,12 @@ public class FresnelUtil {
         return applyLens(thing, lens, options).asString();
     }
 
-    public Map<String, String> asStringByLang(Object thing, Lens lens, List<String> locales) {
-        return applyLens(thing, lens).asStringByLang(locales.stream().map(LangCode::new).toList());
+    public Map<String, String> asStringByLang(Object thing, Lens lens, List<String> locales, Collection<Options> options) {
+        return applyLens(thing, lens, options).asStringByLang(locales.stream().map(LangCode::new).toList());
+    }
+
+    public Map<String, String> asStringByScript(Object thing, Lens lens, Collection<Options> options) {
+        return applyLens(thing, lens, options).asStringByScript();
     }
 
     public Map<String, Object> mapThroughLens(Map<String, Object> thing, Lens lens) {
@@ -239,21 +247,6 @@ public class FresnelUtil {
                 .map(Node.Selected::getFlatValues)
                 .flatMap(List::stream)
                 .toList();
-    }
-
-    public List<String> buildSearchStr(Map<String, Object> thing) {
-        if (!thing.containsKey(TYPE_KEY)) {
-            return List.of();
-        }
-        var lensedForSearchStr = applyLens(thing, Lenses.SEARCH_TOKEN, List.of(Options.NO_FALLBACK));
-        if (lensedForSearchStr.isEmpty()) {
-            return List.of();
-        }
-        var byScript = lensedForSearchStr.asStringByScript();
-        if (!byScript.isEmpty()) {
-            return byScript.values().stream().distinct().toList();
-        }
-        return lensedForSearchStr.asStringByLang(fallbackLocales).values().stream().distinct().toList();
     }
 
     public static class LensMappingBatch {

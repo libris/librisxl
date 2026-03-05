@@ -1,9 +1,8 @@
 package whelk.util
 
 import spock.lang.Specification
-import whelk.Document
 import whelk.JsonLd
-import whelk.Whelk
+import whelk.component.ElasticSearch
 
 import static whelk.component.ElasticSearch.DerivedLenses.CARD_ONLY
 import static whelk.component.ElasticSearch.DerivedLenses.SEARCH_CARD_ONLY
@@ -1362,24 +1361,5 @@ class FresnelUtilSpec extends Specification {
             "mainTitle" : "Titel",
             "z" : [ "a", "b", "c" ]
         ]
-    }
-
-    def "build search string"() {
-        given:
-        var fresnel = new FresnelUtil(ld)
-        fresnel.fallbackLocales = [new FresnelUtil.LangCode('sv'), new FresnelUtil.LangCode('en')]
-
-        expect:
-        fresnel.buildSearchStr(thing) == _str
-
-        where:
-        thing                                                                                                                | _str
-        ['@type': 'Person', 'name': 'Överzet']                                                                               | ['Överzet']
-        ['@type': 'Person', 'givenName': 'Namn', 'familyName': 'Namnsson', 'lifeSpan': "1972-"]                              | ['Namn Namnsson']
-        ['@type': 'Title', 'mainTitle': 'Titel', 'hasPart': ['@type': 'TitlePart', 'partName': 'del', 'partNumber': '1']]    | ['Titel 1 del']
-        ['@type': 'Work', 'hasTitle': [['@type': 'Title', 'mainTitle': 'Titel']]]                                            | ['Titel']
-        ['@type': 'Work', 'hasTitle': [['@type': 'Title', 'mainTitleByLang': ['el': 'σ', 'el-Latn-t-el-Grek-x0-btj': 's']]]] | ['σ', 's']
-        ['@type': 'Work', 'hasTitle': [['@type': 'Title', 'subtitle': 'undertitel']]]                                        | []
-        ['@type': 'Language', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']]                                             | ['Svenska', 'Swedish']
     }
 }
