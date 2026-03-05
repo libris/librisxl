@@ -9,7 +9,8 @@ class ParseSpec extends Specification {
 
     def "normal parse"() {
         given:
-        def input = "/relevant=hej"
+        //def input = "/relevant=hej"
+        def input = "hej hej hej hej"
         def lexedSymbols = Lex.lexQuery(input)
         Parse.CqlQuery parseTree = Parse.parseQuery(lexedSymbols)
 

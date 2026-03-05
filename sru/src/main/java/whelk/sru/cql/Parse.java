@@ -20,11 +20,9 @@ public class Parse {
      * scopedClause 	::= 	scopedClause booleanGroup searchClause | searchClause
      * booleanGroup 	::= 	boolean [modifierList]
      * boolean 	::= 	'and' | 'or' | 'not' | 'prox'
-     * searchClause 	::= 	'(' cqlQuery ')' | term relation term | term
-     * relation 	::= 	comparitor [modifierList]
-     * comparitor 	::= 	comparitorSymbol | namedComparitor
+     * searchClause 	::= 	'(' cqlQuery ')' | term comparitor [modifierList] term | term
+     * comparitor 	::= 	comparitorSymbol | term - 'and' - 'or' - 'not' - 'prox'
      * comparitorSymbol 	::= 	'=' | '>' | '<' | '>=' | '<=' | '<>' | '=='
-     * namedComparitor 	::= 	identifier
      * modifierList 	::= 	modifierList modifier | modifier
      * modifier 	::= 	'/' term [comparitorSymbol term]
      * term 	::= 	identifier | 'and' | 'or' | 'not' | 'prox' | 'sortby'
@@ -40,6 +38,8 @@ public class Parse {
     public record Modifier(Term t1, ComparitorSymbol c, Term t2) {}
     public record ModifierList(List<Modifier> l) {}
     public record ComparitorSymbol(Lex.Symbol s) {}
+    public record Comparitor(ComparitorSymbol c, Term t) {}
+    public record SearchClause(Term t1, Comparitor c, ModifierList l, Term t2) {}
 
 
     public static CqlQuery parseQuery(LinkedList<Lex.Symbol> symbols) throws InvalidQueryException {
@@ -93,6 +93,63 @@ public class Parse {
             }
         }*/
         //------------------------------------------
+
+        // searchClause 	::= 	'(' cqlQuery ')' | term comparitor [modifierList] term | term
+        {
+            // 1st
+            // TODO: THE GROUP CLAUSE!
+
+            // 2nd
+            if (stack.size() >= 3) {
+                if (stack.get(0) instanceof Term t2) {
+                    if (
+                            stack.get(1) instanceof ModifierList l &&
+                            stack.get(2) instanceof Comparitor c &&
+                            stack.get(3) instanceof Term t1 ) {
+                        stack.pop();
+                        stack.pop();
+                        stack.pop();
+                        stack.pop();
+                        stack.push(new SearchClause(t1, c, l, t2));
+                        return true;
+                    } else if (
+                            stack.get(1) instanceof Comparitor c &&
+                            stack.get(2) instanceof Term t1) {
+                        stack.pop();
+                        stack.pop();
+                        stack.pop();
+                        stack.push(new SearchClause(t1, c, null, t2));
+                        return true;
+                    }
+                }
+            }
+
+            //3rd
+            if (stack.size() >= 1) {
+                if (stack.get(0) instanceof Term t) {
+                    // Must be followed by an operator or EOF, or this could be a larger search clause waiting to happen.
+                    if (lookahead == null || lookahead instanceof Lex.Symbol s && s.name() == Lex.TokenName.OPERATOR) {
+                        stack.pop();
+                        stack.push(new SearchClause(t, null, null, null));
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // comparitor 	::= 	comparitorSymbol | term - 'and' - 'or' - 'not' - 'prox'
+        {
+            List<String> exceptions = List.of("and", "or", "not", "prox");
+            if (
+                    stack.size() >= 2 && stack.get(0) instanceof Term t &&
+                    !exceptions.contains(t.i.s.value()) &&
+                    stack.get(1) instanceof Term // This term will not be popped, but we need check for it to distinguish between the comparitor and searchClause cases (this f*****g grammar)
+            ) {
+                stack.pop();
+                stack.push(new Comparitor(null, t));
+                return true;
+            }
+        }
 
         // modifierList 	::= 	modifierList modifier | modifier
         {
