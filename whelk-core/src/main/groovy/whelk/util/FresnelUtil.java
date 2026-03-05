@@ -143,7 +143,7 @@ public class FresnelUtil {
                 Fresnel.showProperties, List.of(
                         Map.of(Fresnel.alternateProperties, List.of(
                                 // TODO this is the expanded form with xByLang like in JsonLd
-                                "prefLabel", "prefLabelByLang", "label", "labelByLang", "name", "nameByLang", "@id"
+                                "prefLabel", "prefLabelByLang", "label", "labelByLang", "name", "nameByLang", "code"
                         ))
                 )
         )),
