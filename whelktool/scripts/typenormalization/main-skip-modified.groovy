@@ -7,7 +7,7 @@ var loadWorkItem = { String workId, Closure process ->
 Set<String> ids = new File(scriptDir, "MODIFIED.txt").readLines() as Set<String>
 
 selectByCollection('bib') {
-  if (it.shortId in ids) {
+  if (it.doc.shortId in ids) {
     return
   }
 
