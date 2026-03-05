@@ -250,6 +250,11 @@ class FresnelUtilSpec extends Specification {
                                                     "marc:arrangedStatementForMusic",
                                                     "originDate"
                                             ]
+                                    ],
+                                    "Language": [
+                                            "@type"          : "fresnel:Lens",
+                                            "classLensDomain": "Language",
+                                            "showProperties" : ["label"]
                                     ]
                             ]],
                     "cards"        :
@@ -284,6 +289,11 @@ class FresnelUtilSpec extends Specification {
                                                     "isPartOf",
                                                     ["inverseOf": "instanceOf"]
                                             ]
+                                    ],
+                                    "Language": [
+                                            "@type"          : "fresnel:Lens",
+                                            "classLensDomain": "Language",
+                                            "showProperties" : ["label"]
                                     ]
                             ]]
             ],
@@ -756,6 +766,11 @@ class FresnelUtilSpec extends Specification {
                                                 "classLensDomain": "Title",
                                                 "showProperties" : ["mainTitle", "title", "subtitle", "titleRemainder", "partNumber", "partName", "hasPart"]
                                         ],
+                                        "Language": [
+                                                "@type"          : "fresnel:Lens",
+                                                "classLensDomain": "Language",
+                                                "showProperties" : ["label"]
+                                        ]
                                 ]]
                 ],
         ]
@@ -863,7 +878,7 @@ class FresnelUtilSpec extends Specification {
                 ]
         ]
         var fresnel = new FresnelUtil(ld)
-        var byLang = fresnel.asStringByLang(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, ['sv', 'en'])
+        var byLang = fresnel.asStringByLang(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, ['sv', 'en'], [])
 
         expect:
         byLang == res
@@ -889,7 +904,7 @@ class FresnelUtilSpec extends Specification {
         lens = FresnelUtil.NestedLenses.CHIP_TO_TOKEN
 
         then:
-        fresnel.asStringByLang(thing, lens, locales) == ['sv': 'Svenska', 'en': 'Swedish']
+        fresnel.asStringByLang(thing, lens, locales, []) == ['sv': 'Svenska', 'en': 'Swedish']
 
 
         when:
@@ -897,7 +912,7 @@ class FresnelUtilSpec extends Specification {
         lens = FresnelUtil.NestedLenses.CHIP_TO_TOKEN
 
         then:
-        fresnel.asStringByLang(thing, lens, locales) == ['sv': 'Nephelai', 'en': 'Nephelai']
+        fresnel.asStringByLang(thing, lens, locales, []) == ['sv': 'Nephelai', 'en': 'Nephelai']
 
 
         when:
@@ -913,7 +928,7 @@ class FresnelUtilSpec extends Specification {
         lens = FresnelUtil.NestedLenses.CHIP_TO_TOKEN
 
         then:
-        fresnel.asStringByLang(thing, lens, locales) == ['sv': 'Nephelai Lysistratē Svenska', 'en': 'Nephelai Lysistratē Swedish']
+        fresnel.asStringByLang(thing, lens, locales, []) == ['sv': 'Nephelai Lysistratē Svenska', 'en': 'Nephelai Lysistratē Swedish']
 
 
         when:
@@ -927,7 +942,7 @@ class FresnelUtilSpec extends Specification {
         lens = FresnelUtil.Lenses.SEARCH_TOKEN
 
         then:
-        fresnel.asStringByLang(thing, lens, locales) == ['sv': 'Nephelai', 'en': 'Nephelai']
+        fresnel.asStringByLang(thing, lens, locales, []) == ['sv': 'Nephelai', 'en': 'Nephelai']
     }
 
     def "Split up strings by script language"() {
@@ -1146,7 +1161,7 @@ class FresnelUtilSpec extends Specification {
                 '@type'     : 'Work',
                 'hasTitle'  : [['@type': 'Title', 'mainTitle': 'Verkstitel']],
                 'language'  : [
-                        ['@type': 'Language', 'code': 'sv', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
+                        ['@type': 'Language', 'labelByLang': ['en': 'Swedish', 'sv': 'Svenska']],
                 ],
                 'originDate': '2025',
                 '@reverse'  : [
