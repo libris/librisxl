@@ -372,7 +372,7 @@
             },
             {
                 "year_template": {
-                    "match": ["year", "startYear", "endYear"],
+                    "match": ["year", "startYear", "endYear", "librissearch:year"],
                     "mapping": {
                         "fields": {
                             "keyword": {
@@ -498,6 +498,15 @@
                     "match_mapping_type": "string",
                     "mapping": {
                         "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "lang_container_template": {
+                    "match": "*ByLang",
+                    "mapping": {
+                        "type": "object",
+                        "enabled": false
                     }
                 }
             }

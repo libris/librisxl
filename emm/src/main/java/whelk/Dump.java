@@ -470,7 +470,7 @@ public class Dump {
         }
 
         if  (computedLabelLocale != null) {
-            fresnelUtil.insertComputedLabels(doc.data, new FresnelUtil.LangCode(computedLabelLocale));
+            fresnelUtil.insertComputedLabels(doc.data, computedLabelLocale);
         }
 
         Map data = Map.of(
