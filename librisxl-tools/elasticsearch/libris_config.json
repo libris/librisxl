@@ -261,6 +261,14 @@
                             "keyword": {
                                 "type": "keyword",
                                 "normalizer": "custom_case_insensitive"
+                            },
+                            "trigram": {
+                                "type": "text",
+                                "analyzer": "trigram"
+                            },
+                            "reverse": {
+                                "type": "text",
+                                "analyzer": "reverse"
                             }
                         }
                     },
