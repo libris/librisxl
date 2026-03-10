@@ -24,6 +24,7 @@ import static whelk.FeatureFlags.Flag.EXPERIMENTAL_INDEX_HOLDING_ORGS
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.Platform.CATEGORY_BY_COLLECTION
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.REVERSE_KEY
 import static whelk.JsonLd.THING_KEY
@@ -442,23 +443,33 @@ class ElasticSearch {
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
 
-        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
-            // FIXME workaround for toCard breaking _categoryByCollection
-            // TODO we need these ids in _links / _outerEmbellishments anyway?
-            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, JsonLd.Platform.CATEGORY_BY_COLLECTION, 'find', '*', JsonLd.ID_KEY], [])
-            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
-            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'find', '*', JsonLd.ID_KEY], [])
-            links += DocumentUtil.getAtPath(copy.data, [JsonLd.GRAPH_KEY, 1, 'instanceOf', JsonLd.Platform.CATEGORY_BY_COLLECTION, 'identify', '*', JsonLd.ID_KEY], [])
-        }
-
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
         var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
 
+        Set<String> categoryLinks = [] as Set
+        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            categoryLinks.addAll(collectCategoryLinks(embellishedGraph))
+            links.addAll(categoryLinks)
+        }
+
         FresnelUtil.LensMappingBatch lensedMainGraph = batchToSearchCard(whelk.fresnelUtil,
                 embellishedGraph.take(originalGraphSize) as List<Map<String, Object>>,
-                links)
+                links - categoryLinks) // Skip preserving category links since these will be restored in a separate step
 
-        copy.data[GRAPH_KEY] = lensedMainGraph.lensedThings()
+        var shapedMainGraph = lensedMainGraph.lensedThings()
+
+        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            // FIXME
+            // Restore _categoryByCollection
+            [[1], [1, JsonLd.WORK_KEY]].each { List path -> {
+                Map thing = (Map) DocumentUtil.getAtPath(embellishedGraph, path, [:])
+                if (thing.containsKey(CATEGORY_BY_COLLECTION)) {
+                    DocumentUtil.getAtPath(shapedMainGraph, path, [:])[CATEGORY_BY_COLLECTION] = thing[CATEGORY_BY_COLLECTION]
+                }
+            }}
+        }
+
+        copy.data[GRAPH_KEY] = shapedMainGraph
 
         def integralIds = collectIntegralIds(copy.data, whelk.jsonld)
 
@@ -686,6 +697,18 @@ class ElasticSearch {
 
     private static Map minimalRecord(Map record) {
         return record.subMap([ID_KEY, TYPE_KEY, THING_KEY])
+    }
+
+    private static Set<String> collectCategoryLinks(List graph) {
+        return [[1], [1, JsonLd.WORK_KEY]].collect { path ->
+                    ["find", "identify", "@none"].collect {collection ->
+                        DocumentUtil.getAtPath(DocumentUtil.getAtPath(graph, path, [:]),
+                                [CATEGORY_BY_COLLECTION, collection, '*', JsonLd.ID_KEY],
+                                [])
+                    }
+                }
+                .flatten()
+                .toSet()
     }
 
     private static setIdentifiers(Document doc) {
