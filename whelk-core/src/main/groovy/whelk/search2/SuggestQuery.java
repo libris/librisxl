@@ -20,13 +20,13 @@ import static whelk.search2.QueryUtil.parenthesize;
 
 public class SuggestQuery extends Query {
     // TODO: Don't hardcode
-    private static final List<String> defaultBaseTypes = List.of("Agent", "Concept", "Language", "Work");
+    private static final List<String> defaultBaseTypes = List.of("Agent", "Concept", "Language", "Work", "bibdb:Organization");
 
     private static final Map<String, List<String>> suggestPredicatesForType = new LinkedHashMap<>() {{
         put("Bibliography", List.of("bibliography"));
         put("Library", List.of("itemHeldBy"));
+        put("bibdb:Organization", List.of("itemHeldByOrg"));
         put("Subject", List.of("subject"));
-        put("GenreForm", List.of("category"));
         put("Language", List.of("language", "originalLanguage"));
         put("BibliographicAgent", List.of("contributor", "subject"));
     }};
@@ -143,6 +143,7 @@ public class SuggestQuery extends Query {
                     .filter(type -> defaultBaseTypes.stream()
                             .filter(Predicate.not("Work"::equals))
                             .anyMatch(baseType -> whelk.getJsonld().isSubClassOf(type, baseType)))
+                    .map(type -> type.contains(":") ? QueryUtil.quote(type) : type)
                     .collect(Collectors.joining(" OR "));
 
             FreeText ft = (FreeText) c.value();
