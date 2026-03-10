@@ -28,7 +28,7 @@ public class Parse {
      * term 	::= 	...
      */
 
-    final static List<String> comparitorSymbols = List.of("=", ">", "<", ">=", "<=", "<>", "=="); // Not optimal, should perhaps be defined externally for performance
+    final static List<String> comparitorSymbols = List.of("=", ">", "<", ">=", "<=", "<>", "==");
 
     // CST nodes
     public record CqlQuery(ScopedClause sc) {}
@@ -37,7 +37,7 @@ public class Parse {
     public record ModifierList(List<Modifier> l) {}
     public record ComparitorSymbol(Lex.Symbol s) {}
     public record Comparitor(ComparitorSymbol c, Term t) {}
-    public record SearchClause(Term t1, Comparitor c, ModifierList l, Term t2) {}
+    public record SearchClause(CqlQuery q, Term t1, Comparitor c, ModifierList l, Term t2) {}
     public record Boolean(Lex.Symbol s) {}
     public record BooleanGroup(Boolean b, ModifierList l) {}
     public record ScopedClause(ScopedClause scoped, BooleanGroup bg, SearchClause search) {}
@@ -134,7 +134,19 @@ public class Parse {
         // searchClause 	::= 	'(' cqlQuery ')' | term comparitor [modifierList] term | term
         {
             // 1st
-            // TODO: THE GROUP CLAUSE!
+            if (stack.size() >= 2) {
+                if (
+                        stack.get(0) instanceof Lex.Symbol s1 && s1.name() == Lex.TokenName.OPERATOR && s1.value().equals(")") &&
+                        stack.get(1) instanceof CqlQuery q &&
+                        stack.get(2) instanceof Lex.Symbol s2 && s2.name() == Lex.TokenName.OPERATOR && s2.value().equals("(")
+                ) {
+                    stack.pop();
+                    stack.pop();
+                    stack.pop();
+                    stack.push(new SearchClause(q, null, null, null, null));
+                    return true;
+                }
+            }
 
             // 2nd
             if (stack.size() >= 3) {
@@ -147,7 +159,7 @@ public class Parse {
                         stack.pop();
                         stack.pop();
                         stack.pop();
-                        stack.push(new SearchClause(t1, c, l, t2));
+                        stack.push(new SearchClause(null, t1, c, l, t2));
                         return true;
                     } else if (
                             stack.get(1) instanceof Comparitor c &&
@@ -155,7 +167,7 @@ public class Parse {
                         stack.pop();
                         stack.pop();
                         stack.pop();
-                        stack.push(new SearchClause(t1, c, null, t2));
+                        stack.push(new SearchClause(null, t1, c, null, t2));
                         return true;
                     }
                 }
@@ -164,10 +176,10 @@ public class Parse {
             //3rd
             if (stack.size() >= 1) {
                 if (stack.get(0) instanceof Term t) {
-                    // Must be followed by an operator or EOF, or this could be a larger search clause waiting to happen.
-                    if (lookahead == null || lookahead instanceof Lex.Symbol s && s.name() == Lex.TokenName.OPERATOR) {
+                    // Must be followed by a non-string or EOF, or this could be a larger search clause waiting to happen.
+                    if (lookahead == null || lookahead instanceof Lex.Symbol s && s.name() != Lex.TokenName.STRING) {
                         stack.pop();
-                        stack.push(new SearchClause(t, null, null, null));
+                        stack.push(new SearchClause(null, t, null, null, null));
                         return true;
                     }
                 }
