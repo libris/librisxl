@@ -13,7 +13,7 @@ import java.util.*;
 public class Parse {
 
     /**
-     * CQL (1.1) equivalent BNF (modified without changed semantics to not be broken):
+     * CQL (1.1) more-or-less equivalent BNF.
      *
      * cqlQuery 	::= 	prefixAssignment cqlQuery | scopedClause
      * prefixAssignment 	::= 	'>' term '=' term | '>' term
@@ -21,25 +21,26 @@ public class Parse {
      * booleanGroup 	::= 	boolean [modifierList]
      * boolean 	::= 	'and' | 'or' | 'not' | 'prox'
      * searchClause 	::= 	'(' cqlQuery ')' | term comparitor [modifierList] term | term
-     * comparitor 	::= 	comparitorSymbol | term - 'and' - 'or' - 'not' - 'prox'
+     * comparitor 	::= 	comparitorSymbol | term
      * comparitorSymbol 	::= 	'=' | '>' | '<' | '>=' | '<=' | '<>' | '=='
      * modifierList 	::= 	modifierList modifier | modifier
      * modifier 	::= 	'/' term [comparitorSymbol term]
-     * term 	::= 	identifier | 'and' | 'or' | 'not' | 'prox' | 'sortby'
-     * identifier 	::= 	charString1 | charString2
+     * term 	::= 	...
      */
 
     final static List<String> comparitorSymbols = List.of("=", ">", "<", ">=", "<=", "<>", "=="); // Not optimal, should perhaps be defined externally for performance
 
     // CST nodes
-    public record CqlQuery() {}
-    public record Identifier(Lex.Symbol s) {}
-    public record Term(Identifier i, Lex.Symbol k) {}
+    public record CqlQuery(ScopedClause sc) {}
+    public record Term(Lex.Symbol s) {}
     public record Modifier(Term t1, ComparitorSymbol c, Term t2) {}
     public record ModifierList(List<Modifier> l) {}
     public record ComparitorSymbol(Lex.Symbol s) {}
     public record Comparitor(ComparitorSymbol c, Term t) {}
     public record SearchClause(Term t1, Comparitor c, ModifierList l, Term t2) {}
+    public record Boolean(Lex.Symbol s) {}
+    public record BooleanGroup(Boolean b, ModifierList l) {}
+    public record ScopedClause(ScopedClause scoped, BooleanGroup bg, SearchClause search) {}
 
 
     public static CqlQuery parseQuery(LinkedList<Lex.Symbol> symbols) throws InvalidQueryException {
@@ -82,17 +83,53 @@ public class Parse {
 
     private static boolean reduce(LinkedList<Object> stack, Lex.Symbol lookahead) {
 
-        // TEMP! TEST THE TESTING! NOT REAL PARSING!
-        /*{
+        {
             if (!stack.isEmpty()) {
-                if (stack.get(0) instanceof Term) {
+                if (stack.get(0) instanceof ScopedClause sc && !(lookahead instanceof Lex.Symbol s && s.name() == Lex.TokenName.KEYWORD)) {
                     stack.pop();
-                    stack.push(new CqlQuery());
+                    stack.push(new CqlQuery(sc));
                     return true;
                 }
             }
-        }*/
-        //------------------------------------------
+        }
+
+        // scopedClause 	::= 	scopedClause booleanGroup searchClause | searchClause
+        {
+            if (stack.size() >= 3) {
+                if (
+                        stack.get(0) instanceof SearchClause searchClause &&
+                        stack.get(1) instanceof BooleanGroup bg &&
+                        stack.get(2) instanceof ScopedClause scopedClause) {
+                    stack.pop();
+                    stack.pop();
+                    stack.pop();
+                    stack.push(new ScopedClause(scopedClause, bg, searchClause));
+                    return true;
+                }
+            }
+            if (stack.size() >= 1 && stack.get(0) instanceof SearchClause searchClause ) {
+                stack.pop();
+                stack.push(new ScopedClause(null, null, searchClause));
+                return true;
+            }
+        }
+
+        // booleanGroup 	::= 	boolean [modifierList]
+        {
+            if (stack.size() >= 2) {
+                if (stack.get(0) instanceof ModifierList l && stack.get(1) instanceof Boolean b) {
+                    stack.pop();
+                    stack.pop();
+                    stack.push(new BooleanGroup(b, l));
+                    return true;
+                }
+            }
+            if (stack.size() >= 1 && stack.get(0) instanceof Boolean b && !(lookahead instanceof Lex.Symbol s && s.name() == Lex.TokenName.OPERATOR && s.value().equals("/"))) {
+                stack.pop();
+                stack.push(new BooleanGroup(b, null));
+                return true;
+            }
+        }
 
         // searchClause 	::= 	'(' cqlQuery ')' | term comparitor [modifierList] term | term
         {
@@ -139,15 +176,17 @@ public class Parse {
 
         // comparitor 	::= 	comparitorSymbol | term - 'and' - 'or' - 'not' - 'prox'
         {
-            //List<String> exceptions = List.of("and", "or", "not", "prox");
             if (
                     stack.size() >= 2 && stack.get(0) instanceof Term t &&
-                    //!exceptions.contains(t.i.s.value()) &&
-                            t.k == null && // not a keyword!
                     stack.get(1) instanceof Term // This term will not be popped, but we need check for it to distinguish between the comparitor and searchClause cases (this f*****g grammar)
             ) {
                 stack.pop();
                 stack.push(new Comparitor(null, t));
+                return true;
+            }
+            else if (stack.size() >= 1 && stack.get(0) instanceof ComparitorSymbol c) {
+                stack.pop();
+                stack.push(new Comparitor(c, null));
                 return true;
             }
         }
@@ -199,29 +238,25 @@ public class Parse {
             }
         }
 
-        // term 	::= 	identifier | 'and' | 'or' | 'not' | 'prox'
-        {
-            if (!stack.isEmpty()) {
-                if (stack.get(0) instanceof Identifier i) {
-                    stack.pop();
-                    stack.push(new Term(i, null));
-                    return true;
-                }
-                else if (stack.get(0) instanceof Lex.Symbol s && s.name() == Lex.TokenName.KEYWORD) {
-                    stack.pop();
-                    stack.push(new Term(null, s));
-                    return true;
-                }
-            }
-        }
-
-        // identifier 	::= 	charString1 | charString2
+        // term 	::= 	...
         {
             if (!stack.isEmpty()) {
                 if (stack.get(0) instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.STRING) {
                     stack.pop();
-                    stack.push(new Identifier(s));
+                    stack.push(new Term(s));
+                    return true;
+                }
+            }
+        }
+
+        // boolean 	::= 	'and' | 'or' | 'not' | 'prox'
+        {
+            if (!stack.isEmpty()) {
+                if (stack.get(0) instanceof Lex.Symbol s &&
+                        s.name() == Lex.TokenName.KEYWORD) {
+                    stack.pop();
+                    stack.push(new Boolean(s));
                     return true;
                 }
             }
