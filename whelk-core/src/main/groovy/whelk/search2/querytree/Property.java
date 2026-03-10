@@ -117,7 +117,7 @@ public non-sealed class Property extends PathElement {
 
     @Override
     public String queryKey() {
-        return queryKey != null ? queryKey.queryKey() : (name.contains(":") ? QueryUtil.quote(name) : name);
+        return queryKey != null ? queryKey.queryKey() : name;
     }
 
     @Override
