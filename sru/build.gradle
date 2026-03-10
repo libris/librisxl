@@ -35,8 +35,41 @@ dependencies {
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
+    // antlr
+    implementation "org.antlr:antlr4:4.13.2"
+    //implementation "org.antlr:antlr:3.5.3"
+
     // Testing
     testImplementation 'junit:junit:4.12'
+}
+
+sourceSets {
+
+    generated {
+        java { srcDirs = ['src/generated/java'] }
+        //groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+    }
+
+    main {
+        java { srcDirs = ['src/main/java','src/generated/java'] }
+        //groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+    }
+    /*test {
+        groovy { srcDir 'src/test/groovy/' }
+    }*/
+}
+
+clean {
+    delete file("src/generated")
+}
+
+task genSources(type: JavaExec) {
+    classpath = configurations.runtimeClasspath
+    mainClass = 'org.antlr.v4.Tool'
+    args = ['cql.g4', '-o', 'src/generated/java/sru/whelk', '-package', 'sru.whelk']
+}
+tasks.named('compileJava') {
+    dependsOn('genSources')
 }
 
 shadowJar {
