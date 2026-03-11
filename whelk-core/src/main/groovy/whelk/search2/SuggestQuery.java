@@ -143,7 +143,7 @@ public class SuggestQuery extends Query {
                     .filter(type -> defaultBaseTypes.stream()
                             .filter(Predicate.not("Work"::equals))
                             .anyMatch(baseType -> whelk.getJsonld().isSubClassOf(type, baseType)))
-                    .map(type -> type.contains(":") ? QueryUtil.quote(type) : type)
+                    .map(SuggestQuery::quotePrefixed)
                     .collect(Collectors.joining(" OR "));
 
             FreeText ft = (FreeText) c.value();
@@ -162,7 +162,8 @@ public class SuggestQuery extends Query {
             Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
             return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
         } else if (edited.node() instanceof FreeText ft && qTree.isSimpleFreeText()) {
-            String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
+            String orJoinedTypes = defaultBaseTypes.stream().map(SuggestQuery::quotePrefixed).collect(Collectors.joining(" OR "));
+            String rawTypeFilter = "\"rdf:type\":" + parenthesize(orJoinedTypes);
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
             return qTree.replace(ft, new Or(List.of(editedTokenAsPrefix(ft), ft)))
                     .add(typeFilter);
@@ -177,5 +178,9 @@ public class SuggestQuery extends Query {
         Token editedAsPrefix = new Token.Raw(edited.token().value() + Operator.WILDCARD);
         tokensCopy.set(editedIdx, editedAsPrefix);
         return ft.withTokens(tokensCopy);
+    }
+
+    private static String quotePrefixed(String s) {
+        return s.contains(":") ? QueryUtil.quote(s) : s;
     }
 }
