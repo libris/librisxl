@@ -1,8 +1,9 @@
+import whelk.JsonLd
+import whelk.datatool.DocumentItem
 import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.ID_KEY
 import static whelk.datatool.bulkchange.BulkJobDocument.DEPRECATE_KEY
-import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE
 import static whelk.datatool.bulkchange.BulkJobDocument.KEEP_KEY
 
 Map deprecateLink = parameters.get(DEPRECATE_KEY)
@@ -26,7 +27,7 @@ selectByIds([deprecateId]) { obsolete ->
     dependsOnObsolete = obsolete.getDependers()
 }
 
-selectByIds(dependsOnObsolete) { depender ->
+selectByIds(dependsOnObsolete) { DocumentItem depender ->
     List<List> modifiedListPaths = []
     def modified = DocumentUtil.traverse(depender.graph) { value, path ->
         // TODO: What if there are links to a record uri?
@@ -47,8 +48,13 @@ selectByIds(dependsOnObsolete) { depender ->
             obj.unique(true)
         }
     }
+
+    var shouldBeLoud = isLoudAllowed
+            // don't trigger sending of old CXZ messages
+            && !getWhelk().jsonld.isSubClassOf(depender.doc.thingType, JsonLd.Platform.ADMINISTRATIVE_NOTICE)
+
     if (modified) {
-        depender.scheduleSave(loud: isLoudAllowed)
+        depender.scheduleSave(loud: shouldBeLoud)
     }
 }
 
