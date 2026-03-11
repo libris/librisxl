@@ -74,7 +74,7 @@ clean {
 task genSources(type: JavaExec) {
     classpath = configurations.runtimeClasspath
     mainClass = 'org.antlr.v4.Tool'
-    args = ['cql.g4', '-o', 'src/generated/java/sru/whelk', '-package', 'sru.whelk', '-no-visitor', '-no-listener']
+    args = ['cql.g4', '-o', 'src/generated/java/sru/whelk/cql', '-package', 'sru.whelk.cql', '-no-visitor', '-no-listener']
 }
 tasks.named('compileJava') {
     dependsOn('genSources')
