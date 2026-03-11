@@ -2,6 +2,7 @@ package whelk.housekeeping
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2
+import whelk.JsonLd
 import whelk.Whelk
 
 import java.sql.Connection
@@ -44,8 +45,8 @@ class NotificationCleaner extends HouseKeeper {
         try {
             Timestamp from = Timestamp.from(Instant.now().minus(DAYS_TO_KEEP_INACTIVE, ChronoUnit.DAYS))
 
-            Set<String> typesToClean = whelk.getJsonld().getSubClasses("AdministrativeNotice")
-            typesToClean.add("AdministrativeNotice")
+            Set<String> typesToClean = whelk.getJsonld().getSubClasses(JsonLd.Platform.ADMINISTRATIVE_NOTICE)
+            typesToClean.add(JsonLd.Platform.ADMINISTRATIVE_NOTICE)
 
             String sql = "SELECT id FROM lddb WHERE collection = 'none' AND data#>>'{@graph,1,@type}' = ANY (?) AND modified < ? AND created < ?;"
             connection.setAutoCommit(false)

@@ -118,9 +118,9 @@ class JsonLd {
     }
 
     static final class Platform {
-
         public static final String COMPUTED_LABEL = "computedLabel";
         public static final String CATEGORY_BY_COLLECTION = "_categoryByCollection";
+        public static final String ADMINISTRATIVE_NOTICE = "AdministrativeNotice";
     }
 
     public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
