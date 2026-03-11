@@ -526,8 +526,8 @@ class ElasticSearch {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard['_ids'] = (thingIds + document.getRecordIdentifiers())
-                .collect { stripHash(lastPathSegment(it)) }
+        searchCard['_ids'] = document.getRecordIdentifiers()
+                .collect { lastPathSegment(it) }
                 .unique()
                 .plus(whelk.fresnelUtil.fslSelect(searchCard, "meta/*/identifiedBy/*/value") as Collection<String>)
 
