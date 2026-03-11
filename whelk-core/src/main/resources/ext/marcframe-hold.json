@@ -606,12 +606,13 @@
     "inherit": "bib",
     "aboutEntity": "?thing",
     "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "resourceType": "ClassificationDdc",
     "$b": {"property": "itemPortion"},
     "$m": null,
     "$q": null,
     "_spec": [
       {
-        "name": "In contrast to bib, continue to map $b to itemPortion ",
+        "name": "ClassificationDdc. In contrast to bib, continue to map $b to itemPortion ",
         "source": {
           "082": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "808"}, {"b": ".066"}, {"2": "21"}
@@ -640,10 +641,9 @@
     "aboutEntity": "?thing",
     "NOTE:local": "LIBRIS-definierat beståndsfält.",
     "$b": {"property": "itemPortion"},
-    "TODO:_spec": [
+    "_spec": [
       {
-        "TODO": "Add ignoreOnRevert. As it is now, it collides with 082. See bug issue LXL-3287",
-        "name": "In contrast to bib, continue to map $b to itemPortion.",
+        "name": "Classification. In contrast to bib, continue to map $b to itemPortion.",
         "source": {
           "084": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Ncba/VP"}, {"b": "Nc"}, {"2": "kssb/8"}
