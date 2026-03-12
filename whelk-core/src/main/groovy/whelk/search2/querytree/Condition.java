@@ -4,6 +4,7 @@ import whelk.JsonLd;
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
+import whelk.search2.QueryUtil;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
@@ -81,7 +82,12 @@ public sealed class Condition implements Node permits Type {
 
     @Override
     public String toQueryString(boolean topLevel) {
-        return operator.format(selector.queryKey(), value.isMultiToken() ? parenthesize(value.queryForm()) : value.queryForm());
+        var k = selector.queryKey();
+        if (k.contains(":") && !QueryUtil.isQuoted(k)) {
+            k = QueryUtil.quote(k);
+        }
+        var v = value.isMultiToken() ? parenthesize(value.queryForm()) : value.queryForm();
+        return operator.format(k, v);
     }
 
     @Override
