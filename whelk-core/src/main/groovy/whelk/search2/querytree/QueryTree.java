@@ -196,6 +196,9 @@ public class QueryTree {
         if (tree instanceof Group g) {
             return g.mapAndReinstantiate(c -> _replace(c, replace, replacement));
         }
+        if (tree instanceof Not(Node node)) {
+            return new Not(_replace(node, replace, replacement));
+        }
         return tree;
     }
 
