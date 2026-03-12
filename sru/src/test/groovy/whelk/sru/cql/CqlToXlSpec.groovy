@@ -44,6 +44,16 @@ class CqlToXlSpec extends Specification {
         translatedXlQuery == '((A AND (B OR C)) AND D) AND type=Instance'
     }
 
+    def "any & all"() {
+        given:
+        String cqlQuery = 'field1 any "a b c" or field2 all "c d e"'
+
+        String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
+
+        expect:
+        translatedXlQuery == '("field1"=(a OR b OR c) OR "field2"=(c AND d AND e)) AND type=Instance'
+    }
+
     def "example query 1"() {
         given:
         String cqlQuery = 'dc.title any fish or (dc.creator any sanderson and dc.identifier = "id:1234567")'
