@@ -30,6 +30,7 @@ public class Translation
     private record AstBooleanGroup(String op, List<AstModifier> modifiers) {}
     private record AstRelation(String comparitor, List<AstModifier> modifiers) {}
     private record AstSearchClause(String index, AstRelation relation, String term) {}
+    private record AstScopedClause(Object scopedClause, AstBooleanGroup booleanGroup, Object searchClause ) {}
 
     private static Object reduce(cqlParser.CqlContext cql) {
         return reduce(cql.sortedQuery());
@@ -52,7 +53,7 @@ public class Translation
         // scopedClause 	::= 	scopedClause booleanGroup searchClause | searchClause
 
         if (scopedClause.booleanGroup() != null) {
-            return reduce(scopedClause.booleanGroup());
+            return new AstScopedClause( reduce(scopedClause.scopedClause()), reduce(scopedClause.booleanGroup()), reduce(scopedClause.searchClause()) );
         } else {
             return reduce(scopedClause.searchClause());
         }
@@ -83,7 +84,10 @@ public class Translation
     private static AstRelation reduce(cqlParser.RelationContext relation) {
         // relation 	::= 	comparitor [modifierList]
 
-        return new AstRelation( reduce(relation.comparitor()), reduce(relation.modifierList()) );
+        if (relation.modifierList() != null)
+            return new AstRelation( reduce(relation.comparitor()), reduce(relation.modifierList()) );
+        else
+            return new AstRelation( reduce(relation.comparitor()), null );
     }
 
     private static String reduce(cqlParser.ComparitorContext comparitor) {
@@ -106,7 +110,7 @@ public class Translation
         return reduce( index.term() );
     }
 
-    private static Object reduce(cqlParser.BooleanGroupContext booleanGroup) {
+    private static AstBooleanGroup reduce(cqlParser.BooleanGroupContext booleanGroup) {
         // booleanGroup 	::= 	boolean [modifierList]
 
         String op;
