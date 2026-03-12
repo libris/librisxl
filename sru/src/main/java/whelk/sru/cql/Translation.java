@@ -19,9 +19,15 @@ public class Translation
         Object phase1Ast = Phase1.reduce(cst);
         String xlql = Phase2.flatten(phase1Ast);
 
-        System.err.println(cqlQuery);
-        System.err.println(phase1Ast);
-        System.err.println(xlql);
+        // CQL searches only for instances
+        if (xlql.startsWith("(") && xlql.endsWith(")"))
+            xlql = xlql + " AND type=Instance";
+        else
+            xlql = "(" + xlql + ") AND type=Instance";
+
+        System.err.println("CQL:  " + cqlQuery);
+        System.err.println("AST:  " + phase1Ast);
+        System.err.println("XLQL: " + xlql);
         System.err.println("--------------");
 
 

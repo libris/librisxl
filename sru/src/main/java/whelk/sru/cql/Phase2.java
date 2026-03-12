@@ -10,6 +10,9 @@ public class Phase2 {
             case Phase1.AstScopedClause scopedClause -> {
                 return flatten(scopedClause);
             }
+            case Phase1.AstBooleanGroup bg -> {
+                return flatten(bg);
+            }
             case String s -> {
                 return s;
             }
@@ -17,9 +20,6 @@ public class Phase2 {
                 return null;
             }
             /* // irrelevant
-            case Phase1.AstBooleanGroup bg -> {
-                return flatten(bg);
-            }
             case Phase1.AstModifier mod -> {
                 return null;
             }
@@ -31,8 +31,6 @@ public class Phase2 {
 
     private static String flatten(Phase1.AstScopedClause scopedClause) {
         // scopedClause, booleanGroup, searchClause. Either all three or just the searchClause
-
-        System.err.println("Flattening scopedClause: " + scopedClause);
 
         if (scopedClause.scopedClause() == null) // just the searchClause
             return flatten(scopedClause.searchClause());
@@ -55,24 +53,37 @@ public class Phase2 {
     private static String flatten(Phase1.AstSearchClause searchClause) {
         // index, term, relation
 
-        System.err.println("Flattening searchClause: " + searchClause);
-
         if (searchClause.relation() == null) { // no relation also implies no index. It's just searchTerm alone.
             return " " + searchClause.term();
         }
 
         Phase1.AstRelation relation = searchClause.relation();
+
         String searchTerm = searchClause.term();
+        if (searchTerm.startsWith("\"") && searchTerm.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
+            searchTerm = searchTerm.substring(1, searchTerm.length()-1);
+
         if (relation.comparitor().equals("any")) {
             // "any" means we're searching for any of the words in the searchTerm. So 'any "a b"' means (a or b)
             String[] parts = searchTerm.split("\\s+");
-            searchTerm = "(" + String.join(" OR ", parts) + ")";
+            if (parts.length > 1)
+                searchTerm = "(" + String.join(" OR ", parts) + ")";
         } else if (relation.comparitor().equals("all")) {
             // "all" means we're searching for all of the words in the searchTerm. So 'all "a b"' means (a and b)
             String[] parts = searchTerm.split("\\s+");
-            searchTerm = "(" + String.join(" AND ", parts) + ")";
+            if (parts.length > 1)
+                searchTerm = "(" + String.join(" AND ", parts) + ")";
         }
 
-        return  searchClause.index() + ":\"" + searchClause.term() + "\"";
+       /* boolean termNeedsQuoting = ! ( ( searchTerm.startsWith("\"") && searchTerm.endsWith("\"") ) || ( searchTerm.startsWith("(") && searchTerm.endsWith(")") ) );
+        if (termNeedsQuoting)
+            searchTerm = "\"" + searchTerm + "\"";*/
+
+        String index = searchClause.index();
+        boolean indexNeedsQuoting = ! ( index.startsWith("\"") && index.endsWith("\"") );
+        if (indexNeedsQuoting)
+            index = "\"" + index + "\"";
+
+        return index + "=" + searchTerm;
     }
 }
