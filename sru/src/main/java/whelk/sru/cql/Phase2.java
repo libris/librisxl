@@ -10,10 +10,13 @@ public class Phase2 {
             case Phase1.AstScopedClause scopedClause -> {
                 return flatten(scopedClause);
             }
+            case String s -> {
+                return s;
+            }
             default -> {
                 return null;
             }
-            /* // irrelevant, can't be root nodes
+            /* // irrelevant
             case Phase1.AstBooleanGroup bg -> {
                 return flatten(bg);
             }
@@ -29,10 +32,12 @@ public class Phase2 {
     private static String flatten(Phase1.AstScopedClause scopedClause) {
         // scopedClause, booleanGroup, searchClause. Either all three or just the searchClause
 
+        System.err.println("Flattening scopedClause: " + scopedClause);
+
         if (scopedClause.scopedClause() == null) // just the searchClause
             return flatten(scopedClause.searchClause());
         else { // scoped + boolean
-            return flatten(scopedClause.scopedClause()) + flatten(scopedClause.booleanGroup()) + flatten(scopedClause.searchClause());
+            return "(" + flatten(scopedClause.scopedClause()) + flatten(scopedClause.booleanGroup()) + flatten(scopedClause.searchClause()) + ")";
         }
     }
 
@@ -40,13 +45,20 @@ public class Phase2 {
         // boolean [modifierList]
 
         // Ignore relation modifiers. What does "or/rel.combine=sum" even mean? Compared to just "or" ?
-        return " " + booleanGroup.op() + " ";
+
+        String op = booleanGroup.op();
+        if (op.equalsIgnoreCase("AND") || op.equalsIgnoreCase("OR") || op.equalsIgnoreCase("NOT"))
+            op = op.toUpperCase();
+        return " " + op + " ";
     }
 
     private static String flatten(Phase1.AstSearchClause searchClause) {
         // index, term, relation
+
+        System.err.println("Flattening searchClause: " + searchClause);
+
         if (searchClause.relation() == null) { // no relation also implies no index. It's just searchTerm alone.
-            return " " + searchClause.term() + " ";
+            return " " + searchClause.term();
         }
 
         Phase1.AstRelation relation = searchClause.relation();
@@ -61,6 +73,6 @@ public class Phase2 {
             searchTerm = "(" + String.join(" AND ", parts) + ")";
         }
 
-        return  " " + searchClause.index() + ":" + searchClause.term() + " ";
+        return  searchClause.index() + ":\"" + searchClause.term() + "\"";
     }
 }

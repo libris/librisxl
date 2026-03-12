@@ -11,7 +11,8 @@ class CqlToXlSpec extends Specification {
 def "simple query"() {
     given:
     //String input = "AAA AND BBB"
-    String input = "dc.title any fish or/rel.combine=sum dc.creator any sanderson"
+    //String input = "dc.title any fish or/rel.combine=sum dc.creator any sanderson"
+    String input = "AAA or (BBB and CCC)"
     String output = Translation.translateCqlToXlQuery(input)
 
     expect:
