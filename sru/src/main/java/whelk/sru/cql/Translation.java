@@ -25,13 +25,14 @@ public class Translation
         else
             xlql = "(" + xlql + ") AND type=Instance";
 
+        /*
         System.err.println("CQL:  " + cqlQuery);
         System.err.println("AST:  " + phase1Ast);
         System.err.println("XLQL: " + xlql);
         System.err.println("--------------");
+        */
 
-
-        return null;
+        return xlql;
     }
 
 

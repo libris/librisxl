@@ -14,18 +14,16 @@ public class Phase2 {
                 return flatten(bg);
             }
             case String s -> {
-                return s;
+
+                String str = s;
+                if (str.startsWith("\"") && str.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
+                    str = str.substring(1, str.length()-1);
+
+                return str;
             }
             default -> {
                 return null;
             }
-            /* // irrelevant
-            case Phase1.AstModifier mod -> {
-                return null;
-            }
-            case Phase1.AstRelation rel -> {
-                return flatten(rel);
-            }*/
         }
     }
 
@@ -47,21 +45,24 @@ public class Phase2 {
         String op = booleanGroup.op();
         if (op.equalsIgnoreCase("AND") || op.equalsIgnoreCase("OR") || op.equalsIgnoreCase("NOT"))
             op = op.toUpperCase();
+        // "CQL supports a fourth boolean operator, proximity. This is a special kind of ``and'' which requires its operands to occur close to each other."
+        if (op.equalsIgnoreCase("PROX"))
+            op = "AND";
         return " " + op + " ";
     }
 
     private static String flatten(Phase1.AstSearchClause searchClause) {
         // index, term, relation
 
-        if (searchClause.relation() == null) { // no relation also implies no index. It's just searchTerm alone.
-            return " " + searchClause.term();
-        }
-
-        Phase1.AstRelation relation = searchClause.relation();
-
         String searchTerm = searchClause.term();
         if (searchTerm.startsWith("\"") && searchTerm.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
             searchTerm = searchTerm.substring(1, searchTerm.length()-1);
+
+        if (searchClause.relation() == null) { // no relation also implies no index. It's just searchTerm alone.
+            return " " + searchTerm;
+        }
+
+        Phase1.AstRelation relation = searchClause.relation();
 
         if (relation.comparitor().equals("any")) {
             // "any" means we're searching for any of the words in the searchTerm. So 'any "a b"' means (a or b)
@@ -74,10 +75,6 @@ public class Phase2 {
             if (parts.length > 1)
                 searchTerm = "(" + String.join(" AND ", parts) + ")";
         }
-
-       /* boolean termNeedsQuoting = ! ( ( searchTerm.startsWith("\"") && searchTerm.endsWith("\"") ) || ( searchTerm.startsWith("(") && searchTerm.endsWith(")") ) );
-        if (termNeedsQuoting)
-            searchTerm = "\"" + searchTerm + "\"";*/
 
         String index = searchClause.index();
         boolean indexNeedsQuoting = ! ( index.startsWith("\"") && index.endsWith("\"") );

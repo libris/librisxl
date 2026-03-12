@@ -9,6 +9,7 @@ import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.*;
+import whelk.sru.cql.Translation;
 import whelk.util.http.WhelkHttpServlet;
 
 import javax.servlet.http.HttpServletRequest;
@@ -60,18 +61,14 @@ public class SruServlet extends WhelkHttpServlet {
             return;
         }
 
-        String queryString = parameters.get("query")[0];
-
-        if (queryString.endsWith(" sortBy libris.legacysort"))
-            queryString = queryString.substring(0, queryString.length()-25);
-
-        String instanceOnlyQueryString = "(" + queryString + ") AND type=Instance";
+        String CqlQueryString = parameters.get("query")[0];
+        String XlQueryString = Translation.translateCqlToXlQuery(CqlQueryString);
 
         Map<String, Object> results;
         try {
             // This part is a little weird
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
-            String[] q = new String[]{instanceOnlyQueryString};
+            String[] q = new String[]{XlQueryString};
             paramsAsIfSearch.put("_q", q);
             paramsAsIfSearch.put("_stats", new String[] { "false" }); // don't need facets
             QueryParams qp = new QueryParams(paramsAsIfSearch);
