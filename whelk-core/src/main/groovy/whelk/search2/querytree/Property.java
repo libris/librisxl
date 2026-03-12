@@ -41,6 +41,7 @@ public non-sealed class Property extends PathElement {
 
     protected Map<String, Object> definition;
     protected List<String> domain;
+    public List<Type> domainTypes;
     protected List<String> range;
     protected String inverseOf;
     protected String langAlias;
@@ -67,6 +68,7 @@ public non-sealed class Property extends PathElement {
     protected Property(Map<String, Object> definition, JsonLd jsonLd) {
         this.definition = definition;
         this.domain = getDomain(jsonLd);
+        this.domainTypes = domain.stream().map(t -> new Type(t, jsonLd)).toList();
         this.range = getRange(jsonLd);
         this.inverseOf = getInverseOf(jsonLd);
         this.indexKey = (String) definition.get("ls:indexKey"); // FIXME: This shouldn't have a different prefix (ls: vs librissearch:)
