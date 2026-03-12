@@ -17,9 +17,11 @@ public class Translation
 
         // Translate
         Object phase1Ast = Phase1.reduce(cst);
+        String xlql = Phase2.flatten(phase1Ast);
 
         System.err.println(cqlQuery);
         System.err.println(phase1Ast);
+        System.err.println(xlql);
         System.err.println("--------------");
 
 
