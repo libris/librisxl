@@ -1,8 +1,4 @@
-import static whelk.JsonLd.ID_KEY
-
-incrementStats('category', 'name', 'example')
-
-var filePath = System.properties['nowhelk.filepath']
+var filePath = System.properties['filepath']
 
 var input = new File(filePath).readLines()
 
@@ -13,34 +9,57 @@ Map idToLabelMap = [:]
 def header = input[0].split(",").toList()
 def iIndex = header.indexOf("i")
 def labelIndex = header.indexOf("gfBroaderLabel")
+def broaderIndex = header.indexOf("gfBroader")
 
 input.drop(1).each { line ->
     def cols = line.split(",")
 
     def iValue = cols[iIndex]
-    def label = cols[labelIndex]
+    def broaderLabel = cols[labelIndex]
+    def broaderUri = cols[broaderIndex]
 
     ids << iValue
-    idToLabelMap[iValue] = label
+    idToLabelMap[iValue] = [uri: broaderUri, label: broaderLabel]
 }
 
-selectByIds(ids) { i ->
-    def instance = i.graph[1]
+selectByIds(ids) { instanceDoc ->
+    def instance = instanceDoc.graph[1]
     def instanceId = instance["@id"]
 
+    Map complementaryGf = [
+            "@type": "GenreForm",
+            "inCollection": [
+                    ["@id": "https://id.kb.se/term/div/complement"]
+            ],
+            "broader": [
+                    "@id": idToLabelMap[instanceId]["uri"]
+            ],
+            "prefLabel": idToLabelMap[instanceId]["label"]
+    ]
+
+    println complementaryGf
     if ("@id" !in instance.instanceOf) {
-        //println "Embedded work"
-        incrementStats('type', instance["instanceOf"]["@type"])
-        //println idToLabelMap[instanceId]
+        Map work = instance["instanceOf"]
+        incrementStats('type', work["@type"])
+
+        work.get('category') << complementaryGf
+
+        instanceDoc.scheduleSave()
+
     }
     else {
-        println "Linked work"
-        println instance["instanceOf"]["@id"]
-        def workId = instance["instanceOf"]["@id"]
-        work = selectById(workId).graph[1]
-        incrementStats('type', work["@type"])
-        println idToLabelMap[instanceId]
-    }
+        String workId = instance["instanceOf"]["@id"]
 
-    //process
+        selectByIds([workId]) { workDoc ->
+            Map work = workDoc.graph[1]
+            incrementStats('type', work["@type"])
+
+            work.get('category') << complementaryGf
+
+            workDoc.scheduleSave()
+
+
+        }
+    }
 }
+
