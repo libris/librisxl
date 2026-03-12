@@ -494,6 +494,11 @@ public non-sealed class Property extends PathElement {
         public boolean isRestrictedSubProperty() {
             return true;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            return super.equals(obj) || superProperty.equals(obj);
+        }
     }
 
     private static final class AnonymousProperty extends Property {

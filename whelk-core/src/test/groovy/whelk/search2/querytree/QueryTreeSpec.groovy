@@ -75,6 +75,7 @@ class QueryTreeSpec extends Specification {
         "category:\"https://id.kb.se/term/ktg/X\""         | "category:\"https://id.kb.se/term/ktg/X\""
         "category:\"https://id.kb.se/term/ktg/Y\""         | "category:\"https://id.kb.se/term/ktg/Y\""
         "category:\"https://id.kb.se/term/ktg/Z\""         | "category:\"https://id.kb.se/term/ktg/Z\""
+        "category:(X Y)"                                   | "category:(X Y)"
     }
 
     def "treat invalid code segment as free text"() {
