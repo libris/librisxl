@@ -865,11 +865,89 @@
   "500": {
     "inherit": "bib",
     "NOTE:local": "LIBRIS-definierat beståndsfält.",
-    "onRevertPrefer": ["562", "563", "583"]
+    "TODO": "500 and 852 clashes in the reconvert",
+    "onRevertPrefer": ["562", "563", "583"],
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "500": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Lokal anmärkning"}]}
+        },
+        "normalized": [
+          {"500": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Lokal anmärkning"}]}},
+          {"852": {"ind1": " ", "ind2": " ", "subfields": [{"z": "Lokal anmärkning"}]}}
+        ],
+        "result": {
+          "mainEntity": {
+            "hasNote": [
+              {"@type": "Note", "label": "Lokal anmärkning"}
+            ]
+          }
+        }
+      }
+    ]
   },
-  "506": {"inherit": "bib", "aboutEntity": "?thing"},
-  "520": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
-  "538": {"inherit": "bib", "$5": null},
+  "506": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "506": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Tillgänglig för personer med läsnedsättning enligt § 17 Upphovsrättslagen"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "usageAndAccessPolicy": [
+              {"@type": "UsageAndAccessPolicy", "label": "Tillgänglig för personer med läsnedsättning enligt § 17 Upphovsrättslagen"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "520": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "520": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Samlingen innehåller annonsinformation och reklam"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "summary": [
+              {"@type": "Summary", "label": "Samlingen innehåller annonsinformation och reklam"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "538": {
+    "inherit": "bib",
+    "$5": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "538": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Systemkrav: PDF-läsare"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "marc:hasSystemDetailsNote": [
+              {
+                "@type": "marc:SystemDetailsNote",
+                "marc:systemDetailsNote": "Systemkrav: PDF-läsare"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
   "541": {
     "groupId": "?example-$seq",
     "NOTE": "groupId has created only sameAs links in the actual converted data.",
@@ -954,14 +1032,52 @@
   },
   "562": {
     "inherit": "bib",
-    "groupId": "?example-$seq"
+    "groupId": "?example-$seq",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "562": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Exemplar med anteckningar"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "marc:hasCopyAndVersionIdentificationNote": [
+              {
+                "@id": "?example-g1-1",
+                "@type": "marc:CopyAndVersionIdentificationNote",
+                "marc:itemCondition": ["Exemplar med anteckningar"]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "563": {
     "addLink": "marc:hasBindingInformation", "embedded": true, "resourceType": "marc:BindingInformationNote",
     "groupId": "?example-$seq",
     "$a": {"property": "label"},
     "$8": {"property": "marc:groupid"},
-    "repeatable": true
+    "repeatable": true,
+    "_spec": [
+      {
+        "name": "Lokal anmärkning: Bokband",
+        "source": {
+          "563": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Samtida grönt silkesband"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "marc:hasBindingInformation": [
+              {
+                "@id": "?example-g1-1",
+                "@type": "marc:BindingInformationNote",
+                "label": "Samtida grönt silkesband"
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "583": {
     "addLink": "marc:hasActionNote",
