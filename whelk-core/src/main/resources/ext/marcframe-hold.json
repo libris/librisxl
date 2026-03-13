@@ -1542,12 +1542,30 @@
   "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ"},
   "842": {
     "NOTE:LC": "nac",
+    "NOTE:local": "Kan även anges i kodad form i Beståndspostens fält 007.",
     "addLink": "hasNote",
     "NOTE:marc-repeatable": false,
     "resourceType": "marc:TextualPhysicalFormDesignator",
     "$a": {"property": "label"},
     "$8": {"property": "marc:groupid"},
-    "repeatable": false
+    "repeatable": false,
+    "_spec": [
+      {
+        "name": "Physical description",
+        "source": {"842": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Mikrofilm"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "hasNote": [
+            {
+              "@type": "marc:TextualPhysicalFormDesignator",
+              "label": "Mikrofilm"
+            }
+          ]
+        }}
+      }
+    ]
   },
   "843": {
     "addLink": "hasNote",
@@ -1559,12 +1577,44 @@
     "$c": {"addProperty": "marc:agencyResponsibleForReproduction"},
     "$d": {"property": "marc:dateOfReproduction"},
     "$e": {"property": "marc:physicalDescriptionOfReproduction"},
-    "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+    "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+    "_spec": [
+      {
+        "name": "Simple reproduction note",
+        "source": {"843": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Elektronisk reproduktion"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "hasNote": [
+            {
+              "@type": "marc:ReproductionNote",
+              "marc:typeOfReproduction": "Elektronisk reproduktion"
+            }
+          ]
+        }}
+      }
+    ]
   },
   "844": {
     "link": "marc:hasNameOfUnit",
     "resourceType": "marc:NameOfUnit",
-    "$a": {"property": "label"}
+    "$a": {"property": "label"},
+    "_spec": [
+      {
+        "name": "Named unit test :)",
+        "source": {"844": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Box 1"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasNameOfUnit": {
+            "@type": "marc:NameOfUnit",
+            "label": "Box 1"
+          }
+        }}
+      }
+    ]
   },
   "845": {
     "addLink": "hasNote",
@@ -1572,7 +1622,28 @@
     "NOTE:LC": "nac",
     "$a": {"property": "marc:termsGoverningUseAndReproduction"},
     "$b": {"property": "marc:jurisdiction"},
-    "$c": {"property": "marc:authorization"}
+    "$c": {"property": "marc:authorization"},
+    "_spec": [
+      {
+        "name": "Usage terms",
+        "source": {"845": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Endast läsesal"},
+          {"b": "SE"},
+          {"c": "KB"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "hasNote": [
+            {
+              "@type": "marc:TermsGoverningUseAndReproductionNote",
+              "marc:termsGoverningUseAndReproduction": "Endast läsesal",
+              "marc:jurisdiction": "SE",
+              "marc:authorization": "KB"
+            }
+          ]
+        }}
+      }
+    ]
   },
 
   "852": {
@@ -1762,7 +1833,25 @@
   "855": {"ignored": true, "NOTE:record-count": 35, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
   "856": {
-    "inherit": "bib"
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.org/resource"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.org/resource"]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
 
   "863": {
@@ -1782,7 +1871,29 @@
     "$z": {"addProperty": "marc:publicNote"},
     "$8": {"property": "marc:groupid"},
     "$9": {"addProperty": "marc:organizationalUnit"},
-    "repeatable": true
+    "repeatable": true,
+    "_spec": [
+      {
+        "source": {"863": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "v.1"},
+          {"p": "pt.2"},
+          {"x": "Intern notering"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasEnumerationAndChronologyBasicBibliographicUnit": [
+            {
+              "@type": "marc:EnumerationAndChronologyBasicBibliographicUnit",
+              "marc:firstLevelOfEnumeration": "v.1",
+              "marc:pieceDesignation": "pt.2",
+              "marc:cataloguersNote": [
+                "Intern notering"
+              ]
+            }
+          ]
+        }}
+      }
+    ]
   },
   "864": {"ignored": true, "NOTE:record-count": 6, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
   "865": {"ignored": true, "NOTE:record-count": 8, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
@@ -1875,7 +1986,28 @@
     "$a": {"property": "marc:textualString"},
     "$x": {"addProperty": "marc:cataloguersNote"},
     "$z": {"addProperty": "marc:publicNote"},
-    "repeatable": true
+    "repeatable": true,
+    "_spec": [
+      {
+        "name": "Supplementary material description",
+        "source": {"867": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Bilagor: karta"},
+          {"z": "Saknas i ex. 2"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasTextualHoldingsSupplementaryMaterial": [
+            {
+              "@type": "marc:TextualHoldingsSupplementaryMaterial",
+              "marc:textualString": "Bilagor: karta",
+              "marc:publicNote": [
+                "Saknas i ex. 2"
+              ]
+            }
+          ]
+        }}
+      }
+    ]
   },
   "868": {
     "addLink": "marc:hasTextualHoldingsIndexes",
@@ -1886,7 +2018,27 @@
     "$a": {"property": "marc:textualString"},
     "$x": {"addProperty": "marc:cataloguersNote"},
     "$z": {"addProperty": "marc:publicNote"},
-    "repeatable": true
+    "repeatable": true,
+    "_spec": [
+      {
+        "source": {"868": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Index 1999-2005"},
+          {"x": "Ofullständigt"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasTextualHoldingsIndexes": [
+            {
+              "@type": "marc:TextualHoldingsIndexes",
+              "marc:textualString": "Index 1999-2005",
+              "marc:cataloguersNote": [
+                "Ofullständigt"
+              ]
+            }
+          ]
+        }}
+      }
+    ]
   },
 
   "876": {
@@ -1908,13 +2060,60 @@
     "$z": {"addProperty": "marc:publicNote"},
     "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
     "$8": {"property": "marc:groupid"},
-    "$9": {"addProperty": "marc:organizationalUnit"}
+    "$9": {"addProperty": "marc:organizationalUnit"},
+    "_spec": [
+      {
+        "source": {"876": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "123456"},
+          {"t": "1"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasItemInformationBasicBibliographicUnit": [
+            {
+              "@type": "marc:ItemInformationBasicBibliographicUnit",
+              "marc:internalItemNumber": "123456",
+              "marc:copyNumber": "1"
+            }
+          ]
+        }}
+      }
+    ]
   },
   "877": {
     "inherit": "876",
     "addLink": "marc:hasItemInformationSupplementaryMaterial",
     "resourceType": "marc:ItemInformationSupplementaryMaterial",
-    "NOTE:LC": "nac"
+    "NOTE:LC": "nac",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "877": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [
+              { "a": "B" },
+              { "b": "Default" },
+              { "c": "MDV" }
+            ]
+          }
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "marc:hasItemInformationSupplementaryMaterial": [
+              {
+                "@type": "marc:ItemInformationSupplementaryMaterial",
+                "marc:internalItemNumber": "B",
+                "marc:invalidOrCanceledInternalItemNumber": ["Default"],
+                "marc:cost": ["MDV"]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "878": {"ignored": true, "NOTE:record-count": 9, "NOTE:LC": "nac"},
 
@@ -1923,7 +2122,30 @@
   "884": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
   "886": {
     "inherit": "bib",
-    "NOTE:LC": "nac"
+    "NOTE:LC": "nac",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "886": {"ind1": "2", "ind2": " ", "subfields": [{"2": "intermrc"}, {"a": "917"}, {"o": "OPL"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "marc:hasForeignMARCInformationField": [
+              {
+                "@type": "marc:ForeignMARCInformationField",
+                "marc:foreignMarcSubfield-i1": "2",
+                "marc:partList": [
+                  {"marc:foreignMarcSubfield-2": "intermrc"},
+                  {"marc:foreignMarcSubfield-a": "917"},
+                  {"marc:foreignMarcSubfield-o": "OPL"}
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "887": {"ignored": true, "NOTE:LC": "nac", "NOTE:local": "Maskinellt genererad information från LIBRIS XL till Voyager"},
 
