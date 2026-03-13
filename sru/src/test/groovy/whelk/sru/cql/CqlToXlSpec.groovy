@@ -1,5 +1,6 @@
 package whelk.sru.cql
 
+import org.antlr.v4.runtime.misc.ParseCancellationException
 import spock.lang.Specification
 
 class CqlToXlSpec extends Specification {
@@ -112,6 +113,28 @@ class CqlToXlSpec extends Specification {
 
         expect:
         translatedXlQuery == '("x.title"=dinosaur AND "aVerySillyLongPrefix.author"=farlow) AND type=Instance'
+    }
+
+    def "failed parse"() {
+        given:
+        String cqlQuery = '('
+
+        when:
+        String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
+
+        then:
+        thrown ParseCancellationException
+    }
+
+    def "failed lex"() {
+        given:
+        String cqlQuery = '😇'
+
+        when:
+        String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
+
+        then:
+        thrown RuntimeException
     }
 
 }
