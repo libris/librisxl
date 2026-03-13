@@ -4730,7 +4730,30 @@
     "$2": {"property": "marc:sourceOfHeadingOrTerm"},
     "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
     "$4": {"addProperty": "marc:relatorCode"},
-    "$0": {"addProperty": "marc:recordControlNumber"}
+    "$0": {"addProperty": "marc:recordControlNumber"},
+    "_spec": [
+      {
+        "source": {
+          "751": {
+            "ind1": " ", "ind2": "0",
+            "subfields": [{"a": "Stockholm (Sweden)"}, {"0": "(DLC)sh 000"}]
+          }
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "marc:hasAddedEntryGeographicName": [
+              {
+                "@type": "marc:AddedEntryGeographicName",
+                "marc:thesaurus": "marc:LibraryOfCongressSubjectHeadingsNameAuthorityFile",
+                "marc:geographicName": "Stockholm (Sweden)",
+                "marc:recordControlNumber": ["(DLC)sh 000"]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "755": {
     "include": ["subjectbaseSansUri"],
