@@ -272,8 +272,15 @@ class TestData {
     static def getEsMappings() {
         def mappings = [
                 'properties': [
-                        'p3'                    : ['type': 'nested'],
-                        '@reverse.instanceOf.p3': ['type': 'nested']
+                        'p3'                                : ['type': 'nested'],
+                        '@reverse.instanceOf.p3'            : ['type': 'nested'],
+                        '@type'                             : ['type': 'keyword'],
+                        'p2'                                : ['type': 'keyword'],
+                        'p3.p4.@id'                         : ['type': 'keyword'],
+                        '_categoryByCollection.find.@id'    : ['type': 'keyword'],
+                        '_categoryByCollection.identify.@id': ['type': 'keyword'],
+                        '_categoryByCollection.@none.@id'   : ['type': 'keyword'],
+                        '@reverse.instanceOf.category.@id'  : ['type': 'keyword']
                 ]
         ]
         return new EsMappings(mappings)
