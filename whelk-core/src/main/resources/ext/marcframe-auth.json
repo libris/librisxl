@@ -2276,7 +2276,24 @@
     "$a": {"addProperty": "label"},
     "$0": {"addProperty": "marc:recordControlNumber"},
     "$1": {"ignored": true, "NOTE:LC": "nac"},
-    "$2": {"property": "marc:sourceOfTerm"}
+    "$2": {"property": "marc:sourceOfTerm"},
+     "spec": [     {
+        "name": "genreForm unlinked",
+        "source": [
+          {"380": {"ind1": " ", "ind2": " ", "subfields": [{"a": "CD-böcker"}]}}
+        ],
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "genreForm" : [ {
+              "@type" : "GenreForm",
+              "label" : "CD-böcker"
+            }
+           ]
+          }
+        }
+      }
+    ]
   },
   "381": {
     "NOTE:LC": "381 - Other Distinguishing Characteristics of Work or Expression (R)",
@@ -4520,8 +4537,28 @@
   "680": {
     "addLink": "hasNote",
     "resourceType": "Note",
+    "NOTE:local": "Allmän offentlig anmärkning",
     "$a": {"addProperty": "marc:headingOrSubdivisionTerm"},
-    "$i": {"addProperty": "scopeNote"}
+    "$i": {"addProperty": "scopeNote"},
+    "_spec": [
+      {
+        "name": "maps heading/subdivision term and scope note",
+        "source": {
+          "680": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Ska ej förväxlas"},
+            {"i": "Anmärkning"}
+          ]}
+        },
+        "result": {"mainEntity": {
+          "@type": "Identity",
+          "hasNote": [ {
+            "@type": "Note",
+            "marc:headingOrSubdivisionTerm": [ "Ska ej förväxlas" ],
+            "scopeNote": [ "Anmärkning" ]
+          } ]
+        }}
+      }
+    ]
   },
   "681": {
     "NOTE:LC": "681 - Subject Example Tracing Note (R)",
@@ -4534,7 +4571,21 @@
     "NOTE:record-count": 0
   },
   "688": {
-    "$a": {"addProperty": "historyNote"}
+    "$a": {"addProperty": "historyNote"},
+    "_spec": [
+      {
+        "name": "history note text",
+        "source": {
+          "688": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Tidigare term. Ändrad 2026-01-01."}
+          ]}
+        },
+        "result": {"mainEntity": {
+          "@type": "Identity",
+          "historyNote": [ "Tidigare term. Ändrad 2026-01-01." ]
+        }}
+      }
+    ]
   },
 
   "700": {
