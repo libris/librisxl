@@ -205,7 +205,30 @@
     ]
   },
 
-  "001" : {"inherit": "bib"},
+  "001" : {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "fields": [
+            {"001": "0000000"},
+            {"004": "7149594"}
+          ]
+        },
+        "result": {
+          "@type": "Record",
+          "controlNumber": "0000000",
+          "mainEntity": {
+            "@type": "Item",
+            "itemOf": {
+              "@id": "http://libris.kb.se/resource/bib/7149594"
+            }
+          }
+        }
+      }
+    ]
+  },
 
   "003": {
     "ignored": true,
@@ -217,12 +240,107 @@
     "link": "itemOf", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
     "matchUriToken": "^\\d{1,14}$",
     "TODO:meta": {"property": "controlNumber"},
-    "repeatable": false
+    "repeatable": false,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "fields": [
+            {"001": "0000000"},
+            {"004": "1234567"}
+          ]
+        },
+        "result": {
+          "mainEntity": {
+            "itemOf": {
+              "@id": "http://libris.kb.se/resource/bib/1234567"
+            }
+          }
+        }
+      }
+    ]
   },
 
-  "005": {"inherit": "bib"},
+  "005": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {"005": "20130814170612.0"},
+        "result": {"modified": "2013-08-14T17:06:12.0+02:00"}
+      }
+    ]
+  },
 
-  "007": {"inherit": "bib"},
+  "007": {
+    "inherit": "bib",
+    "TODO": "Revert may omit 007 in hold when mainEntity @type collapses to Item. _spec.addOnRevert used only for test validation.",
+    "_spec": [
+      {
+        "name": "inheritance regression test (007 o| is dropped)",
+        "source": {"007": "o|"},
+          "normalized": [],
+        "result": {
+          "mainEntity": {
+            "@type": "Item"
+          }
+        }
+      },
+      {
+        "name": "inheritance regression test (video mapping)",
+        "source": {"007": "vf cb|||s"},
+        "normalized": {"007": "vf cb|||s              "},
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "carrierType": [{"@id": "https://id.kb.se/marc/VideoMaterialType-f"}],
+            "colorContent": [{"@id": "https://id.kb.se/marc/VideoColorType-c"}],
+            "videoCharacteristic": [{"@id": "https://id.kb.se/marc/VideoFormatType-b"}],
+            "soundCharacteristic": [{"@id": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-s"}]
+          }
+        },
+        "addOnRevert": {
+          "mainEntity": {
+            "@type": ["Item", "VideoRecording"]
+          }
+        }
+      },
+      {
+        "name": "inheritance regression test (electronic remote)",
+        "source": {"007": "cr |||   |||||"},
+        "normalized": {"007": "cr |||   |||||         "},
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}]
+          }
+        },
+        "addOnRevert": {
+          "mainEntity": {
+            "@type": ["Item", "Electronic"]
+          }
+        }
+      },
+      {
+        "name": "inheritance regression test (still image drawing)",
+        "source": {"007": "kd ao|"},
+        "normalized": {"007": "kd ao|                 "},
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "baseMaterial": [{"@id": "https://id.kb.se/marc/NonProjectedType-o"}],
+            "genreForm": [{"@id": "https://id.kb.se/marc/NonProjMaterialType-d"}],
+            "colorContent": [{"@id": "https://id.kb.se/marc/ColorType-a"}]
+          }
+        },
+        "addOnRevert": {
+          "mainEntity": {
+            "@type": ["Item", "StillImageInstance"]
+          }
+        }
+      }
+    ]
+  },
 
   "008": {
     "[0:6]": {
