@@ -222,7 +222,23 @@
 
   "003": {"ignored": true, "NOTE:local": "FÖREKOMMER EJ I LIBRIS AUKTORITETSFORMAT"},
 
-  "005": {"inherit": "bib"},
+  "005": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {"005": "20130814170612.0"},
+        "result": {
+          "@type": "Record",
+          "modified": "2013-08-14T17:06:12.0+02:00",
+          "mainEntity": {}
+        },
+        "addOnRevert": {
+          "mainEntity": {"@type": "Identity"}
+        }
+      }
+    ]
+  },
 
   "008": {
     "[0:6]": {
