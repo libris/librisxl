@@ -16,6 +16,7 @@ emm/exampleclient/libris-cache.sqlite3
 # Java/Gradle Artifacts
 /.gradle
 /*/.gradle
+/**/src/generated
 /build
 /*/build
 /*/out
