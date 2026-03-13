@@ -601,18 +601,92 @@
   },
   "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
   "017": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
-  "020": {"inherit": "bib"},
-  "022": {"inherit": "bib"},
-  "024": {"inherit": "bib"},
+  "020": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "ISBN 020 inheritance regression test",
+        "source": {
+          "020": {"ind1": " ", "ind2": " ", "subfields": [{"a": "9781137368331 (e-book)"}]}
+        },
+        "normalized": {
+          "020": {"ind1": " ", "ind2": " ", "subfields": [{"a": "9781137368331"}, {"q": "e-book"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "identifiedBy": [
+              {"@type": "ISBN", "value": "9781137368331", "qualifier": "e-book"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "022": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "ISSN 022 inheritance regression test",
+        "source": {
+          "022": {"ind1": " ", "ind2": " ", "subfields": [{"a": "0345-0856"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "identifiedBy": [
+              {"@type": "ISSN", "value": "0345-0856"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "024": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "Identifer 024 inheritance regression test",
+        "source": {
+          "024": {"ind1": "2", "ind2": " ", "subfields": [{"a": "9790692006282"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "identifiedBy": [
+              {"@type": "ISMN", "value": "9790692006282"}
+            ]
+          }
+        }
+      }
+    ]
+  },
   "027": {"ignored": true, "NOTE:record-count": 0, "TODO": "inherit-bib?"},
   "030": {"ignored": true, "NOTE:record-count": 0, "TODO": "inherit-bib?"},
   "035": {
     "inherit": "bib",
     "aboutEntity": null,
+    "NOTE:record-count": 15770916,
     "NOTE:local": "Fältet förekommer normalt inte i beståndsposter, men kan användas för dubblettkontroll/länkning vid postexport till lokalt system.",
     "$6": {"property": "marc:hold035-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
     "$8": {"addProperty": "marc:hold035-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
-    "$9": null
+    "$9": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "(ALMA)991001091647205936"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "identifiedBy": [
+              {"@type": "SystemNumber", "value": "(ALMA)991001091647205936"}
+            ]
+          }
+        }
+      }
+    ]
   },
   "040": {"ignored": true, "NOTE:record-count": 4, "NOTE:local": "ANVÄNDS NORMALT EJ I BESTÅNDSFORMATET"}, 
   "050": {
