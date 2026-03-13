@@ -4880,10 +4880,10 @@
     ],
     "_spec": [
       {
-        "name": "inheritance regression test (auth i2 mapping)",
+        "name": "inheritance regression test (auth i2=0 describedBy)",
         "source": {
           "856": {"ind1": "4", "ind2": "0", "subfields": [
-            {"u": "http://example.com/doc.pdf"}
+            {"u": "http://example.com/Resource"}
           ]}
         },
         "result": {
@@ -4892,7 +4892,72 @@
             "describedBy": [
               {
                 "@type": "Document",
-                "uri": ["http://example.com/doc.pdf"]
+                "uri": ["http://example.com/Resource"]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "inheritance overide regression test (auth i2=1 describedBy) NOTE:reverts to ind2=0",
+        "source": {
+          "856": {"ind1": "4", "ind2": "1", "subfields": [
+            {"u": "http://example.com/VersionOfResource"},
+            {"z": "Fritt tillgänglig"}
+          ]}
+        },
+        "normalized": {
+          "856": {"ind1": "4", "ind2": "0", "subfields": [
+            {"u": "http://example.com/VersionOfResource"},
+            {"z": "Fritt tillgänglig"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "describedBy": [
+              {
+                "@type": "Document",
+                "marc:publicNote" : [ "Fritt tillgänglig" ],
+                "uri": ["http://example.com/VersionOfResource"]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "inheritance override regression test (auth i2=2 relatedTo)",
+        "source": {
+          "856": {"ind1": "4", "ind2": "2", "subfields": [
+            {"u": "http://example.org/RelatedResource"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "relatedTo": [
+              {
+                "@type": "Document",
+                "uri": ["http://example.org/RelatedResource"]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "inheritance override regression test (auth i2=8 seeAlso)",
+        "source": {
+          "856": {"ind1": "4", "ind2": "8", "subfields": [
+            {"u": "http://example.net/NoDisplayConstant"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "seeAlso": [
+              {
+                "@type": "Document",
+                "uri": ["http://example.net/NoDisplayConstant"]
               }
             ]
           }
