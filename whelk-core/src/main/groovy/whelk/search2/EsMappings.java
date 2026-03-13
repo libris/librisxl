@@ -3,7 +3,6 @@ package whelk.search2;
 import whelk.util.DocumentUtil;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -13,12 +12,16 @@ import java.util.stream.Collectors;
 import static whelk.util.DocumentUtil.NOP;
 
 public class EsMappings {
-    private final Set<String> keywordFields;
+    private final Set<String> keywordSubfieldFields;
+
     private final Set<String> fourDigitsKeywordFields;
     private final Set<String> fourDigitsShortFields;
+
+    private final Set<String> keywordTypeFields;
     private final Set<String> dateTypeFields;
     private final Set<String> nestedTypeFields;
     private final Set<String> longTypeFields;
+
     private final Set<String> nestedNotInParentFields;
 
     public static String KEYWORD = "keyword";
@@ -26,9 +29,10 @@ public class EsMappings {
     public static String FOUR_DIGITS_SHORT_SUFFIX = "_4_digits_short";
 
     public EsMappings(Map<?, ?> mappings) {
-        this.keywordFields = getKeywordFields(mappings);
+        this.keywordSubfieldFields = getKeywordSubfieldFields(mappings);
         this.fourDigitsKeywordFields = getFourDigitsKeywordFields(mappings);
         this.fourDigitsShortFields = getFourDigitsShortFields(mappings);
+        this.keywordTypeFields = getFieldsOfType("keyword", mappings);
         this.dateTypeFields = getFieldsOfType("date", mappings);
         this.nestedTypeFields = getFieldsOfType("nested", mappings);
         this.longTypeFields = getFieldsOfType("long", mappings);
@@ -37,7 +41,7 @@ public class EsMappings {
     }
 
     public boolean hasKeywordSubfield(String fieldPath) {
-        return keywordFields.contains(fieldPath);
+        return keywordSubfieldFields.contains(fieldPath);
     }
 
     public boolean hasFourDigitsKeywordField(String fieldPath) {
@@ -64,6 +68,17 @@ public class EsMappings {
         return nestedNotInParentFields.contains(fieldPath);
     }
 
+    public boolean isAggregatable(String fieldPath) {
+        // Simple check based on current mappings.
+        // Doesn't consider
+        // - text fields with `"fielddata": true` (aggregatable)
+        // - fields with "doc_values": false` (not aggregatable)
+        // This is fine since the current index settings do not use these options.
+        return keywordTypeFields.contains(fieldPath)
+                || dateTypeFields.contains(fieldPath)
+                || longTypeFields.contains(fieldPath);
+    }
+
     public Set<String> getNestedTypeFields() {
         return nestedTypeFields;
     }
@@ -76,7 +91,7 @@ public class EsMappings {
         return getFieldsWithSuffix(mappings, FOUR_DIGITS_SHORT_SUFFIX);
     }
 
-    private static Set<String> getKeywordFields(Map<?, ?> mappings) {
+    private static Set<String> getKeywordSubfieldFields(Map<?, ?> mappings) {
         return getFieldsWithSetting("fields", v -> v instanceof Map<?, ?> m && m.containsKey(KEYWORD), mappings);
     }
 

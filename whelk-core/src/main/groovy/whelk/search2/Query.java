@@ -444,6 +444,9 @@ public class Query {
                     } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
                         field = String.format("%s.%s", field, JsonLd.ID_KEY);
                     }
+                    if (!ctx.esSettings.mappings().isAggregatable(field)) {
+                        return;
+                    }
                     Optional<String> nestedStem = selector.getEsNestedStem(ctx.esSettings.mappings());
                     Map<String, Object> aggs = nestedStem.isPresent()
                             ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
