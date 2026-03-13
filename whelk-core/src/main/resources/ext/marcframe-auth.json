@@ -576,7 +576,28 @@
 
   "010": {
     "inherit": "bib",
-    "NOTE:local": "ANVÄNDS NORMALT EJ"
+    "NOTE:local": "ANVÄNDS NORMALT EJ",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "010": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "a 54009564"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "identifiedBy": [
+              {
+                "@type": "LCCN",
+                "value": "a 54009564"
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "014": {
     "NOTE:LC": "014 - Link to Bibliographic Record for Serial or Multipart Item (R) - nac",
@@ -595,7 +616,30 @@
     "ignored": true,
     "NOTE:record-count": 0
   },
-  "022": {"inherit": "bib"},
+  "022": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "022": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "0345-0856"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "identifiedBy": [
+              {
+                "@type": "ISSN",
+                "value": "0345-0856"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
   "024": {
     "include": ["identifier"],
     "match": [
@@ -722,7 +766,34 @@
     "ignored": true,
     "NOTE:record-count": 0
   },
-  "035": {"inherit": "bib", "$6": null, "$8": null},
+  "035": {
+    "inherit": "bib",
+    "$6": null,
+    "$8": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "035": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "(OCoLC)123"}
+          ]}
+        },
+        "result": {
+          "identifiedBy": [
+            {
+              "@type": "SystemNumber",
+              "value": "(OCoLC)123"
+            }
+          ]
+        },
+        "addOnRevert": {
+          "mainEntity": {
+            "@type": "Identity"
+          }
+        }
+      }
+    ]
+  },
   "040": {
     "inherit": "bib",
     "TODO": "if no $f, drop entire record (or mark as obsolete)",
@@ -837,7 +908,26 @@
   },
   "045" : {
     "inherit": "bib",
-    "aboutEntity": "?thing"
+    "aboutEntity": "?thing",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "045": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "1998"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "marc:hasTimePeriodOfContent": {
+              "@type": "marc:TimePeriodOfContent",
+              "marc:timePeriodCode": ["1998"]
+            }
+          }
+        }
+      }
+    ]
   },
 
   "046" : {
@@ -953,7 +1043,31 @@
   "082" : {
     "NOTE:local": "ANVÄNDS NORMALT EJ",
     "inherit": "bib",
-    "aboutEntity": "?thing"
+    "aboutEntity": "?thing",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "082": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "158.1"},
+            {"2": "23"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "classification": [
+              {
+                "@type": "ClassificationDdc",
+                "code": "158.1",
+                "editionEnumeration": "23",
+                "edition": "full"
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "083" : {
     "aboutEntity": "?thing",
@@ -4641,6 +4755,27 @@
       {"when": "i2=1", "addLink": "describedBy"},
       {"when": "i2=2", "addLink": "relatedTo"},
       {"when": "i2=8", "addLink": "seeAlso"}
+    ],
+    "_spec": [
+      {
+        "name": "inheritance regression test (auth i2 mapping)",
+        "source": {
+          "856": {"ind1": "4", "ind2": "0", "subfields": [
+            {"u": "http://example.com/doc.pdf"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "describedBy": [
+              {
+                "@type": "Document",
+                "uri": ["http://example.com/doc.pdf"]
+              }
+            ]
+          }
+        }
+      }
     ]
   },
   "880": {
