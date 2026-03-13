@@ -939,7 +939,55 @@
       "$s": {"property": "activityStartDate"},
       "$t": {"property": "activityEndDate"},
       "$2": {"property": "marc:sourceOfDateScheme"},
-      "TODO:edtf": "?"
+      "TODO:edtf": "?",
+      "_spec": [
+        {
+          "name": "person birth/death dates, no source scheme",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"f": "1910-02-14"},
+              {"g": "1983-06-03"}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "@type": "Identity",
+            "birthDate": "1910-02-14",
+            "deathDate": "1983-06-03"
+          }}
+        },
+        {
+          "name": "establishment and termination dates with source scheme edtf",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"q": "1957"},
+              {"r": "1999"},
+              {"2": "edtf"}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "@type": "Identity",
+            "establishDate": "1957",
+            "terminateDate": "1999",
+            "marc:sourceOfDateScheme": "edtf"
+          }}
+        },
+        {
+          "name": "activity period dates with source scheme iso8601",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"s": "1980"},
+              {"t": "1989"},
+              {"2": "iso8601"}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "@type": "Identity",
+            "activityStartDate": "1980",
+            "activityEndDate": "1989",
+            "marc:sourceOfDateScheme": "iso8601"
+          }}
+        }
+      ]
   },
   "050": {
     "NOTE:LC": "050 - Library of Congress Call Number (R)",
