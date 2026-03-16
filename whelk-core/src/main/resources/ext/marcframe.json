@@ -5504,6 +5504,7 @@
       ]
     },
     "046": {
+      "NOTE:LC": "Guidelines on how to transcribe a date in subfields are generally the same as those specified under 008/06",
       "addLink": "marc:hasSpecialCodedDates",
       "resourceType": "marc:SpecialCodedDates",
       "$a": {"property": "marc:typeOfDateCode"},
@@ -5515,7 +5516,73 @@
       "$o": null,
       "$p": null,
       "$2": null,
-      "$6": null
+      "$6": null,
+      "_spec": [
+        {
+          "name": "coded dates using date1BC/date2CE fields",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"b": "456"},
+              {"c": "1234"},
+              {"e": "1250"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasSpecialCodedDates": [ {
+                "@type": "marc:SpecialCodedDates",
+                "marc:date1BCDate": "456",
+                "marc:date1CEDate": "1234",
+                "marc:date2CEDateFieldMustAlsoContainASubfieldC": "1250"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "type of date code with validity range, inclusive dates",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "i"},
+              {"m": "1890"},
+              {"n": "1899"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasSpecialCodedDates": [ {
+                "@type": "marc:SpecialCodedDates",
+                "marc:typeOfDateCode": "i",
+                "marc:beginningOfDateValid": "1890",
+                "marc:endOfDateValid": "1899"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "combined coded date values in one 046 field",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "q"},
+              {"c": "1978"},
+              {"e": "1981"},
+              {"m": "1978"},
+              {"n": "1981"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasSpecialCodedDates": [ {
+                "@type": "marc:SpecialCodedDates",
+                "marc:typeOfDateCode": "q",
+                "marc:date1CEDate": "1978",
+                "marc:date2CEDateFieldMustAlsoContainASubfieldC": "1981",
+                "marc:beginningOfDateValid": "1978",
+                "marc:endOfDateValid": "1981"
+              } ]
+            }
+          }
+        }
+      ]
     },
     "047": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
@@ -12449,7 +12516,27 @@
       "$u": {"addProperty": "marc:uniformResourceIdentifier"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "NOTE:$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "system details note with uri",
+          "source": {
+            "538": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "DVD-spelare krävs"},
+              {"u": "https://example.org/system-details"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasSystemDetailsNote": [ {
+                "@type": "marc:SystemDetailsNote",
+                "marc:systemDetailsNote": "DVD-spelare krävs",
+                "marc:uniformResourceIdentifier": ["https://example.org/system-details"]
+              } ]
+            }
+          }
+        }
+      ]
     },
     "540": {
       "aboutEntity": "?thing",
@@ -12915,6 +13002,8 @@
     "562": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
       "Note:LC": "nac",
+      "TODO": "$a: Identifying Markings not item Condition, hold inherits bib",
+      "NOTE": "$e: number of copies in marc not inventoryLevel, less of a semantic variant but see test #2",
       "addLink": "marc:hasCopyAndVersionIdentificationNote",
       "resourceType": "marc:CopyAndVersionIdentificationNote",
       "embedded": true,
@@ -12924,7 +13013,53 @@
       "$d": {"addProperty": "marc:presentationFormat"},
       "$e": {"addProperty": "marc:inventoryLevel"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$8": {"property": "marc:groupid"}
+      "$8": {"property": "marc:groupid"},
+      "_spec": [
+        {
+          "name": "copy and version identification details",
+          "source": {
+            "562": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Annotations"},
+              {"b": "Copy 1"},
+              {"8": "grp-1"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasCopyAndVersionIdentificationNote": [ {
+                "@type": "marc:CopyAndVersionIdentificationNote",
+                "marc:itemCondition": ["Annotations"],
+                "marc:copyIdentification": ["Copy 1"],
+                "marc:groupid": "grp-1"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "description used to distinguish one copy of the described materials from other copies",
+          "source": {
+            "562": {"ind1": " ", "ind2": " ", "subfields": [
+              {"e": "3 copies kept"},
+              {"b": "Labelled as president's desk copy, board of directors' working file copy, and public release copy."}
+            ]}
+          },
+          "normalized": {
+            "562": {"ind1": " ", "ind2": " ", "subfields": [
+              {"b": "Labelled as president's desk copy, board of directors' working file copy, and public release copy."},
+              {"e": "3 copies kept"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasCopyAndVersionIdentificationNote": [ {
+                "@type": "marc:CopyAndVersionIdentificationNote",
+                "marc:inventoryLevel": ["3 copies kept"],
+                "marc:copyIdentification": ["Labelled as president's desk copy, board of directors' working file copy, and public release copy."]
+              } ]
+            }
+          }
+        }
+      ]
     },
     "563": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
