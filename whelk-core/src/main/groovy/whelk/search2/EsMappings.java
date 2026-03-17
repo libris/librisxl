@@ -64,6 +64,10 @@ public class EsMappings {
         return longTypeFields.contains(fieldPath);
     }
 
+    public boolean isKeywordTypeField(String fieldPath) {
+        return keywordTypeFields.contains(fieldPath);
+    }
+
     public boolean isNestedNotInParentField(String fieldPath) {
         return nestedNotInParentFields.contains(fieldPath);
     }
