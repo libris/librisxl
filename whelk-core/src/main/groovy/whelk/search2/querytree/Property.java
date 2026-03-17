@@ -308,10 +308,10 @@ public non-sealed class Property extends PathElement {
                 .flatMap(List::stream)
                 .collect(Collectors.toSet());
 
+        boolean isRecordProperty = this.hasDomainAdminMetadata(jsonLd);
+
         Predicate<Property> followIntegralRelation = integralProp ->
-                integralProp.range()
-                        .stream()
-                        .anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
+                isRecordProperty || integralProp.range().stream().anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
 
         List<List<Property>> altPaths = integralRelations.stream()
                 .filter(followIntegralRelation)
@@ -326,20 +326,8 @@ public non-sealed class Property extends PathElement {
                 })
                 .collect(Collectors.toList());
 
-        if (altPaths.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+        if (altPaths.isEmpty() || isRecordProperty || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
             altPaths.add(List.of(this));
-        }
-
-        /*
-        FIXME:
-         Integral relations are generally not applied to records.
-         Bibliography is an exception: we need to search both meta.bibliography and hasInstance.meta.bibliography
-         */
-        if ("bibliography".equals(name)) {
-            integralRelations.stream().filter(ir -> "hasInstance".equals(ir.name()))
-                    .findFirst()
-                    .map(hasInstance -> List.of(hasInstance, this))
-                    .ifPresent(altPaths::add);
         }
 
         return altPaths.stream()

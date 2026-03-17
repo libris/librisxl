@@ -24,6 +24,7 @@ import static whelk.FeatureFlags.Flag.EXPERIMENTAL_INDEX_HOLDING_ORGS
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.JSONLD_ALT_ID_KEY
 import static whelk.JsonLd.Platform.CATEGORY_BY_COLLECTION
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.REVERSE_KEY
@@ -526,10 +527,7 @@ class ElasticSearch {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard['_ids'] = document.getRecordIdentifiers()
-                .collect { lastPathSegment(it) }
-                .unique()
-                .plus(whelk.fresnelUtil.fslSelect(searchCard, "meta/*/identifiedBy/*/value") as Collection<String>)
+        searchCard['_ids'] = collectIds(embellishedGraph, integralIds)
 
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
@@ -607,6 +605,21 @@ class ElasticSearch {
     
     static String flattenedLangMapKey(key) {
         return '__' + key
+    }
+
+    private static Set<String> collectIds(List embellishedGraph, Collection<String> integralIds) {
+        var records = embellishedGraph.take(1) + embellishedGraph.findAll { ((String) DocumentUtil.getAtPath(it, Document.thingIdPath2)) in integralIds }
+                .collect { DocumentUtil.getAtPath(it, Document.recordPath) }
+
+        Set ids = [] as Set
+
+        records.each {
+            ids.add(lastPathSegment((String) it[ID_KEY]))
+            DocumentUtil.getAtPath(it, [JSONLD_ALT_ID_KEY, '*', ID_KEY], []).each { ids.add(lastPathSegment((String) it)) }
+            ids.addAll(DocumentUtil.getAtPath(it, ['identifiedBy', '*', 'value'], []))
+        }
+
+        return ids
     }
 
     private static Map<String, String> buildSortKeyByLang(Map<String, Object> thing, Whelk whelk) {

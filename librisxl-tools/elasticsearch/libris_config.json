@@ -320,6 +320,16 @@
                 }
             },
             {
+                "control_number_template": {
+                    "mapping": {
+                        "index": true,
+                        "type": "keyword"
+                    },
+                    "match": "controlNumber",
+                    "match_mapping_type": "string"
+                }
+            },
+            {
                 "date_template": {
                     "match": ["created", "modified", "generationDate"],
                     "mapping": {
