@@ -106,8 +106,9 @@ class ConditionSpec extends Specification {
         "instanceOf.p8:v8"  | ["T2"]       | "p8:v8"
         "p5:x"              | []           | "meta.p5:x"
         "meta.p5:x"         | []           | "meta.p5:x"
-        "bibliography:x"    | ["T1"]       | "meta.bibliography:x"
-        "bibliography:x"    | ["T2"]       | "meta.bibliography:x OR hasInstance.meta.bibliography:x"
+        "bibliography:x"    | ["T1"]       | "instanceOf.meta.bibliography:x OR meta.bibliography:x"
+        "bibliography:x"    | ["T2"]       | "hasInstance.meta.bibliography:x OR meta.bibliography:x"
+        "bibliography:x"    | ["T3"]       | "meta.bibliography:x"
     }
 
     def "To ES query (negation + nested field)"() {
