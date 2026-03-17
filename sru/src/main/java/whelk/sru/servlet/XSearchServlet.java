@@ -521,7 +521,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         result.put("type", getLegacyWebbsokType(item));
 
         /*
-        One string publication + One string manufacture
+        One string per publication + One string per manufacture
 
         "publisher": "Enskede : TPB",
         "date": "2007",
@@ -548,19 +548,28 @@ public class XSearchServlet extends WhelkHttpServlet {
         var publications = new ArrayList<Map<?,?>>(allPublications.size());
         publications.addAll(allPublications.stream().filter(p -> "PrimaryPublication".equals(p.get(TYPE_KEY))).toList());
         publications.addAll(allPublications.stream().filter(p -> !"PrimaryPublication".equals(p.get(TYPE_KEY))).toList());
-        var dates = new TreeSet<>();
-        var dateFields = List.of("year", "date", "startYear", "endYear");
+        var dates = new ArrayList<>();
+        var dateFields = List.of("year", "date");
 
         var manufacture = get(item, List.of("manufacture"));
 
         DocumentUtil.Visitor filter = (value,path) -> {
             if (!path.isEmpty()) {
                 if (dateFields.contains(path.getLast())) {
-                    dates.add(value.toString());
+                    if (value instanceof List<?> l) {
+                        dates.add(String.join(", ", l.stream().map(String::valueOf).toList()));
+                    } else {
+                        dates.add(value.toString());
+                    }
                     return new DocumentUtil.Remove();
                 }
                 if ("country".equals(path.getLast())) {
                     return new DocumentUtil.Remove();
+                }
+                if (value instanceof Map<?,?> m && (m.containsKey("startYear") || m.containsKey("endYear"))) {
+                    var start = m.remove("startYear");
+                    var end = m.remove("endYear");
+                    dates.add(String.format("%s-%s", start != null ? start : "", end != null ? end : ""));
                 }
             }
 
@@ -569,16 +578,12 @@ public class XSearchServlet extends WhelkHttpServlet {
         DocumentUtil.traverse(publications, filter);
         DocumentUtil.traverse(manufacture, filter);
         var publisher = new ArrayList<String>();
-        if (!publications.isEmpty()) {
-            publisher.add(publications.stream()
+        publications.stream()
                     .map(format)
-                    .collect(Collectors.joining(", "))); // old xsearch uses a :
-        }
-        if (!manufacture.isEmpty()) {
-            publisher.add(manufacture.stream()
-                    .map(format)
-                    .collect(Collectors.joining(", "))); // old xsearch uses a :
-        }
+                    .forEach(publisher::add);
+        manufacture.stream()
+                .map(format)
+                .forEach(publisher::add);
         if (!publisher.isEmpty()) {
             result.put("publisher", unwrapSingle(publisher));
         }
