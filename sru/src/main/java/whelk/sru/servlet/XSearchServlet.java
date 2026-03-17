@@ -45,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -63,6 +64,11 @@ import static javax.xml.stream.XMLStreamConstants.END_ELEMENT;
 import static javax.xml.stream.XMLStreamConstants.START_ELEMENT;
 import static se.kb.libris.export.ExportProfile.addSabTitles;
 import static se.kb.libris.export.ExportProfile.mergeBibMfhd;
+import static whelk.JsonLd.ID_KEY;
+import static whelk.JsonLd.NONE_KEY;
+import static whelk.JsonLd.Platform.CATEGORY_BY_COLLECTION;
+import static whelk.JsonLd.TYPE_KEY;
+import static whelk.JsonLd.WORK_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.util.DocumentUtil.getAtPath;
 
@@ -448,7 +454,7 @@ public class XSearchServlet extends WhelkHttpServlet {
          */
         var titles = get(item, List.of("hasTitle"));
         titles.stream()
-                .filter(t -> "Title".equals(t.get(JsonLd.TYPE_KEY)))
+                .filter(t -> "Title".equals(t.get(TYPE_KEY)))
                 .findFirst()
                 .or(() -> titles.stream().findFirst())
                 .map(format)
@@ -463,12 +469,12 @@ public class XSearchServlet extends WhelkHttpServlet {
          */
         var contribution = get(item, List.of("instanceOf", "contribution"));
         contribution.stream()
-                .filter(t -> "PrimaryContribution".equals(t.get(JsonLd.TYPE_KEY)))
+                .filter(t -> "PrimaryContribution".equals(t.get(TYPE_KEY)))
                 .findFirst()
                 .or(() -> contribution.stream()
                         .filter(c -> get(c, List.of("role", "*"))
                                 .stream()
-                                .anyMatch(r -> "https://id.kb.se/relator/author".equals(r.get(JsonLd.ID_KEY))))
+                                .anyMatch(r -> "https://id.kb.se/relator/author".equals(r.get(ID_KEY))))
                         .findFirst())
                 .or(() -> contribution.stream().findFirst())
                 .filter(c -> c.containsKey("agent"))
@@ -490,7 +496,7 @@ public class XSearchServlet extends WhelkHttpServlet {
          */
         // TODO XL search result includes generated ISBN10 or ISBN13
         var isbns = get(item, List.of("identifiedBy")).stream()
-                .filter(t -> "ISBN".equals(t.get(JsonLd.TYPE_KEY)))
+                .filter(t -> "ISBN".equals(t.get(TYPE_KEY)))
                 .filter(c -> c.containsKey("value"))
                 .map(c -> c.get("value"))
                 .toList();
@@ -499,7 +505,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         }
 
         var issns = get(item, List.of("identifiedBy")).stream()
-                .filter(t -> "ISSN".equals(t.get(JsonLd.TYPE_KEY)))
+                .filter(t -> "ISSN".equals(t.get(TYPE_KEY)))
                 .filter(c -> c.containsKey("value"))
                 .map(c -> c.get("value"))
                 .toList();
@@ -508,13 +514,11 @@ public class XSearchServlet extends WhelkHttpServlet {
         }
 
         /*
-        TODO map new types/categories from type normalization
         "type": "book",
         "type": "journal",
         "type": "E-book",
          */
-        result.put("type", "TODO...");
-
+        result.put("type", getLegacyWebbsokType(item));
 
         /*
         One string publication + One string manufacture
@@ -542,8 +546,8 @@ public class XSearchServlet extends WhelkHttpServlet {
          */
         var allPublications = get(item, List.of("publication"));
         var publications = new ArrayList<Map<?,?>>(allPublications.size());
-        publications.addAll(allPublications.stream().filter(p -> "PrimaryPublication".equals(p.get(JsonLd.TYPE_KEY))).toList());
-        publications.addAll(allPublications.stream().filter(p -> !"PrimaryPublication".equals(p.get(JsonLd.TYPE_KEY))).toList());
+        publications.addAll(allPublications.stream().filter(p -> "PrimaryPublication".equals(p.get(TYPE_KEY))).toList());
+        publications.addAll(allPublications.stream().filter(p -> !"PrimaryPublication".equals(p.get(TYPE_KEY))).toList());
         var dates = new TreeSet<>();
         var dateFields = List.of("year", "date", "startYear", "endYear");
 
@@ -614,7 +618,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         Stream.concat(
                         get(item, List.of("associatedMedia", "*")).stream(),
                         get(item, List.of("@reverse", "reproductionOf", "*", "associatedMedia", "*")).stream())
-                .filter(t -> "MediaObject".equals(t.get(JsonLd.TYPE_KEY)))
+                .filter(t -> "MediaObject".equals(t.get(TYPE_KEY)))
                 .forEach(m -> {
                     if (m.containsKey("uri")) {
                         free.addAll(asList(m.get("uri")));
@@ -669,6 +673,15 @@ public class XSearchServlet extends WhelkHttpServlet {
        return ((List<Map<?,?>>) getAtPath(o, path, Collections.emptyList()));
     }
 
+    @SuppressWarnings("unchecked")
+    private static List<String> getS(Object o, List<String> path) {
+        return ((List<String>) getAtPath(o, path, Collections.emptyList()));
+    }
+
+    private static String getUriSlug(String s) {
+        return List.of(s.split("/")).getLast();
+    }
+
     private static Optional<String> getOptionalSingleNonEmpty(String name, Map<String, String[]> queryParameters) {
         return getOptionalSingle(name, queryParameters).filter(Predicate.not(String::isEmpty));
     }
@@ -695,4 +708,203 @@ public class XSearchServlet extends WhelkHttpServlet {
         }
         return value;
     }
+
+    private static String getLegacyWebbsokType(Map<?, ?> item) {
+        var workType = (String) ((Map<?, ?>) item.get(WORK_KEY)).get(TYPE_KEY);
+        var instanceType = (String) asList(item.get(TYPE_KEY)).getFirst();
+
+        var workCategories = new HashSet<String>();
+        getS(item, List.of(WORK_KEY, CATEGORY_BY_COLLECTION, "find", "*", ID_KEY))
+                .stream().map(XSearchServlet::getUriSlug)
+                .forEach(workCategories::add);
+        getS(item, List.of(WORK_KEY, CATEGORY_BY_COLLECTION, "identify", "*", ID_KEY))
+                .stream().map(XSearchServlet::getUriSlug)
+                .forEach(workCategories::add);
+        getS(item, List.of(WORK_KEY, CATEGORY_BY_COLLECTION, NONE_KEY, "*", ID_KEY))
+                .stream().map(XSearchServlet::getUriSlug)
+                .forEach(workCategories::add);
+
+        var instanceCategories = getS(item, List.of(CATEGORY_BY_COLLECTION, NONE_KEY, "*", ID_KEY))
+                .stream().map(XSearchServlet::getUriSlug)
+                .collect(Collectors.toSet());
+
+        return getLegacyWebbsokType(instanceType, workType, instanceCategories, workCategories);
+    }
+
+    private static String getLegacyWebbsokType(
+            String instanceType,
+            String workType,
+            Set<String> instanceCategories,
+            Set<String> workCategories) {
+
+        for (var r : TYPE_RULES) {
+            if (r.match(instanceType, workType, instanceCategories, workCategories)) {
+                return r.result;
+            }
+        }
+
+        return "";
+    }
+
+    private record Rule(String result, String instanceType, String workType, Set<String> instanceCategories, Set<String> workCategories) {
+        boolean match(String instanceType, String workType, Set<String> instanceCategories, Set<String> workCategories) {
+            return ((this.instanceType == null || this.instanceType.equals(instanceType))
+                    && (this.workType == null || this.workType.equals(workType))
+                    && (instanceCategories.containsAll(this.instanceCategories))
+                    && (workCategories.containsAll(this.workCategories))
+            );
+        }
+    }
+
+    // https://git.kb.se/libris/legacy/search/-/blob/master/src/main/webapp/transformers/MARC21slim2JSON.xsl?ref_type=heads#L207
+    /*
+        <xsl:when test="$leader6-7 = 'am' and $cf007 = 'cr'">E-book</xsl:when>
+        <xsl:when test="$leader6-7 = 'am' and $cf007 != 'cr'">book</xsl:when>
+        <xsl:when test="($leader6-7 = 'aa' or $leader6-7 = 'ab') and $cf007 = 'cr'">E-article</xsl:when>
+        <xsl:when test="($leader6-7 = 'aa' or $leader6-7 = 'ab') and $cf007 != 'cr'">article</xsl:when>
+        <xsl:when test="$leader6-7 = 'as' and $cf007 = 'cr'">E-journal</xsl:when>
+        <xsl:when test="$leader6-7 = 'as' and $cf007 != 'cr'">journal</xsl:when>
+        <xsl:when test="$leader6='t'">manuscript</xsl:when>
+        <xsl:when test="$leader6='a'">text</xsl:when>
+        <xsl:when test="$leader6='e' or $leader6='f'">cartographic</xsl:when>
+        <xsl:when test="$leader6='c' or $leader6='d'">notated music</xsl:when>
+        <xsl:when test="$leader6='i'">sound recording</xsl:when>
+        <xsl:when test="$leader6='j'">musical sound recording</xsl:when>
+        <xsl:when test="$leader6='k'">still image</xsl:when>
+        <xsl:when test="$leader6='g'">moving image</xsl:when>
+        <xsl:when test="$leader6='r'">three dimensional object</xsl:when>
+        <xsl:when test="$leader6='m'">software, multimedia</xsl:when>
+        <xsl:when test="$leader6='p'">mixed material</xsl:when>
+        <xsl:when test="$leader6='o'">kit</xsl:when>
+     */
+
+    // evaluated in this order. first matching applies.
+    private static final Rule[] TYPE_RULES = {
+            new Rule(
+                    "book",
+                    null,
+                    "Monograph",
+                    Set.of("Print", "Volume"),
+                    Set.of()
+            ),
+            new Rule(
+                    "E-book",
+                    null,
+                    null,
+                    Set.of("EBook"),
+                    Set.of()
+            ),
+            new Rule(
+                    "E-article",
+                    "DigitalResource",
+                    null,
+                    Set.of("ComponentPart"),
+                    Set.of()
+            ),
+            new Rule(
+                    "article",
+                    null,
+                    null,
+                    Set.of("ComponentPart"),
+                    Set.of()
+            ),
+            new Rule(
+                    "E-journal",
+                    "DigitalResource",
+                    "Serial",
+                    Set.of(),
+                    Set.of()
+            ),
+            new Rule(
+                    "journal",
+                    null,
+                    "Serial",
+                    Set.of(),
+                    Set.of()
+            ),
+            new Rule(
+                    "manuscript",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Handskrifter")
+            ),
+            new Rule(
+                    "software, multimedia",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Software")
+            ),
+            new Rule(
+                    "moving image",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("MovingImage")
+            ),
+            new Rule(
+                    "still image",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Bilder")
+            ),
+            new Rule(
+                    "notated music",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Noterad%20musik")
+            ),
+            new Rule(
+                    "musical sound recording",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Musik")
+            ),
+            new Rule(
+                    "sound recording",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Tal")
+            ),
+            new Rule(
+                    "sound recording",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Audio")
+            ),
+            new Rule(
+                    "sound recording",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Ljudb%C3%B6cker")
+            ),
+            new Rule(
+                    "cartographic",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Kartografiskt%20material")
+            ),
+            new Rule(
+                    "three dimensional object",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("ThreeDimensionalForm")
+            ),
+            new Rule(
+                    "text",
+                    null,
+                    null,
+                    Set.of(),
+                    Set.of("Text")
+            )
+    };
 }
