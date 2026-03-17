@@ -815,6 +815,13 @@ public class XSearchServlet extends WhelkHttpServlet {
     // evaluated in this order. first matching applies.
     private static final Rule[] TYPE_RULES = {
             new Rule(
+                    "kit",
+                    "PhysicalResource",
+                    "Monograph",
+                    Set.of(),
+                    Set.of("Kit")
+            ),
+            new Rule(
                     "book",
                     null,
                     "Monograph",
