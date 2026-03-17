@@ -31,9 +31,6 @@ selectByIds(ids) { instanceDoc ->
             "inCollection": [
                     ["@id": "https://id.kb.se/term/div/complement"]
             ],
-            "broader": [
-                    "@id": idToLabelMap[instanceId]["uri"]
-            ],
             "prefLabel": idToLabelMap[instanceId]["label"]
     ]
 
