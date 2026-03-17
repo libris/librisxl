@@ -1,5 +1,6 @@
 package whelk.sru.servlet;
 
+import groovy.lang.Tuple2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import se.kb.libris.util.marc.Field;
@@ -7,6 +8,10 @@ import se.kb.libris.util.marc.MarcFieldComparator;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
+import se.kb.libris.utils.isbn.ConvertException;
+import se.kb.libris.utils.isbn.Isbn;
+import se.kb.libris.utils.isbn.IsbnException;
+import se.kb.libris.utils.isbn.IsbnParser;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -494,14 +499,23 @@ public class XSearchServlet extends WhelkHttpServlet {
         "issn": "1403-3844",
 
          */
-        // TODO XL search result includes generated ISBN10 or ISBN13
-        var isbns = get(item, List.of("identifiedBy")).stream()
+
+        var isbns = new ArrayList<>(get(item, List.of("identifiedBy")).stream()
                 .filter(t -> "ISBN".equals(t.get(TYPE_KEY)))
                 .filter(c -> c.containsKey("value"))
-                .map(c -> c.get("value"))
-                .toList();
+                .map(c -> new Tuple2<>((String) c.get("value"), (Object) c.get("qualifier")))
+                .toList());
+
+        // XL search result includes generated ISBN10 or ISBN13.
+        // Remove ISBN10 without qualifier if corresponding ISBN13 exists
+        isbns.removeIf(i -> {
+            var i13 = toIsbn13(i.getV1());
+            var hasNoQualifier = i.getV2() == null;
+            return i13 != null && hasNoQualifier && isbns.stream().anyMatch(i2 -> i13.equals(i2.getV1()));
+        });
+
         if (!isbns.isEmpty()) {
-            result.put("isbn", unwrapSingle(isbns));
+            result.put("isbn", unwrapSingle(isbns.stream().map(Tuple2::getV1).toList()));
         }
 
         var issns = get(item, List.of("identifiedBy")).stream()
@@ -671,6 +685,21 @@ public class XSearchServlet extends WhelkHttpServlet {
         // TODO any other fields?
 
         return result;
+    }
+
+    private static String toIsbn13(String isbn) {
+        if (isbn == null || isbn.length() != 10) {
+            return null;
+        }
+        try {
+            var other = IsbnParser.parse(isbn);
+            if (other == null) {
+                return null;
+            }
+            return other.convert(Isbn.ISBN13).toString();
+        } catch (IsbnException | ConvertException ignored) {
+            return null;
+        }
     }
 
     @SuppressWarnings("unchecked")
