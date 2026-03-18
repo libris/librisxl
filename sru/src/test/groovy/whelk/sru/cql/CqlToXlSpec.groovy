@@ -134,7 +134,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         then:
-        thrown RuntimeException
+        thrown ParseCancellationException
     }
 
 }

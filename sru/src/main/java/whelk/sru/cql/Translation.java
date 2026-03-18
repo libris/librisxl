@@ -3,6 +3,7 @@ package whelk.sru.cql;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import sru.whelk.cql.cqlLexer;
 import sru.whelk.cql.cqlParser;
 
@@ -17,12 +18,12 @@ public class Translation
         lexer.addErrorListener(new ANTLRErrorListener() {
             @Override
             public void syntaxError(Recognizer<?, ?> recognizer, Object o, int i, int i1, String s, RecognitionException e) {
-                throw new RuntimeException("ANTLR Lex of query failed: " + s);
+                throw new ParseCancellationException("ANTLR Lex of query failed: " + s);
             }
 
             @Override
             public void reportAmbiguity(Parser parser, DFA dfa, int i, int i1, boolean b, BitSet bitSet, ATNConfigSet atnConfigSet) {
-                throw new RuntimeException("ANTLR Lex of query failed (ambiguity).");
+                throw new ParseCancellationException("ANTLR Lex of query failed (ambiguity).");
             }
 
             @Override

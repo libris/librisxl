@@ -1,5 +1,6 @@
 package whelk.sru.servlet;
 
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,11 +62,11 @@ public class SruServlet extends WhelkHttpServlet {
             return;
         }
 
-        String CqlQueryString = parameters.get("query")[0];
-        String XlQueryString = Translation.translateCqlToXlQuery(CqlQueryString);
-
         Map<String, Object> results;
         try {
+            String CqlQueryString = parameters.get("query")[0];
+            String XlQueryString = Translation.translateCqlToXlQuery(CqlQueryString);
+
             // This part is a little weird
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
             String[] q = new String[]{XlQueryString};
@@ -75,8 +76,8 @@ public class SruServlet extends WhelkHttpServlet {
             AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
             Query query = new Query(qp, ap, vocabMappings, esSettings, whelk);
             results = query.collectResults();
-        } catch (InvalidQueryException e) {
-            logger.error("Bad query.", e);
+        } catch (InvalidQueryException | ParseCancellationException e) {
+            logger.info("Bad query: \"" + parameters.get("query")[0] + "\" -> " + e.getMessage());
             res.sendError(400);
             return;
         }
