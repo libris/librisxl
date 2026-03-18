@@ -63,7 +63,7 @@
       "1": "marc:JurisdictionName",
       "2": "marc:NameInDirectOrder"
     },
-    "NOTE-TypeOfRecordType": "Position b OBSOLETE since 1995 (was ArchivalUnit)",
+    "NOTE:TypeOfRecordType": "Position b OBSOLETE since 1995 (was ArchivalUnit)",
     "TypeOfRecordType": {
       "a": "Text",
       "c": "NotatedMusic",
@@ -5429,7 +5429,7 @@
     },
     "043": {
       "NOTE:local": "ANVÄNDS NORMALT EJ - Används normalt inte i Bibliografiska formatet, men ska ligga kvar oförändrat i importerade poster.",
-      "NOTE:lc": "Is geographicCoverage in BF2",
+      "NOTE:LC": "Is geographicCoverage in BF2",
       "aboutEntity": "?work",
       "link": "marc:hasGeographicAreaCode",
       "resourceType": "marc:GeographicAreaCode",
@@ -8473,7 +8473,7 @@
 
     "249": {
       "ignored": true,
-      "NOTE:Local": "LIBRIS-definierat fält, OBSOLET sedan 2004",
+      "NOTE:local": "LIBRIS-definierat fält, OBSOLET sedan 2004",
       "NOTE": "Global cleanup of existing occurrences. See LXL-3103 for more info"
     },
 
@@ -8560,7 +8560,7 @@
 
     "256": {
       "NOTE:LC": "Prior to the definition of this field in 1987, file characteristics were recorded in subfield $a of field 300",
-      "NOTE:Local": "Until librisxl version 1.7 mapped to digitalCharacteristic",
+      "NOTE:local": "Until librisxl version 1.7 mapped to digitalCharacteristic",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "marc:ComputerFileCharacteristics",
@@ -10982,7 +10982,7 @@
        ]
      },
     "351": {
-      "NOTE:Local": "ignoreOnRevert?",
+      "NOTE:local": "ignoreOnRevert?",
       "addLink": "collectionArrangement",
       "resourceType": "CollectionArrangement",
       "$a": {"addProperty": "collectionOrganization"},
@@ -11522,7 +11522,7 @@
     "490": {
       "include": ["inseries"],
       "groupId": "#seriesmember-$seq",
-      "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing ": "SetFlagsByPatterns"},
+      "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing": "SetFlagsByPatterns"},
       "i2": null,
       "$a": {"addProperty": "seriesStatement"},
       "$l": {"ignored": true},
@@ -11983,7 +11983,7 @@
 
     "514": {
       "NOTE:LC": "514 - DATA QUALITY NOTE (NR) nac",
-      "NOTE:Local": "Removed from bibliographic marc-export",
+      "NOTE:local": "Removed from bibliographic marc-export",
       "ignored": true,
       "NOTE:record-count": 0
     },
@@ -12757,7 +12757,7 @@
       "aboutEntity": "?thing",
       "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
       "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
-      "NOTE:Local": "Removed from bibliographic marc-export",
+      "NOTE:local": "Removed from bibliographic marc-export",
       "i1": {"marcDefault": " "},
       "$a": {"addProperty": "marc:custodian"}
     },
@@ -13047,7 +13047,7 @@
     },
     "562": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
-      "Note:LC": "nac",
+      "NOTE:LC": "nac",
       "TODO": "$a: Identifying Markings not item Condition, hold inherits bib",
       "NOTE": "$e: number of copies in marc not inventoryLevel, less of a semantic variant but see test #2",
       "addLink": "marc:hasCopyAndVersionIdentificationNote",
@@ -20515,7 +20515,7 @@
     },
 
     "976": {
-      "Note:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
+      "NOTE:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
       "aboutEntity": "?thing",
       "addLink": "marc:hasBib976",
       "resourceType": "marc:Bib976",
