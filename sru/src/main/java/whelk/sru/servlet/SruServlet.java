@@ -1,5 +1,6 @@
 package whelk.sru.servlet;
 
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,6 +10,7 @@ import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.*;
+import whelk.sru.cql.Translation;
 import whelk.util.http.WhelkHttpServlet;
 
 import javax.servlet.http.HttpServletRequest;
@@ -60,26 +62,22 @@ public class SruServlet extends WhelkHttpServlet {
             return;
         }
 
-        String queryString = parameters.get("query")[0];
-
-        if (queryString.endsWith(" sortBy libris.legacysort"))
-            queryString = queryString.substring(0, queryString.length()-25);
-
-        String instanceOnlyQueryString = "(" + queryString + ") AND type=Instance";
-
         Map<String, Object> results;
         try {
+            String CqlQueryString = parameters.get("query")[0];
+            String XlQueryString = Translation.translateCqlToXlQuery(CqlQueryString);
+
             // This part is a little weird
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
-            String[] q = new String[]{instanceOnlyQueryString};
+            String[] q = new String[]{XlQueryString};
             paramsAsIfSearch.put("_q", q);
             paramsAsIfSearch.put("_stats", new String[] { "false" }); // don't need facets
             QueryParams qp = new QueryParams(paramsAsIfSearch);
             AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
             Query query = new Query(qp, ap, vocabMappings, esSettings, whelk);
             results = query.collectResults();
-        } catch (InvalidQueryException e) {
-            logger.error("Bad query.", e);
+        } catch (InvalidQueryException | ParseCancellationException e) {
+            logger.info("Bad query: \"" + parameters.get("query")[0] + "\" -> " + e.getMessage());
             res.sendError(400);
             return;
         }
