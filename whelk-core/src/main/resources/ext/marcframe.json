@@ -12858,11 +12858,11 @@
           }}
         },
         {
-          "name": "LanguageNote and Notation in same field.",
+          "name": "LanguageNote and Notation in same field. Removed interpunction in normalized",
           "source": {
             "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin;"},{"b": "Roman alphabet."}]}
           },
-          "source": {
+          "normalized": {
             "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin"},{"b": "Roman alphabet"}]}
           },
           "result": {"mainEntity": {
@@ -13237,7 +13237,7 @@
           "source": {"583": {"ind1": "1", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
-          "source": {"583": {"ind1": " ", "ind2": " ", "subfields": [
+          "normalized": {"583": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
           "result": {"mainEntity": {
@@ -17317,6 +17317,7 @@
           }}
         },
         {
+          "name": "Normalized 711 has removed interpunction in $a",
           "source": {
             "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Westminster Assembly"},
@@ -17324,7 +17325,7 @@
               {"n": "10"},
               {"x": "2222-2222"}
             ]}},
-            "source": {
+            "normalized": {
               "711": {"ind1": "2", "ind2": " ", "subfields": [
                 {"a": "Westminster Assembly,"},
                 {"n": "10"},
