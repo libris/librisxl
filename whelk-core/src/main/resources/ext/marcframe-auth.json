@@ -2277,7 +2277,7 @@
     "$0": {"addProperty": "marc:recordControlNumber"},
     "$1": {"ignored": true, "NOTE:LC": "nac"},
     "$2": {"property": "marc:sourceOfTerm"},
-     "spec": [     {
+     "_spec": [     {
         "name": "genreForm unlinked",
         "source": [
           {"380": {"ind1": " ", "ind2": " ", "subfields": [{"a": "CD-böcker"}]}}
@@ -2287,7 +2287,7 @@
             "@type": "Identity",
             "genreForm" : [ {
               "@type" : "GenreForm",
-              "label" : "CD-böcker"
+              "label" : [ "CD-böcker" ]
             }
            ]
           }
