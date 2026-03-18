@@ -968,7 +968,7 @@
         "[15]": null,
         "[16]": {
           "NOTE:LC": "Transposition and arrangement - # - nac",
-          "ignore": true,
+          "ignored": true,
           "fixedDefault": "|"
         },
         "[17]": null
@@ -1854,7 +1854,7 @@
         "[9]": {
           "NOTE:LC": "09 - Production elements",
           "NOTE": "LC ignores all but c & d",
-          "ignore": true,
+          "ignored": true,
           "NOTE:record-count": 0
         },
         "[10]": {
@@ -2600,7 +2600,7 @@
         "[32]": null,
         "[33]": {
           "NOTE:LC": "Transposition and arrangement - # - nac",
-          "ignore": true,
+          "ignored": true,
           "fixedDefault": "|"
         },
         "[34]": null
@@ -5832,11 +5832,12 @@
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
       "i1": null,
       "$a": {"addProperty": "classificationPortion"},
-      "$b": {"ignored": true},
+      "$b": {"ignored": true, "NOTE:LC": "Item number (NR)"},
       "$0": {"property": "marc:recordControlNumber"},
-      "$1": {"ignore": true, "NOTE:LC": "nac"},
+      "$1": {"ignored": true, "NOTE:LC": "nac"},
       "_spec": [
         {
+          "name": "NAL classification, item number ignored",
           "source": {
             "070": {"ind1": "0", "ind2": " ", "subfields": [{"a": "QH301.A5"},{"b": "1981"}]}
           },
@@ -12484,13 +12485,58 @@
     "535": {
       "addLink": "marc:hasLocationOfOriginalsDuplicatesNote",
       "resourceType": "marc:LocationOfOriginalsDuplicatesNote",
-      "i1": {"property": "marc:holderOf"},
+      "i1": {"property": "marc:holderOf", "NOTE:LC": "Custodial role"},
       "$a": {"property": "marc:custodian"},
       "$b": {"property": "marc:postalAddress"},
-      "$c": {"ignore": true, "NOTE": "Country"},
+      "$c": {"ignored": true, "NOTE": "Country"},
       "$d": {"addProperty": "marc:telecommunicationsAddress"},
       "$g": {"property": "marc:repositoryLocationCode"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "name": "ignored: 535$c is dropped",
+          "source": {
+            "535": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Holder"},
+              {"c": "Country"},
+              {"g": "Location"}
+            ]}
+          },
+          "normalized": {
+            "535": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Holder"},
+              {"g": "Location"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasLocationOfOriginalsDuplicatesNote": [ {
+                "@type": "marc:LocationOfOriginalsDuplicatesNote",
+                "marc:custodian": "Holder",
+                "marc:holderOf": "1",
+                "marc:repositoryLocationCode": "Location"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "ignored-only: no 535 emitted on revert",
+          "source": {
+            "535": {"ind1": "2", "ind2": " ", "subfields": [
+              {"c": "Sweden"}
+            ]}
+          },
+          "normalized": [],
+          "result": {
+            "mainEntity": {
+              "marc:hasLocationOfOriginalsDuplicatesNote": [ {
+                "@type": "marc:LocationOfOriginalsDuplicatesNote",
+                "marc:holderOf": "2"
+              } ]
+            }
+          }
+        }
+      ]
     },
     "536": {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
