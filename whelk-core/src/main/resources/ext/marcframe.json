@@ -63,7 +63,7 @@
       "1": "marc:JurisdictionName",
       "2": "marc:NameInDirectOrder"
     },
-    "NOTE-TypeOfRecordType": "Position b OBSOLETE since 1995 (was ArchivalUnit)",
+    "NOTE:TypeOfRecordType": "Position b OBSOLETE since 1995 (was ArchivalUnit)",
     "TypeOfRecordType": {
       "a": "Text",
       "c": "NotatedMusic",
@@ -968,7 +968,7 @@
         "[15]": null,
         "[16]": {
           "NOTE:LC": "Transposition and arrangement - # - nac",
-          "ignore": true,
+          "ignored": true,
           "fixedDefault": "|"
         },
         "[17]": null
@@ -1854,7 +1854,7 @@
         "[9]": {
           "NOTE:LC": "09 - Production elements",
           "NOTE": "LC ignores all but c & d",
-          "ignore": true,
+          "ignored": true,
           "NOTE:record-count": 0
         },
         "[10]": {
@@ -2600,7 +2600,7 @@
         "[32]": null,
         "[33]": {
           "NOTE:LC": "Transposition and arrangement - # - nac",
-          "ignore": true,
+          "ignored": true,
           "fixedDefault": "|"
         },
         "[34]": null
@@ -5429,7 +5429,7 @@
     },
     "043": {
       "NOTE:local": "ANVÄNDS NORMALT EJ - Används normalt inte i Bibliografiska formatet, men ska ligga kvar oförändrat i importerade poster.",
-      "NOTE:lc": "Is geographicCoverage in BF2",
+      "NOTE:LC": "Is geographicCoverage in BF2",
       "aboutEntity": "?work",
       "link": "marc:hasGeographicAreaCode",
       "resourceType": "marc:GeographicAreaCode",
@@ -5832,11 +5832,12 @@
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
       "i1": null,
       "$a": {"addProperty": "classificationPortion"},
-      "$b": {"ignored": true},
+      "$b": {"ignored": true, "NOTE:LC": "Item number (NR)"},
       "$0": {"property": "marc:recordControlNumber"},
-      "$1": {"ignore": true, "NOTE:LC": "nac"},
+      "$1": {"ignored": true, "NOTE:LC": "nac"},
       "_spec": [
         {
+          "name": "NAL classification, item number ignored",
           "source": {
             "070": {"ind1": "0", "ind2": " ", "subfields": [{"a": "QH301.A5"},{"b": "1981"}]}
           },
@@ -8472,7 +8473,7 @@
 
     "249": {
       "ignored": true,
-      "NOTE:Local": "LIBRIS-definierat fält, OBSOLET sedan 2004",
+      "NOTE:local": "LIBRIS-definierat fält, OBSOLET sedan 2004",
       "NOTE": "Global cleanup of existing occurrences. See LXL-3103 for more info"
     },
 
@@ -8559,7 +8560,7 @@
 
     "256": {
       "NOTE:LC": "Prior to the definition of this field in 1987, file characteristics were recorded in subfield $a of field 300",
-      "NOTE:Local": "Until librisxl version 1.7 mapped to digitalCharacteristic",
+      "NOTE:local": "Until librisxl version 1.7 mapped to digitalCharacteristic",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "marc:ComputerFileCharacteristics",
@@ -10981,7 +10982,7 @@
        ]
      },
     "351": {
-      "NOTE:Local": "ignoreOnRevert?",
+      "NOTE:local": "ignoreOnRevert?",
       "addLink": "collectionArrangement",
       "resourceType": "CollectionArrangement",
       "$a": {"addProperty": "collectionOrganization"},
@@ -11521,7 +11522,7 @@
     "490": {
       "include": ["inseries"],
       "groupId": "#seriesmember-$seq",
-      "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing ": "SetFlagsByPatterns"},
+      "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing": "SetFlagsByPatterns"},
       "i2": null,
       "$a": {"addProperty": "seriesStatement"},
       "$l": {"ignored": true},
@@ -11982,7 +11983,7 @@
 
     "514": {
       "NOTE:LC": "514 - DATA QUALITY NOTE (NR) nac",
-      "NOTE:Local": "Removed from bibliographic marc-export",
+      "NOTE:local": "Removed from bibliographic marc-export",
       "ignored": true,
       "NOTE:record-count": 0
     },
@@ -12484,13 +12485,58 @@
     "535": {
       "addLink": "marc:hasLocationOfOriginalsDuplicatesNote",
       "resourceType": "marc:LocationOfOriginalsDuplicatesNote",
-      "i1": {"property": "marc:holderOf"},
+      "i1": {"property": "marc:holderOf", "NOTE:LC": "Custodial role"},
       "$a": {"property": "marc:custodian"},
       "$b": {"property": "marc:postalAddress"},
-      "$c": {"ignore": true, "NOTE": "Country"},
+      "$c": {"ignored": true, "NOTE": "Country"},
       "$d": {"addProperty": "marc:telecommunicationsAddress"},
       "$g": {"property": "marc:repositoryLocationCode"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "name": "ignored: 535$c is dropped",
+          "source": {
+            "535": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Holder"},
+              {"c": "Country"},
+              {"g": "Location"}
+            ]}
+          },
+          "normalized": {
+            "535": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Holder"},
+              {"g": "Location"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasLocationOfOriginalsDuplicatesNote": [ {
+                "@type": "marc:LocationOfOriginalsDuplicatesNote",
+                "marc:custodian": "Holder",
+                "marc:holderOf": "1",
+                "marc:repositoryLocationCode": "Location"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "ignored-only: no 535 emitted on revert",
+          "source": {
+            "535": {"ind1": "2", "ind2": " ", "subfields": [
+              {"c": "Sweden"}
+            ]}
+          },
+          "normalized": [],
+          "result": {
+            "mainEntity": {
+              "marc:hasLocationOfOriginalsDuplicatesNote": [ {
+                "@type": "marc:LocationOfOriginalsDuplicatesNote",
+                "marc:holderOf": "2"
+              } ]
+            }
+          }
+        }
+      ]
     },
     "536": {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
@@ -12711,7 +12757,7 @@
       "aboutEntity": "?thing",
       "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
       "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
-      "NOTE:Local": "Removed from bibliographic marc-export",
+      "NOTE:local": "Removed from bibliographic marc-export",
       "i1": {"marcDefault": " "},
       "$a": {"addProperty": "marc:custodian"}
     },
@@ -12812,11 +12858,11 @@
           }}
         },
         {
-          "name": "LanguageNote and Notation in same field.",
+          "name": "LanguageNote and Notation in same field. Removed interpunction in normalized",
           "source": {
             "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin;"},{"b": "Roman alphabet."}]}
           },
-          "source": {
+          "normalized": {
             "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin"},{"b": "Roman alphabet"}]}
           },
           "result": {"mainEntity": {
@@ -13001,7 +13047,7 @@
     },
     "562": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
-      "Note:LC": "nac",
+      "NOTE:LC": "nac",
       "TODO": "$a: Identifying Markings not item Condition, hold inherits bib",
       "NOTE": "$e: number of copies in marc not inventoryLevel, less of a semantic variant but see test #2",
       "addLink": "marc:hasCopyAndVersionIdentificationNote",
@@ -13191,7 +13237,7 @@
           "source": {"583": {"ind1": "1", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
-          "source": {"583": {"ind1": " ", "ind2": " ", "subfields": [
+          "normalized": {"583": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
           "result": {"mainEntity": {
@@ -17271,6 +17317,7 @@
           }}
         },
         {
+          "name": "Normalized 711 has removed interpunction in $a",
           "source": {
             "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Westminster Assembly"},
@@ -17278,7 +17325,7 @@
               {"n": "10"},
               {"x": "2222-2222"}
             ]}},
-            "source": {
+            "normalized": {
               "711": {"ind1": "2", "ind2": " ", "subfields": [
                 {"a": "Westminster Assembly,"},
                 {"n": "10"},
@@ -20468,7 +20515,7 @@
     },
 
     "976": {
-      "Note:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
+      "NOTE:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
       "aboutEntity": "?thing",
       "addLink": "marc:hasBib976",
       "resourceType": "marc:Bib976",
