@@ -107,6 +107,19 @@ class AstSpec extends Specification {
         )
     }
 
+    def "like"() {
+        given:
+        def input = "contributor ~ \"ns:abc\""
+        def lexedSymbols = Lex.lexQuery(input)
+        Parse.OrComb parseTree = Parse.parseQuery(lexedSymbols)
+        Ast.Node ast = Ast.buildFrom(parseTree)
+
+        expect:
+        ast == new Ast.Code(new Lex.Symbol(STRING, "contributor", 0),
+                Operator.LIKE,
+                new Ast.Leaf(new Lex.Symbol(QUOTED_STRING, "ns:abc", 14)))
+    }
+
     def "comparison"() {
         given:
         def input = "published >= 2000"

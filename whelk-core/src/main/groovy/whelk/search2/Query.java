@@ -22,6 +22,7 @@ import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
 
 import whelk.util.DocumentUtil;
+import whelk.util.FresnelUtil;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -163,6 +165,8 @@ public class Query {
     }
 
     protected Map<String, Object> getPartialCollectionView() {
+
+
         var view = new LinkedHashMap<String, Object>();
 
         view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
@@ -174,6 +178,22 @@ public class Query {
         if (queryParams.mappingOnly) {
             linkLoader.loadChips();
             return view;
+        }
+
+        var anyLike = qTree.allDescendants().anyMatch(n -> n instanceof Condition c
+                && c.operator() == Operator.LIKE
+                && c.value() instanceof Link);
+        if (anyLike) {
+            // FIXME this depends on chips being queued in getSearchMapping()
+            linkLoader.loadChips();
+            qTree.allDescendants().forEach(n -> {
+                if (n instanceof Condition c
+                        && c.operator() == Operator.LIKE
+                        && c.value() instanceof Link link) {
+                    var needle = whelk.getFresnelUtil().asString(link.description(), FresnelUtil.Lenses.SEARCH_NEEDLE);
+                    link.setSearchNeedle(needle);
+                }
+            });
         }
 
         view.put("itemOffset", queryParams.offset);
@@ -544,6 +564,8 @@ public class Query {
                     links.forEach(link -> link.setChip(dummyChip(id)));
                 }
             });
+
+            links.clear();
         }
 
         private Map<String, Object> dummyChip(String id) {
