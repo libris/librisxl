@@ -2762,6 +2762,122 @@
           }
         },
         {
+          "name": "With publication place, agent and date (264 $a $b $c) and 008",
+          "source": [
+            {"008": "|     s2020    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm :"},
+              {"b": "Norstedts,"},
+              {"c": "2020"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/sw"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2020"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Norstedts"},
+                  "place": {"@type": "Place", "label": "Stockholm"},
+                  "year": "2020"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "No publication place (264 $a) and 008",
+          "source": [
+            {"008": "|     s2021    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Bonnier,"},
+              {"c": "2021"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/sw"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2021"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Bonnier"},
+                  "year": "2021"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Publisher only (264 $b) with unknown date/country in 008",
+          "source": [
+            {"008": "|     snnnn    xx |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Saga Egmont"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/xx"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "nnnn"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Saga Egmont"}
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conflicting 008 year and 264$c year are both preserved",
+          "source": [
+            {"008": "|     s2020    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Norstedts,"},
+              {"c": "2019"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/sw"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2020"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Norstedts"},
+                  "year": "2019"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "export fixedDefault in the absence of frequency in series",
           "source": {
             "leader": "     cas a        i 4500",
