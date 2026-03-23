@@ -367,6 +367,11 @@ public non-sealed class Property extends PathElement {
         return langAlias != null;
     }
 
+    public boolean isPreferLike() {
+        // FIXME: don't hardcode
+        return isCategory("https://id.kb.se/ns/librissearch/preferLike", definition);
+    }
+
     private static boolean isComposite(Map<String, Object> definition) {
         // FIXME: don't hardcode
         return isCategory("https://id.kb.se/ns/librissearch/composite", definition);

@@ -6,6 +6,7 @@ import whelk.search2.ESSettings;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static whelk.search2.QueryUtil.matchAny;
@@ -22,7 +23,7 @@ public sealed abstract class Any implements Node, Value permits Any.EmptyGroup, 
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
         // TODO
         return Map.of();
     }

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -82,8 +83,8 @@ public sealed class Condition implements Node permits Type {
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
-        return _toSearchMapping(makeUpLink);
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
+        return _toSearchMapping(makeUpLink, makeReplaceLink);
     }
 
     @Override
@@ -210,12 +211,19 @@ public sealed class Condition implements Node permits Type {
         return new Or(altFields);
     }
 
-    private Map<String, Object> _toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
+    private Map<String, Object> _toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
         Map<String, Object> m = new LinkedHashMap<>();
 
         m.put("property", selector.definition());
         m.put(operator.termKey, value instanceof Resource r ? r.description() : value.queryForm());
         m.put("up", makeUpLink.apply(this));
+
+        if (operator == LIKE) {
+            m.put("toEquals", makeReplaceLink.apply(this, new Condition(selector, EQUALS, value)));
+        }
+        if (operator == EQUALS && selector instanceof Property p && p.isPreferLike()) {
+            m.put("toLike", makeReplaceLink.apply(this, new Condition(selector, LIKE, value)));
+        }
 
         m.put("_key", selector.queryKey());
         m.put("_value", value.queryForm());

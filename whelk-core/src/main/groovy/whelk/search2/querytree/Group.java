@@ -49,9 +49,9 @@ public sealed abstract class Group implements Node permits And, Or {
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
         var m = new LinkedHashMap<String, Object>();
-        m.put(key(), children().stream().map(c -> c.toSearchMapping(makeUpLink)).toList());
+        m.put(key(), children().stream().map(c -> c.toSearchMapping(makeUpLink, makeReplaceLink)).toList());
         m.put("up", makeUpLink.apply(this));
         return m;
     }
