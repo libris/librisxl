@@ -8,7 +8,6 @@ import whelk.search2.querytree.Property;
 import whelk.search2.querytree.Term;
 import whelk.search2.querytree.VocabTerm;
 import whelk.util.DocumentUtil;
-import whelk.util.Restrictions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,7 +62,7 @@ public record VocabMappings(
         Map<BaseProperty, Map<Value, List<NarrowerProperty>>>
         for example:
         [
-            "category": [
+            "workCategory": [
                     "https://id.kb.se/term/ktg/Literature": ["findCategory"],
                     "https://id.kb.se/term/ktg/Software"  : ["findCategory"],
                     "https://id.kb.se/term/saogf/Poesi"   : ["identifyCategory"]
@@ -88,10 +87,15 @@ public record VocabMappings(
         Map<String, Map<String, Set<String>>> classes = new HashMap<>();
         Map<String, Map<String, Set<String>>> enums = new HashMap<>();
 
+        List<String> coercingProperties = new ArrayList<>();
+
         vocab.forEach((termKey, termDefinition) -> {
             String ns = getNs(termKey, systemVocabNs);
             if (isProperty(termDefinition)) {
                 addAllMappings(termKey, ns, properties, whelk);
+                if (jsonLd.getCategoryMembers("librissearch:coercing").contains(termKey)) {
+                    coercingProperties.add(termKey);
+                }
             } else if (isClass(termDefinition, jsonLd)) {
                 addAllMappings(termKey, ns, classes, whelk);
             } else if (isEnum(termDefinition, jsonLd)) {
@@ -101,7 +105,7 @@ public record VocabMappings(
 
         addMapping(JsonLd.TYPE_KEY, RDF_TYPE, "rdf", properties);
 
-        return new VocabMappings(properties, classes, enums, getPropertiesRestrictedByValue(whelk));
+        return new VocabMappings(properties, classes, enums, getPropertiesRestrictedByValue(whelk, coercingProperties));
     }
 
     private static String getNs(String termKey, String systemVocabNs) {
@@ -206,17 +210,21 @@ public record VocabMappings(
         return asList(termDefinition.get(JsonLd.TYPE_KEY));
     }
 
-    private static Map<String, Map<String, List<String>>> getPropertiesRestrictedByValue(Whelk whelk) {
+    private static Map<String, Map<String, List<String>>> getPropertiesRestrictedByValue(Whelk whelk, List<String> coercingProps) {
         JsonLd ld = whelk.getJsonld();
 
         Map<String, List<String>> groupedBySuperProp = new HashMap<>();
-        Restrictions.NARROWS.forEach((narrowerProp, superProp) ->
-                groupedBySuperProp.computeIfAbsent(superProp, x -> new ArrayList<>())
-                        .add(narrowerProp));
+        coercingProps.forEach(coercing -> {
+            String superProp = get(ld.vocabIndex, List.of(coercing, JsonLd.Rdfs.SUB_PROPERTY_OF, 0, ID_KEY), "");
+            if (!superProp.isEmpty()) {
+                groupedBySuperProp.computeIfAbsent(ld.toTermKey(superProp), x -> new ArrayList<>())
+                        .add(coercing);
+            }
+        });
 
         Map<String, Map<String, List<String>>> propertiesRestrictedByValue = new HashMap<>();
 
-        groupedBySuperProp.forEach((superProp, narrowerProps) -> {
+        groupedBySuperProp.forEach((superProp, coercing) -> {
             var types = new HashSet<String>();
 
             ld.getRange(superProp).forEach(type -> {
@@ -227,10 +235,10 @@ public record VocabMappings(
             for (String type : types) {
                 for (var doc : whelk.getStorage().loadAllByType(type)) {
                     var iri = doc.getThingIdentifiers().stream().findFirst().orElseThrow();
-                    for (var n : narrowerProps) {
+                    for (var n : coercing) {
                         var propDef = ld.vocabIndex.getOrDefault(n, Map.of());
                         Property.getObjectHasValueRestrictions(propDef, ld).forEach(hasValueRestriction -> {
-                            var onProperty = hasValueRestriction.property();
+                            var onProperty = hasValueRestriction.onProperty();
                             var hasValue = hasValueRestriction.value();
                             var path = List.of(JsonLd.GRAPH_KEY, 1, onProperty.name());
                             Predicate<Object> hasMatchingValue = o -> switch (hasValue) {

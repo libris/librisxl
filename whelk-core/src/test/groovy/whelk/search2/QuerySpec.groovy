@@ -23,8 +23,8 @@ class QuerySpec extends Specification {
             "statistics": [
                     "sliceList": [
                             ["dimensionChain": ["findCategory"], "slice": ["dimensionChain": ["identifyCategory"]]],
-                            ["dimensionChain": ["noneCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]],
-                            ["dimensionChain": ["hasInstanceCategory"], "itemLimit": 100]
+                            ["dimensionChain": ["workCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]],
+                            ["dimensionChain": ["instanceCategory"], "itemLimit": 100]
                     ]
             ]
     ]
@@ -275,14 +275,14 @@ class QuerySpec extends Specification {
                         "match_all": [:]
                 ]
             ],
-            "@reverse.instanceOf.category.@id" : [
+            "@reverse.instanceOf._categoryByCollection.@none.@id" : [
                 "aggs" : [
-                    "hasInstanceCategory" : [
+                    "librissearch:instanceCategory" : [
                         "terms" : [
                             "order" : [
                                 "_count" : "desc"
                             ],
-                            "field" : "@reverse.instanceOf.category.@id",
+                            "field" : "@reverse.instanceOf._categoryByCollection.@none.@id",
                             "size" : 100
                         ]
                     ]
@@ -296,8 +296,8 @@ class QuerySpec extends Specification {
 
     def "build agg query for categories 2"() {
         given:
-        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree('category:"https://id.kb.se/term/ktg/X"', disambiguate), appParams2.sliceList)
-        Map aggQuery = Query.buildAggQuery(appParams2.sliceList, jsonLd, [], esSettings, selectedFacets)
+        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree('workCategory:"https://id.kb.se/term/ktg/X"', disambiguate), appParams2.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams2.sliceList, jsonLd, ['T2'], esSettings, selectedFacets)
 
         expect:
         aggQuery == [
@@ -337,7 +337,7 @@ class QuerySpec extends Specification {
             ],
             "_categoryByCollection.@none.@id" : [
                 "aggs" : [
-                    "librissearch:noneCategory" : [
+                    "librissearch:workCategory" : [
                         "terms" : [
                             "order" : [
                                 "_count" : "desc"
@@ -357,15 +357,15 @@ class QuerySpec extends Specification {
                     ]
                 ]
             ],
-            "@reverse.instanceOf.category.@id" : [
+            "@reverse.instanceOf._categoryByCollection.@none.@id" : [
                 "aggs" : [
-                    "hasInstanceCategory" : [
+                    "librissearch:instanceCategory" : [
                         "terms" : [
                             "order" : [
                                 "_count" : "desc"
                             ],
                             "size" : 100,
-                            "field" : "@reverse.instanceOf.category.@id"
+                            "field" : "@reverse.instanceOf._categoryByCollection.@none.@id"
                         ]
                     ]
                 ],
@@ -374,6 +374,94 @@ class QuerySpec extends Specification {
                         "filter" : [
                             "term" : [
                                 "_categoryByCollection.find.@id" : "https://id.kb.se/term/ktg/X"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    }
+
+    def "build agg query for categories 3"() {
+        given:
+        SelectedFacets selectedFacets = new SelectedFacets(new QueryTree('workCategory:"https://id.kb.se/term/ktg/Y"', disambiguate), appParams2.sliceList)
+        Map aggQuery = Query.buildAggQuery(appParams2.sliceList, jsonLd, ['T1'], esSettings, selectedFacets)
+
+        expect:
+        aggQuery == [
+            "instanceOf._categoryByCollection.find.@id" : [
+                "aggs" : [
+                    "librissearch:findCategory" : [
+                        "terms" : [
+                            "size" : 10,
+                            "field" : "instanceOf._categoryByCollection.find.@id",
+                            "order" : [
+                                "_count" : "desc"
+                            ]
+                        ],
+                        "aggs" : [
+                            "instanceOf._categoryByCollection.identify.@id" : [
+                                "aggs" : [
+                                    "librissearch:identifyCategory" : [
+                                        "terms" : [
+                                            "size" : 10,
+                                            "field" : "instanceOf._categoryByCollection.identify.@id",
+                                            "order" : [
+                                                "_count" : "desc"
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                "filter" : [
+                                    "match_all" : [:]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                "filter" : [
+                    "match_all" : [:]
+                ]
+            ],
+            "instanceOf._categoryByCollection.@none.@id" : [
+                "aggs" : [
+                    "librissearch:workCategory" : [
+                        "terms" : [
+                            "size" : 100,
+                            "field" : "instanceOf._categoryByCollection.@none.@id",
+                            "order" : [
+                                "_count" : "desc"
+                            ]
+                        ]
+                    ]
+                ],
+                "filter" : [
+                    "bool" : [
+                        "filter" : [
+                            "term" : [
+                                "instanceOf._categoryByCollection.identify.@id" : "https://id.kb.se/term/ktg/Y"
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            "_categoryByCollection.@none.@id" : [
+                "aggs" : [
+                    "librissearch:instanceCategory" : [
+                        "terms" : [
+                            "size" : 100,
+                            "field" : "_categoryByCollection.@none.@id",
+                            "order" : [
+                                "_count" : "desc"
+                            ]
+                        ]
+                    ]
+                ],
+                "filter" : [
+                    "bool" : [
+                        "filter" : [
+                            "term" : [
+                                "instanceOf._categoryByCollection.identify.@id" : "https://id.kb.se/term/ktg/Y"
                             ]
                         ]
                     ]

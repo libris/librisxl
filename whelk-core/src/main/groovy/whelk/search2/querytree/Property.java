@@ -47,7 +47,7 @@ public non-sealed class Property extends PathElement {
     protected boolean isVocabTerm;
 
     protected Property superProperty;
-    protected List<Restrictions.OnProperty> objectOnPropertyRestrictions;
+    protected List<Restrictions.HasValue> objectOnPropertyRestrictions;
 
     private static final String LIBRIS_SEARCH_NS = "librissearch:";
 
@@ -100,8 +100,8 @@ public non-sealed class Property extends PathElement {
         if (isShorthand(propDef)) {
             return new ShorthandProperty(propertyKey, jsonLd, queryKey);
         }
-        if (Restrictions.isNarrowingProperty(propertyKey)) {
-            return new NarrowedRestrictedProperty(propertyKey, jsonLd, queryKey);
+        if (isCoercing(propDef)) {
+            return new CoercingSubProperty(propertyKey, jsonLd, queryKey);
         }
         if (RDF_TYPE.equals(propertyKey)) {
             return new RdfType(jsonLd, queryKey);
@@ -229,14 +229,12 @@ public non-sealed class Property extends PathElement {
         return indexKey != null;
     }
 
-    public List<Restrictions.OnProperty> objectOnPropertyRestrictions() {
+    public List<Restrictions.HasValue> objectOnPropertyRestrictions() {
         return objectOnPropertyRestrictions != null ? objectOnPropertyRestrictions : List.of();
     }
 
-    protected List<Restrictions.OnProperty> getObjectHasValueRestrictions(JsonLd jsonLd) {
-        return getObjectHasValueRestrictions(definition, jsonLd).stream()
-                .map(Restrictions.OnProperty.class::cast)
-                .toList();
+    protected List<Restrictions.HasValue> getObjectHasValueRestrictions(JsonLd jsonLd) {
+        return getObjectHasValueRestrictions(definition, jsonLd);
     }
 
     public static List<Restrictions.HasValue> getObjectHasValueRestrictions(Map<String, Object> definition, JsonLd jsonLd) {
@@ -372,6 +370,11 @@ public non-sealed class Property extends PathElement {
         return isCategory("https://id.kb.se/ns/librissearch/composite", definition);
     }
 
+    private static boolean isCoercing(Map<String, Object> definition) {
+        // FIXME: don't hardcode
+        return isCategory("https://id.kb.se/ns/librissearch/coercing", definition);
+    }
+
     private static boolean isShorthand(Map<String, Object> definition) {
         // FIXME: don't hardcode
         return isCategory("https://id.kb.se/vocab/shorthand", definition);
@@ -450,15 +453,19 @@ public non-sealed class Property extends PathElement {
         }
     }
 
-    public static final class NarrowedRestrictedProperty extends Property {
-        public NarrowedRestrictedProperty(Property superProperty, String subPropertyKey, JsonLd jsonLd) {
+    public static final class CoercingSubProperty extends Property {
+        public CoercingSubProperty(Property superProperty, String subPropertyKey, JsonLd jsonLd) {
             super(subPropertyKey, jsonLd);
             this.superProperty = superProperty;
         }
 
-        public NarrowedRestrictedProperty(String subPropertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+        public CoercingSubProperty(String subPropertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
             super(subPropertyKey, jsonLd, queryKey);
             this.superProperty = getSuperProperty(jsonLd);
+        }
+
+        public Property getSuperProperty() {
+            return superProperty;
         }
 
         @Override
@@ -471,6 +478,7 @@ public non-sealed class Property extends PathElement {
             return superProperty.definition();
         }
 
+        @Override
         public String esField() {
             if (hasIndexKey()) {
                 return indexKey;
@@ -481,11 +489,6 @@ public non-sealed class Property extends PathElement {
         @Override
         public boolean isRestrictedSubProperty() {
             return true;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return super.equals(obj) || superProperty.equals(obj);
         }
     }
 
@@ -517,7 +520,7 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        protected List<Restrictions.OnProperty> getObjectHasValueRestrictions(JsonLd jsonLd) {
+        protected List<Restrictions.HasValue> getObjectHasValueRestrictions(JsonLd jsonLd) {
             var range = getUnambiguousRange(jsonLd);
             if (range != null) {
                /*

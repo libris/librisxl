@@ -6,7 +6,6 @@ import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.YearRange;
-import whelk.util.Restrictions;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,8 +23,8 @@ public class SelectedFacets {
 
     // TODO: don't hardcode
     private final Set<String> radioProps = Set.of(
-            Restrictions.FIND_CATEGORY,
-            Restrictions.IDENTIFY_CATEGORY
+            "librissearch:findCategory",
+            "librissearch:identifyCategory"
     );
 
     public SelectedFacets(QueryTree queryTree, List<AppParams.Slice> sliceList) {

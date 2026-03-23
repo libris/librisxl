@@ -22,7 +22,6 @@ import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
 
 import whelk.util.DocumentUtil;
-import whelk.util.Restrictions;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,6 +67,10 @@ public class Query {
     private QueryResult queryResult;
 
     private ReducedQueryTree fullQueryTree;
+
+    private static final String FIND_CATEGORY = "librissearch:findCategory";
+    private static final String IDENTIFY_CATEGORY = "librissearch:identifyCategory";
+    private static final String WORK_NONE_CATEGORY = "librissearch:workCategory";
 
     public enum SearchMode {
         SUGGEST,
@@ -421,9 +424,9 @@ public class Query {
         if (!slice.getShowIf().isEmpty()) {
             // Enable @none facet if find/identify/@none in query
             // TODO don't hardcode this if we decide it is what we want
-            if (ctx.selectedFacets().getSelected(Restrictions.FIND_CATEGORY).isEmpty()
-                && ctx.selectedFacets().getSelected(Restrictions.IDENTIFY_CATEGORY).isEmpty()
-                && ctx.selectedFacets().getSelected(Restrictions.NONE_CATEGORY).isEmpty()) {
+            if (ctx.selectedFacets().getSelected(FIND_CATEGORY).isEmpty()
+                && ctx.selectedFacets().getSelected(IDENTIFY_CATEGORY).isEmpty()
+                && ctx.selectedFacets().getSelected(WORK_NONE_CATEGORY).isEmpty()) {
                 return;
             }
         }
@@ -462,8 +465,8 @@ public class Query {
                             m.remove(slice.subSlice().propertyKey());
                         }
                         // TODO don't hardcode this if we decide it is what we want
-                        if (Restrictions.FIND_CATEGORY.equals(pKey) || Restrictions.IDENTIFY_CATEGORY.equals(pKey)) {
-                            m.remove(Restrictions.NONE_CATEGORY);
+                        if (FIND_CATEGORY.equals(pKey) || IDENTIFY_CATEGORY.equals(pKey)) {
+                            m.remove(WORK_NONE_CATEGORY);
                         }
                         //if ("_categoryByCollection.@none".equals(pKey)) {
                         //    m.remove("_categoryByCollection.find");
@@ -477,7 +480,7 @@ public class Query {
                     query.put(field, filterWrap(aggs, property.name(), filter));
                 });
     }
-    
+
     private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {
         return buildCoreAqqQuery(field, slice, ctx, false);
     }
@@ -709,9 +712,8 @@ public class Query {
                                 //List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
                                 //addObservation.accept(qt.remove(selected).add(pv));
                                 Predicate<Node> f = (Node n) -> n instanceof Condition c2
-                                        && c2.selector().path().getLast() instanceof Property p
-                                        && "category".equals(p.queryKey())
-                                        && p.isRestrictedSubProperty();
+                                        && c2.selector() instanceof Property p
+                                        && (p.name().equals(WORK_NONE_CATEGORY) || (p instanceof Property.CoercingSubProperty coercing && coercing.getSuperProperty().name().equals(WORK_NONE_CATEGORY)));
 
                                 var qt2 = qt.removeAll(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
                                 if (selectedValue == null || !selectedValue.contains(c)) {
@@ -787,14 +789,14 @@ public class Query {
 
                 // Move @none to under selected find/identify
                 // TODO don't hardcode this if we decide it is what we want
-                var none = s.remove(Restrictions.NONE_CATEGORY);
+                var none = s.remove(WORK_NONE_CATEGORY);
                 if (none != null) {
-                    var find =  s.get(Restrictions.FIND_CATEGORY);
+                    var find =  s.get(FIND_CATEGORY);
                     if (find != null) {
                         DocumentUtil.traverse(find, (value, path) -> {
-                            if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true) && !path.contains(Restrictions.NONE_CATEGORY)) {
+                            if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true) && !path.contains(WORK_NONE_CATEGORY)) {
                                 var newV = new HashMap<>(m);
-                                ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put(Restrictions.NONE_CATEGORY, none);
+                                ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put(WORK_NONE_CATEGORY, none);
                                 return new DocumentUtil.Replace(newV);
                             }
                             return DocumentUtil.NOP;

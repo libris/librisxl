@@ -123,13 +123,13 @@ class EsQueryTreeSpec extends Specification {
 
     def "category ES query"() {
         given:
-        def q = 'type:T1x category:"https://id.kb.se/term/ktg/Y" category:("https://id.kb.se/term/ktg/A" OR "https://id.kb.se/term/ktg/B")'
+        def q = 'type:T2x workCategory:"https://id.kb.se/term/ktg/Y" workCategory:("https://id.kb.se/term/ktg/A" OR "https://id.kb.se/term/ktg/B")'
         QueryTree qt = new QueryTree(q, disambiguate)
         def appConfig = [
                 "statistics": [
                         "sliceList": [
                                 ["dimensionChain": ["findCategory"], "slice": ["dimensionChain": ["identifyCategory"]]],
-                                ["dimensionChain": ["noneCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]]
+                                ["dimensionChain": ["workCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]]
                         ]
                 ]
         ]
@@ -143,7 +143,7 @@ class EsQueryTreeSpec extends Specification {
                 "bool": [
                         "filter": [
                                 "term": [
-                                        "@type": "T1x"
+                                        "@type": "T2x"
                                 ]
                         ]
                 ]
@@ -151,6 +151,14 @@ class EsQueryTreeSpec extends Specification {
         esQueryTree.getPostFilter() == [
                 "bool": [
                         "must": [[
+                                         "bool": [
+                                                 "filter": [
+                                                         "term": [
+                                                                 "_categoryByCollection.identify.@id": "https://id.kb.se/term/ktg/Y"
+                                                         ]
+                                                 ]
+                                         ]
+                                 ], [
                                          "bool": [
                                                  "should": [[
                                                                     "bool": [
@@ -169,14 +177,6 @@ class EsQueryTreeSpec extends Specification {
                                                                             ]
                                                                     ]
                                                             ]]
-                                         ]
-                                 ], [
-                                         "bool": [
-                                                 "filter": [
-                                                         "term": [
-                                                                 "_categoryByCollection.identify.@id": "https://id.kb.se/term/ktg/Y"
-                                                         ]
-                                                 ]
                                          ]
                                  ]]
                 ]
