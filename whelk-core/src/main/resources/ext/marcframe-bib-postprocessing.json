@@ -115,6 +115,24 @@
         "back": "both"
       },
       {
+        "name":  "Metatesting postprocess merge",
+        "source": {
+          "marc:primaryProvisionActivity": {
+            "@type": "PrimaryProvisionActivity",
+            "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+            "year": "2021",
+            "country": [ {"@id": "https://id.kb.se/country/sw"} ]
+          },
+          "publication": [ {"@type": "Publication", "year": "2021" } ]
+        },
+        "result": {
+          "publication": [
+            {"@type": "PrimaryPublication", "country": [ {"@id": "https://id.kb.se/country/sw"} ], "year": "2021"}
+          ]
+        },
+        "back": "both"
+      },
+      {
         "name": "also handle non-array publication object",
         "source": {
           "marc:primaryProvisionActivity": {

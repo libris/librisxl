@@ -2762,6 +2762,122 @@
           }
         },
         {
+          "name": "With publication place, agent and date (264 $a $b $c) and 008",
+          "source": [
+            {"008": "|     s2020    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm :"},
+              {"b": "Norstedts,"},
+              {"c": "2020"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/sw"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2020"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Norstedts"},
+                  "place": {"@type": "Place", "label": "Stockholm"},
+                  "year": "2020"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "No publication place (264 $a) and 008",
+          "source": [
+            {"008": "|     s2021    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Bonnier,"},
+              {"c": "2021"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/sw"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2021"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Bonnier"},
+                  "year": "2021"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Publisher only (264 $b) with unknown date/country in 008",
+          "source": [
+            {"008": "|     snnnn    xx |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Saga Egmont"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/xx"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "nnnn"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Saga Egmont"}
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conflicting 008 year and 264$c year are both preserved",
+          "source": [
+            {"008": "|     s2020    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Norstedts,"},
+              {"c": "2019"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/sw"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2020"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Norstedts"},
+                  "year": "2019"
+                }
+              ]
+            }
+          }
+        },
+        {
           "name": "export fixedDefault in the absence of frequency in series",
           "source": {
             "leader": "     cas a        i 4500",
@@ -9313,6 +9429,7 @@
       "subfieldOrder": "6 3 ...",
       "_spec": [
         {
+          "name": "publication and manufacture split from i2=1 and i2=3",
           "source": [
             {"264": {"ind1": " ", "ind2": "1", "subfields": [
               {"a": "Stockholm :"}, {"b": "Bonnier,"}, {"c": "1996"}
@@ -9339,6 +9456,125 @@
           }}
         },
         {
+          "name": "publication place only from i2=1 $a",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Lund"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "place": {"@type": "Place", "label": "Lund"}
+              }
+            ]
+          }}
+        },
+        {
+          "name": "publication agent only from i2=1 $b",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Bonnier"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "agent": {"@type": "Agent", "label": "Bonnier"}
+              }
+            ]
+          }}
+        },
+        {
+          "name": "publication malformed date token from i2=1 $c",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"c": "circa 199x?"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "date": "circa 199x?"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "production from i2=0",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "0", "subfields": [
+              {"a": "Malmö :"}, {"b": "Malmö stad,"}, {"c": "2022"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "production": [
+              {
+                "@type": "Production",
+                "place": {"@type": "Place", "label": "Malmö"},
+                "agent": {"@type": "Agent", "label": "Malmö stad"},
+                "year": "2022"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "distribution from i2=2",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "2", "subfields": [
+              {"a": "Göteborg :"}, {"b": "Disa Distribution,"}, {"c": "2019"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "distribution": [
+              {
+                "@type": "Distribution",
+                "place": {"@type": "Place", "label": "Göteborg"},
+                "agent": {"@type": "Agent", "label": "Disa Distribution"},
+                "year": "2019"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "manufacture appliesTo from $3",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"3": "Originalboxen:"}, {"a": "Uppsala :"}, {"b": "Tryckhuset"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "manufacture": [
+              {
+                "@type": "Manufacture",
+                "appliesTo": {"@type": "Resource", "label": "Originalboxen"},
+                "place": {"@type": "Place", "label": "Uppsala"},
+                "agent": {"@type": "Agent", "label": "Tryckhuset"}
+              }
+            ]
+          }}
+        },
+        {
+          "name": "copyright from i2=4 $c",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "4", "subfields": [
+              {"c": "©2012"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "copyright": [
+              {
+                "@type": "Copyright",
+                "date": "©2012"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "publication multi-part with copyright from i2=4",
           "source": [
             {"264": {"ind1": " ", "ind2": "1", "subfields": [
               {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"},
