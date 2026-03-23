@@ -15616,17 +15616,20 @@
           }}
         },
         {
+          "name": "Malformed: blank ind2 with $2 present, normalize ind2 to 7",
+          "TODO": "Requires converter change. Needs ind2 normalization before match rules?",
           "source": {"655": {"ind1": " ", "ind2": " ", "subfields": [{"a": "True crime stories"}, {"2": "lcgft"}]}},
-          "TODO:EmptyInd2-result": {"mainEntity": {
+          "normalized": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "True crime stories"}, {"2": "lcgft"}]}},
+          "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "genreForm": [
                 {
                   "@type": "GenreForm",
-                  "@id": "hhttp://id.loc.gov/authorities/genreForms/gf2014026203.html",
+                  "@id": "http://id.loc.gov/authorities/genreForms/gf2014026203",
                   "inScheme": {
                     "@type": "ConceptScheme",
-                    "@id": "http://id.loc.gov/authorities/genreForms",
+                    "@id": "https://id.kb.se/term/lcgft",
                     "code": "lcgft"
                   },
                   "prefLabel": "True crime stories"
@@ -15636,10 +15639,41 @@
           }}
         },
         {
-          "source": {"655": {"ind1": "7", "ind2": " ", "subfields": [{"a": "Artikeldatabaser"}, {"2": "saogf"}]}},
-          "TODO:": {"mainEntity": {
+          "name": "Malformed: blank ind2 without $2, normalize ind2 to 4",
+          "source": {"655": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Festskrifter"}]}},
+          "normalized": {"655": {"ind1": " ", "ind2": "4", "subfields": [{"a": "Festskrifter"}]}},
+          "result": {"mainEntity": {
             "instanceOf": {
-              "@type": "Text"
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@type": "GenreForm",
+                  "prefLabel": "Festskrifter"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Malformed: ind1/ind2 swapped, normalize using $2 presence",
+          "TODO": "Requires converter change. Needs ind2 normalization before match rules? Make types normalization compatible?",
+          "source": {"655": {"ind1": "7", "ind2": " ", "subfields": [{"a": "Artikeldatabaser"}, {"2": "saogf"}]}},
+          "normalized": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Artikeldatabaser"}, {"2": "saogf"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@type": "GenreForm",
+                  "@id": "https://id.kb.se/term/saogf/Artikeldatabaser",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/saogf",
+                    "code": "saogf"
+                  },
+                  "prefLabel": "Artikeldatabaser"
+                }
+              ]
             }
           }}
         },
