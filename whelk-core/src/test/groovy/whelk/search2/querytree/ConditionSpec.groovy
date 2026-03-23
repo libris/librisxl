@@ -14,7 +14,7 @@ class ConditionSpec extends Specification {
     def "convert to search mapping 1"() {
         given:
         def searchMapping = QueryTreeBuilder.buildTree('p1:v1', disambiguate)
-                .toSearchMapping {n -> ['@id': '/find?_q=*'] }
+                .toSearchMapping ({n -> ['@id': '/find?_q=*']}, {n, n2 -> ['@id': '/find?_q=']})
 
         expect:
         searchMapping == [
@@ -29,7 +29,7 @@ class ConditionSpec extends Specification {
     def "convert to search mapping 2"() {
         given:
         def searchMapping = QueryTreeBuilder.buildTree('NOT p1.p2:E1', disambiguate)
-                .toSearchMapping {n -> ['@id': '/find?_q=*'] }
+                .toSearchMapping ({n -> ['@id': '/find?_q=*']}, {n, n2 -> ['@id': '/find?_q=']})
 
         expect:
         searchMapping == [
@@ -54,7 +54,7 @@ class ConditionSpec extends Specification {
     def "convert to search mapping 3"() {
         given:
         def searchMapping = QueryTreeBuilder.buildTree('@reverse.p3.@reverse.p4:v1', disambiguate)
-                .toSearchMapping {n -> ['@id': '/find?_q=*'] }
+                .toSearchMapping ({n -> ['@id': '/find?_q=*']}, {n, n2 -> ['@id': '/find?_q=']})
 
         expect:
         searchMapping == [
