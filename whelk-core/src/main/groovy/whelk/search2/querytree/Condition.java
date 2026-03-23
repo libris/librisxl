@@ -204,6 +204,7 @@ public sealed class Condition implements Node permits Type {
         }
 
         List<Condition> altFields = Stream.concat(Stream.of(baseType), subtypes.stream())
+                .filter(Predicate.not(jsonLd::isDeprecated))
                 .sorted()
                 .map(t -> withValue(new VocabTerm(t, jsonLd.vocabIndex.get(t))))
                 .toList();
