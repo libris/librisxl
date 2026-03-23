@@ -16,6 +16,8 @@ import java.util.stream.Stream;
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
+import static whelk.search2.Operator.EQUALS;
+import static whelk.search2.Operator.LIKE;
 import static whelk.search2.QueryUtil.parenthesize;
 
 public class SuggestQuery extends Query {
@@ -63,7 +65,8 @@ public class SuggestQuery extends Query {
                             .map(selector -> {
                                 String formattedLink = new Link((String) item.get(ID_KEY)).queryForm();
                                 Link placeholderLink = new Link("http://PLACEHOLDER_LINK");
-                                Condition placeholderNode = new Condition(selector, Operator.EQUALS, placeholderLink);
+                                var op = selector instanceof Property p && p.isPreferLike() ? LIKE : EQUALS;
+                                Condition placeholderNode = new Condition(selector, op, placeholderLink);
                                 String template = qTree.replace(edited.node(), placeholderNode).toQueryString();
                                 int placeholderLinkStart = template.indexOf(placeholderLink.queryForm());
                                 if (placeholderLinkStart == -1) {
@@ -139,7 +142,7 @@ public class SuggestQuery extends Query {
     }
 
     private QueryTree getSuggestQueryTree() throws InvalidQueryException {
-        if (edited.node() instanceof Condition c && c.operator().equals(Operator.EQUALS)) {
+        if (edited.node() instanceof Condition c && c.operator().equals(EQUALS)) {
             Selector selector = c.selector();
             String searchableTypes = selector.range().stream()
                     .filter(type -> defaultBaseTypes.stream()
