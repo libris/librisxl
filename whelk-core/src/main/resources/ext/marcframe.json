@@ -4693,7 +4693,28 @@
       "$a": {"property": "value"},
       "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
       "$b": {"link": "source", "resourceType": "Source", "property": "label"},
-      "$6": null
+      "$6": null,
+      "_spec": [
+        {
+          "name": "PostalRegistration with source in $b",
+          "source": {"032": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "PA-12345"},
+            {"b": "Registering agency"}
+          ]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "PostalRegistration",
+                "value": "PA-12345",
+                "source": {
+                  "@type": "Source",
+                  "label": "Registering agency"
+                }
+              }
+            ]
+          }}
+        }
+      ]
   },
     "033": {
       "NOTE:record-count": 852,
@@ -5077,7 +5098,28 @@
     "resourceType": "StudyNumber",
     "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
     "$b": {"link": "source", "resourceType": "Source", "property": "label"},
-    "$6": null
+    "$6": null,
+    "_spec": [
+      {
+        "name": "StudyNumber with source in $b",
+        "source": {"036": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "SN-2026-001"},
+          {"b": "Study authority"}
+        ]}},
+        "result": {"mainEntity": {
+          "identifiedBy": [
+            {
+              "@type": "StudyNumber",
+              "value": "SN-2026-001",
+              "source": {
+                "@type": "Source",
+                "label": "Study authority"
+              }
+            }
+          ]
+        }}
+      }
+    ]
     },
     "037": {
       "addLink": "acquisitionSource",
@@ -12164,11 +12206,37 @@
       ]
     },
     "508": {
-      "aboutEntity": "?work", 
+      "NOTE:LC": "I - credits",
+      "aboutEntity": "?work",
       "addLink": "hasNote",
       "resourceType": "marc:CreationProductionCreditsNote",
       "$a": {"property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "NOTE:$7": "BF2.1: $7 - Data provenance (R) nac",
+      "_spec": [
+        {
+          "source": [
+            {"508": {"ind1": " ", "ind2": " ", "subfields": [{"a": "credits"}]}},
+            {"511": {"ind1": "0", "ind2": " ", "subfields": [{"a": "cast"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:CreationProductionCreditsNote",
+                  "label": "credits"
+                },
+                {
+                  "@type": "marc:ParticipantOrPerformerNote",
+                  "label": "cast",
+                  "marc:displayConstantController": "marc:NoDisplayConstantGenerated"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "510": {
       "addLink": "indexedIn",
@@ -12194,6 +12262,7 @@
     },
 
     "511": {
+      "NOTE:LC": "I - credits (Add Cast: before $a content)",
       "aboutEntity": "?work",
       "addLink": "hasNote",
       "resourceType": "marc:ParticipantOrPerformerNote",
@@ -12206,7 +12275,45 @@
         }
       },
       "$a": {"property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"511": {"ind1": "1", "ind2": " ", "subfields": [{"a": "cast"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:ParticipantOrPerformerNote",
+                  "label": "cast",
+                  "marc:displayConstantController": "marc:Cast"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": [
+            {"511": {"ind1": " ", "ind2": " ", "subfields": [{"a": "participant"}]}}
+          ],
+          "normalized": [
+            {"511": {"ind1": "0", "ind2": " ", "subfields": [{"a": "participant"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:ParticipantOrPerformerNote",
+                  "label": "participant"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "513": {
       "addLink": "hasNote",
@@ -20480,6 +20587,7 @@
         {"when": "i2=2", "addLink": "isPrimaryTopicOf", "resourceType": "Document"},
         {"when": "i2=8", "addLink": "relatedTo", "resourceType": "Document"}
       ],
+      "TODO:i2-3-4": "LoC 2022 added i2=3/4 for component-part relationships. Evaluate explicit mapping for those values.",
       "TODO?": {
         "if $x=digipic or $y=bild": {"addLink": "depiction"},
         "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
@@ -20487,14 +20595,35 @@
       "$2": {"requires-i1": "7", "property": "marc:electronicLocatorType", "marcDefault": "http"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
+      "NOTE:$7": "$7 - Access status (NR) [NEW, 2019; REDESCRIBED, 2025]. Applies to $g and/or $u.",
+      "TODO:$7": "Evaluate mapping of access-status codes (0,1,u,z) to explicit open/restricted status in RDF.",
       "$8": {"property": "marc:groupid"},
       "$a": {"addProperty": "marc:hostName"},
+      "NOTE:$b": "$b - Access number [OBSOLETE, 2020]",
+      "NOTE:$c": "$c - Compression information (R)",
+      "NOTE:$d": "$d - Path (R)",
+      "NOTE:$e": "$e - Data provenance [NEW, 2022]",
       "$f": {"addProperty": "marc:electronicName"},
-      "$q": {"link": "encodingFormat", "resourceType": "EncodingFormat", "property": "label", "infer": true},
-      "$r": {"ignored": true, "NOTE:LC": "$r - Settings [OBSOLETE, 2020]"},
+      "NOTE:$g": "$g - Persistent identifier (R) [NEW, 2022]. Earlier: Uniform Resource Name [OBSOLETE, 2000].",
+      "NOTE:$h": "$h - Non-functioning Uniform Resource Identifier (R) [NEW, 2022]. Earlier: Processor of request [OBSOLETE, 2020].",
+      "TODO:$g/$h": "Evaluate mapping for PID links ($g) and stale links ($h) without breaking legacy export/revert behavior.",
+      "NOTE:$i": "$i - Instruction [OBSOLETE, 2020]",
+      "NOTE:$j": "$j - Bits per second [OBSOLETE, 2020]",
+      "NOTE:$k": "$k - Password [OBSOLETE, 2020]",
+      "NOTE:$l": "$l - Standardized information governing access (R) [NEW, 2022]. Earlier: Logon [OBSOLETE, 2020].",
+      "NOTE:$m": "$m - Contact for access assistance (R)",
+      "NOTE:$n": "$n - Terms governing access (R) [NEW, 2022]. Earlier: Name of location of host [OBSOLETE, 2020].",
+      "TODO:$l/$n": "Evaluate mapping of 2022 access-rights semantics ($l/$n) as equivalents to 506 structured/text terms.",
+      "NOTE:$o": "$o - Operating system (NR)",
+      "NOTE:$p": "$p - Port (NR)",
+      "$q": {"link": "encodingFormat", "resourceType": "EncodingFormat", "property": "label", "infer": true, "NOTE:LC": "$q - Electronic format type (R) [CHANGED, 2022] [REDESCRIBED, 2022]"},
+      "$r": {"ignored": true, "NOTE:LC": "$r - Settings [OBSOLETE, 2020]. NEW 2022: standardized information governing use and reproduction (equivalent to 540$f/$2/$u).", "TODO": "If mapped, model structured rights/use terms (vocabulary/URI) without clashing with legacy settings usage."},
       "$s": {"addProperty": "contentSize"},
-      "$t": {"ignored": true, "NOTE:LC": "$t - Terminal emulation [OBSOLETE, 2020]"},
+      "$t": {"ignored": true, "NOTE:LC": "$t - Terminal emulation [OBSOLETE, 2020]. NEW 2022: terms governing use and reproduction (equivalent to 540$a).", "TODO": "If mapped, model textual rights/use terms while preserving legacy data safety."},
+      "NOTE:$u": "$u - Uniform Resource Identifier (R) [REDESCRIBED, 2022]. Repeatable; non-functioning URI should go in $h.",
       "$u": {"addProperty": "uri"},
+      "NOTE:$v": "$v - Hours access method available (R)",
+      "NOTE:$w": "$w - Record control number (R)",
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"addProperty": "marc:linkText"},
       "$z": {"addProperty": "marc:publicNote"},
@@ -20603,6 +20732,36 @@
               }
             ]
           }}
+        },
+        {
+          "name": "TODO baseline: i2=3 currently falls back to default electronicLocator mapping",
+          "source": {"856": {"ind1": "4", "ind2": "3", "subfields": [{"u": "http://example.com/component-part"}]}},
+          "normalized": {"856": {"ind1": "4", "ind2": " ", "subfields": [{"u": "http://example.com/component-part"}]}},
+          "result": {"mainEntity": {
+            "electronicLocator": [{"@type": "Document", "uri": ["http://example.com/component-part"]}]
+          }}
+        },
+        {
+          "name": "TODO baseline: i2=4 currently falls back to default electronicLocator mapping",
+          "source": {"856": {"ind1": "4", "ind2": "4", "subfields": [{"u": "http://example.com/component-version"}]}},
+          "normalized": {"856": {"ind1": "4", "ind2": " ", "subfields": [{"u": "http://example.com/component-version"}]}},
+          "result": {"mainEntity": {
+            "electronicLocator": [{"@type": "Document", "uri": ["http://example.com/component-version"]}]
+          }}
+        },
+        {
+          "name": "TODO baseline: $7 currently remains unhandled and is preserved in _marcUncompleted",
+          "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/open-access.pdf"}, {"7": "0"}]}},
+          "normalized": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/open-access.pdf"}]}},
+          "result": {
+            "mainEntity": {
+              "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/open-access.pdf"]}]
+            },
+            "_marcUncompleted": [{
+              "856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/open-access.pdf"}, {"7": "0"}]},
+              "_unhandled": ["7"]
+            }]
+          }
         }
       ]
     },
