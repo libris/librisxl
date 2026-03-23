@@ -6,6 +6,7 @@ import java.util.Map;
 //  e.g. https://id.kb.se/vocab/equals)
 public enum Operator {
     EQUALS("equals", "%s:%s"),
+    LIKE("like", "%s~%s"),
     GREATER_THAN_OR_EQUALS("greaterThanOrEquals", "%s>=%s"),
     GREATER_THAN("greaterThan", "%s>%s"),
     LESS_THAN_OR_EQUALS("lessThanOrEquals", "%s<=%s"),
@@ -39,6 +40,9 @@ public enum Operator {
     public static Map<String, Operator> symbolMappings() {
         return Map.of(
                 "=", EQUALS,
+                ":", EQUALS,
+                "~", LIKE,
+
                 ">", GREATER_THAN,
                 ">=", GREATER_THAN_OR_EQUALS,
                 "<", LESS_THAN,
@@ -47,6 +51,6 @@ public enum Operator {
     }
 
     public boolean isRange() {
-        return this != EQUALS;
+        return this != EQUALS && this != LIKE;
     }
 }

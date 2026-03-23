@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static whelk.search2.QueryUtil.parenthesize;
@@ -31,8 +32,8 @@ public record Not(Node node) implements Node {
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
-        return Map.of("not", node.toSearchMapping(makeUpLink),
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
+        return Map.of("not", node.toSearchMapping(makeUpLink, makeReplaceLink),
                 "up", makeUpLink.apply(this));
     }
 

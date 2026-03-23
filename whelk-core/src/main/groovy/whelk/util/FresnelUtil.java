@@ -55,6 +55,7 @@ public class FresnelUtil {
     public static final String SEARCH_TOKENS = "search-tokens";
     public static final String TOP_SEARCH_TOKENS = "top-search-tokens";
     public static final String TOKENS = "tokens";
+    public static final String SEARCH_NEEDLES = "search-needles";
 
     public record LensGroupChain(List<String> chain) {
         public LensGroupChain(String group) {
@@ -76,6 +77,8 @@ public class FresnelUtil {
         public static final Lens SEARCH_TOKEN = new Lens(SEARCH_TOKEN_CHAIN);
         public static final Lens TOP_SEARCH_TOKEN = new Lens(TOP_SEARCH_TOKEN_CHAIN);
         public static final Lens TOKEN = new Lens(TOKEN_CHAIN);
+        //public static final Lens SEARCH_NEEDLE = new Lens(new LensGroupChain(List.of(SEARCH_NEEDLES, TOP_SEARCH_TOKENS, SEARCH_TOKENS, SEARCH_CHIPS, CHIPS)));
+        public static final Lens SEARCH_NEEDLE = new Lens(new LensGroupChain(List.of(TOP_SEARCH_TOKENS, SEARCH_TOKENS, SEARCH_CHIPS, CHIPS)));
     }
 
     public static final class NestedLenses {

@@ -8,14 +8,17 @@ import whelk.search2.QueryUtil;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.hash;
@@ -25,9 +28,13 @@ import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.Operator.EQUALS;
+import static whelk.search2.Operator.LIKE;
 import static whelk.search2.QueryUtil.boolWrap;
+import static whelk.search2.QueryUtil.mustNotWrap;
+import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
+import static whelk.search2.QueryUtil.shouldWrap;
 
 public sealed class Condition implements Node permits Type {
     private final Selector selector;
@@ -76,8 +83,8 @@ public sealed class Condition implements Node permits Type {
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
-        return _toSearchMapping(makeUpLink);
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
+        return _toSearchMapping(makeUpLink, makeReplaceLink);
     }
 
     @Override
@@ -204,12 +211,19 @@ public sealed class Condition implements Node permits Type {
         return new Or(altFields);
     }
 
-    private Map<String, Object> _toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
+    private Map<String, Object> _toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
         Map<String, Object> m = new LinkedHashMap<>();
 
         m.put("property", selector.definition());
         m.put(operator.termKey, value instanceof Resource r ? r.description() : value.queryForm());
         m.put("up", makeUpLink.apply(this));
+
+        if (operator == LIKE) {
+            m.put("toEquals", makeReplaceLink.apply(this, new Condition(selector, EQUALS, value)));
+        }
+        if (operator == EQUALS && selector instanceof Property p && p.isPreferLike()) {
+            m.put("toLike", makeReplaceLink.apply(this, new Condition(selector, LIKE, value)));
+        }
 
         m.put("_key", selector.queryKey());
         m.put("_value", value.queryForm());
@@ -229,7 +243,9 @@ public sealed class Condition implements Node permits Type {
                     : esFreeTextFilter(selector.isObjectProperty() ? f + "." + SEARCH_KEY : f, ft, esSettings);
             case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
             case Numeric numeric -> esNumFilter(f, numeric, esSettings);
-            case Link link -> esResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link);
+            case Link link -> operator == LIKE
+                ? esLikeResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link, esSettings)
+                : esResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link);
             case VocabTerm vocabTerm -> esResourceFilter(f, vocabTerm);
             case Term term -> esTermFilter(f, term);
             case YearRange yearRange -> esYearRangeFilter(f, yearRange, esSettings);
@@ -292,7 +308,7 @@ public sealed class Condition implements Node permits Type {
 
     private Map<String, Object> esNumOrDateFilter(String f, Object v) {
         return switch (operator) {
-            case EQUALS -> esTermQueryFilter(f, v);
+            case EQUALS, LIKE -> esTermQueryFilter(f, v);
             case GREATER_THAN_OR_EQUALS -> esRangeFilter(f, "gte", v);
             case GREATER_THAN -> esRangeFilter(f, "gt", v);
             case LESS_THAN_OR_EQUALS -> esRangeFilter(f, "lte", v);
@@ -307,6 +323,33 @@ public sealed class Condition implements Node permits Type {
 
     private Map<String, Object> esResourceFilter(String f, Resource r) {
         return esTermQueryFilter(f, r.jsonForm());
+    }
+
+    private Map<String, Object> esLikeResourceFilter(String f, Link l, ESSettings esSettings) {
+        if ("".equals(l.getNeedle())) {
+            return esResourceFilter(f, l);
+        }
+
+        var needle = Arrays.stream(l.getNeedle().split("\\s"))
+                .map(QueryUtil::quote)
+                .collect(Collectors.joining(" "));
+        var freeTextFilter = Map.of("simple_query_string", Map.of(
+                        "query", needle,
+                        "fields", List.of(selector.esField() + "." + SEARCH_KEY),
+                        "default_operator", "AND",
+                        "quote_field_suffix", ESSettings.Boost.EXACT_SUFFIX));
+        var notLinked = selector.getEsNestedStem(esSettings.mappings()).isPresent()
+            ? mustNotWrap(existsFilter(f))
+            : mustNotWrap(esResourceFilter(f, l));
+        var blankFilter = mustWrap(List.of(freeTextFilter, notLinked));
+
+        var linkedBeforeBlank = 50_000f;
+        return shouldWrap(
+                List.of(
+                        esTermQueryFilter(f, l.jsonForm(), linkedBeforeBlank),
+                        blankFilter
+                )
+        );
     }
 
     private Map<String, Object> esTermFilter(String f, Term t) {
@@ -329,12 +372,20 @@ public sealed class Condition implements Node permits Type {
         return boolWrap(Map.of("filter", m));
     }
 
+    private static Map<String, Object> filterWrap(Map<?, ?> m, float boost) {
+        return Map.of("constant_score", Map.of("filter", m, "boost", boost));
+    }
+
     private static Map<String, Object> rangeWrap(Map<?, ?> m) {
         return Map.of("range", m);
     }
 
     private static Map<String, Object> esTermQueryFilter(String field, Object value) {
         return filterWrap(Map.of("term", Map.of(field, value)));
+    }
+
+    private static Map<String, Object> esTermQueryFilter(String field, Object value, float boost) {
+        return filterWrap(Map.of("term", Map.of(field, Map.of("value", value))), boost);
     }
 
     // FIXME: Handle queries that are syntactically correct but make no sense and are guaranteed to return no hits

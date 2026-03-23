@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static whelk.JsonLd.Rdfs.RESOURCE;
@@ -42,10 +43,10 @@ public sealed class FilterAlias implements Node {
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
         var m = new LinkedHashMap<String, Object>();
         LinkedHashMap<String, Object> description = new LinkedHashMap<>(description());
-        description.put("parsedFilter", getParsed().toSearchMapping(makeUpLink));
+        description.put("parsedFilter", getParsed().toSearchMapping(makeUpLink, makeReplaceLink));
         m.put("object", description);
         m.put("value", alias());
         m.put("up", makeUpLink.apply(this));

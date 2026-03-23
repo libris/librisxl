@@ -16,7 +16,7 @@ public class Parse {
      * TERM: STRING | GROUP | UOPERATOR TERM | STRING BOPERATOR STRING | STRING BOPERATOREQ TERM
      * UOPERATOR: "NOT"
      * BOPERATOR: "<" | ">" | "<=" | ">="
-     * BOPERATOREQ: ":" | "="
+     * BOPERATOREQ: ":" | "=" | "~"
      * STRING: ...
      */
 
@@ -39,7 +39,7 @@ public class Parse {
     public record Boperator(Lex.Symbol op) {
     }
 
-    public record BoperatorEq() {
+    public record BoperatorEq(Lex.Symbol op) {
     }
 
     public static OrComb parseQuery(LinkedList<Lex.Symbol> symbols) throws InvalidQueryException {
@@ -95,14 +95,14 @@ public class Parse {
             }
         }
 
-        // BOPERATOREQ: ":" | "="
+        // BOPERATOREQ: ":" | "=" | "~"
         {
             if (!stack.isEmpty()) {
                 if (stack.getFirst() instanceof Lex.Symbol s &&
                         s.name() == Lex.TokenName.OPERATOR &&
-                        (s.value().equals("=") || s.value().equals(":"))) {
+                        (s.value().equals("=") || s.value().equals(":") || s.value().equals("~"))) {
                     stack.pop();
-                    stack.push(new BoperatorEq());
+                    stack.push(new BoperatorEq(s));
                     return true;
                 }
             }
@@ -178,6 +178,8 @@ public class Parse {
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("="))
                             okToReduce = false;
                         if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals(":"))
+                            okToReduce = false;
+                        if (lookahead.name() == Lex.TokenName.OPERATOR && lookahead.value().equals("~"))
                             okToReduce = false;
                     }
 

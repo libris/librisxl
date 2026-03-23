@@ -16,6 +16,7 @@ import java.util.Map;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink) {
+    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("property", textQuery != null ? textQuery.definition() : Map.of());
         m.put(EQUALS.termKey, queryForm());
