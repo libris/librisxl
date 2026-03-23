@@ -324,7 +324,9 @@ public sealed class Condition implements Node permits Type {
                         "query", l.getNeedle(),
                         "fields", List.of(selector.esField() + "." + SEARCH_KEY),
                         "default_operator", "AND"));
-        var notLinked = mustNotWrap(existsFilter(f));
+        var notLinked = selector.getEsNestedStem(esSettings.mappings()).isPresent()
+            ? mustNotWrap(existsFilter(f))
+            : mustNotWrap(esResourceFilter(f, l));
         var blankFilter = mustWrap(List.of(freeTextFilter, notLinked));
 
         var linkedBeforeBlank = 50_000f;
