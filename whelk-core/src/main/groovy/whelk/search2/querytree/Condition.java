@@ -8,6 +8,7 @@ import whelk.search2.QueryUtil;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.hash;
@@ -320,10 +322,14 @@ public sealed class Condition implements Node permits Type {
             return esResourceFilter(f, l);
         }
 
+        var needle = Arrays.stream(l.getNeedle().split("\\s"))
+                .map(QueryUtil::quote)
+                .collect(Collectors.joining(" "));
         var freeTextFilter = Map.of("simple_query_string", Map.of(
-                        "query", l.getNeedle(),
+                        "query", needle,
                         "fields", List.of(selector.esField() + "." + SEARCH_KEY),
-                        "default_operator", "AND"));
+                        "default_operator", "AND",
+                        "quote_field_suffix", ESSettings.Boost.EXACT_SUFFIX));
         var notLinked = selector.getEsNestedStem(esSettings.mappings()).isPresent()
             ? mustNotWrap(existsFilter(f))
             : mustNotWrap(esResourceFilter(f, l));
