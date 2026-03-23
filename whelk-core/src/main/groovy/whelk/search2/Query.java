@@ -865,7 +865,7 @@ public class Query {
                     var observations = sliceResult.getObservations(slice, parentValue, mySelectedValue, selectedFacets);
                     if (!observations.isEmpty() || parentValue != null) {
                         if (selectedFacets.isRangeFilter(propertyKey)) {
-                            sliceNode.put("search", getRangeTemplate(propertyKey));
+                            sliceNode.put("search", getRangeTemplate(property));
                         }
                         sliceNode.put("dimension", property.name());
                         sliceNode.put("observation", observations);
@@ -901,9 +901,10 @@ public class Query {
             return r;
         }
 
-        private Map<String, Object> getRangeTemplate(String propertyKey) {
-            List<Condition> selected = getSelectedFacets().getSelected(propertyKey);
-            FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
+        private Map<String, Object> getRangeTemplate(Property property) {
+            List<Condition> selected = getSelectedFacets().getSelected(property.name());
+            String queryKey = property.formattedQueryKey();
+            FreeText placeholderNode = new FreeText(String.format("{?%s}", queryKey));
             String templateQueryString = qTree.removeAll(selected)
                     .add(placeholderNode)
                     .toQueryString();
@@ -917,7 +918,7 @@ public class Query {
             }
 
             Map<String, String> mapping = Map.of(
-                    "variable", propertyKey,
+                    "variable", queryKey,
                     Operator.GREATER_THAN_OR_EQUALS.termKey, selectedMin,
                     Operator.LESS_THAN_OR_EQUALS.termKey, selectedMax
             );

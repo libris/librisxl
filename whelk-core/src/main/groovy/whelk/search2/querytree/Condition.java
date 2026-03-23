@@ -89,10 +89,7 @@ public sealed class Condition implements Node permits Type {
 
     @Override
     public String toQueryString(boolean topLevel) {
-        var k = selector.queryKey();
-        if (k.contains(":") && !QueryUtil.isQuoted(k)) {
-            k = QueryUtil.quote(k);
-        }
+        var k = selector.formattedQueryKey();
         var v = value.isMultiToken() ? parenthesize(value.queryForm()) : value.queryForm();
         return operator.format(k, v);
     }
