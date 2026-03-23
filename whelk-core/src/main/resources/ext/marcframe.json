@@ -4693,7 +4693,28 @@
       "$a": {"property": "value"},
       "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
       "$b": {"link": "source", "resourceType": "Source", "property": "label"},
-      "$6": null
+      "$6": null,
+      "_spec": [
+        {
+          "name": "PostalRegistration with source in $b",
+          "source": {"032": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "PA-12345"},
+            {"b": "Registering agency"}
+          ]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "PostalRegistration",
+                "value": "PA-12345",
+                "source": {
+                  "@type": "Source",
+                  "label": "Registering agency"
+                }
+              }
+            ]
+          }}
+        }
+      ]
   },
     "033": {
       "NOTE:record-count": 852,
@@ -5077,7 +5098,28 @@
     "resourceType": "StudyNumber",
     "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
     "$b": {"link": "source", "resourceType": "Source", "property": "label"},
-    "$6": null
+    "$6": null,
+    "_spec": [
+      {
+        "name": "StudyNumber with source in $b",
+        "source": {"036": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "SN-2026-001"},
+          {"b": "Study authority"}
+        ]}},
+        "result": {"mainEntity": {
+          "identifiedBy": [
+            {
+              "@type": "StudyNumber",
+              "value": "SN-2026-001",
+              "source": {
+                "@type": "Source",
+                "label": "Study authority"
+              }
+            }
+          ]
+        }}
+      }
+    ]
     },
     "037": {
       "addLink": "acquisitionSource",
