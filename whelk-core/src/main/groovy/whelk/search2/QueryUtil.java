@@ -104,7 +104,8 @@ public class QueryUtil {
                 // https://tools.ietf.org/html/rfc3986#section-3.4
                 .replace("%3A", ":")
                 .replace("%2F", "/")
-                .replace("%40", "@");
+                .replace("%40", "@")
+                .replace("%7E", "~");
     }
 
     public static Map<String, Object> mustWrap(Object l) {
