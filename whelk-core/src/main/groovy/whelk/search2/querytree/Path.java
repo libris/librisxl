@@ -83,21 +83,8 @@ public final class Path implements Selector {
         var next = tail.getFirst();
         var newTail = tail.subList(1, tail.size());
         var nextAltSelectors = next.getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
-        if (nextAltSelectors.isEmpty()) {
-            // Indicates that an integral relation has been canceled out by its reverse
-            // For example, when instanceOf is prepended to hasInstance.x
-            // the integral property is dropped and only the tail (x) is kept
-            return getAltPaths(newTail, jsonLd, List.of(), allowIncompatible);
-        }
         return nextAltSelectors.stream()
                 .flatMap(s -> getAltPaths(newTail, jsonLd, next.range(), allowIncompatible).stream()
-                        .filter(altPath ->
-                                // Avoid creating alternative paths caused by inverse integral round-trips.
-                                // For example, if the original path is hasInstance.x, do not
-                                // generate the alternative path x via instanceOf.hasInstance.x.
-                                !(s instanceof Property p1
-                                        && !altPath.isEmpty() && altPath.getFirst() instanceof Property p2
-                                        && p1.isInverseOf(p2)))
                         .map(altPath -> Stream.concat(s.path().stream(), altPath.stream())))
                 .map(Stream::toList)
                 .toList();

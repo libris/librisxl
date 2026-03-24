@@ -313,15 +313,7 @@ public non-sealed class Property extends PathElement {
 
         List<List<Property>> altPaths = integralRelations.stream()
                 .filter(followIntegralRelation)
-                .map(ir -> {
-                    var altPath = new ArrayList<>(path());
-                    if (ir.isInverseOf(altPath.getFirst())) {
-                        altPath.removeFirst();
-                    } else {
-                        altPath.addFirst(ir);
-                    }
-                    return altPath;
-                })
+                .map(ir -> Stream.concat(Stream.of(ir), path().stream()).toList())
                 .collect(Collectors.toList());
 
         if (isRecordProperty || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
