@@ -146,7 +146,7 @@ public sealed class Condition implements Node permits Type {
     }
 
     private ExpandedNode expandWithAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        List<Node> withAltSelectors = selector.getAltSelectors(jsonLd, rdfSubjectTypes).stream()
+        List<Node> withAltSelectors = selector.getAltSelectors(jsonLd, rdfSubjectTypes, true).stream()
                 .map(s -> s.withPrependedMetaProperty(jsonLd))
                 .map(this::withSelector)
                 .map(s -> s._expand(jsonLd))

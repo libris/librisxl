@@ -133,8 +133,8 @@ public non-sealed class Property extends PathElement {
     }
 
     @Override
-    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return _getAltSelectors(jsonLd, rdfSubjectTypes);
+    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
+        return _getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
     }
 
     @Override
@@ -151,7 +151,7 @@ public non-sealed class Property extends PathElement {
 
     @Override
     public boolean isType() {
-        return isRdfType();
+        return isRdfType() || TYPE_KEY.equals(indexKey);
     }
 
     @Override
@@ -296,8 +296,8 @@ public non-sealed class Property extends PathElement {
         return Objects.hash(toString());
     }
 
-    private List<Selector> _getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        if (rdfSubjectTypes.isEmpty() || isPlatformTerm() || isRdfType()) {
+    private List<Selector> _getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
+        if (isPlatformTerm() || isRdfType()) {
             return List.of(this);
         }
 
@@ -324,7 +324,11 @@ public non-sealed class Property extends PathElement {
                 })
                 .collect(Collectors.toList());
 
-        if (altPaths.isEmpty() || isRecordProperty || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+        if (isRecordProperty || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+            altPaths.add(List.of(this));
+        }
+
+        if (altPaths.isEmpty() && allowIncompatible) {
             altPaths.add(List.of(this));
         }
 
@@ -566,9 +570,9 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
             return getComponents(jsonLd).stream()
-                    .flatMap(s -> s.getAltSelectors(jsonLd, rdfSubjectTypes).stream())
+                    .flatMap(s -> s.getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible).stream())
                     .toList();
         }
 
@@ -618,8 +622,8 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-            return new Path(propertyChain).getAltSelectors(jsonLd, rdfSubjectTypes);
+        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
+            return new Path(propertyChain).getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
         }
 
         @Override

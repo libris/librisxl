@@ -52,10 +52,16 @@ public final class Path implements Selector {
     }
 
     @Override
-    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return getAltPaths(path(), jsonLd, rdfSubjectTypes).stream()
-                .map(l -> l.size() > 1 ? new Path(l) : l.getFirst())
-                .toList();
+    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
+        List<Selector> altSelectors = new ArrayList<>();
+        getAltPaths(path(), jsonLd, rdfSubjectTypes, allowIncompatible).forEach(l -> {
+            if (l.size() == 1) {
+                altSelectors.add(l.getFirst());
+            } else if (l.size() > 1) {
+                altSelectors.add(new Path(l));
+            }
+        });
+        return altSelectors;
     }
 
     @Override
@@ -70,21 +76,21 @@ public final class Path implements Selector {
         return new Path(newPath);
     }
 
-    private List<List<PathElement>> getAltPaths(List<? extends PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+    private List<List<PathElement>> getAltPaths(List<? extends PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
         if (tail.isEmpty()) {
             return List.of(List.of());
         }
         var next = tail.getFirst();
         var newTail = tail.subList(1, tail.size());
-        var nextAltSelectors = next.getAltSelectors(jsonLd, rdfSubjectTypes);
+        var nextAltSelectors = next.getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
         if (nextAltSelectors.isEmpty()) {
             // Indicates that an integral relation has been canceled out by its reverse
             // For example, when instanceOf is prepended to hasInstance.x
             // the integral property is dropped and only the tail (x) is kept
-            return getAltPaths(newTail, jsonLd, List.of());
+            return getAltPaths(newTail, jsonLd, List.of(), allowIncompatible);
         }
         return nextAltSelectors.stream()
-                .flatMap(s -> getAltPaths(newTail, jsonLd, next.range()).stream()
+                .flatMap(s -> getAltPaths(newTail, jsonLd, next.range(), allowIncompatible).stream()
                         .filter(altPath ->
                                 // Avoid creating alternative paths caused by inverse integral round-trips.
                                 // For example, if the original path is hasInstance.x, do not

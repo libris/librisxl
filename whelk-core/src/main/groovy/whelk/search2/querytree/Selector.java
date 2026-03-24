@@ -14,7 +14,7 @@ public sealed interface Selector permits Path, PathElement {
 
     List<? extends PathElement> path();
 
-    List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
+    List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible);
     Selector withPrependedMetaProperty(JsonLd jsonLd);
 
     boolean isValid();

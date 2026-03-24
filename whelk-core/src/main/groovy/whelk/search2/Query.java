@@ -436,7 +436,7 @@ public class Query {
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
-        property.getAltSelectors(ctx.jsonLd, ctx.rdfSubjectTypes).stream()
+        property.getAltSelectors(ctx.jsonLd, ctx.rdfSubjectTypes, false).stream()
                 .map(s -> s.withPrependedMetaProperty(ctx.jsonLd))
                 .forEach(selector -> {
                     String field = selector.esField();
