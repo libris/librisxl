@@ -297,7 +297,7 @@ public non-sealed class Property extends PathElement {
     }
 
     private List<Selector> _getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
-        if (isPlatformTerm() || isRdfType()) {
+        if (rdfSubjectTypes.isEmpty() || isPlatformTerm() || isRdfType()) {
             return List.of(this);
         }
 
