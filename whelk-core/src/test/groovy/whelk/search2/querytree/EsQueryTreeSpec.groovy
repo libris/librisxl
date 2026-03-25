@@ -219,42 +219,6 @@ class EsQueryTreeSpec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (negated)"() {
-        given:
-        String q = 'p3.p1:x p3.p4:y'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings)
-
-        expect:
-        esQueryTree.getMainQuery() == [
-                "nested": [
-                        "path" : "p3",
-                        "query": [
-                                "bool": [
-                                        "must": [[
-                                                         "simple_query_string": [
-                                                                 "default_operator"  : "AND",
-                                                                 "query"             : "x",
-                                                                 "analyze_wildcard"  : true,
-                                                                 "quote_field_suffix": ".exact",
-                                                                 "fields"            : ["p3.p1^5.0"]
-                                                         ]
-                                                 ], [
-                                                         "simple_query_string": [
-                                                                 "default_operator"  : "AND",
-                                                                 "query"             : "y",
-                                                                 "analyze_wildcard"  : true,
-                                                                 "quote_field_suffix": ".exact",
-                                                                 "fields"            : ["p3.p4._str^5.0"]
-                                                         ]
-                                                 ]]
-                                ]
-                        ]
-                ]
-        ]
-    }
-
     def "To ES query: group nested 2"() {
         given:
         String q = 'p3.p1:x p3.p4:y p2:e1'
@@ -353,7 +317,6 @@ class EsQueryTreeSpec extends Specification {
 
     def "To ES query: group nested 4"() {
         given:
-        // TODO: Interpret "(p3.p1:x p3.p4:y) (p3.p1:a p3.p4:b)" differently, i.e. don't flatten and treat each group as a distinct nested clause?
         String q = 'p3.p1:x p3.p4:y p3.p1:a p3.p4:b'
         QueryTree qt = new QueryTree(q, disambiguate)
         ExpandedQueryTree eqt = qt.expand(jsonLd)
@@ -361,45 +324,58 @@ class EsQueryTreeSpec extends Specification {
 
         expect:
         esQueryTree.getMainQuery() == [
-                "nested": [
-                        "query": [
-                                "bool": [
-                                        "must": [[
-                                                         "simple_query_string": [
-                                                                 "default_operator"  : "AND",
-                                                                 "query"             : "x",
-                                                                 "analyze_wildcard"  : true,
-                                                                 "quote_field_suffix": ".exact",
-                                                                 "fields"            : ["p3.p1^5.0"]
+                "bool": [
+                        "must": [[
+                                         "nested": [
+                                                 "path" : "p3",
+                                                 "query": [
+                                                         "bool": [
+                                                                 "must": [[
+                                                                                  "simple_query_string": [
+                                                                                          "default_operator"  : "AND",
+                                                                                          "query"             : "x",
+                                                                                          "analyze_wildcard"  : true,
+                                                                                          "quote_field_suffix": ".exact",
+                                                                                          "fields"            : ["p3.p1^5.0"]
+                                                                                  ]
+                                                                          ], [
+                                                                                  "simple_query_string": [
+                                                                                          "default_operator"  : "AND",
+                                                                                          "query"             : "y",
+                                                                                          "analyze_wildcard"  : true,
+                                                                                          "quote_field_suffix": ".exact",
+                                                                                          "fields"            : ["p3.p4._str^5.0"]
+                                                                                  ]
+                                                                          ]]
                                                          ]
-                                                 ], [
-                                                         "simple_query_string": [
-                                                                 "default_operator"  : "AND",
-                                                                 "query"             : "y",
-                                                                 "analyze_wildcard"  : true,
-                                                                 "quote_field_suffix": ".exact",
-                                                                 "fields"            : ["p3.p4._str^5.0"]
+                                                 ]
+                                         ]
+                                 ], [
+                                         "nested": [
+                                                 "path" : "p3",
+                                                 "query": [
+                                                         "bool": [
+                                                                 "must": [[
+                                                                                  "simple_query_string": [
+                                                                                          "default_operator"  : "AND",
+                                                                                          "query"             : "a",
+                                                                                          "analyze_wildcard"  : true,
+                                                                                          "quote_field_suffix": ".exact",
+                                                                                          "fields"            : ["p3.p1^5.0"]
+                                                                                  ]
+                                                                          ], [
+                                                                                  "simple_query_string": [
+                                                                                          "default_operator"  : "AND",
+                                                                                          "query"             : "b",
+                                                                                          "analyze_wildcard"  : true,
+                                                                                          "quote_field_suffix": ".exact",
+                                                                                          "fields"            : ["p3.p4._str^5.0"]
+                                                                                  ]
+                                                                          ]]
                                                          ]
-                                                 ], [
-                                                         "simple_query_string": [
-                                                                 "default_operator"  : "AND",
-                                                                 "query"             : "a",
-                                                                 "analyze_wildcard"  : true,
-                                                                 "quote_field_suffix": ".exact",
-                                                                 "fields"            : ["p3.p1^5.0"]
-                                                         ]
-                                                 ], [
-                                                         "simple_query_string": [
-                                                                 "default_operator"  : "AND",
-                                                                 "query"             : "b",
-                                                                 "analyze_wildcard"  : true,
-                                                                 "quote_field_suffix": ".exact",
-                                                                 "fields"            : ["p3.p4._str^5.0"]
-                                                         ]
-                                                 ]]
-                                ]
-                        ],
-                        "path" : "p3"
+                                                 ]
+                                         ]
+                                 ]]
                 ]
         ]
     }

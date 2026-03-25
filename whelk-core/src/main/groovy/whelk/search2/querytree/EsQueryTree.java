@@ -6,6 +6,7 @@ import whelk.search2.SelectedFacets;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -59,7 +60,7 @@ public class EsQueryTree {
 
         private static Node _getNestedTree(Node tree, EsMappings esMappings) {
             if (tree instanceof And and) {
-                List<Nested> nestedGroups = getNestedGroups(and, esMappings);
+                List<Nested> nestedGroups = collectNestedGroups(and, esMappings);
                 List<Node> nested = nestedGroups.stream().map(And::children).flatMap(List::stream).toList();
                 List<Node> nonNested = and.children().stream()
                         .filter(Predicate.not(nested::contains))
@@ -75,16 +76,45 @@ public class EsQueryTree {
             return tree;
         }
 
-        private static List<Nested> getNestedGroups(And and, EsMappings esMappings) {
+        private static List<Nested> collectNestedGroups(And and, EsMappings esMappings) {
             List<Nested> nestedGroups = new ArrayList<>();
 
-            and.children().stream().collect(Collectors.groupingBy(node -> getNestedStem(node, esMappings)))
-                    .forEach((nestedStem, group) -> {
-                        // At least two different paths sharing the same nested stem
-                        if (nestedStem.isPresent() && group.size() > 1) {
-                            nestedGroups.add(new Nested(group, nestedStem.get()));
+            Map<String, Map<String, List<Node>>> groups = new LinkedHashMap<>();
+
+            Runnable harvestNested = () -> {
+                groups.forEach((stem, nodesByField) -> {
+                    var group = nodesByField.values().stream().flatMap(List::stream).toList();
+                    if (group.size() > 1) {
+                        nestedGroups.add(new Nested(group, stem));
+                    }
+                });
+                groups.clear();
+            };
+
+            and.children().forEach(n -> {
+                var stem = getNestedStem(n, esMappings);
+                if (stem.isEmpty()) {
+                    harvestNested.run();
+                } else {
+                    var selectors = (n instanceof Condition c ? List.of(c) : n.children())
+                            .stream()
+                            .map(Condition.class::cast)
+                            .map(Condition::selector)
+                            .toList();
+                    for (Selector s : selectors) {
+                        var field = s.esField();
+                        var nodesForField = groups.getOrDefault(stem.get(), Map.of()).getOrDefault(field, List.of());
+                        if (!nodesForField.isEmpty() && !s.isLdSetContainer()) {
+                            harvestNested.run();
                         }
-                    });
+                        groups.computeIfAbsent(stem.get(), k -> new LinkedHashMap<>())
+                                .computeIfAbsent(field, k -> new ArrayList<>())
+                                .add(n);
+                    }
+                }
+            });
+
+            harvestNested.run();
 
             return nestedGroups;
         }
@@ -119,8 +149,9 @@ public class EsQueryTree {
             if (node instanceof Condition c) {
                 return c.selector().getEsNestedStem(esMappings);
             }
-            if (node instanceof Group g) {
-                var groupedByNestedStem = g.children().stream().collect(Collectors.groupingBy(n -> getNestedStem(n, esMappings)));
+            if (node instanceof Or or) {
+                var groupedByNestedStem = or.children().stream()
+                        .collect(Collectors.groupingBy(n -> getNestedStem(n, esMappings)));
                 if (groupedByNestedStem.size() == 1) {
                     return groupedByNestedStem.keySet().iterator().next();
                 }
