@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -124,7 +123,7 @@ public class Query {
         JsonLd ld = whelk.getJsonld();
         ExpandedQueryTree expandedQueryTree = getFullQueryTree().expand(ld);
         ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
-        if (queryParams.skipStats) {
+        if (!queryParams.stats.on) {
             EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings);
             return buildEsQueryDsl(esQueryTree.getMainQuery());
         }
@@ -204,7 +203,7 @@ public class Query {
 
         view.put("items", getQueryResult().collectItems(this::applyLens));
 
-        if (!queryParams.skipStats) {
+        if (queryParams.stats.on) {
             view.put("stats", stats.build());
             linkLoader.queue(stats.getLinks());
         }

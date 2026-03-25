@@ -82,7 +82,7 @@ public class ObjectQuery extends Query {
         EsQueryTree esQueryTree = new EsQueryTree(expanded, esSettings);
         Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
 
-        if (queryParams.skipStats) {
+        if (!queryParams.stats.on) {
             esQueryDsl.put("aggs", getPAggQuery(predicateToSubjectTypes));
             return esQueryDsl;
         }
