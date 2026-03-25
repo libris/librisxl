@@ -23,6 +23,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     List<String> newWorkTypes = Collections.emptyList()
     String defaultWorkLegacyType
     String componentPartCategory
+    List<String> prioritizedWorkLegacyTypes = Collections.emptyList()
     List<String> keepMatchingWithCategories = Collections.emptyList()
 
     Map<String, Set<String>> marcTypeMappings  // TODO: turn JSON set value to Set! (for speed)
@@ -116,7 +117,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         DocumentUtil.traverse(work) { value, path ->
             if (!path.isEmpty()) {
                 if (value instanceof Map && resourceCache.jsonld.isSubClassOf(getType(value), 'Work')) {
-                    reshapeToLegacyWork(value, getDescriptions(value.category))
+                    reshapeToLegacyWork(value, getDescriptions(value.remove('category')))
                 }
             }
         }
@@ -132,10 +133,14 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     String getWorkType(List<Map<String, Object>> workCategories) {
         // TODO:
-        // - better match ranking? i:Audio [if SpokenWords?/Ljudböcker] > a:Text > k:StillImage ?
-        // FIXME: also construct ManuscriptText | ManuscriptNotatedMusic | Cartography
+        // - More involved match ranking? i:Audio [if SpokenWords?/Ljudböcker] > a:Text > k:StillImage ?
+        // - also construct ManuscriptText | ManuscriptNotatedMusic | Cartography (if asked for)
         var result = collectImpliedTypesFromCategory(workCategories)
-        if (defaultWorkLegacyType in result) return defaultWorkLegacyType
+        for (prioType in prioritizedWorkLegacyTypes) {
+            if (prioType in result) {
+                return prioType
+            }
+        }
         for (type in result) return type
     }
 
@@ -165,11 +170,11 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         for (type in result) return type
     }
 
-    List<Map<String, Object>> getDescriptions(Object refs) {
+    List<Map<String, Object>> getDescriptions(Object refs, boolean onlyLinked=false) {
         return (List<Map<String, Object>>) asList(refs).findResults {
             ID in it && it[ID] in typeCategoryNormalizer.categories
                 ? new HashMap(typeCategoryNormalizer.categories[it[ID]])
-                : it
+                : onlyLinked ? null : it
         }
     }
 
@@ -234,7 +239,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
                 result[key] = ctg
             }
             for (rel in matchRelations) {
-                var implied = getDescriptions(ctg[rel])
+                var implied = getDescriptions(ctg[rel], true)
                 if (!keepImplied) {
                     implied.each {
                         var keep = ID in it
