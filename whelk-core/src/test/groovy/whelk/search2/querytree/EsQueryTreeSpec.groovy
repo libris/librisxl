@@ -183,7 +183,7 @@ class EsQueryTreeSpec extends Specification {
         ]
     }
 
-    def "To ES query: group nested"() {
+    def "To ES query: group AND-nested"() {
         given:
         String q = 'p3.p1:x p3.p4:y'
         QueryTree qt = new QueryTree(q, disambiguate)
@@ -215,6 +215,73 @@ class EsQueryTreeSpec extends Specification {
                                                  ]]
                                 ]
                         ]
+                ]
+        ]
+    }
+
+    def "To ES query: group OR-nested"() {
+        given:
+        String q = 'p3.p4:\"https://id.kb.se/x\" OR p3.p4:\"https://id.kb.se/y\"'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ExpandedQueryTree eqt = qt.expand(jsonLd)
+        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings)
+
+        expect:
+        esQueryTree.getMainQuery() == [
+                "nested": [
+                        "path" : "p3",
+                        "query": [
+                                "bool": [
+                                        "should": [[
+                                                           "bool": [
+                                                                   "filter": [
+                                                                           "term": [
+                                                                                   "p3.p4.@id": "https://id.kb.se/x"
+                                                                           ]
+                                                                   ]
+                                                           ]
+                                                   ], [
+                                                           "bool": [
+                                                                   "filter": [
+                                                                           "term": [
+                                                                                   "p3.p4.@id": "https://id.kb.se/y"
+                                                                           ]
+                                                                   ]
+                                                           ]
+                                                   ]]
+                                ]
+                        ]
+                ]
+        ]
+    }
+
+    def "To ES query: group OR-nested (include_in_parent=true)"() {
+        given:
+        String q = 'p15.p4:\"https://id.kb.se/x\" OR p15.p4:\"https://id.kb.se/y\"'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ExpandedQueryTree eqt = qt.expand(jsonLd)
+        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings)
+
+        expect:
+        esQueryTree.getMainQuery() == [
+                "bool": [
+                        "should": [[
+                                           "bool": [
+                                                   "filter": [
+                                                           "term": [
+                                                                   "p15.p4.@id": "https://id.kb.se/x"
+                                                           ]
+                                                   ]
+                                           ]
+                                   ], [
+                                           "bool": [
+                                                   "filter": [
+                                                           "term": [
+                                                                   "p15.p4.@id": "https://id.kb.se/y"
+                                                           ]
+                                                   ]
+                                           ]
+                                   ]]
                 ]
         ]
     }

@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.shouldWrap;
 
-public sealed class Or extends Group {
+public non-sealed class Or extends Group {
     private final List<Node> children;
 
     public Or(List<? extends Node> children) {

@@ -137,6 +137,23 @@ class ConditionSpec extends Specification {
         ]
     }
 
+    def "To ES query (nested field with include_in_parent=true)"() {
+        given:
+        var tree = QueryTreeBuilder.buildTree("p15:\"https://id.kb.se/x\"", disambiguate)
+        ESSettings esSettings = new ESSettings(esMappings, new ESSettings.Boost([:]))
+
+        expect:
+        tree.toEs(esSettings) == [
+            "bool" : [
+                "filter" : [
+                    "term" : [
+                        "p15.@id" : "https://id.kb.se/x"
+                    ]
+                ]
+            ]
+        ]
+    }
+
     def "To ES exists query"() {
         given:
         var exists = QueryTreeBuilder.buildTree(q, disambiguate)

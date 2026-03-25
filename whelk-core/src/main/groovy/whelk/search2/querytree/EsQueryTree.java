@@ -60,24 +60,29 @@ public class EsQueryTree {
 
         private static Node _getNestedTree(Node tree, EsMappings esMappings) {
             if (tree instanceof And and) {
-                List<Nested> nestedGroups = collectNestedGroups(and, esMappings);
-                List<Node> nested = nestedGroups.stream().map(And::children).flatMap(List::stream).toList();
+                List<NestedAnd> nestedAndGroups = collectNestedGroups(and, esMappings);
+                List<Node> nested = nestedAndGroups.stream().map(And::children).flatMap(List::stream).toList();
                 List<Node> nonNested = and.children().stream()
                         .filter(Predicate.not(nested::contains))
                         .map(n -> getNestedTree(n, esMappings)).toList();
-                if (nestedGroups.size() == 1 && nonNested.isEmpty()) {
-                    return nestedGroups.getFirst();
+                if (nestedAndGroups.size() == 1 && nonNested.isEmpty()) {
+                    return nestedAndGroups.getFirst();
                 }
-                return new And(Stream.concat(nestedGroups.stream(), nonNested.stream()).toList(), false);
+                return new And(Stream.concat(nestedAndGroups.stream(), nonNested.stream()).toList(), false);
             }
             if (tree instanceof Or or) {
-                return or.mapAndReinstantiate(n -> getNestedTree(n, esMappings));
+                var nestedOr = getNestedStem(or, esMappings)
+                        .filter(esMappings::isNestedNotInParentField)
+                        .map(stem -> new NestedOr(or.children(), stem));
+                return nestedOr.isPresent()
+                        ? nestedOr.get()
+                        : or.mapAndReinstantiate(n -> getNestedTree(n, esMappings));
             }
             return tree;
         }
 
-        private static List<Nested> collectNestedGroups(And and, EsMappings esMappings) {
-            List<Nested> nestedGroups = new ArrayList<>();
+        private static List<NestedAnd> collectNestedGroups(And and, EsMappings esMappings) {
+            List<NestedAnd> nestedAndGroups = new ArrayList<>();
 
             Map<String, Map<String, List<Node>>> groups = new LinkedHashMap<>();
 
@@ -85,7 +90,7 @@ public class EsQueryTree {
                 groups.forEach((stem, nodesByField) -> {
                     var group = nodesByField.values().stream().flatMap(List::stream).toList();
                     if (group.size() > 1) {
-                        nestedGroups.add(new Nested(group, stem));
+                        nestedAndGroups.add(new NestedAnd(group, stem));
                     }
                 });
                 groups.clear();
@@ -116,7 +121,7 @@ public class EsQueryTree {
 
             harvestNested.run();
 
-            return nestedGroups;
+            return nestedAndGroups;
         }
 
         private static Group regroupAltSelectorsByNestedStem(And and, EsMappings esMappings) {
@@ -198,7 +203,7 @@ public class EsQueryTree {
                 return new PostFilterTree(null);
             }
 
-            List<Nested> nestedGroups = new QueryTree(nestedTree.tree()).getTopNodesOfType(Nested.class);
+            List<NestedAnd> nestedAndGroups = new QueryTree(nestedTree.tree()).getTopNodesOfType(NestedAnd.class);
 
             List<Node> postFilterNodes = new ArrayList<>();
             for (List<Node> multiSelected : multiSelectGroups) {
@@ -206,8 +211,8 @@ public class EsQueryTree {
                         .map(PostFilterTree::flattenedConditions)
                         .flatMap(Set::stream)
                         .collect(Collectors.toSet());
-                nestedGroups.stream()
-                        .filter(nested -> intersect(flattenedConditions(nested), selectedConditions))
+                nestedAndGroups.stream()
+                        .filter(nestedAnd -> intersect(flattenedConditions(nestedAnd), selectedConditions))
                         .findFirst()
                         .ifPresentOrElse(postFilterNodes::add,
                                 () -> postFilterNodes.add(multiSelected.size() > 1 ? new Or(multiSelected) : multiSelected.getFirst()));
@@ -234,10 +239,10 @@ public class EsQueryTree {
         }
     }
 
-    private static final class Nested extends And {
+    private static final class NestedAnd extends And {
         private final String stem;
 
-        private Nested(List<? extends Node> children, String stem) {
+        private NestedAnd(List<? extends Node> children, String stem) {
             super(children);
             this.stem = stem;
         }
@@ -248,8 +253,27 @@ public class EsQueryTree {
         }
 
         @Override
-        public Nested newInstance(List<Node> children) {
-            return new Nested(children, stem);
+        public NestedAnd newInstance(List<Node> children) {
+            return new NestedAnd(children, stem);
+        }
+    }
+
+    private static final class NestedOr extends Or {
+        private final String stem;
+
+        private NestedOr(List<? extends Node> children, String stem) {
+            super(children);
+            this.stem = stem;
+        }
+
+        @Override
+        public Map<String, Object> toEs(ESSettings esSettings) {
+            return nestedWrap(stem, super.getCoreEsQuery(esSettings));
+        }
+
+        @Override
+        public NestedOr newInstance(List<Node> children) {
+            return new NestedOr(children, stem);
         }
     }
 }

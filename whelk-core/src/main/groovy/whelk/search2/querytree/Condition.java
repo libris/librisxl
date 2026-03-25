@@ -253,6 +253,7 @@ public sealed class Condition implements Node permits Type {
 
     private Optional<Map<String, Object>> getEsNestedQuery(ESSettings esSettings) {
         return selector.getEsNestedStem(esSettings.mappings())
+                .filter(esSettings.mappings()::isNestedNotInParentField)
                 .map(nestedStem -> nestedWrap(nestedStem, getCoreEsQuery(esSettings)));
     }
 
