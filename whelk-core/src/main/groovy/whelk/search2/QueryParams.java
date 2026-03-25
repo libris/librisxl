@@ -61,7 +61,7 @@ public class QueryParams {
     public enum Stats {
         FALSE(false),
         FALSE_THIS_REQUEST(false),
-        TRUE(false);
+        TRUE(true);
 
         final boolean on;
 
