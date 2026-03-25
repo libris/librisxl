@@ -3,6 +3,7 @@
   "matchRelations": ["exactMatch", "closeMatch", "broader", "broadMatch"],
   "newWorkTypes": ["Monograph", "Serial", "Collection", "Integrating"],
   "defaultWorkLegacyType": "Text",
+  "prioritizedWorkLegacyTypes": ["Multimedia", "Text"],
   "componentPartCategory": "https://id.kb.se/term/saobf/ComponentPart",
   "keepMatchingWithCategories": [],
   "marcTypeMappings": {
@@ -62,6 +63,45 @@
   "_spec:TODO:from": "whelktool/scripts/typenormalization/tailored_examples.jsonl",
   "_spec": [
     {
+      "name": "bibtype-map simple instance and work",
+      "source": {
+        "mainEntity": {
+          "@id": "https://libris.kb.se/000000000000000#it",
+          "@type": "Print",
+          "mediaType": [
+            {"@id": "https://id.kb.se/term/rda/Unmediated"}
+          ],
+          "carrierType": [
+            {"@id": "https://id.kb.se/term/rda/Volume"}
+          ],
+          "issuanceType": "Monograph",
+          "instanceOf": {
+            "@type": "Text",
+            "contentType": [
+              {"@id": "https://id.kb.se/term/rda/Text"}
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@id": "https://libris.kb.se/000000000000000#it",
+          "@type": "PhysicalResource",
+          "category": [
+            {"@id": "https://id.kb.se/term/rda/Volume"},
+            {"@id": "https://id.kb.se/term/saobf/Print"}
+          ],
+          "instanceOf": {
+            "@type": "Monograph",
+            "category": [
+              {"@id": "https://id.kb.se/term/rda/Text"}
+            ]
+          }
+        }
+      },
+      "back": "source"
+    },
+    {
       "name": "bibtype-map embedded instance and work",
       "source": {
         "mainEntity": {
@@ -84,7 +124,9 @@
                 "Sammanfattning och fulltext från Linköping University Electronic Press"
               ],
               "instanceOf": {"@type": "Text"},
-              "carrierType": {"@id": "https://id.kb.se/marc/Electronic"},
+              "carrierType": [
+                {"@id": "https://id.kb.se/marc/Electronic"}
+              ],
               "issuanceType": "Monograph"
             }
           ],
@@ -96,13 +138,16 @@
             ],
             "genreForm": [
               {"@id": "https://id.kb.se/term/saogf/Avhandlingar"},
+              {"@id": "https://id.kb.se/marc/Thesis"},
+              {"@id": "https://id.kb.se/term/saogf/Facklitteratur"},
+              {"@id" : "https://id.kb.se/term/ktg/NonFictionLiterature"},
+              {"@id" : "https://id.kb.se/marc/NotFictionNotFurtherSpecified"},
+              {"@id" : "https://id.kb.se/term/ktg/Literature"},
               {
                 "@type": "GenreForm",
                 "inScheme": {"@id": "https://id.kb.se/term/lcgft"},
                 "prefLabel": "Academic theses"
-              },
-              {"@id": "https://id.kb.se/marc/Thesis"},
-              {"@id": "https://id.kb.se/term/saogf/Facklitteratur"}
+              }
             ],
             "hasPart": [
               {
@@ -110,24 +155,22 @@
                 "intendedAudience": [
                   {"@id": "https://id.kb.se/marc/Juvenile"}
                 ],
-                "contentType": {"@id": "https://id.kb.se/term/rda/Text"},
+                "contentType": [
+                  {"@id": "https://id.kb.se/term/rda/Text"}
+                ],
                 "genreForm": [
                   {"@id": "https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur"},
+                  {"@id": "https://id.kb.se/marc/FictionNotFurtherSpecified"},
+                  {"@id": "https://id.kb.se/term/ktg/Literature"},
                   {
                     "@type": "GenreForm",
                     "inScheme": {"@id": "https://id.kb.se/term/lcsh"},
                     "prefLabel": "Literature"
-                  },
-                  {"@id": "https://id.kb.se/marc/FictionNotFurtherSpecified"},
-                  {"@id": "https://id.kb.se/term/ktg/Literature"}
+                  }
                 ]
               },
               {
                 "@type": "Audio",
-                "category": [
-                  {"@id": "https://id.kb.se/marc/Fiction"},
-                  {"@id": "https://id.kb.se/term/ktg/Audio"}
-                ],
                 "intendedAudience": [
                   {"@id": "https://id.kb.se/marc/Juvenile"}
                 ],
@@ -202,7 +245,54 @@
             ]
           }
         }
-      }
+      },
+      "back": "source"
+    },
+    {
+      "name": "bibtype-map prioritized work legacy type",
+      "source": {
+        "mainEntity": {
+          "@id": "https://libris.kb.se/000000000000000#it",
+          "@type": "Print",
+          "mediaType": [
+            {"@id": "https://id.kb.se/term/rda/Unmediated"}
+          ],
+          "carrierType": [
+            {"@id": "https://id.kb.se/term/rda/Volume"}
+          ],
+          "issuanceType": "Monograph",
+          "instanceOf": {
+            "@type": "Multimedia",
+            "contentType": [
+              {"@id": "https://id.kb.se/term/rda/ComputerProgram"},
+              {"@id": "https://id.kb.se/marc/ComputerProgram"},
+              {"@id": "https://id.kb.se/term/rda/Text"}
+            ],
+            "genreForm": [
+              {"@id": "https://id.kb.se/marc/ComputerProgram"},
+              {"@id": "https://id.kb.se/term/ktg/Software"}
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@id": "https://libris.kb.se/000000000000000#it",
+          "@type": "PhysicalResource",
+          "category": [
+            {"@id": "https://id.kb.se/term/rda/Volume"},
+            {"@id": "https://id.kb.se/term/saobf/Print"}
+          ],
+          "instanceOf": {
+            "@type": "Monograph",
+            "category": [
+              {"@id": "https://id.kb.se/term/rda/ComputerProgram"},
+              {"@id": "https://id.kb.se/term/rda/Text"}
+            ]
+          }
+        }
+      },
+      "back": "source"
     }
   ]
 }
