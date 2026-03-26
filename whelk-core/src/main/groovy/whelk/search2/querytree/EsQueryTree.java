@@ -47,8 +47,16 @@ public class EsQueryTree {
     }
 
     private record NestedTree(Node tree) {
-        private static NestedTree from(ExpandedQueryTree queryTree, EsMappings esMappings) {
+        static NestedTree from(ExpandedQueryTree queryTree, EsMappings esMappings) {
             return new NestedTree(getNestedTree(queryTree.tree(), esMappings));
+        }
+
+        NestedTree remove(PostFilterTree postFilterTree) {
+            if (postFilterTree.isEmpty()) {
+                return this;
+            }
+            var modified = remove(tree, flattenedConditions(postFilterTree.tree()));
+            return new NestedTree(modified == null ? new Any.EmptyString() : modified);
         }
 
         private static Node getNestedTree(Node tree, EsMappings esMappings) {
@@ -101,10 +109,10 @@ public class EsQueryTree {
                 if (stem.isEmpty()) {
                     harvestNested.run();
                 } else {
-                    var selectors = (n instanceof Condition c ? List.of(c) : n.children())
+                    var selectors = flattenedConditions(n)
                             .stream()
-                            .map(Condition.class::cast)
                             .map(Condition::selector)
+                            .distinct()
                             .toList();
                     for (Selector s : selectors) {
                         var field = s.esField();
@@ -164,14 +172,6 @@ public class EsQueryTree {
             return Optional.empty();
         }
 
-        private NestedTree remove(PostFilterTree postFilterTree) {
-            if (postFilterTree.isEmpty()) {
-                return this;
-            }
-            var modified = remove(tree, postFilterTree.flattenedConditions());
-            return new NestedTree(modified == null ? new Any.EmptyString() : modified);
-        }
-
         private static Node remove(Node tree, Collection<Condition> remove) {
             if (remove.stream().anyMatch(n -> n == tree)) {
                 return null;
@@ -188,7 +188,7 @@ public class EsQueryTree {
     }
 
     private record PostFilterTree(Node tree) {
-        private static PostFilterTree from(ExpandedQueryTree eqt, NestedTree nestedTree, SelectedFacets selectedFacets) {
+        static PostFilterTree from(ExpandedQueryTree eqt, NestedTree nestedTree, SelectedFacets selectedFacets) {
             if (selectedFacets == null) {
                 return new PostFilterTree(null);
             }
@@ -208,7 +208,7 @@ public class EsQueryTree {
             List<Node> postFilterNodes = new ArrayList<>();
             for (List<Node> multiSelected : multiSelectGroups) {
                 var selectedConditions = multiSelected.stream()
-                        .map(PostFilterTree::flattenedConditions)
+                        .map(EsQueryTree::flattenedConditions)
                         .flatMap(Set::stream)
                         .collect(Collectors.toSet());
                 nestedAndGroups.stream()
@@ -222,16 +222,8 @@ public class EsQueryTree {
             return new PostFilterTree(postFilterNodes.size() > 1 ? new And(postFilterNodes, false) : postFilterNodes.getFirst());
         }
 
-        private boolean isEmpty() {
+        boolean isEmpty() {
             return tree == null;
-        }
-
-        private Set<Condition> flattenedConditions() {
-            return flattenedConditions(tree);
-        }
-
-        private static Set<Condition> flattenedConditions(Node node) {
-            return node.allDescendants().filter(Condition.class::isInstance).map(Condition.class::cast).collect(Collectors.toSet());
         }
 
         private static boolean intersect(Set<?> a, Set<?> b) {
@@ -239,10 +231,14 @@ public class EsQueryTree {
         }
     }
 
+    static Set<Condition> flattenedConditions(Node node) {
+        return node.allDescendants().filter(Condition.class::isInstance).map(Condition.class::cast).collect(Collectors.toSet());
+    }
+
     private static final class NestedAnd extends And {
         private final String stem;
 
-        private NestedAnd(List<? extends Node> children, String stem) {
+        NestedAnd(List<? extends Node> children, String stem) {
             super(children);
             this.stem = stem;
         }
@@ -261,7 +257,7 @@ public class EsQueryTree {
     private static final class NestedOr extends Or {
         private final String stem;
 
-        private NestedOr(List<? extends Node> children, String stem) {
+        NestedOr(List<? extends Node> children, String stem) {
             super(children);
             this.stem = stem;
         }
