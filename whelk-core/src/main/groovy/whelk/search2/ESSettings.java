@@ -4,6 +4,7 @@ import whelk.Whelk;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ public class ESSettings {
 
     public ESSettings(Whelk whelk) {
         if (whelk.elastic != null) {
-            this.mappings = new EsMappings(whelk.elastic.getMappings());
+            this.mappings = new EsMappings(whelk.elastic.getAllMappings());
             this.maxItems = whelk.elastic.maxResultWindow;
         }
         this.boost = loadBoostSettings();

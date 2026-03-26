@@ -743,6 +743,12 @@ class JsonLd {
         return superTermOf
     }
 
+    /**
+     *
+     * @param type
+     * @param baseType
+     * @return true if types is a subclass of baseType OR type == baseType
+     */
     boolean isSubClassOf(String type, String baseType) {
         if (!type) {
             return false

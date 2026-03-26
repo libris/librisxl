@@ -5,6 +5,7 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQuery;
 import whelk.search2.querytree.EsQueryTree;
 import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.Node;
@@ -15,6 +16,7 @@ import whelk.search2.querytree.Type;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +30,7 @@ public class PredicateObjectQuery extends ObjectQuery {
     }
 
     @Override
-    protected Map<String, Object> doGetEsQueryDsl() {
+    protected EsQuery doGetEsQuery() {
         JsonLd ld = whelk.getJsonld();
 
         Map<String, List<Property>> predicatesByInferredSubjectType = new HashMap<>();
@@ -63,7 +65,7 @@ public class PredicateObjectQuery extends ObjectQuery {
         Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
 
         if (!queryParams.stats.on) {
-            return esQueryDsl;
+            return new EsQuery(esQueryDsl, Collections.emptyList());
         }
 
         Set<String> subjectTypes = Stream.concat(queryTree.getRdfSubjectTypesList().stream(), predicatesByInferredSubjectType.keySet().stream())
@@ -71,7 +73,7 @@ public class PredicateObjectQuery extends ObjectQuery {
         var aggQuery = getEsAggQuery(subjectTypes);
         esQueryDsl.put("aggs", aggQuery);
 
-        return esQueryDsl;
+        return new EsQuery(esQueryDsl, Collections.emptyList());
     }
 
     private Node predicateObjectFilter(Collection<Property> predicates) {
