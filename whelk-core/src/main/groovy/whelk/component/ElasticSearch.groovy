@@ -222,14 +222,14 @@ class ElasticSearch {
         return subIndexToBaseType[subIndex]
     }
 
-    /**
-     * Get ES mappings for associated index
-     *
-     */
     List<Map<?, ?>> getAllMappings() {
         allIndexNames().collect{ getMappings(it) }
     }
 
+    /**
+     * Get ES mappings for associated index
+     *
+     */
     Map getMappings(String index) {
         Map response
         try {
