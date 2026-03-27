@@ -67,26 +67,35 @@ public class EsQueryTree {
         }
 
         private static Node _getNestedTree(Node tree, EsMappings esMappings) {
-            if (tree instanceof And and) {
-                List<NestedAnd> nestedAndGroups = collectNestedGroups(and, esMappings);
-                List<Node> nested = nestedAndGroups.stream().map(And::children).flatMap(List::stream).toList();
-                List<Node> nonNested = and.children().stream()
-                        .filter(Predicate.not(nested::contains))
-                        .map(n -> getNestedTree(n, esMappings)).toList();
-                if (nestedAndGroups.size() == 1 && nonNested.isEmpty()) {
-                    return nestedAndGroups.getFirst();
+            return switch (tree) {
+                case And and -> {
+                    List<NestedAnd> nestedAndGroups = collectNestedGroups(and, esMappings);
+                    List<Node> nested = nestedAndGroups.stream().map(And::children).flatMap(List::stream).toList();
+                    List<Node> nonNested = and.children().stream()
+                            .filter(Predicate.not(nested::contains))
+                            .map(n -> getNestedTree(n, esMappings)).toList();
+                    if (nestedAndGroups.size() == 1 && nonNested.isEmpty()) {
+                        yield nestedAndGroups.getFirst();
+                    }
+                    yield new And(Stream.concat(nestedAndGroups.stream(), nonNested.stream()).toList(), false);
                 }
-                return new And(Stream.concat(nestedAndGroups.stream(), nonNested.stream()).toList(), false);
-            }
-            if (tree instanceof Or or) {
-                var nestedOr = getNestedStem(or, esMappings)
+                case Or or -> {
+                    var nestedOr = findUnambiguousNestedStem(or, esMappings)
+                            .filter(esMappings::isNestedNotInParentField)
+                            .map(stem -> new NestedOr(or.children(), stem));
+                    yield nestedOr.isPresent()
+                            ? nestedOr.get()
+                            : or.mapAndReinstantiate(n -> getNestedTree(n, esMappings));
+                }
+                case Not(Node node) -> node instanceof Group g
+                        ? getNestedTree(g.getInverse(), esMappings)
+                        : new Not(getNestedTree(node, esMappings));
+                case Condition c -> c.selector().getEsNestedStem(esMappings)
                         .filter(esMappings::isNestedNotInParentField)
-                        .map(stem -> new NestedOr(or.children(), stem));
-                return nestedOr.isPresent()
-                        ? nestedOr.get()
-                        : or.mapAndReinstantiate(n -> getNestedTree(n, esMappings));
-            }
-            return tree;
+                        .map(stem -> (Condition) new NestedCondition(c, stem))
+                        .orElse(c);
+                default -> tree;
+            };
         }
 
         private static List<NestedAnd> collectNestedGroups(And and, EsMappings esMappings) {
@@ -96,8 +105,8 @@ public class EsQueryTree {
 
             Runnable harvestNested = () -> {
                 groups.forEach((stem, nodesByField) -> {
-                    var group = nodesByField.values().stream().flatMap(List::stream).toList();
-                    if (group.size() > 1) {
+                    var group = nodesByField.values().stream().flatMap(List::stream).distinct().toList();
+                    if (group.size() > 1 && !group.stream().allMatch(Not.class::isInstance)) {
                         nestedAndGroups.add(new NestedAnd(group, stem));
                     }
                 });
@@ -105,7 +114,7 @@ public class EsQueryTree {
             };
 
             and.children().forEach(n -> {
-                var stem = getNestedStem(n, esMappings);
+                var stem = findUnambiguousNestedStem(n, esMappings);
                 if (stem.isEmpty()) {
                     harvestNested.run();
                 } else {
@@ -117,7 +126,7 @@ public class EsQueryTree {
                     for (Selector s : selectors) {
                         var field = s.esField();
                         var nodesForField = groups.getOrDefault(stem.get(), Map.of()).getOrDefault(field, List.of());
-                        if (!nodesForField.isEmpty() && !s.isLdSetContainer()) {
+                        if (!nodesForField.isEmpty() && !s.isLdSetContainer() && !(n instanceof Not)) {
                             harvestNested.run();
                         }
                         groups.computeIfAbsent(stem.get(), k -> new LinkedHashMap<>())
@@ -148,7 +157,7 @@ public class EsQueryTree {
                 Map<Optional<String>, List<Node>> groupedByNestedStem = altSelectors.stream()
                         .map(Node::children)
                         .flatMap(List::stream)
-                        .collect(Collectors.groupingBy(n -> getNestedStem(n, esMappings)));
+                        .collect(Collectors.groupingBy(n -> findUnambiguousNestedStem(n, esMappings)));
                 if (!groupedByNestedStem.containsKey(Optional.empty())) {
                     newChildren.removeAll(altSelectors);
                     newChildren.add(new Or(groupedByNestedStem.values().stream().map(And::new).toList()));
@@ -158,18 +167,20 @@ public class EsQueryTree {
             return newChildren.size() == 1 ? (Or) newChildren.getFirst() : new And(newChildren);
         }
 
-        private static Optional<String> getNestedStem(Node node, EsMappings esMappings) {
-            if (node instanceof Condition c) {
-                return c.selector().getEsNestedStem(esMappings);
-            }
-            if (node instanceof Or or) {
-                var groupedByNestedStem = or.children().stream()
-                        .collect(Collectors.groupingBy(n -> getNestedStem(n, esMappings)));
-                if (groupedByNestedStem.size() == 1) {
-                    return groupedByNestedStem.keySet().iterator().next();
+        private static Optional<String> findUnambiguousNestedStem(Node node, EsMappings esMappings) {
+            return switch (node) {
+                case Condition c -> c.selector().getEsNestedStem(esMappings);
+                case Not not -> findUnambiguousNestedStem(not.node(), esMappings);
+                case Or or -> {
+                    var stems = or.children().stream()
+                            .map(n -> findUnambiguousNestedStem(n, esMappings))
+                            .collect(Collectors.toSet());
+                    yield stems.size() == 1
+                            ? stems.iterator().next()
+                            : Optional.empty();
                 }
-            }
-            return Optional.empty();
+                default -> Optional.empty();
+            };
         }
 
         private static Node remove(Node tree, Collection<Condition> remove) {
@@ -203,7 +214,7 @@ public class EsQueryTree {
                 return new PostFilterTree(null);
             }
 
-            List<NestedAnd> nestedAndGroups = new QueryTree(nestedTree.tree()).getTopNodesOfType(NestedAnd.class);
+            List<NestedNode> nestedNodes = new QueryTree(nestedTree.tree()).getTopNodesOfType(NestedNode.class);
 
             List<Node> postFilterNodes = new ArrayList<>();
             for (List<Node> multiSelected : multiSelectGroups) {
@@ -211,8 +222,9 @@ public class EsQueryTree {
                         .map(EsQueryTree::flattenedConditions)
                         .flatMap(Set::stream)
                         .collect(Collectors.toSet());
-                nestedAndGroups.stream()
-                        .filter(nestedAnd -> intersect(flattenedConditions(nestedAnd), selectedConditions))
+                nestedNodes.stream()
+                        .map(Node.class::cast)
+                        .filter(nestedNode -> intersect(flattenedConditions(nestedNode), selectedConditions))
                         .findFirst()
                         .ifPresentOrElse(postFilterNodes::add,
                                 () -> postFilterNodes.add(multiSelected.size() > 1 ? new Or(multiSelected) : multiSelected.getFirst()));
@@ -235,7 +247,24 @@ public class EsQueryTree {
         return node.allDescendants().filter(Condition.class::isInstance).map(Condition.class::cast).collect(Collectors.toSet());
     }
 
-    private static final class NestedAnd extends And {
+    private sealed interface NestedNode permits NestedCondition, NestedAnd, NestedOr {
+    }
+
+    private static final class NestedCondition extends Condition implements NestedNode {
+        private final String stem;
+
+        NestedCondition(Condition c, String stem) {
+            super(c.selector(), c.operator(), c.value());
+            this.stem = stem;
+        }
+
+        @Override
+        public Map<String, Object> toEs(ESSettings esSettings) {
+            return nestedWrap(stem, super.toEs(esSettings));
+        }
+    }
+
+    private static final class NestedAnd extends And implements NestedNode {
         private final String stem;
 
         NestedAnd(List<? extends Node> children, String stem) {
@@ -245,7 +274,7 @@ public class EsQueryTree {
 
         @Override
         public Map<String, Object> toEs(ESSettings esSettings) {
-            return nestedWrap(stem, super.getCoreEsQuery(esSettings));
+            return nestedWrap(stem, super.toEs(esSettings));
         }
 
         @Override
@@ -254,7 +283,7 @@ public class EsQueryTree {
         }
     }
 
-    private static final class NestedOr extends Or {
+    private static final class NestedOr extends Or implements NestedNode {
         private final String stem;
 
         NestedOr(List<? extends Node> children, String stem) {
@@ -264,7 +293,7 @@ public class EsQueryTree {
 
         @Override
         public Map<String, Object> toEs(ESSettings esSettings) {
-            return nestedWrap(stem, super.getCoreEsQuery(esSettings));
+            return nestedWrap(stem, super.toEs(esSettings));
         }
 
         @Override

@@ -19,11 +19,6 @@ public non-sealed class Or extends Group {
     }
 
     @Override
-    public Map<String, Object> toEs(ESSettings esSettings) {
-        return shouldWrap(childrenToEs(esSettings));
-    }
-
-    @Override
     public Node getInverse() {
         return new And(children.stream().map(Node::getInverse).toList());
     }

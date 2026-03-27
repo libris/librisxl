@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -32,11 +31,10 @@ import static whelk.search2.Operator.LIKE;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.mustWrap;
-import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
 import static whelk.search2.QueryUtil.shouldWrap;
 
-public sealed class Condition implements Node permits Type {
+public non-sealed class Condition implements Node {
     private final Selector selector;
     private final Operator operator;
     private final Value value;
@@ -68,11 +66,7 @@ public sealed class Condition implements Node permits Type {
         if (selector instanceof Property.TextQuery && value instanceof FreeText ft) {
             return ft.toEs(esSettings);
         }
-        return getEsNestedQuery(esSettings).orElse(getCoreEsQuery(esSettings));
-    }
-
-    public Map<String, Object> getCoreEsQuery(ESSettings esSettings) {
-        return _getCoreEsQuery(selector.esField(), value, esSettings);
+        return buildEsQuery(selector.esField(), value, esSettings);
     }
 
     @Override
@@ -229,7 +223,7 @@ public sealed class Condition implements Node permits Type {
         return m;
     }
 
-    private Map<String, Object> _getCoreEsQuery(String f, Value v, ESSettings esSettings) {
+    private Map<String, Object> buildEsQuery(String f, Value v, ESSettings esSettings) {
         if (operator.isRange() && !v.isRangeOpCompatible()) {
             // FIXME
             return nonsenseFilter();
@@ -251,19 +245,13 @@ public sealed class Condition implements Node permits Type {
         };
     }
 
-    private Optional<Map<String, Object>> getEsNestedQuery(ESSettings esSettings) {
-        return selector.getEsNestedStem(esSettings.mappings())
-                .filter(esSettings.mappings()::isNestedNotInParentField)
-                .map(nestedStem -> nestedWrap(nestedStem, getCoreEsQuery(esSettings)));
-    }
-
     private Map<String, Object> esDateFilter(String field, DateTime d, ESSettings esSettings) {
         // TODO: What about e.g. :firstIssueDate/:lastIssueDate? These have range xsd:date however are not indexed as date type in ES.
         if (esSettings.mappings().isDateTypeField(field)) {
             return esNumOrDateFilter(field, d.dateTime().toElasticDateString());
         }
         // Treat as free text
-        return _getCoreEsQuery(field, new FreeText(d.toString()), esSettings);
+        return buildEsQuery(field, new FreeText(d.toString()), esSettings);
     }
 
     private Map<String, Object> esNumFilter(String field, Numeric n, ESSettings esSettings) {
@@ -288,7 +276,7 @@ public sealed class Condition implements Node permits Type {
         }
 
         // Treat as free text
-        return _getCoreEsQuery(field, new FreeText(n.toString()), esSettings);
+        return buildEsQuery(field, new FreeText(n.toString()), esSettings);
     }
 
     private Map<String, Object> esYearRangeFilter(String field, YearRange yearRange, ESSettings esSettings) {
@@ -302,7 +290,7 @@ public sealed class Condition implements Node permits Type {
             return esRangeFilter(field, yearRange.toEsDateRange());
         }
 
-        return _getCoreEsQuery(field, new FreeText(yearRange.toString()), esSettings);
+        return buildEsQuery(field, new FreeText(yearRange.toString()), esSettings);
     }
 
     private Map<String, Object> esNumOrDateFilter(String f, Object v) {

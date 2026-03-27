@@ -1,7 +1,6 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.ESSettings;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -11,7 +10,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import static whelk.search2.QueryUtil.mustWrap;
-import static whelk.search2.QueryUtil.nestedWrap;
 
 public non-sealed class And extends Group {
     private final List<Node> children;
@@ -22,11 +20,6 @@ public non-sealed class And extends Group {
 
     public And(List<Node> children, boolean flattenChildren) {
         this.children = flattenChildren ? flattenChildren(children) : children;
-    }
-
-    @Override
-    public Map<String, Object> toEs(ESSettings esSettings) {
-        return mustWrap(childrenToEs(esSettings));
     }
 
     @Override
