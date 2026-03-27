@@ -268,7 +268,8 @@ class TestData {
         def ctx = [
                 '@context': [
                         '@vocab': 'https://id.kb.se/vocab/',
-                        'p2'    : ['@type': '@vocab']
+                        'p2'    : ['@type': '@vocab'],
+                        'p4'    : ['@container': '@set']
                 ]
         ]
         return new JsonLd(ctx, [:], vocab)
