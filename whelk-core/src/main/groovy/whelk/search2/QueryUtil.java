@@ -125,7 +125,11 @@ public class QueryUtil {
     }
 
     public static Map<String, Object> nestedWrap(String nestedPath, Map<String, Object> query) {
-        return Map.of("nested", Map.of("path", nestedPath, "query", query));
+        return Map.of("nested", Map.of(
+                "ignore_unmapped", true, // otherwise can fail when searching multiple indices
+                "path", nestedPath,
+                "query", query
+        ));
     }
 
     public static Map<String, Object> matchAny() {

@@ -2,9 +2,22 @@ package whelk.search2;
 
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.*;
+import whelk.search2.querytree.And;
+import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQuery;
+import whelk.search2.querytree.EsQueryTree;
+import whelk.search2.querytree.FreeText;
+import whelk.search2.querytree.Link;
+import whelk.search2.querytree.Node;
+import whelk.search2.querytree.Or;
+import whelk.search2.querytree.Property;
+import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.QueryTreeBuilder;
+import whelk.search2.querytree.Selector;
+import whelk.search2.querytree.Token;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -95,12 +108,12 @@ public class SuggestQuery extends Query {
     }
 
     @Override
-    protected Map<String, Object> doGetEsQueryDsl() {
+    protected EsQuery doGetEsQuery() {
         var queryTree = getFullQueryTree(suggestQueryTree).expand(whelk.getJsonld());
         var esQueryTree = new EsQueryTree(queryTree, esSettings);
         var queryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
         queryDsl.remove("sort");
-        return queryDsl;
+        return new EsQuery(queryDsl, Collections.emptyList());
     }
 
     private List<Selector> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {

@@ -110,7 +110,9 @@ class ElasticReindexer {
 
             threadPool.awaitAllAndShutdown()
             log.info("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
-            log.info("New number of mappings/fields in ES: ${whelk.elastic.getFieldCount()}")
+            for (var ix : whelk.elastic.allIndexNames()) {
+                log.info("New number of mappings/fields in ES: ${ix} : ${whelk.elastic.getFieldCount(ix)}")
+            }
             whelk.storage.logStats()
         } catch (Throwable e) {
             log.error("Reindex failed with: ${e}", e)

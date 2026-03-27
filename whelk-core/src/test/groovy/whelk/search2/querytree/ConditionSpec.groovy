@@ -121,6 +121,7 @@ class ConditionSpec extends Specification {
                 "bool": [
                         "must_not": [
                                 "nested": [
+                                        "ignore_unmapped" : true,
                                         "query": [
                                                 "bool": [
                                                         "filter": [
