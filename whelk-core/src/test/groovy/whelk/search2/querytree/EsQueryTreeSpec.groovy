@@ -193,6 +193,7 @@ class EsQueryTreeSpec extends Specification {
         expect:
         esQueryTree.getMainQuery() == [
                 "nested": [
+                        "ignore_unmapped" : true,
                         "path" : "p3",
                         "query": [
                                 "bool": [
@@ -229,6 +230,7 @@ class EsQueryTreeSpec extends Specification {
         expect:
         esQueryTree.getMainQuery() == [
                 "nested": [
+                        "ignore_unmapped" : true,
                         "path" : "p3",
                         "query": [
                                 "bool": [
@@ -267,6 +269,7 @@ class EsQueryTreeSpec extends Specification {
                 "bool": [
                         "must": [[
                                          "nested": [
+                                                 "ignore_unmapped" : true,
                                                  "query": [
                                                          "bool": [
                                                                  "must": [[
@@ -313,6 +316,7 @@ class EsQueryTreeSpec extends Specification {
         expect:
         esQueryTree.getMainQuery() == [
                 "nested": [
+                        "ignore_unmapped" : true,
                         "path" : "p3",
                         "query": [
                                 "bool": [
@@ -362,6 +366,7 @@ class EsQueryTreeSpec extends Specification {
         expect:
         esQueryTree.getMainQuery() == [
                 "nested": [
+                        "ignore_unmapped" : true,
                         "query": [
                                 "bool": [
                                         "must": [[
@@ -432,6 +437,7 @@ class EsQueryTreeSpec extends Specification {
         ]
         esQueryTree.getPostFilter() == [
                 "nested": [
+                        "ignore_unmapped" : true,
                         "path" : "p3",
                         "query": [
                                 "bool": [
@@ -486,6 +492,7 @@ class EsQueryTreeSpec extends Specification {
         ]
         esQueryTree.getPostFilter() == [
                 "nested": [
+                        "ignore_unmapped" : true,
                         "path" : "p3",
                         "query": [
                                 "bool": [
