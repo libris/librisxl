@@ -117,7 +117,9 @@ public non-sealed class Property extends PathElement {
 
     @Override
     public String queryKey() {
-        return queryKey != null ? queryKey.queryKey() : name;
+        return queryKey != null
+                ? queryKey.queryKey()
+                : (name.startsWith(LIBRIS_SEARCH_NS) ? name.replace(LIBRIS_SEARCH_NS, "") : name); // FIXME
     }
 
     @Override
