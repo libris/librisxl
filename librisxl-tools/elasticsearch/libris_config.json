@@ -7,7 +7,7 @@
                     "limit": 100000
                 }
             },
-            "number_of_shards": 15,
+            "number_of_shards": 5,
             "number_of_replicas": 2,
             "similarity": {
                 "bm25-ignore-length": {
