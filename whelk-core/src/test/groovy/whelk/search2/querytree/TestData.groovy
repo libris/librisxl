@@ -290,6 +290,7 @@ class TestData {
                         '@reverse.instanceOf.category.@id'  : ['type': 'keyword']
                 ]
         ]
-        return new EsMappings(mappings)
+        // TODO
+        return new EsMappings(List.of(mappings))
     }
 }

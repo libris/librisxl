@@ -7,6 +7,7 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQuery;
 import whelk.search2.querytree.EsQueryTree;
 import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.FilterAlias;
@@ -18,6 +19,7 @@ import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
+import whelk.search2.querytree.Type;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
 
@@ -36,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -66,7 +67,7 @@ public class Query {
     private final Stats stats;
     private SelectedFacets selectedFacets;
 
-    private Map<String, Object> esQueryDsl;
+    private EsQuery esQuery;
     private QueryResult queryResult;
 
     private ReducedQueryTree fullQueryTree;
@@ -120,18 +121,32 @@ public class Query {
         return QueryUtil.makeFindUrl(qTree.toQueryString(), queryParams);
     }
 
-    protected Map<String, Object> doGetEsQueryDsl() {
+    protected EsQuery doGetEsQuery() {
         JsonLd ld = whelk.getJsonld();
-        ExpandedQueryTree expandedQueryTree = getFullQueryTree().expand(ld);
-        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
-        if (queryParams.skipStats) {
-            EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings);
-            return buildEsQueryDsl(esQueryTree.getMainQuery());
+        var fullQueryTree = getFullQueryTree();
+
+        var indexNames = fullQueryTree.getRdfSubjectTypesList().stream().map(whelk.elastic::getIndexForType).toList();
+        /* TODO?
+        // remove type condition that exactly matches subindex content
+        if (indexNames.size() == 1 && !indexNames.getFirst().equals(whelk.elastic.getBaseIndex())) {
+            var baseType = whelk.elastic.getBaseTypeForSubIndex(indexNames.getFirst());
+            var removeFromTopLevel = new Type(base, whelk.getJsonld())
+            ...
         }
+         */
+
+        ExpandedQueryTree expandedQueryTree = fullQueryTree.expand(ld);
+        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
+        if (!queryParams.stats.on) {
+            EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings);
+            var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
+            return new EsQuery(esQueryDsl, Collections.emptyList());
+        }
+
         EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings, getSelectedFacets());
-        Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
+        var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
         esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectTypesList()));
-        return esQueryDsl;
+        return new EsQuery(esQueryDsl, indexNames);
     }
 
     protected Map<String, Object> buildEsQueryDsl(Map<String, Object> mainQuery) {
@@ -155,7 +170,7 @@ public class Query {
 
     protected QueryResult getQueryResult() {
         if (queryResult == null) {
-            this.queryResult = new QueryResult(doQuery(getEsQueryDsl()), queryParams.debug);
+            this.queryResult = new QueryResult(doQuery(getEsQuery()), queryParams.debug);
         }
         return queryResult;
     }
@@ -204,7 +219,7 @@ public class Query {
 
         view.put("items", getQueryResult().collectItems(this::applyLens));
 
-        if (!queryParams.skipStats) {
+        if (queryParams.stats.on) {
             view.put("stats", stats.build());
             linkLoader.queue(stats.getLinks());
         }
@@ -216,7 +231,7 @@ public class Query {
         view.put("maxItems", esSettings.maxItems());
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_QUERY)) {
-            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQueryDsl()));
+            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQuery().dsl()));
         }
 
         linkLoader.loadChips();
@@ -284,10 +299,10 @@ public class Query {
         return mappings;
     }
 
-    private Map<?, ?> doQuery(Object dsl) {
-        return dsl instanceof List<?> l
-                ? whelk.elastic.multiQuery(l)
-                : whelk.elastic.query((Map<?, ?>) dsl);
+    private Map<?, ?> doQuery(EsQuery esQuery) {
+        return esQuery.dsl() instanceof List<?> l
+                ? whelk.elastic.multiQuery(l, esQuery.indexNames())
+                : whelk.elastic.query((Map<?, ?>) esQuery.dsl(), esQuery.indexNames());
     }
 
     private List<FilterAlias> collectOptionalFilters() {
@@ -317,11 +332,11 @@ public class Query {
         return SearchMode.STANDARD_SEARCH;
     }
 
-    private Map<String, Object> getEsQueryDsl() {
-        if (esQueryDsl == null) {
-            this.esQueryDsl = doGetEsQueryDsl();
+    private EsQuery getEsQuery() {
+        if (esQuery == null) {
+            this.esQuery = doGetEsQuery();
         }
-        return esQueryDsl;
+        return esQuery;
     }
 
     private QueryTree mergeTrees(QueryTree baseTree, List<QueryTree> other) {
