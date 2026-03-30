@@ -193,6 +193,7 @@ class EsQueryTreeSpec extends Specification {
         expect:
         esQueryTree.getMainQuery() == [
                 "nested": [
+                        "ignore_unmapped": true,
                         "query": [
                                 "bool": [
                                         "filter": [
@@ -294,7 +295,8 @@ class EsQueryTreeSpec extends Specification {
                                                            ]
                                                    ]]
                                 ]
-                        ]
+                        ],
+                        "ignore_unmapped": true
                 ]
         ]
     }
@@ -340,7 +342,6 @@ class EsQueryTreeSpec extends Specification {
         expect:
         esQueryTree.getMainQuery() == [
                 "nested": [
-                        "ignore_unmapped" : true,
                         "path" : "p3",
                         "query": [
                                 "bool": [
@@ -386,7 +387,8 @@ class EsQueryTreeSpec extends Specification {
                                                          ]
                                                  ]]
                                 ]
-                        ]
+                        ],
+                        "ignore_unmapped" : true
                 ]
         ]
     }
@@ -424,7 +426,8 @@ class EsQueryTreeSpec extends Specification {
                                                                             ]]
                                                            ]
                                                    ],
-                                                   "path" : "p3"
+                                                   "path" : "p3",
+                                                   "ignore_unmapped": true
                                            ]
                                    ], [
                                            "nested": [
@@ -437,7 +440,8 @@ class EsQueryTreeSpec extends Specification {
                                                                    "fields"            : ["p3.p1^5.0"]
                                                            ]
                                                    ],
-                                                   "path" : "p3"
+                                                   "path" : "p3",
+                                                   "ignore_unmapped": true
                                            ]
                                    ]]
                 ]
@@ -465,7 +469,8 @@ class EsQueryTreeSpec extends Specification {
                                                                  ]
                                                          ]
                                                  ],
-                                                 "path" : "p3"
+                                                 "path" : "p3",
+                                                 "ignore_unmapped": true
                                          ]
                                  ], [
                                          "nested": [
@@ -478,7 +483,8 @@ class EsQueryTreeSpec extends Specification {
                                                                  ]
                                                          ]
                                                  ],
-                                                 "path" : "p3"
+                                                 "path" : "p3",
+                                                 "ignore_unmapped": true
                                          ]
                                  ]]
                 ]
@@ -547,7 +553,8 @@ class EsQueryTreeSpec extends Specification {
                                                            ]
                                                    ]]
                                 ]
-                        ]
+                        ],
+                        "ignore_unmapped" : true
                 ]
         ]
     }
@@ -573,7 +580,8 @@ class EsQueryTreeSpec extends Specification {
                                                                            ]
                                                                    ]
                                                            ]
-                                                   ]
+                                                   ],
+                                                   "ignore_unmapped": true
                                            ]
                                    ], [
                                            "bool": [
@@ -609,7 +617,8 @@ class EsQueryTreeSpec extends Specification {
                                                                            ]
                                                                    ]
                                                            ]
-                                                   ]
+                                                   ],
+                                                   "ignore_unmapped": true
                                            ]
                                    ], [
                                            "nested": [
@@ -622,7 +631,8 @@ class EsQueryTreeSpec extends Specification {
                                                                            ]
                                                                    ]
                                                            ]
-                                                   ]
+                                                   ],
+                                                   "ignore_unmapped": true
                                            ]
                                    ], [
                                            "bool": [
@@ -658,7 +668,8 @@ class EsQueryTreeSpec extends Specification {
                                                                  ]
                                                          ]
                                                  ],
-                                                 "path" : "p3"
+                                                 "path" : "p3",
+                                                 "ignore_unmapped": true
                                          ]
                                  ], [
                                          "bool": [
@@ -706,7 +717,8 @@ class EsQueryTreeSpec extends Specification {
                                                                                   ]
                                                                           ]]
                                                          ]
-                                                 ]
+                                                 ],
+                                                 "ignore_unmapped": true
                                          ]
                                  ], [
                                          "bool": [
@@ -754,7 +766,8 @@ class EsQueryTreeSpec extends Specification {
                                                                                   ]
                                                                           ]]
                                                          ]
-                                                 ]
+                                                 ],
+                                                 "ignore_unmapped": true
                                          ]
                                  ], [
                                          "nested": [
@@ -779,7 +792,8 @@ class EsQueryTreeSpec extends Specification {
                                                                                   ]
                                                                           ]]
                                                          ]
-                                                 ]
+                                                 ],
+                                                 "ignore_unmapped": true
                                          ]
                                  ]]
                 ]
@@ -828,7 +842,8 @@ class EsQueryTreeSpec extends Specification {
                                                                                   ]
                                                                           ]]
                                                          ]
-                                                 ]
+                                                 ],
+                                                 "ignore_unmapped": true
                                          ]
                                  ], [
                                          "nested": [
@@ -853,7 +868,8 @@ class EsQueryTreeSpec extends Specification {
                                                                                   ]
                                                                           ]]
                                                          ]
-                                                 ]
+                                                 ],
+                                                 "ignore_unmapped": true
                                          ]
                                  ]]
                 ]
@@ -872,7 +888,6 @@ class EsQueryTreeSpec extends Specification {
                 "bool": [
                         "must": [[
                                          "nested": [
-                                                 "ignore_unmapped" : true,
                                                  "query": [
                                                          "bool": [
                                                                  "must": [[
@@ -902,7 +917,8 @@ class EsQueryTreeSpec extends Specification {
                                                                           ]]
                                                          ]
                                                  ],
-                                                 "path" : "p3"
+                                                 "path" : "p3",
+                                                 "ignore_unmapped" : true
                                          ]
                                  ], [
                                          "nested": [
@@ -915,7 +931,8 @@ class EsQueryTreeSpec extends Specification {
                                                                  ]
                                                          ]
                                                  ],
-                                                 "path" : "p3"
+                                                 "path" : "p3",
+                                                 "ignore_unmapped" : true
                                          ]
                                  ]]
                 ]
@@ -955,7 +972,8 @@ class EsQueryTreeSpec extends Specification {
                                                                                   ]
                                                                           ]]
                                                          ]
-                                                 ]
+                                                 ],
+                                                 "ignore_unmapped" : true,
                                          ]
                                  ], [
                                          "nested": [
@@ -968,7 +986,8 @@ class EsQueryTreeSpec extends Specification {
                                                                          ]
                                                                  ]
                                                          ]
-                                                 ]
+                                                 ],
+                                                 "ignore_unmapped" : true,
                                          ]
                                  ], [
                                          "simple_query_string": [
@@ -1004,7 +1023,8 @@ class EsQueryTreeSpec extends Specification {
                                                         ]
                                                 ]
                                         ],
-                                        "path" : "p3"
+                                        "path" : "p3",
+                                        "ignore_unmapped" : true,
                                 ]
                         ]
                 ]
@@ -1044,7 +1064,6 @@ class EsQueryTreeSpec extends Specification {
         expect:
         esQueryTree.getMainQuery() == [
                 "nested": [
-                        "ignore_unmapped" : true,
                         "path" : "p3",
                         "query": [
                                 "bool": [
@@ -1070,7 +1089,8 @@ class EsQueryTreeSpec extends Specification {
                                                          ]
                                                  ]]
                                 ]
-                        ]
+                        ],
+                        "ignore_unmapped" : true
                 ]
         ]
     }
@@ -1085,7 +1105,6 @@ class EsQueryTreeSpec extends Specification {
         expect:
         esQueryTree.getMainQuery() == [
                 "nested": [
-                        "ignore_unmapped" : true,
                         "query": [
                                 "bool": [
                                         "must": [[
@@ -1135,7 +1154,8 @@ class EsQueryTreeSpec extends Specification {
                                                  ]]
                                 ]
                         ],
-                        "path" : "p3"
+                        "path" : "p3",
+                        "ignore_unmapped" : true
                 ]
         ]
     }
@@ -1163,7 +1183,8 @@ class EsQueryTreeSpec extends Specification {
                                                                                          ]
                                                                                  ]
                                                                          ]
-                                                                 ]
+                                                                 ],
+                                                                 "ignore_unmapped" : true
                                                          ]
                                                  ]
                                          ]
@@ -1180,7 +1201,8 @@ class EsQueryTreeSpec extends Specification {
                                                                                          ]
                                                                                  ]
                                                                          ]
-                                                                 ]
+                                                                 ],
+                                                                 "ignore_unmapped" : true
                                                          ]
                                                  ]
                                          ]
