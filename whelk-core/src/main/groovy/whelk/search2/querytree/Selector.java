@@ -22,6 +22,7 @@ public sealed interface Selector permits Path, PathElement {
     boolean isType();
 
     boolean isObjectProperty();
+    boolean isLdSetContainer();
 
     boolean mayAppearOnType(String type, JsonLd jsonLd);
     boolean appearsOnType(String type, JsonLd jsonLd);

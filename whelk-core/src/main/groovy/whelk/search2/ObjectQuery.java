@@ -145,9 +145,8 @@ public class ObjectQuery extends Query {
         var filters = new HashMap<>();
 
         predicateToSubjectTypes.forEach((p, subjects) -> {
-            var filter = new Condition(p, Operator.EQUALS, object)
+            var filter = new QueryTree(new Condition(p, Operator.EQUALS, object))
                     .expand(jsonLd, subjects)
-                    .expandedRoot()
                     .toEs(esSettings);
             filters.put(p.name(), filter);
         });

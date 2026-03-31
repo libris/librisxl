@@ -45,6 +45,7 @@ public non-sealed class Property extends PathElement {
     protected String inverseOf;
     protected String langAlias;
     protected boolean isVocabTerm;
+    protected boolean isLdSetContainer;
 
     protected Property superProperty;
     protected List<Restrictions.OnProperty> objectOnPropertyRestrictions;
@@ -62,6 +63,7 @@ public non-sealed class Property extends PathElement {
         this.name = name;
         this.langAlias =(String) jsonLd.langContainerAlias.get(name);
         this.isVocabTerm = jsonLd.isVocabTerm(name);
+        this.isLdSetContainer = jsonLd.isSetContainer(name);
     }
 
     protected Property(Map<String, Object> definition, JsonLd jsonLd) {
@@ -157,6 +159,11 @@ public non-sealed class Property extends PathElement {
     @Override
     public boolean isObjectProperty() {
         return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
+    }
+
+    @Override
+    public boolean isLdSetContainer() {
+        return isLdSetContainer;
     }
 
     @Override

@@ -21,11 +21,8 @@ public sealed abstract class Group implements Node permits And, Or {
     abstract Map<String, Object> wrap(List<Map<String, Object>> esChildren);
 
     @Override
-    public abstract boolean equals(Object o);
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.getClass(), new HashSet<>(children()));
+    public Map<String, Object> toEs(ESSettings esSettings) {
+        return wrap(children().stream().map(n -> n.toEs(esSettings)).toList());
     }
 
     @Override
@@ -68,8 +65,9 @@ public sealed abstract class Group implements Node permits And, Or {
         return toQueryString(true);
     }
 
-    public Node filterAndReinstantiate(Predicate<Node> p) {
-        return mapFilterAndReinstantiate(Function.identity(), p);
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getClass(), new HashSet<>(children()));
     }
 
     public Group mapAndReinstantiate(Function<Node, Node> mapper) {
@@ -111,21 +109,5 @@ public sealed abstract class Group implements Node permits And, Or {
                     reduced.add(child);
                 });
         return reduced.size() == 1 ? reduced.getFirst() : newInstance(reduced);
-    }
-
-    List<Map<String, Object>> childrenToEs(ESSettings esSettings) {
-        return children().stream().map(n -> n.toEs(esSettings)).toList();
-    }
-
-    Map<String, Object> getCoreEsQuery(ESSettings esSettings) {
-        return wrap(children().stream().map(n -> toCoreEsQuery(n, esSettings)).toList());
-    }
-
-    private static Map<String, Object> toCoreEsQuery(Node node, ESSettings esSettings) {
-        return switch (node) {
-            case Condition c -> c.getCoreEsQuery(esSettings);
-            case Group g -> g.getCoreEsQuery(esSettings);
-            default -> node.toEs(esSettings);
-        };
     }
 }

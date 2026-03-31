@@ -111,33 +111,6 @@ class ConditionSpec extends Specification {
         "bibliography:x"    | ["T3"]       | "meta.bibliography:x"
     }
 
-    def "To ES query (negation + nested field)"() {
-        given:
-        var tree = QueryTreeBuilder.buildTree("NOT p3:\"https://id.kb.se/x\"", disambiguate)
-        ESSettings esSettings = new ESSettings(esMappings, new ESSettings.Boost([:]))
-
-        expect:
-        tree.toEs(esSettings) == [
-                "bool": [
-                        "must_not": [
-                                "nested": [
-                                        "ignore_unmapped" : true,
-                                        "query": [
-                                                "bool": [
-                                                        "filter": [
-                                                                "term": [
-                                                                        "p3.@id": "https://id.kb.se/x"
-                                                                ]
-                                                        ]
-                                                ]
-                                        ],
-                                        "path" : "p3"
-                                ]
-                        ]
-                ]
-        ]
-    }
-
     def "To ES exists query"() {
         given:
         var exists = QueryTreeBuilder.buildTree(q, disambiguate)
