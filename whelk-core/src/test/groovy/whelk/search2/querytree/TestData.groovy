@@ -271,7 +271,7 @@ class TestData {
                 'properties': [
                         'p3'                                                 : ['type': 'nested'],
                         '@reverse.instanceOf.p3'                             : ['type': 'nested'],
-                        'p15'                                                : ['type': 'nested', "include_in_parent": true]
+                        'p15'                                                : ['type': 'nested', "include_in_parent": true],
                         '@type'                                              : ['type': 'keyword'],
                         'p2'                                                 : ['type': 'keyword'],
                         'p3.p4.@id'                                          : ['type': 'keyword'],
