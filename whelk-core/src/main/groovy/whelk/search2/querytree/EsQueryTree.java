@@ -224,7 +224,7 @@ public class EsQueryTree {
                         .collect(Collectors.toSet());
                 nestedNodes.stream()
                         .map(Node.class::cast)
-                        .filter(nestedNode -> intersect(flattenedConditions(nestedNode), selectedConditions))
+                        .filter(nestedNode -> intersects(flattenedConditions(nestedNode), selectedConditions))
                         .findFirst()
                         .ifPresentOrElse(postFilterNodes::add,
                                 () -> postFilterNodes.add(multiSelected.size() > 1 ? new Or(multiSelected) : multiSelected.getFirst()));
@@ -238,7 +238,7 @@ public class EsQueryTree {
             return tree == null;
         }
 
-        private static boolean intersect(Set<?> a, Set<?> b) {
+        private static boolean intersects(Set<?> a, Set<?> b) {
             return a.stream().anyMatch(b::contains);
         }
     }
