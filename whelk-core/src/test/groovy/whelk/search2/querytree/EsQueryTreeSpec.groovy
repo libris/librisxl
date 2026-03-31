@@ -522,7 +522,7 @@ class EsQueryTreeSpec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (AND, same repeatable field)"() {
+    def "To ES query: group nested (OR, same repeatable field)"() {
         given:
         String q = 'p3.p4:"https://id.kb.se/x" OR p3.p4:"https://id.kb.se/y"'
         QueryTree qt = new QueryTree(q, disambiguate)
