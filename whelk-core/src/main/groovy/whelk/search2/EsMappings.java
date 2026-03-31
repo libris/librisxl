@@ -3,9 +3,11 @@ package whelk.search2;
 import whelk.util.DocumentUtil;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -28,16 +30,17 @@ public class EsMappings {
     public static String FOUR_DIGITS_KEYWORD_SUFFIX = "_4_digits_keyword";
     public static String FOUR_DIGITS_SHORT_SUFFIX = "_4_digits_short";
 
-    public EsMappings(Map<?, ?> mappings) {
-        this.keywordSubfieldFields = getKeywordSubfieldFields(mappings);
-        this.fourDigitsKeywordFields = getFourDigitsKeywordFields(mappings);
-        this.fourDigitsShortFields = getFourDigitsShortFields(mappings);
-        this.keywordTypeFields = getFieldsOfType("keyword", mappings);
-        this.dateTypeFields = getFieldsOfType("date", mappings);
-        this.nestedTypeFields = getFieldsOfType("nested", mappings);
-        this.longTypeFields = getFieldsOfType("long", mappings);
+    public EsMappings(List<Map<?, ?>> mappings) {
+        this.keywordSubfieldFields = union(mappings, EsMappings::getKeywordSubfieldFields);
+        this.fourDigitsKeywordFields = union(mappings, EsMappings::getFourDigitsKeywordFields);
+        this.fourDigitsShortFields = union(mappings, EsMappings::getFourDigitsShortFields);
+        this.keywordTypeFields = union(mappings, m -> getFieldsOfType("keyword", m));
+        this.dateTypeFields = union(mappings, m -> getFieldsOfType("date", m));
+        this.nestedTypeFields = union(mappings, m -> getFieldsOfType("nested", m));
+        this.longTypeFields = union(mappings, m -> getFieldsOfType("long", m));
         this.nestedNotInParentFields = new HashSet<>(nestedTypeFields);
-        this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappings));
+        var includeInParent = union(mappings, m -> getFieldsWithSetting("include_in_parent", true, m));
+        this.nestedNotInParentFields.removeAll(includeInParent);
     }
 
     public boolean hasKeywordSubfield(String fieldPath) {
@@ -130,4 +133,11 @@ public class EsMappings {
         DocumentUtil.traverse(mappings.get("properties"), visitor);
         return fields;
     }
+
+    private static <T, U> Set<U> union (List<T> mappings, Function<T, Set<U>> f) {
+        return mappings.stream()
+                .map(f)
+                .reduce(new HashSet<>(), (a,b) -> {a.addAll(b); return a;});
+    }
+
 }

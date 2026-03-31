@@ -1,6 +1,7 @@
 package whelk.component
 
 import groovy.json.JsonOutput
+import groovy.transform.Memoized
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.codec.binary.Base64
 import se.kb.libris.utils.isbn.ConvertException
@@ -57,7 +58,9 @@ class ElasticSearch {
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
     public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
     
-    String defaultIndex = null
+    String mainIndex = null
+    Map<String, String> baseTypeToSubIndex = new HashMap<>();
+    Map<String, String> subIndexToBaseType = new HashMap<>();
     private List<String> elasticHosts
     private String elasticUser
     private String elasticPassword
@@ -65,8 +68,11 @@ class ElasticSearch {
     private ElasticClient bulkClient
     private boolean isPitApiAvailable = false
     private static final int ES_LOG_MIN_DURATION = 2000 // Only log queries taking at least this amount of milliseconds
+    private static final String SUB_IX_SEPARATOR = '-'
 
     private final Queue<Runnable> indexingRetryQueue = new LinkedBlockingQueue<>()
+
+    private final JsonLd jsonLd
 
     private static final class DerivedLenses {
         public static final FresnelUtil.Lens CARD_ONLY = new FresnelUtil.Lens(
@@ -95,20 +101,33 @@ class ElasticSearch {
             SEARCH_CARD_STR
     ] as Set
 
-    ElasticSearch(Properties props) {
+    ElasticSearch(Properties props, JsonLd jsonLd) {
         this(
                 props.getProperty("elasticHost"),
                 props.getProperty("elasticIndex"),
+                Optional.ofNullable(props.getProperty("elasticSubIndexTypes"))
+                        .map { it.split(",") as List }
+                        .map { it.collect(s -> s.trim()) }
+                        .orElse(Collections.emptyList()),
                 props.getProperty("elasticUser"),
-                props.getProperty("elasticPassword")
+                props.getProperty("elasticPassword"),
+                jsonLd
         )
     }
 
-    ElasticSearch(String elasticHost, String elasticIndex, String elasticUser, String elasticPassword) {
+    private ElasticSearch(
+            String elasticHost,
+            String elasticIndex,
+            List<String> elasticSubIndexTypes,
+            String elasticUser,
+            String elasticPassword,
+            JsonLd jsonLd)
+    {
         this.elasticHosts = getElasticHosts(elasticHost)
-        this.defaultIndex = elasticIndex
+        this.mainIndex = elasticIndex
         this.elasticUser = elasticUser
         this.elasticPassword = elasticPassword
+        this.jsonLd = jsonLd
 
         client = ElasticClient.withDefaultHttpClient(elasticHosts, elasticUser, elasticPassword)
         bulkClient = ElasticClient.withBulkHttpClient(elasticHosts, elasticUser, elasticPassword)
@@ -124,6 +143,26 @@ class ElasticSearch {
         }, 60*1000, 10*1000)
         
         initSettings()
+
+        // initSettings() waits for ES available. Do this after
+        for (var type : elasticSubIndexTypes) {
+            // is this a physical index with a numerical suffix? it is the case when indexing to a new index
+            var suffix = mainIndex.find('_\\d$')
+            var base = suffix ? Unicode.stripSuffix(mainIndex, suffix) : mainIndex
+            // elastic index names must be lowercase
+            var ix = base + SUB_IX_SEPARATOR + type.toLowerCase() + (suffix ?: '')
+
+            if (indexExists(ix)) {
+                baseTypeToSubIndex.put(type, ix);
+                subIndexToBaseType.put(ix, type);
+            } else {
+                log.info("Could not find subindex ${ix}. Disabled it.")
+            }
+        }
+
+        log.info("Hosts: ${elasticHosts}")
+        log.info("Index: ${mainIndex}")
+        log.info("Subindices: ${getSubIndexNames()}")
     }
 
     void initSettings() {
@@ -168,18 +207,35 @@ class ElasticSearch {
         return hosts
     }
 
-    String getIndexName() { defaultIndex }
+    String getIndexName() { mainIndex }
 
-	/**
-	 * Get ES mappings for associated index
-	 *
-	 */
-	Map getMappings() {
+    Collection<String> getSubIndexNames() {
+        subIndexToBaseType.keySet()
+    }
+
+    @Memoized
+    List<String> allIndexNames() {
+        [getIndexName()] + getSubIndexNames()
+    }
+
+    String getBaseTypeForSubIndex(String subIndex) {
+        return subIndexToBaseType[subIndex]
+    }
+
+    List<Map<?, ?>> getAllMappings() {
+        allIndexNames().collect{ getMappings(it) }
+    }
+
+    /**
+     * Get ES mappings for associated index
+     *
+     */
+    Map getMappings(String index) {
         Map response
         try {
-            response = client.performRequest('GET', "/${indexName}/_mappings", '')
+            response = client.performRequest('GET', "/${index}/_mappings", '')
         } catch (UnexpectedHttpStatusException e) {
-            log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings: ${e.message}", e)
+            log.warn("Got unexpected status code ${e.statusCode} when getting ES mappings for ${index}: ${e.message}", e)
             return [:]
         }
 
@@ -188,20 +244,37 @@ class ElasticSearch {
         List<String> keys = response.keySet() as List
 
         if (keys.size() == 1 && response[(keys[0])].containsKey('mappings')) {
-            return response[(keys[0])]['mappings']
+            return (Map) response[(keys[0])]['mappings']
         } else {
-            log.warn("Couldn't get mappings from ES index ${indexName}, response was ${response}.")
+            log.warn("Couldn't get mappings from ES index ${index}, response was ${response}.")
             return [:]
+        }
+    }
+
+    boolean indexExists(String index) {
+        try {
+            client.performRequest('GET', "/${index}/_settings", '')
+            return true
+        } catch (UnexpectedHttpStatusException e) {
+            if (e.statusCode == 404) {
+                return false
+            }
+            throw e
         }
     }
 
     /**
      * Get ES settings for associated index
+     * NOTE assumes that all subindices have the same settings
      */
     Map getSettings() {
+        return getSettings(mainIndex)
+    }
+
+    Map getSettings(String index) {
         Map response
         try {
-            response = client.performRequest('GET', "/${indexName}/_settings", '')
+            response = client.performRequest('GET', "/${index}/_settings", '')
         } catch (UnexpectedHttpStatusException e) {
             // When ES is starting up there is a time when it accepts connections but cannot yet authenticate
             // users because the security index is unavailable. This results in a 401 Unauthorized (with the
@@ -224,22 +297,39 @@ class ElasticSearch {
             throw new RuntimeException("Couldn't get settings from ES index ${indexName}, response was ${response}.")
         }
     }
-    
-    int getFieldCount() {
+
+    int getFieldCount(String index) {
         Map response
         try {
-            response = client.performRequest('GET', "/${indexName}/_field_caps?fields=*", '')
+            response = client.performRequest('GET', "/${index}/_field_caps?fields=*", '')
         } catch (Exception e) {
-            log.warn("Error getting fields from ES: $e", e)
+            log.warn("Error getting fields from ES for ${index}: $e", e)
             return -1
         }
         
         try {
             return response.fields.size()
         } catch (Exception e) {
-            log.warn("Error parsing response when getting number of fields from ES: $e", e)
+            log.warn("Error parsing response when getting number of fields from ES for ${index}: $e", e)
             return -1
         }
+    }
+
+    String getIndexForDoc(Document doc) {
+        return getIndexForType(doc.singleThingTypeOrVirtualThingType())
+    }
+
+    @Memoized
+    String getIndexForType(String type) {
+        for (var e : subIndexToBaseType.entrySet()) {
+            var subIndex = e.getKey()
+            var baseType = e.getValue()
+            if (jsonLd.isSubClassOf(type, baseType)) {
+                return subIndex
+            }
+        }
+
+        return mainIndex
     }
 
     void bulkIndex(Collection<Document> docs, Whelk whelk) {
@@ -330,7 +420,7 @@ class ElasticSearch {
     }
 
     String createActionRow(Document doc) {
-        def action = ["index" : [ "_index" : indexName,
+        def action = ["index" : [ "_index" : getIndexForDoc(doc),
                                   "_id" : toElasticId(doc.getShortId()) ]]
         return mapper.writeValueAsString(action)
     }
@@ -341,10 +431,10 @@ class ElasticSearch {
         try {
             Map responseMap = client.performRequest(
                     'PUT',
-                    "/${indexName}/_doc/${toElasticId(doc.getShortId())}",
+                    "/${getIndexForDoc(doc)}/_doc/${toElasticId(doc.getShortId())}",
                     getShapeForIndex(doc, whelk))
             if (log.isDebugEnabled()) {
-                log.debug("Indexed the document ${doc.getShortId()} as ${indexName}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
+                log.debug("Indexed the document ${doc.getShortId()} as ${getIndexForDoc(doc)}/_doc/${responseMap['_id']} as version ${responseMap['_version']}")
             }
         } catch (Exception e) {
             if (!isBadRequest(e)) {
@@ -357,15 +447,15 @@ class ElasticSearch {
         }
     }
 
-    void incrementReverseLinks(String shortId, String relation) {
-        updateReverseLinkCounter(shortId, relation, 1)
+    void incrementReverseLinks(Document doc, String relation) {
+        updateReverseLinkCounter(doc.shortId, relation, 1, getIndexForDoc(doc))
     }
 
-    void decrementReverseLinks(String shortId, String relation) {
-        updateReverseLinkCounter(shortId, relation, -1)
+    void decrementReverseLinks(Document doc, String relation) {
+        updateReverseLinkCounter(doc.shortId, relation, -1, getIndexForDoc(doc))
     }
 
-    private void updateReverseLinkCounter(String shortId, String relation, int deltaCount) {
+    private void updateReverseLinkCounter(String shortId, String relation, int deltaCount, String index) {
         // An indexed document will always have reverseLinks.totalItems set to an integer,
         // and reverseLinks.totalItemsByRelation set to a map, but reverseLinks.totalItemsByRelation['foo']
         // doesn't necessarily exist at this time; hence the null check before trying to update the link counter.
@@ -383,7 +473,7 @@ class ElasticSearch {
         try {
             client.performRequest(
                     'POST',
-                    "/${indexName}/_update/${toElasticId(shortId)}",
+                    "/${index}/_update/${toElasticId(shortId)}",
                     body)
         }
         catch (Exception e) {
@@ -397,7 +487,7 @@ class ElasticSearch {
             }
             else {
                 log.warn("Failed to update reverse link counter ($deltaCount) for $shortId: $e, placing in retry queue.", e)
-                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, relation, deltaCount) })
+                indexingRetryQueue.add({ -> updateReverseLinkCounter(shortId, relation, deltaCount, index) })
             }
         }
     }
@@ -409,7 +499,7 @@ class ElasticSearch {
         def dsl = ["query":["term":["_id":toElasticId(identifier)]]]
         try {
             Map responseMap = client.performRequest('POST',
-                    "/${indexName}/_delete_by_query",
+                    "/${allIndexNames().join(',')}/_delete_by_query",
                     JsonOutput.toJson(dsl))
 
             if (log.isDebugEnabled()) {
@@ -457,30 +547,42 @@ class ElasticSearch {
                 embellishedGraph.take(originalGraphSize) as List<Map<String, Object>>,
                 links - categoryLinks) // Skip preserving category links since these will be restored in a separate step
 
-        var shapedMainGraph = lensedMainGraph.lensedThings()
-
-        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+        def restoreCategoryByCollection = { shapedGraph, beforeGraph ->
             // FIXME
-            // Restore _categoryByCollection
             [[1], [1, JsonLd.WORK_KEY]].each { List path -> {
-                Map thing = (Map) DocumentUtil.getAtPath(embellishedGraph, path, [:])
+                Map thing = (Map) DocumentUtil.getAtPath(beforeGraph, path, [:])
                 if (thing.containsKey(CATEGORY_BY_COLLECTION)) {
-                    DocumentUtil.getAtPath(shapedMainGraph, path, [:])[CATEGORY_BY_COLLECTION] = thing[CATEGORY_BY_COLLECTION]
+                    DocumentUtil.getAtPath(shapedGraph, path, [:])[CATEGORY_BY_COLLECTION] = thing[CATEGORY_BY_COLLECTION]
                 }
             }}
         }
 
-        copy.data[GRAPH_KEY] = shapedMainGraph
+        var shapedMainGraph = lensedMainGraph.lensedThings()
 
-        def integralIds = collectIntegralIds(copy.data, whelk.jsonld)
+        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            restoreCategoryByCollection(shapedMainGraph, embellishedGraph)
+        }
 
-        copy.data[GRAPH_KEY] += embellishedGraph.drop(originalGraphSize).collect { getShapeForEmbellishment(whelk.fresnelUtil, (Map) it, integralIds) }
+        var integralIds = collectIntegralIds(shapedMainGraph, whelk.jsonld)
+
+        var shapedEmbellished = embellishedGraph
+                .drop(originalGraphSize)
+                .collect {
+                    getShapeForEmbellishment(whelk.fresnelUtil,
+                            (Map) it,
+                            integralIds,
+                            whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)
+                                    ? restoreCategoryByCollection
+                                    : null)
+                }
+
+
+        copy.data[GRAPH_KEY] = shapedMainGraph + shapedEmbellished
 
         setIdentifiers(copy)
         boolean isVirtualWork = copy.isVirtual()
         if (isVirtualWork) {
             copy.centerOnVirtualMainEntity()
-
         }
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = copy.getThingIdentifiers()
@@ -666,8 +768,8 @@ class ElasticSearch {
         }
     }
 
-    private static Set<String> collectIntegralIds(Map data, JsonLd jsonLd) {
-        return JsonLd.getExternalReferences(data)
+    private static Set<String> collectIntegralIds(List<Map> graph, JsonLd jsonLd) {
+        return JsonLd.getExternalReferences([(GRAPH_KEY): graph])
                 .findAll {
                     // FIXME
                     if (jsonLd.isIntegral(it.relation)) {
@@ -680,7 +782,7 @@ class ElasticSearch {
                 .toSet()
     }
 
-    private static Map getShapeForEmbellishment(FresnelUtil fresnelUtil, Map embellishData, Set<String> integralIds) {
+    private static Map getShapeForEmbellishment(FresnelUtil fresnelUtil, Map embellishData, Set<String> integralIds, Closure restoreCategoryByCollection) {
         def graph = ((List) embellishData[GRAPH_KEY])
         if (graph) {
             def (record, thing) = graph
@@ -689,7 +791,12 @@ class ElasticSearch {
                     ? toSearchCard(fresnelUtil, thing) // Do we really want the full search card here?
                     : toSearchChip(fresnelUtil, thing)
             def shapedRecord = minimalRecord((Map) record) + ((Map) shapedThing.remove(RECORD_KEY) ?: [:])
-            embellishData[GRAPH_KEY] = [shapedRecord, shapedThing]
+            def shapedGraph = [shapedRecord, shapedThing]
+            if (integralIds.contains(thing[ID_KEY]) && restoreCategoryByCollection) {
+                restoreCategoryByCollection(shapedGraph, graph)
+            }
+            embellishData[GRAPH_KEY] = shapedGraph
+
         }
         return embellishData
     }
@@ -793,24 +900,24 @@ class ElasticSearch {
         isnis.findAll{ it.size() == 16 }.collect { Unicode.formatIsni(it) }
     }
 
-    Map multiQuery(List jsonDslList) {
+    Map multiQuery(List jsonDslList, Collection<String> indexNames = Collections.emptyList()) {
         return performQuery(
                 jsonDslList.collect { [[:], it].collect { JsonOutput.toJson(it) + '\n' } }.flatten().join(),
-                getMultiSearchQueryUrl()
+                getMultiSearchQueryUrl(indexNames)
         )
     }
 
-    Map query(Map jsonDsl) {
-        return performQuery(JsonOutput.toJson(jsonDsl), getQueryUrl())
+    Map query(Map jsonDsl, Collection<String> indexNames = Collections.emptyList()) {
+        return performQuery(JsonOutput.toJson(jsonDsl), getQueryUrl([], indexNames))
     }
 
-    Map queryIds(Map jsonDsl) {
+    Map queryIds(Map jsonDsl, Collection<String> indexNames = Collections.emptyList()) {
         return performQuery(
                 JsonOutput.toJson(jsonDsl),
-                getQueryUrl(['took','hits.total','hits.hits._id'])
+                getQueryUrl(['took','hits.total','hits.hits._id'], indexNames)
         )
     }
-    
+
     /**
      * Find all other documents that need to be re-indexed because 
      * of changes in linked document(s)
@@ -875,16 +982,25 @@ class ElasticSearch {
         getQueryUrl(filterPath, null)
     }
 
-    private getMultiSearchQueryUrl() {
-        return getQueryUrl([], indexName, true)
+    private getMultiSearchQueryUrl(Collection<String> indexNames) {
+        return getQueryUrl([], indexNames, true)
     }
     
-    private String getQueryUrl(filterPath = [], index = indexName, multiSearch = false) {
-        def url = (index ? "/${index}" : '') + (multiSearch ? '/_msearch' : '/_search') + "?search_type=$SEARCH_TYPE"
+    private String getQueryUrl(filterPath = [], Collection<String> indexNames, multiSearch = false) {
+        boolean noIndex = indexNames == null
+        var ix = noIndex ? '' : "/${indexString(indexNames)}"
+        def url = ix + (multiSearch ? '/_msearch' : '/_search') + "?search_type=$SEARCH_TYPE"
         if (filterPath) {
             url += "&filter_path=${filterPath.join(',')}"
         }
         return url.toString()
+    }
+
+    private String indexString(Collection<String> indexNames) {
+        var ixs = indexNames.isEmpty() ? allIndexNames() : indexNames
+        ixs.size() == 1
+                ? ixs.first()
+                : new HashSet<>(ixs).join(",")
     }
 
     static String toElasticId(String id) {
@@ -929,7 +1045,7 @@ class ElasticSearch {
         abstract Map nextRequest()
         
         String queryPath() {
-            getQueryUrl(filterPath)
+            getQueryUrl(filterPath, Collections.emptyList())
         }
         
         @Override
@@ -1046,7 +1162,7 @@ class ElasticSearch {
         String queryPath() {
             isPitApiAvailable // point in time is created on index and then index cannot be specified here 
                     ? getQueryUrlWithoutIndex(filterPath)
-                    : getQueryUrl(filterPath)
+                    : getQueryUrl(filterPath, Collections.emptyList())
         }
 
         @Override
@@ -1074,10 +1190,11 @@ class ElasticSearch {
             return request
         }
     }
-    
+
+    // TODO support specifying indices?
     private String createPointInTime(String keepAlive = "1m") {
         try {
-            return performRequest('POST', "/$indexName/_pit?keep_alive=$keepAlive").id
+            return performRequest('POST', "/${allIndexNames().join(',')}/_pit?keep_alive=$keepAlive").id
         }
         catch (Exception e) {
             log.warn("Failed to create Point In Time: $e")

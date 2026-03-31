@@ -2,6 +2,7 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.EsMappings;
+import whelk.search2.QueryUtil;
 
 import java.util.Collection;
 import java.util.List;
@@ -21,6 +22,7 @@ public sealed interface Selector permits Path, PathElement {
     boolean isType();
 
     boolean isObjectProperty();
+    boolean isLdSetContainer();
 
     boolean mayAppearOnType(String type, JsonLd jsonLd);
     boolean appearsOnType(String type, JsonLd jsonLd);
@@ -38,5 +40,12 @@ public sealed interface Selector permits Path, PathElement {
             return Optional.of(esField);
         }
         return esMappings.getNestedTypeFields().stream().filter(esField::startsWith).findFirst();
+    }
+
+    default String formattedQueryKey() {
+        var k = queryKey();
+        return k.contains(":") && !QueryUtil.isQuoted(k)
+                ? QueryUtil.quote(k)
+                : k;
     }
 }

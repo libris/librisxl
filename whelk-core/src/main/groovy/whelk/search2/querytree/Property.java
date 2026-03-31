@@ -45,6 +45,7 @@ public non-sealed class Property extends PathElement {
     protected String inverseOf;
     protected String langAlias;
     protected boolean isVocabTerm;
+    protected boolean isLdSetContainer;
 
     protected Property superProperty;
     protected List<Restrictions.HasValue> objectOnPropertyRestrictions;
@@ -62,6 +63,7 @@ public non-sealed class Property extends PathElement {
         this.name = name;
         this.langAlias =(String) jsonLd.langContainerAlias.get(name);
         this.isVocabTerm = jsonLd.isVocabTerm(name);
+        this.isLdSetContainer = jsonLd.isSetContainer(name);
     }
 
     protected Property(Map<String, Object> definition, JsonLd jsonLd) {
@@ -159,6 +161,11 @@ public non-sealed class Property extends PathElement {
     @Override
     public boolean isObjectProperty() {
         return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
+    }
+
+    @Override
+    public boolean isLdSetContainer() {
+        return isLdSetContainer;
     }
 
     @Override
@@ -361,6 +368,11 @@ public non-sealed class Property extends PathElement {
 
     private boolean hasLangAlias() {
         return langAlias != null;
+    }
+
+    public boolean isPreferLike() {
+        // FIXME: don't hardcode
+        return isCategory("https://id.kb.se/ns/librissearch/preferLike", definition);
     }
 
     private static boolean isComposite(Map<String, Object> definition) {

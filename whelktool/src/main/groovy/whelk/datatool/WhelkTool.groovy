@@ -809,7 +809,7 @@ class WhelkTool {
         if (whelk.elastic) {
             log "  ElasticSearch:"
             log "    hosts:   ${whelk.elastic.elasticHosts}"
-            log "    index:   ${whelk.elastic.defaultIndex}"
+            log "    index:   ${whelk.elastic.mainIndex}"
         }
         log "Using script: $script"
         log "Using report dir: $reportsDir"

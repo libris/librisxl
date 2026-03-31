@@ -133,7 +133,9 @@ class SiteSearch {
             Map appDesc = getAndIndexDescription(appId);
             if (appDesc != null) {
                 Map findDesc = getAndIndexDescription(appId + "find");
-                queryParameters.put("_appConfig", new String[]{mapper.writeValueAsString(search2.buildAppConfig(findDesc))});
+                if (!queryParameters.containsKey("_appConfig")) {
+                    queryParameters.put("_appConfig", new String[]{mapper.writeValueAsString(search2.buildAppConfig(findDesc))});
+                }
             }
             return search2.doSearch(queryParameters);
         } else {

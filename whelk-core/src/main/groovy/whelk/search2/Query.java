@@ -7,6 +7,7 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQuery;
 import whelk.search2.querytree.EsQueryTree;
 import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.FilterAlias;
@@ -18,10 +19,12 @@ import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
+import whelk.search2.querytree.Type;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
 
 import whelk.util.DocumentUtil;
+import whelk.util.FresnelUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,7 +66,7 @@ public class Query {
     private final Stats stats;
     private SelectedFacets selectedFacets;
 
-    private Map<String, Object> esQueryDsl;
+    private EsQuery esQuery;
     private QueryResult queryResult;
 
     private ReducedQueryTree fullQueryTree;
@@ -121,18 +124,32 @@ public class Query {
         return QueryUtil.makeFindUrl(qTree.toQueryString(), queryParams);
     }
 
-    protected Map<String, Object> doGetEsQueryDsl() {
+    protected EsQuery doGetEsQuery() {
         JsonLd ld = whelk.getJsonld();
-        ExpandedQueryTree expandedQueryTree = getFullQueryTree().expand(ld);
-        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
-        if (queryParams.skipStats) {
-            EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings);
-            return buildEsQueryDsl(esQueryTree.getMainQuery());
+        var fullQueryTree = getFullQueryTree();
+
+        var indexNames = fullQueryTree.getRdfSubjectTypesList().stream().map(whelk.elastic::getIndexForType).toList();
+        /* TODO?
+        // remove type condition that exactly matches subindex content
+        if (indexNames.size() == 1 && !indexNames.getFirst().equals(whelk.elastic.getBaseIndex())) {
+            var baseType = whelk.elastic.getBaseTypeForSubIndex(indexNames.getFirst());
+            var removeFromTopLevel = new Type(base, whelk.getJsonld())
+            ...
         }
+         */
+
+        ExpandedQueryTree expandedQueryTree = fullQueryTree.expand(ld);
+        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
+        if (!queryParams.stats.on) {
+            EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings);
+            var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
+            return new EsQuery(esQueryDsl, Collections.emptyList());
+        }
+
         EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings, getSelectedFacets());
-        Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
+        var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
         esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectTypesList()));
-        return esQueryDsl;
+        return new EsQuery(esQueryDsl, indexNames);
     }
 
     protected Map<String, Object> buildEsQueryDsl(Map<String, Object> mainQuery) {
@@ -156,7 +173,7 @@ public class Query {
 
     protected QueryResult getQueryResult() {
         if (queryResult == null) {
-            this.queryResult = new QueryResult(doQuery(getEsQueryDsl()), queryParams.debug);
+            this.queryResult = new QueryResult(doQuery(getEsQuery()), queryParams.debug);
         }
         return queryResult;
     }
@@ -166,6 +183,8 @@ public class Query {
     }
 
     protected Map<String, Object> getPartialCollectionView() {
+
+
         var view = new LinkedHashMap<String, Object>();
 
         view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
@@ -179,6 +198,22 @@ public class Query {
             return view;
         }
 
+        var anyLike = qTree.allDescendants().anyMatch(n -> n instanceof Condition c
+                && c.operator() == Operator.LIKE
+                && c.value() instanceof Link);
+        if (anyLike) {
+            // FIXME this depends on chips being queued in getSearchMapping()
+            linkLoader.loadChips();
+            qTree.allDescendants().forEach(n -> {
+                if (n instanceof Condition c
+                        && c.operator() == Operator.LIKE
+                        && c.value() instanceof Link link) {
+                    var needle = whelk.getFresnelUtil().asString(link.description(), FresnelUtil.Lenses.SEARCH_NEEDLE);
+                    link.setSearchNeedle(needle);
+                }
+            });
+        }
+
         view.put("itemOffset", queryParams.offset);
         view.put("itemsPerPage", queryParams.limit);
         view.put("totalItems", getQueryResult().numHits);
@@ -187,7 +222,7 @@ public class Query {
 
         view.put("items", getQueryResult().collectItems(this::applyLens));
 
-        if (!queryParams.skipStats) {
+        if (queryParams.stats.on) {
             view.put("stats", stats.build());
             linkLoader.queue(stats.getLinks());
         }
@@ -199,7 +234,7 @@ public class Query {
         view.put("maxItems", esSettings.maxItems());
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_QUERY)) {
-            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQueryDsl()));
+            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQuery().dsl()));
         }
 
         linkLoader.loadChips();
@@ -267,10 +302,10 @@ public class Query {
         return mappings;
     }
 
-    private Map<?, ?> doQuery(Object dsl) {
-        return dsl instanceof List<?> l
-                ? whelk.elastic.multiQuery(l)
-                : whelk.elastic.query((Map<?, ?>) dsl);
+    private Map<?, ?> doQuery(EsQuery esQuery) {
+        return esQuery.dsl() instanceof List<?> l
+                ? whelk.elastic.multiQuery(l, esQuery.indexNames())
+                : whelk.elastic.query((Map<?, ?>) esQuery.dsl(), esQuery.indexNames());
     }
 
     private List<FilterAlias> collectOptionalFilters() {
@@ -300,11 +335,11 @@ public class Query {
         return SearchMode.STANDARD_SEARCH;
     }
 
-    private Map<String, Object> getEsQueryDsl() {
-        if (esQueryDsl == null) {
-            this.esQueryDsl = doGetEsQueryDsl();
+    private EsQuery getEsQuery() {
+        if (esQuery == null) {
+            this.esQuery = doGetEsQuery();
         }
-        return esQueryDsl;
+        return esQuery;
     }
 
     private QueryTree mergeTrees(QueryTree baseTree, List<QueryTree> other) {
@@ -547,6 +582,8 @@ public class Query {
                     links.forEach(link -> link.setChip(dummyChip(id)));
                 }
             });
+
+            links.clear();
         }
 
         private Map<String, Object> dummyChip(String id) {
@@ -845,7 +882,7 @@ public class Query {
                     var observations = sliceResult.getObservations(slice, parentValue, mySelectedValue, selectedFacets);
                     if (!observations.isEmpty() || parentValue != null) {
                         if (selectedFacets.isRangeFilter(propertyKey)) {
-                            sliceNode.put("search", getRangeTemplate(propertyKey));
+                            sliceNode.put("search", getRangeTemplate(property));
                         }
                         sliceNode.put("dimension", property.name());
                         sliceNode.put("observation", observations);
@@ -881,9 +918,10 @@ public class Query {
             return r;
         }
 
-        private Map<String, Object> getRangeTemplate(String propertyKey) {
-            List<Condition> selected = getSelectedFacets().getSelected(propertyKey);
-            FreeText placeholderNode = new FreeText(String.format("{?%s}", propertyKey));
+        private Map<String, Object> getRangeTemplate(Property property) {
+            List<Condition> selected = getSelectedFacets().getSelected(property.name());
+            String queryKey = property.formattedQueryKey();
+            FreeText placeholderNode = new FreeText(String.format("{?%s}", queryKey));
             String templateQueryString = qTree.removeAll(selected)
                     .add(placeholderNode)
                     .toQueryString();
@@ -897,7 +935,7 @@ public class Query {
             }
 
             Map<String, String> mapping = Map.of(
-                    "variable", propertyKey,
+                    "variable", queryKey,
                     Operator.GREATER_THAN_OR_EQUALS.termKey, selectedMin,
                     Operator.LESS_THAN_OR_EQUALS.termKey, selectedMax
             );

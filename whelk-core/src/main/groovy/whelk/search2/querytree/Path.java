@@ -106,6 +106,11 @@ public final class Path implements Selector {
     }
 
     @Override
+    public boolean isLdSetContainer() {
+        return last().isLdSetContainer();
+    }
+
+    @Override
     public boolean mayAppearOnType(String type, JsonLd jsonLd) {
         return first().mayAppearOnType(type, jsonLd);
     }

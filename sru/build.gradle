@@ -1,5 +1,6 @@
 apply plugin: 'java-library'
 apply plugin: 'com.gradleup.shadow'
+apply plugin: 'groovy'
 
 def mainClassName = "whelk.SruServer"
 
@@ -35,8 +36,48 @@ dependencies {
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
+    // Parser generator
+    implementation "org.antlr:antlr4:4.13.2"
+
     // Testing
-    testImplementation 'junit:junit:4.12'
+    testImplementation "org.spockframework:spock-core:${spockVersion}"
+
+}
+
+sourceSets {
+
+    generated {
+        java { srcDirs = ['src/generated/java'] }
+    }
+    main {
+        java { srcDirs = ['src/main/java','src/generated/java'] }
+    }
+
+    test {
+        groovy { srcDir 'src/test/groovy/' }
+    }
+}
+
+test.testLogging {
+    showStandardStreams = true
+    exceptionFormat = "full"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+clean {
+    delete file("src/generated")
+}
+
+task genSources(type: JavaExec) {
+    classpath = configurations.runtimeClasspath
+    mainClass = 'org.antlr.v4.Tool'
+    args = ['cql.g4', '-o', 'src/generated/java/sru/whelk/cql', '-package', 'sru.whelk.cql', '-no-visitor', '-no-listener']
+}
+tasks.named('compileJava') {
+    dependsOn('genSources')
 }
 
 shadowJar {

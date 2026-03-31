@@ -14,7 +14,7 @@ class ConditionSpec extends Specification {
     def "convert to search mapping 1"() {
         given:
         def searchMapping = QueryTreeBuilder.buildTree('p1:v1', disambiguate)
-                .toSearchMapping {n -> ['@id': '/find?_q=*'] }
+                .toSearchMapping ({n -> ['@id': '/find?_q=*']}, {n, n2 -> ['@id': '/find?_q=']})
 
         expect:
         searchMapping == [
@@ -29,7 +29,7 @@ class ConditionSpec extends Specification {
     def "convert to search mapping 2"() {
         given:
         def searchMapping = QueryTreeBuilder.buildTree('NOT p1.p2:E1', disambiguate)
-                .toSearchMapping {n -> ['@id': '/find?_q=*'] }
+                .toSearchMapping ({n -> ['@id': '/find?_q=*']}, {n, n2 -> ['@id': '/find?_q=']})
 
         expect:
         searchMapping == [
@@ -54,7 +54,7 @@ class ConditionSpec extends Specification {
     def "convert to search mapping 3"() {
         given:
         def searchMapping = QueryTreeBuilder.buildTree('@reverse.p3.@reverse.p4:v1', disambiguate)
-                .toSearchMapping {n -> ['@id': '/find?_q=*'] }
+                .toSearchMapping ({n -> ['@id': '/find?_q=*']}, {n, n2 -> ['@id': '/find?_q=']})
 
         expect:
         searchMapping == [
@@ -107,32 +107,6 @@ class ConditionSpec extends Specification {
         "bibliography:x"    | ["T1"]       | "instanceOf.meta.bibliography:x OR meta.bibliography:x"
         "bibliography:x"    | ["T2"]       | "hasInstance.meta.bibliography:x OR meta.bibliography:x"
         "bibliography:x"    | ["T3"]       | "meta.bibliography:x"
-    }
-
-    def "To ES query (negation + nested field)"() {
-        given:
-        var tree = QueryTreeBuilder.buildTree("NOT p3:\"https://id.kb.se/x\"", disambiguate)
-        ESSettings esSettings = new ESSettings(esMappings, new ESSettings.Boost([:]))
-
-        expect:
-        tree.toEs(esSettings) == [
-                "bool": [
-                        "must_not": [
-                                "nested": [
-                                        "query": [
-                                                "bool": [
-                                                        "filter": [
-                                                                "term": [
-                                                                        "p3.@id": "https://id.kb.se/x"
-                                                                ]
-                                                        ]
-                                                ]
-                                        ],
-                                        "path" : "p3"
-                                ]
-                        ]
-                ]
-        ]
     }
 
     def "To ES exists query"() {

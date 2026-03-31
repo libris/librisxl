@@ -51,6 +51,11 @@ public sealed abstract class Key extends PathElement permits Key.AmbiguousKey, K
     }
 
     @Override
+    public boolean isLdSetContainer() {
+        return false;
+    }
+
+    @Override
     public boolean mayAppearOnType(String type, JsonLd jsonLd) {
         return false;
     }

@@ -24,7 +24,7 @@ public class ESSettings {
 
     public ESSettings(Whelk whelk) {
         if (whelk.elastic != null) {
-            this.mappings = new EsMappings(whelk.elastic.getMappings());
+            this.mappings = new EsMappings(whelk.elastic.getAllMappings());
             this.maxItems = whelk.elastic.maxResultWindow;
         }
         this.boost = loadBoostSettings();

@@ -58,7 +58,27 @@ public class QueryParams {
     public final String q;
     public final String r;
 
-    public final boolean skipStats;
+    public enum Stats {
+        FALSE(false),
+        FALSE_THIS_REQUEST(false),
+        TRUE(true);
+
+        final boolean on;
+
+        Stats(boolean on) {
+            this.on = on;
+        }
+
+        public static Stats parse(String s) {
+            return switch(s.toLowerCase()) {
+                case "false" -> FALSE;
+                case "falsethisrequest" -> FALSE_THIS_REQUEST;
+                default -> TRUE;
+            };
+        }
+    }
+
+    public final Stats stats;
     public final boolean suggest;
     public final boolean mappingOnly;
 
@@ -76,7 +96,7 @@ public class QueryParams {
         this.r = getOptionalSingle(ApiParams.CUSTOM_SITE_FILTER, apiParameters).orElse(null);
         this.suggest = getOptionalSingle(ApiParams.SUGGEST, apiParameters).map("true"::equalsIgnoreCase).isPresent();
         this.cursor = getCursor(apiParameters);
-        this.skipStats = suggest || getOptionalSingle(ApiParams.STATS, apiParameters).map("false"::equalsIgnoreCase).isPresent();
+        this.stats = suggest ? Stats.FALSE_THIS_REQUEST : getOptionalSingle(ApiParams.STATS, apiParameters).map(Stats::parse).orElse(Stats.TRUE);
         this.aliased = getAliased(apiParameters);
         this.boost = getOptionalSingle(ApiParams.BOOST, apiParameters).map(ESSettings::loadBoostSettings).orElse(null);
         this.mappingOnly = getOptionalSingle(ApiParams.MAPPING_ONLY, apiParameters).map("true"::equalsIgnoreCase).isPresent();
@@ -150,7 +170,7 @@ public class QueryParams {
                     }
                 }
                 case ApiParams.STATS -> {
-                    if (skipStats && !suggest) {
+                    if (stats == Stats.FALSE) {
                         params.put(ApiParams.STATS, "false");
                     }
                 }

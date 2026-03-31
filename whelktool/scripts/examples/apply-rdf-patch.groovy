@@ -175,13 +175,13 @@ selectByIds(descriptionMap.keySet() + deletionMap.keySet()) { dataItem ->
     def mainId = mainEntity[ID]
     existingIds << mainId
 
-    Map desc = descriptionMap[mainId]
-    if (desc && update(dataItem.whelk.jsonld, mainEntity, desc)) {
+    Map deleteDesc = deletionMap[mainId]
+    if (deleteDesc && delete(dataItem.whelk.jsonld, mainEntity, deleteDesc)) {
         dataItem.scheduleSave()
     }
 
-    Map deleteDesc = deletionMap[mainId]
-    if (deleteDesc && delete(dataItem.whelk.jsonld, mainEntity, deleteDesc)) {
+    Map desc = descriptionMap[mainId]
+    if (desc && update(dataItem.whelk.jsonld, mainEntity, desc)) {
         dataItem.scheduleSave()
     }
 }

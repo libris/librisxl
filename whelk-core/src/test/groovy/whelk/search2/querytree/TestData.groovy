@@ -29,6 +29,7 @@ class TestData {
                 'p12'             : ['p12'] as Set,
                 'p13'             : ['p13'] as Set,
                 'p14'             : ['p14'] as Set,
+                'p15'             : ['p15'] as Set,
                 'ctx.p'           : ['ctxProp'] as Set,
                 'type'            : ['rdf:type'] as Set,
                 'rdf:type'        : ['rdf:type'] as Set,
@@ -174,6 +175,10 @@ class TestData {
                         'domain': ['@id': 'T4']
                 ],
                 [
+                        '@id'  : 'p15',
+                        '@type': 'ObjectProperty'
+                ],
+                [
                         '@id'  : 'ctxProp',
                         '@type': 'DatatypeProperty',
                         'domain': ['@id': 'T4']
@@ -254,7 +259,8 @@ class TestData {
         def ctx = [
                 '@context': [
                         '@vocab': 'https://id.kb.se/vocab/',
-                        'p2'    : ['@type': '@vocab']
+                        'p2'    : ['@type': '@vocab'],
+                        'p4'    : ['@container': '@set']
                 ]
         ]
         return new JsonLd(ctx, [:], vocab)
@@ -265,6 +271,7 @@ class TestData {
                 'properties': [
                         'p3'                                                 : ['type': 'nested'],
                         '@reverse.instanceOf.p3'                             : ['type': 'nested'],
+                        'p15'                                                : ['type': 'nested', "include_in_parent": true]
                         '@type'                                              : ['type': 'keyword'],
                         'p2'                                                 : ['type': 'keyword'],
                         'p3.p4.@id'                                          : ['type': 'keyword'],
@@ -277,6 +284,7 @@ class TestData {
                         '@reverse.instanceOf._categoryByCollection.@none.@id': ['type': 'keyword']
                 ]
         ]
-        return new EsMappings(mappings)
+        // TODO
+        return new EsMappings(List.of(mappings))
     }
 }

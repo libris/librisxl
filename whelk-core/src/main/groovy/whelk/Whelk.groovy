@@ -78,6 +78,12 @@ class Whelk {
     boolean skipIndexDependers = false
     boolean skipSparql = false
 
+    enum EsMode {
+        ELASTIC_ENABLED,
+        ELASTIC_DISABLED
+    }
+    private EsMode esMode
+
     // useCache may be set to true only when doing initial imports (temporary processes with the rest of Libris down).
     // Any other use of this results in a "local" cache, which will not be invalidated when data changes elsewhere,
     // resulting in potential serving of stale data.
@@ -97,15 +103,14 @@ class Whelk {
     }
 
     static Whelk createLoadedSearchWhelk(Properties configuration, boolean useCache = false) {
-        Whelk whelk = new Whelk(configuration, useCache)
+        Whelk whelk = new Whelk(configuration, EsMode.ELASTIC_ENABLED, useCache)
         whelk.configureAndLoad(configuration)
         return whelk
     }
 
-    Whelk(PostgreSQLComponent pg, ElasticSearch es) {
+    Whelk(PostgreSQLComponent pg, EsMode esMode) {
         this(pg)
-        this.elastic = es
-        log.info("Using index: $elastic")
+        this.esMode = esMode
     }
 
     Whelk(PostgreSQLComponent pg) {
@@ -114,8 +119,8 @@ class Whelk {
         log.info("Started with storage: $storage")
     }
 
-    Whelk(Properties conf, useCache = false) {
-        this(useCache ? new CachingPostgreSQLComponent(conf) : new PostgreSQLComponent(conf), new ElasticSearch(conf))
+    Whelk(Properties conf, EsMode esMode, useCache = false) {
+        this(useCache ? new CachingPostgreSQLComponent(conf) : new PostgreSQLComponent(conf), esMode)
     }
 
     private void configureAndLoad(Properties configuration) {
@@ -149,6 +154,11 @@ class Whelk {
         logRoot = new File(System.getProperty("xl.logRoot", "./logs"))
 
         loadCoreData(systemContextUri)
+
+        if (this.esMode == EsMode.ELASTIC_ENABLED) {
+            this.elastic = new ElasticSearch(configuration, jsonld)
+            elasticFind = new ElasticFind(new ESQuery(this))
+        }
 
         sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
         sparqlQueryClient = new SparqlQueryClient(configuration.getProperty('sparqlEndpoint', null), jsonld);
@@ -241,9 +251,6 @@ class Whelk {
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
-        if (elastic) {
-            elasticFind = new ElasticFind(new ESQuery(this))
-        }
         initDocumentNormalizers()
         this.fresnelUtil = new FresnelUtil(jsonld)
     }
@@ -366,7 +373,8 @@ class Whelk {
         removedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
             if (id) {
-                elastic.decrementReverseLinks(id, link.relation)
+                Document doc = storage.load(id)
+                elastic.decrementReverseLinks(doc, link.relation)
             }
         }
 
@@ -386,7 +394,7 @@ class Whelk {
                     reindexAffectedReverseIntegral(doc)
                 } else {
                     // just update link counter
-                    elastic.incrementReverseLinks(id, link.relation)
+                    elastic.incrementReverseLinks(doc, link.relation)
                 }
             }
         }

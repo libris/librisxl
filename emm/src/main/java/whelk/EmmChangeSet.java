@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -91,6 +92,10 @@ public class EmmChangeSet {
 
         try (Connection connection = whelk.getStorage().getOuterConnection()) {
 
+            // If an item appears several time on the same page, only the first of them should be a 'create'-event
+            // (assuming the record was created within the interval).
+            Set<String> idsAlreadyMarkedCreatedInInterval = new HashSet<>();
+
             // Get a page of items
             {
                 String sql = "SELECT" +
@@ -116,10 +121,25 @@ public class EmmChangeSet {
                         Timestamp creationTime = resultSet.getTimestamp(4);
                         String type = resultSet.getString(5);
                         String library = resultSet.getString(6);
-                        if (type != null && uri != null && modificationTime != null)
-                            result.add(new EmmActivity(uri, type, creationTime, modificationTime, deleted, library));
                         if (modificationTime.before(earliestSeenTimeStamp))
                             earliestSeenTimeStamp = modificationTime;
+
+                        if (type != null && uri != null) {
+                            Instant creation = creationTime.toInstant();
+                            Instant latestOnPage = untilTimeStamp.toInstant();
+                            Instant earliestOnPage = earliestSeenTimeStamp.toInstant();
+
+                            // Is the creation time of this record within the page interval, and it hasn't already been reported as created on this very page?
+                            boolean created = !
+                                    (
+                                            creation.isAfter(latestOnPage) ||
+                                            creation.isBefore(earliestOnPage)
+                                    ) && !idsAlreadyMarkedCreatedInInterval.contains(uri);
+                            if (created)
+                                idsAlreadyMarkedCreatedInInterval.add(uri);
+
+                            result.add(new EmmActivity(uri, type, modificationTime, deleted, created, library));
+                        }
                     }
                 }
             }
@@ -144,7 +164,23 @@ public class EmmChangeSet {
                         Timestamp creationTime = resultSet.getTimestamp(4);
                         String type = resultSet.getString(5);
                         String library = resultSet.getString(6);
-                        result.add(new EmmActivity(uri, type, creationTime, modificationTime, deleted, library));
+
+                        if (type != null && uri != null) {
+                            Instant creation = creationTime.toInstant();
+                            Instant latestOnPage = untilTimeStamp.toInstant();
+                            Instant earliestOnPage = earliestSeenTimeStamp.toInstant();
+
+                            // Is the creation time of this record within the page interval, and it hasn't already been reported as created on this very page?
+                            boolean created = !
+                                    (
+                                            creation.isAfter(latestOnPage) ||
+                                            creation.isBefore(earliestOnPage)
+                                    ) && !idsAlreadyMarkedCreatedInInterval.contains(uri);
+                            if (created)
+                                idsAlreadyMarkedCreatedInInterval.add(uri);
+
+                            result.add(new EmmActivity(uri, type, modificationTime, deleted, created, library));
+                        }
                     }
                 }
             }

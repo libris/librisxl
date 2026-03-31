@@ -5,6 +5,7 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQuery;
 import whelk.search2.querytree.EsQueryTree;
 import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.Link;
@@ -44,7 +45,7 @@ public class ObjectQuery extends Query {
     }
 
     @Override
-    protected Map<String, Object> doGetEsQueryDsl() {
+    protected EsQuery doGetEsQuery() {
         JsonLd ld = whelk.getJsonld();
 
         ReducedQueryTree queryTree = (ReducedQueryTree) getFullQueryTree().add(objectFilter());
@@ -82,9 +83,9 @@ public class ObjectQuery extends Query {
         EsQueryTree esQueryTree = new EsQueryTree(expanded, esSettings);
         Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
 
-        if (queryParams.skipStats) {
+        if (!queryParams.stats.on) {
             esQueryDsl.put("aggs", getPAggQuery(predicateToSubjectTypes));
-            return esQueryDsl;
+            return new EsQuery(esQueryDsl, Collections.emptyList());
         }
 
         List<String> subjectTypes = Stream.concat(givenSubjectTypes.stream(), inferredSubjectTypes.stream()).toList();
@@ -92,7 +93,7 @@ public class ObjectQuery extends Query {
         aggQuery.putAll(getPAggQuery(predicateToSubjectTypes));
         esQueryDsl.put("aggs", aggQuery);
 
-        return esQueryDsl;
+        return new EsQuery(esQueryDsl, Collections.emptyList());
     }
 
     @Override
@@ -144,9 +145,8 @@ public class ObjectQuery extends Query {
         var filters = new HashMap<>();
 
         predicateToSubjectTypes.forEach((p, subjects) -> {
-            var filter = new Condition(p, Operator.EQUALS, object)
+            var filter = new QueryTree(new Condition(p, Operator.EQUALS, object))
                     .expand(jsonLd, subjects)
-                    .expandedRoot()
                     .toEs(esSettings);
             filters.put(p.name(), filter);
         });

@@ -16,6 +16,7 @@ public final class Link extends Resource {
     private final Map<String, Object> chip = new LinkedHashMap<>();
 
     private Token token;
+    private String needle;
 
     public Link(String iri) {
         this.iri = iri;
@@ -39,6 +40,14 @@ public final class Link extends Resource {
     public void setThing(Map<String, Object> thing) {
         this.chip.clear();
         this.thing.putAll(thing);
+    }
+
+    public void setSearchNeedle(String needle) {
+        this.needle = needle;
+    }
+
+    public String getNeedle() {
+        return needle;
     }
 
     public String iri() {

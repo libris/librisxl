@@ -61,5 +61,148 @@
   },
   "_spec:TODO:from": "whelktool/scripts/typenormalization/tailored_examples.jsonl",
   "_spec": [
+    {
+      "name": "bibtype-map embedded instance and work",
+      "source": {
+        "mainEntity": {
+          "@id": "https://libris.kb.se/000000000000000#it",
+          "@type": "Print",
+          "mediaType": [
+            {"@id": "https://id.kb.se/term/rda/Unmediated"}
+          ],
+          "carrierType": [
+            {"@id": "https://id.kb.se/term/rda/Volume"}
+          ],
+          "issuanceType": "Monograph",
+          "marc:versionOfResource": [
+            {
+              "uri": [
+                "http://urn.kb.se/resolve?urn=urn:nbn:se:liu:diva-219906"
+              ],
+              "@type": "Electronic",
+              "marc:publicNote": [
+                "Sammanfattning och fulltext från Linköping University Electronic Press"
+              ],
+              "instanceOf": {"@type": "Text"},
+              "carrierType": {"@id": "https://id.kb.se/marc/Electronic"},
+              "issuanceType": "Monograph"
+            }
+          ],
+          "instanceOf": {
+            "@type": "Text",
+            "contentType": [
+              {"@id": "https://id.kb.se/marc/Thesis"},
+              {"@id": "https://id.kb.se/term/rda/Text"}
+            ],
+            "genreForm": [
+              {"@id": "https://id.kb.se/term/saogf/Avhandlingar"},
+              {
+                "@type": "GenreForm",
+                "inScheme": {"@id": "https://id.kb.se/term/lcgft"},
+                "prefLabel": "Academic theses"
+              },
+              {"@id": "https://id.kb.se/marc/Thesis"},
+              {"@id": "https://id.kb.se/term/saogf/Facklitteratur"}
+            ],
+            "hasPart": [
+              {
+                "@type": "Text",
+                "intendedAudience": [
+                  {"@id": "https://id.kb.se/marc/Juvenile"}
+                ],
+                "contentType": {"@id": "https://id.kb.se/term/rda/Text"},
+                "genreForm": [
+                  {"@id": "https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur"},
+                  {
+                    "@type": "GenreForm",
+                    "inScheme": {"@id": "https://id.kb.se/term/lcsh"},
+                    "prefLabel": "Literature"
+                  },
+                  {"@id": "https://id.kb.se/marc/FictionNotFurtherSpecified"},
+                  {"@id": "https://id.kb.se/term/ktg/Literature"}
+                ]
+              },
+              {
+                "@type": "Audio",
+                "category": [
+                  {"@id": "https://id.kb.se/marc/Fiction"},
+                  {"@id": "https://id.kb.se/term/ktg/Audio"}
+                ],
+                "intendedAudience": [
+                  {"@id": "https://id.kb.se/marc/Juvenile"}
+                ],
+                "genreForm": [
+                  {"@id": "https://id.kb.se/marc/Fiction"}
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "result": {
+        "mainEntity": {
+          "@id": "https://libris.kb.se/000000000000000#it",
+          "@type": "PhysicalResource",
+          "category": [
+            {"@id": "https://id.kb.se/term/rda/Volume"},
+            {"@id": "https://id.kb.se/term/saobf/Print"}
+          ],
+          "marc:versionOfResource": [
+            {
+              "uri": [
+                "http://urn.kb.se/resolve?urn=urn:nbn:se:liu:diva-219906"
+              ],
+              "@type": "Instance",
+              "instanceOf": {"@type": "Text"},
+              "category": [
+                {"@id": "https://id.kb.se/term/saobf/AbstractElectronic"}
+              ],
+              "marc:publicNote": [
+                "Sammanfattning och fulltext från Linköping University Electronic Press"
+              ]
+            }
+          ],
+          "instanceOf": {
+            "@type": "Monograph",
+            "category": [
+              {"@id": "https://id.kb.se/term/saogf/Avhandlingar"},
+              {"@id": "https://id.kb.se/term/rda/Text"},
+              {
+                "@type": "GenreForm",
+                "inScheme": {"@id": "https://id.kb.se/term/lcgft"},
+                "prefLabel": "Academic theses"
+              }
+            ],
+            "hasPart": [
+              {
+                "@type": "Work",
+                "category": [
+                  {"@id": "https://id.kb.se/term/saogf/Sk%C3%B6nlitteratur"},
+                  {"@id": "https://id.kb.se/term/rda/Text"},
+                  {
+                    "@type": "GenreForm",
+                    "inScheme": {"@id": "https://id.kb.se/term/lcsh"},
+                    "prefLabel": "Literature"
+                  }
+                ],
+                "intendedAudience": [
+                  {"@id": "https://id.kb.se/marc/Juvenile"}
+                ]
+              },
+              {
+                "@type": "Work",
+                "category": [
+                  {"@id": "https://id.kb.se/marc/Fiction"},
+                  {"@id": "https://id.kb.se/term/ktg/Audio"}
+                ],
+                "intendedAudience": [
+                  {"@id": "https://id.kb.se/marc/Juvenile"}
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
   ]
 }

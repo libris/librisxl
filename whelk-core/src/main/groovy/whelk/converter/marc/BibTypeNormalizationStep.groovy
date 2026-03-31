@@ -1,13 +1,17 @@
 package whelk.converter.marc
 
 //import groovy.transform.CompileStatic
+import groovy.util.logging.Log4j2 as Log
 
 import whelk.TypeCategoryNormalizer
 import whelk.converter.BibTypeNormalizer
+import static whelk.converter.BibTypeNormalizer.getType
+import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.asList
 
 //@CompileStatic
+@Log
 class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     boolean requiresResources = true
@@ -50,14 +54,18 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     boolean checkRequired() {
         if (resourceCache == null) {
-            // FIXME: log.warn
-            System.err.println("BibTypeNormalizationStep MISSING resourceCache!")
+            log.warn("BibTypeNormalizationStep MISSING resourceCache!")
             return false
         }
+
         return true
     }
 
     void modify(Map record, Map thing) {
+        if (!checkRequired()) {
+            return
+        }
+
         bibTypeNormaliser.normalize(thing, thing.instanceOf)
     }
 
@@ -66,11 +74,16 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
             return
         }
 
-        def work = instance.instanceOf
-        if (!work) {
-          // Does not look like an instance (cannot usefully unmodify); just skip.
-          return
+        if (instance.instanceOf == null) {
+            log.debug("Does not look like an instance (cannot usefully unmodify); skipping")
+            return
         }
+
+        denormalize(instance)
+    }
+
+    void denormalize(Map instance) {
+        def work = instance.get('instanceOf', [:]) // NOTE: *sets* default value
 
         // Pick out the categories:
         var workCategories = getDescriptions(work.category)
@@ -88,12 +101,30 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
         // Mutate into legacy form:
         def issuanceType = getIssuanceType(work[TYPE], instance[TYPE], workCategories, instanceCategories)
-        reshapeToLegacyWork(work, instance, workCategories, instanceCategories)
-        reshapeToLegacyInstance(work, instance, workCategories, instanceCategories)
+        reshapeToLegacyWork(work, workCategories)
+        reshapeToLegacyInstance(instance, workCategories, instanceCategories)
         instance.issuanceType = issuanceType ?: 'Monograph'
+
+        DocumentUtil.traverse(instance) { value, path ->
+            if (!path.isEmpty() && !path.contains('instanceOf')) {
+                if (value instanceof Map && resourceCache.jsonld.isSubClassOf(getType(value), 'Instance')) {
+                    denormalize(value)
+                }
+            }
+        }
+
+        DocumentUtil.traverse(work) { value, path ->
+            if (!path.isEmpty()) {
+                if (value instanceof Map && resourceCache.jsonld.isSubClassOf(getType(value), 'Work')) {
+                    reshapeToLegacyWork(value, getDescriptions(value.category))
+                }
+            }
+        }
+
     }
 
-    void reshapeToLegacyWork(Map work, Map someInstance, List workCategories, List instanceCategories) {
+
+    void reshapeToLegacyWork(Map work, List workCategories) {
         work.contentType = getCategoryOfType(workCategories, 'ContentType', true)
         work.genreForm = getCategoryOfType(workCategories, 'GenreForm')
         work[TYPE] = getWorkType(workCategories) ?: defaultWorkLegacyType
@@ -108,7 +139,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         for (type in result) return type
     }
 
-    void reshapeToLegacyInstance(Map work, Map instance, List workCategories, List instanceCategories) {
+    void reshapeToLegacyInstance(Map instance, List workCategories, List instanceCategories) {
         instance.mediaType = getCategoryOfType(instanceCategories, 'MediaType', true)
         instance.carrierType = getCategoryOfType(instanceCategories, 'CarrierType', true)
 

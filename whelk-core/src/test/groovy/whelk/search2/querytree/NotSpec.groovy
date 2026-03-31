@@ -3,10 +3,13 @@ package whelk.search2.querytree
 import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.Disambiguate
+import whelk.search2.ESSettings
+import whelk.search2.EsMappings
 
 class NotSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
+    EsMappings esMappings = TestData.getEsMappings()
 
     def "expand filter alias"() {
         given:
