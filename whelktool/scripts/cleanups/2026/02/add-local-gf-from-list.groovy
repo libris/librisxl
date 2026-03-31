@@ -6,57 +6,66 @@ List ids = []
 Map idToLabelMap = [:]
 
 // get header indexes
-def header = input[0].split(",").toList()
+def header = input[0].split("\\|").toList()
 def iIndex = header.indexOf("i")
 def labelIndex = header.indexOf("gfBroaderLabel")
 def broaderIndex = header.indexOf("gfBroader")
 
 input.drop(1).each { line ->
-    def cols = line.split(",")
+    def cols = line.split("\\|")
 
     def iValue = cols[iIndex]
     def broaderLabel = cols[labelIndex]
-    def broaderUri = cols[broaderIndex]
 
     ids << iValue
-    idToLabelMap[iValue] = [uri: broaderUri, label: broaderLabel]
+    idToLabelMap.get(iValue, []) << [broaderLabel]
 }
 
 selectByIds(ids) { instanceDoc ->
     def instance = instanceDoc.graph[1]
     def instanceId = instance["@id"]
 
-    Map complementaryGf = [
-            "@type": "GenreForm",
-            "inCollection": [
-                    ["@id": "https://id.kb.se/term/div/complement"]
-            ],
-            "prefLabel": idToLabelMap[instanceId]["label"]
-    ]
+    for (broader in idToLabelMap[instanceId]) {
 
-    println complementaryGf
-    if ("@id" !in instance.instanceOf) {
-        Map work = instance["instanceOf"]
-        incrementStats('type', work["@type"])
+        Map complementaryGf = [
+                "@type": "GenreForm",
+                "inCollection": [
+                        ["@id": "https://id.kb.se/term/div/complement"]
+                ],
+                "inScheme": [
+                        "@id": "https://id.kb.se/term/saogf"
+                ],
+                "prefLabel": broader
+        ]
 
-        work.get('category') << complementaryGf
-
-        instanceDoc.scheduleSave()
-
-    }
-    else {
-        String workId = instance["instanceOf"]["@id"]
-
-        selectByIds([workId]) { workDoc ->
-            Map work = workDoc.graph[1]
+        if ("@id" !in instance.instanceOf) {
+            Map work = instance["instanceOf"]
             incrementStats('type', work["@type"])
 
-            work.get('category') << complementaryGf
+            if (!(complementaryGf in work.category)) {
+                work.category << complementaryGf
+                incrementStats('complement', broader)
+            }
+        }
+        else {
+            String workId = instance["instanceOf"]["@id"]
+            println workId
+            selectByIds([workId]) { workDoc ->
+                Map work = workDoc.graph[1]
+                incrementStats('type', work["@type"])
 
-            workDoc.scheduleSave()
+                if (!(complementaryGf in work.category)) {
+                    work.category << complementaryGf
+                }
+
+                workDoc.scheduleSave()
 
 
+            }
         }
     }
+
+    instanceDoc.scheduleSave()
+
 }
 
