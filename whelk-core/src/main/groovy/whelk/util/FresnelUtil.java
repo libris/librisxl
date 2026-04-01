@@ -26,6 +26,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
@@ -1222,13 +1223,15 @@ public class FresnelUtil {
         private static final String SUB = "^";
 
         private final String path;
+        private final String[] pathParts;
 
         FslPath(String path) {
             this.path = path;
+            this.pathParts = path.split("/");
         }
 
         List<Node.Selected> select(Map<String, Object> sourceEntity) {
-            return select(sourceEntity, new ArrayList<>(List.of(path.split("/"))));
+            return select(sourceEntity, new ArrayList<>(List.of(pathParts)));
         }
 
         boolean isIntegralProperty() {
@@ -1305,6 +1308,8 @@ public class FresnelUtil {
         }
 
         private final class ArcStep extends LocationStep {
+            private static final Pattern BRACKET_PATTERN = Pattern.compile(".+\\[.+]");
+
             private boolean reverse = false;
             private final List<String> allowedTypes = new ArrayList<>();
             private final List<String> candidateKeys = new ArrayList<>();
@@ -1366,7 +1371,7 @@ public class FresnelUtil {
                     arcStep = arcStep.substring(IN.length());
                 }
 
-                if (arcStep.matches(".+\\[.+]")) {
+                if (BRACKET_PATTERN.matcher(arcStep).matches()) {
                     String allowedType = arcStep.substring(arcStep.indexOf('[') + 1, arcStep.indexOf(']'));
                     arcStep = arcStep.substring(0, arcStep.indexOf('['));
                     if (allowedType.startsWith(SUB)) {
