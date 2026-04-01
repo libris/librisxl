@@ -1,5 +1,6 @@
 package whelk.component
 
+import groovy.transform.CompileStatic
 import groovy.transform.Memoized
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.codec.binary.Base64
@@ -522,6 +523,7 @@ class ElasticSearch {
         }
     }
 
+    @CompileStatic
     static String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
 
@@ -531,7 +533,7 @@ class ElasticSearch {
             log.debug("Framing ${document.getShortId()}")
         }
 
-        Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
+        Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri } as Set<String>
 
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
         var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
@@ -606,7 +608,7 @@ class ElasticSearch {
         var itemPath = ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"]
         var itemCount = ((List) DocumentUtil.getAtPath(searchCard, itemPath, []))
                 .collect{ it['heldBy']?[JsonLd.ID_KEY] }.grep().unique().size()
-        incomingLinkCountByRelation.put('itemOf.instanceOf', itemCount)
+        incomingLinkCountByRelation.put('itemOf.instanceOf', (long) itemCount)
 
         searchCard['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
@@ -635,7 +637,7 @@ class ElasticSearch {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
                 if (value instanceof List) {
-                    return new DocumentUtil.Replace(value.collect { !Unicode.isNormalizedForSearch(it) ? Unicode.normalizeForSearch(it) : it })
+                    return new DocumentUtil.Replace(((List<String>) value).collect { String s -> !Unicode.isNormalizedForSearch(s) ? Unicode.normalizeForSearch(s) : s })
                 }
                 if (value instanceof String && !Unicode.isNormalizedForSearch(value)) {
                     return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
@@ -658,14 +660,14 @@ class ElasticSearch {
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
                 // -->
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
-                var flattened = [:]
+                Map<String, List> flattened = [:]
                 value.each { k, v ->
                     if (k in whelk.jsonld.langContainerAlias) {
-                        var __k = flattenedLangMapKey(k)
-                        flattened[__k] = (flattened[__k] ?: []) + asList(v)
+                        var __k = flattenedLangMapKey((String) k)
+                        flattened[__k] = ((List) (flattened[__k] ?: [])) + asList(v)
                     } else if (k in whelk.jsonld.langContainerAliasInverted) {
-                        var __k = flattenedLangMapKey(whelk.jsonld.langContainerAliasInverted[k])
-                        flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
+                        var __k = flattenedLangMapKey((String) whelk.jsonld.langContainerAliasInverted[k])
+                        flattened[__k] = ((List) (flattened[__k] ?: [])) + ((Map) v).values().flatten()
                     }
                 }
                 if (!flattened.isEmpty()) {
@@ -706,7 +708,8 @@ class ElasticSearch {
         return mapper.writeValueAsString(searchCard)
     }
     
-    static String flattenedLangMapKey(key) {
+    @CompileStatic
+    static String flattenedLangMapKey(String key) {
         return '__' + key
     }
 
@@ -725,6 +728,7 @@ class ElasticSearch {
         return ids
     }
 
+    @CompileStatic
     private static Map<String, String> buildSortKeyByLang(Map<String, Object> thing, Whelk whelk) {
         List<String> locales =  whelk.jsonld.locales
 
@@ -752,6 +756,7 @@ class ElasticSearch {
         return s.replaceFirst(/^[^\p{Lu}\p{Ll}\p{Lt}\p{Lo}\p{N}]+/, "")
     }
 
+    @CompileStatic
     private static void addSearchStr(Map<String, Object> thing, Whelk whelk, Lens lens, String key) {
         if (!thing[TYPE_KEY]) {
             return
@@ -767,6 +772,7 @@ class ElasticSearch {
         }
     }
 
+    @CompileStatic
     private static Set<String> collectIntegralIds(List<Map> graph, JsonLd jsonLd) {
         return JsonLd.getExternalReferences([(GRAPH_KEY): graph])
                 .findAll {
@@ -781,16 +787,18 @@ class ElasticSearch {
                 .toSet()
     }
 
+    @CompileStatic
     private static Map getShapeForEmbellishment(FresnelUtil fresnelUtil, Map embellishData, Set<String> integralIds, Closure restoreCategoryByCollection) {
-        def graph = ((List) embellishData[GRAPH_KEY])
+        List graph = ((List) embellishData[GRAPH_KEY])
         if (graph) {
-            def (record, thing) = graph
+            Map record = (Map) graph[0]
+            Map thing = (Map) graph[1]
             thing[RECORD_KEY] = record
-            def shapedThing = integralIds.contains(thing[ID_KEY])
+            Map<String, Object> shapedThing = integralIds.contains(thing[ID_KEY])
                     ? toSearchCard(fresnelUtil, thing) // Do we really want the full search card here?
                     : toSearchChip(fresnelUtil, thing)
-            def shapedRecord = minimalRecord((Map) record) + ((Map) shapedThing.remove(RECORD_KEY) ?: [:])
-            def shapedGraph = [shapedRecord, shapedThing]
+            Map shapedRecord = minimalRecord(record) + ((Map) shapedThing.remove(RECORD_KEY) ?: [:])
+            List shapedGraph = [shapedRecord, shapedThing]
             if (integralIds.contains(thing[ID_KEY]) && restoreCategoryByCollection) {
                 restoreCategoryByCollection(shapedGraph, graph)
             }
@@ -800,22 +808,27 @@ class ElasticSearch {
         return embellishData
     }
 
+    @CompileStatic
     private static Map<String, Object> toSearchChip(FresnelUtil fresnelUtil, Map thing) {
         return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CHIP)
     }
 
+    @CompileStatic
     private static Map<String, Object> toSearchCard(FresnelUtil fresnelUtil, Map thing) {
         return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD)
     }
 
+    @CompileStatic
     private static Map<String, Object> mapThroughLensForIndex(FresnelUtil fresnelUtil, Map thing, Lens lens) {
         return fresnelUtil.mapThroughLens(thing, lens, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], [])
     }
 
+    @CompileStatic
     private static FresnelUtil.LensMappingBatch batchToSearchCard(FresnelUtil fresnelUtil, List<Map<String, Object>> thing, Collection<String> preserveLinks) {
         return fresnelUtil.mapBatchThroughLens(thing, FresnelUtil.Lenses.SEARCH_CARD, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks)
     }
 
+    @CompileStatic
     private static Map minimalRecord(Map record) {
         return record.subMap([ID_KEY, TYPE_KEY, THING_KEY])
     }
@@ -848,10 +861,12 @@ class ElasticSearch {
         }
     }
 
-    private static lastPathSegment(String uri) {
+    @CompileStatic
+    private static String lastPathSegment(String uri) {
         uri.contains('/') ? uri.substring(uri.lastIndexOf('/') + 1) : uri
     }
 
+    @CompileStatic
     private static String stripHash(String s) {
         s.contains('#') ? s.substring(0, s.indexOf('#')) : s
     }
