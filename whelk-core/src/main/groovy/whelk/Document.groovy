@@ -618,6 +618,7 @@ class Document {
         return _preparePath(path, data)
     }
 
+    @CompileStatic
     static boolean _preparePath(List path, Object root) {
         // Start at root data node
         Object node = root
@@ -626,24 +627,24 @@ class Document {
             Object step = path.get(i)
 
             // use the next step to determine the type of the next object
-            Type nextReplacementType = (path.get(i + 1) instanceof Integer) ? ArrayList : HashMap
+            Class nextReplacementType = (path.get(i + 1) instanceof Integer) ? ArrayList : HashMap
 
             // Get the next object along the path (candidate)
             Object candidate = null
             if (node instanceof Map)
-                candidate = node.get(step)
+                candidate = ((Map) node).get(step)
             else if (node instanceof List) {
-                if (node.size() > step)
-                    candidate = node.get(step)
+                if (((List) node).size() > (int) step)
+                    candidate = ((List) node).get((int) step)
             }
 
             // If that step can't be taken in the current structure, expand the structure
             if (candidate == null) {
                 if (node instanceof Map)
-                    node.put(step, nextReplacementType.newInstance())
+                    ((Map) node).put(step, nextReplacementType.newInstance())
                 else if (node instanceof List) {
-                    while (node.size() < step + 1)
-                        node.add(nextReplacementType.newInstance())
+                    while (((List) node).size() < (int) step + 1)
+                        ((List) node).add(nextReplacementType.newInstance())
                 }
             }
             // Check path integrity, in all but the last step (which will presumably be replaced)
@@ -657,7 +658,10 @@ class Document {
                 return false
             }
 
-            node = node.get(step)
+            if (node instanceof Map)
+                node = ((Map) node).get(step)
+            else if (node instanceof List)
+                node = ((List) node).get((int) step)
         }
         return true
     }
@@ -669,6 +673,7 @@ class Document {
         return _set(path, value, data)
     }
 
+    @CompileStatic
     static boolean _set(List path, Object value, Object root) {
         if (!_preparePath(path, root))
             return false
@@ -679,23 +684,26 @@ class Document {
         for (int i = 0; i < path.size() - 1; ++i) // follow all but last step
         {
             Object step = path.get(i)
-            node = node.get(step)
+            if (node instanceof Map)
+                node = ((Map) node).get(step)
+            else if (node instanceof List)
+                node = ((List) node).get((int) step)
         }
 
         if ( node instanceof Map )
-            node.put(path.get(path.size() - 1), value)
+            ((Map) node).put(path.get(path.size() - 1), value)
         else if ( node instanceof List ) {
             List nodeAsList = (List) node
-            while (nodeAsList.size() < path.get(path.size() - 1))
+            while (nodeAsList.size() < (int) path.get(path.size() - 1))
                 nodeAsList.add(null)
-            nodeAsList.add(path.get(path.size() - 1), value)
-            //node.add(path.get(path.size() - 1), value)
+            nodeAsList.add((int) path.get(path.size() - 1), value)
         }
         else
             throw new RuntimeException("Was asked to insert at " + path.get(path.size() - 1) + " in " + node + " and could not match up the container types.")
         return true
     }
 
+    @CompileStatic
     static boolean _removeLeafObject(List path, Object root) {
         // Start at root data node
         Object node = root
@@ -703,10 +711,16 @@ class Document {
         for (int i = 0; i < path.size() - 1; ++i) // follow all but last step
         {
             Object step = path.get(i)
-            node = node.get(step)
+            if (node instanceof Map)
+                node = ((Map) node).get(step)
+            else if (node instanceof List)
+                node = ((List) node).get((int) step)
         }
 
-        node.remove(path.get(path.size() - 1))
+        if (node instanceof Map)
+            ((Map) node).remove(path.get(path.size() - 1))
+        else if (node instanceof List)
+            ((List) node).remove((int) path.get(path.size() - 1))
         return true
     }
 
@@ -718,23 +732,37 @@ class Document {
         return false
     }
 
+    @CompileStatic
     private Object get(List path) {
         return _get(path, data)
     }
 
+    @CompileStatic
     static Object _get(List path, Object root) {
         // Start at root data node
         Object node = root
 
         for (Object step : path) {
-            if ((node instanceof Map) && !(step instanceof String)) {
-                log.warn("Needed string as map key, but was given: " + step + ". (path was: " + path + ")")
-                return null
-            } else if ((node instanceof List) && !(step instanceof Integer)) {
-                log.warn("Needed integer as list index, but was given: " + step + ". (path was: " + path + ")")
+            if (node instanceof Map) {
+                if (!(step instanceof String)) {
+                    log.warn("Needed string as map key, but was given: " + step + ". (path was: " + path + ")")
+                    return null
+                }
+                node = ((Map) node).get((String) step)
+            } else if (node instanceof List) {
+                if (!(step instanceof Integer)) {
+                    log.warn("Needed integer as list index, but was given: " + step + ". (path was: " + path + ")")
+                    return null
+                }
+                int idx = (int) step
+                List list = (List) node
+                if (idx < 0 || idx >= list.size()) {
+                    return null
+                }
+                node = list.get(idx)
+            } else {
                 return null
             }
-            node = node[step]
 
             if (node == null) {
                 return null
