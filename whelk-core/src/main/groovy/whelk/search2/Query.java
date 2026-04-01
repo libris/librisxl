@@ -19,10 +19,8 @@ import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
-import whelk.search2.querytree.Type;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
-
 import whelk.util.DocumentUtil;
 import whelk.util.FresnelUtil;
 import whelk.util.Restrictions;
@@ -393,20 +391,23 @@ public class Query {
     private Map<String, Object> applyLens(Map<String, Object> framedThing) {
         Set<String> preserveLinks = Stream.ofNullable(queryParams.object).collect(Collectors.toSet());
 
-        var res = switch (queryParams.lens) {
-            case "chips" -> whelk.getJsonld().toChip(framedThing, preserveLinks);
-            case "full" -> removeSystemInternalProperties(framedThing);
-            default -> whelk.getJsonld().toCard(framedThing, false, false, false, preserveLinks, true);
-        };
+        var res = "chips".equals(queryParams.lens)
+            ? whelk.getJsonld().toChip(framedThing, preserveLinks)
+            : removeSystemInternalProperties(framedThing);
 
         return castToStringObjectMap(res);
     }
 
     private static Map<String, Object> removeSystemInternalProperties(Map<String, Object> framedThing) {
         DocumentUtil.traverse(framedThing, (value, path) -> {
-            if (!path.isEmpty() && ((String) path.getLast()).startsWith("_")) {
-                return new DocumentUtil.Remove();
+            if (value instanceof Map<?, ?> m) {
+                m.keySet().removeIf(k ->
+                        k instanceof String key
+                                && key.startsWith("_")
+                                && !JsonLd.Platform.CATEGORY_BY_COLLECTION.equals(key)
+                );
             }
+
             return DocumentUtil.NOP;
         });
         return framedThing;
