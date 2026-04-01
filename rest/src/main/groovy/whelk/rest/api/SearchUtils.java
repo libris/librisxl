@@ -122,11 +122,9 @@ public class SearchUtils {
     private Map<String, Object> applyLens(Map<String, Object> framedThing, String lens, String preserveId) {
         Set<String> preserveLinks = preserveId != null ? Collections.singleton(preserveId) : Collections.emptySet();
 
-        return switch (lens != null ? lens : "") {
-            case "chips" -> (Map<String, Object>) ld.toChip(framedThing, preserveLinks);
-            case "full" -> removeSystemInternalProperties(framedThing);
-            default -> (Map<String, Object>) ld.toCard(framedThing, false, false, false, preserveLinks, true);
-        };
+        return "chips".equals(lens)
+                ? (Map<String, Object>) ld.toChip(framedThing, preserveLinks)
+                : removeSystemInternalProperties(framedThing);
     }
 
     private Map<String, Object> queryElasticSearch(Map<String, String[]> queryParameters,
@@ -342,10 +340,15 @@ public class SearchUtils {
 
     Map<String, Object> removeSystemInternalProperties(Map<String, Object> framedThing) {
         DocumentUtil.traverse(framedThing, (value, path) -> {
-            if (path != null && !path.isEmpty() && ((String) path.getLast()).startsWith("_")) {
-                return new DocumentUtil.Remove();
+            if (value instanceof Map<?, ?> m) {
+                m.keySet().removeIf(k ->
+                        k instanceof String key
+                                && key.startsWith("_")
+                                && !JsonLd.Platform.CATEGORY_BY_COLLECTION.equals(key)
+                );
             }
-            return null;
+
+            return DocumentUtil.NOP;
         });
         return framedThing;
     }
