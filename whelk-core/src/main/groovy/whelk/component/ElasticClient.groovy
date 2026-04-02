@@ -47,8 +47,8 @@ import static whelk.util.Jackson.mapper
 
 @Log
 class ElasticClient {
-    static final int MAX_CONNECTIONS_PER_HOST = 12
-    static final int CONNECTION_POOL_SIZE = 30
+    static final int MAX_CONNECTIONS_PER_HOST = 20
+    static final int CONNECTION_POOL_SIZE = 60
 
     static final int CONNECT_TIMEOUT_MS = 5 * 1000
     static final int READ_TIMEOUT_MS = 15 * 1000
