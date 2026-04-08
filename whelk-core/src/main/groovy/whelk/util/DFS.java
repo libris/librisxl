@@ -9,7 +9,7 @@ import java.util.Map;
 
 // Iterative depth-first traversal of JSON-LD structures.
 class DFS {
-    private static final int INITIAL_CAPACITY = 32;
+    private static final int INITIAL_CAPACITY = 16;
 
     private DocumentUtil.Visitor visitor;
     private List<DocumentUtil.Operation> operations;
@@ -17,11 +17,10 @@ class DFS {
     private Object[] path = new Object[INITIAL_CAPACITY];
     private int pathSize = 0;
 
-    private Object[] frameContainer = new Object[INITIAL_CAPACITY]; // Map or List
-    private Object[][] frameKeys = new Object[INITIAL_CAPACITY][];  // Map keys (null for Lists)
-    private int[] frameIndex = new int[INITIAL_CAPACITY];
-    private int[] frameSize = new int[INITIAL_CAPACITY];
-    private int frameTop = 0;
+    private Object[] containerStack = new Object[INITIAL_CAPACITY]; // Map or List
+    private Object[][] keysStack = new Object[INITIAL_CAPACITY][];  // Map keys (null for Lists)
+    private int[] indexStack = new int[INITIAL_CAPACITY];
+    private int stackSize = 0;
 
     private final List<Object> pathView = new AbstractList<>() {
         @Override
@@ -40,42 +39,46 @@ class DFS {
         operations = new ArrayList<>();
 
         pathSize = 0;
-        frameTop = 0;
+        stackSize = 0;
 
         visit(obj);
-        pushFrame(obj);
+        push(obj);
 
-        while (frameTop > 0) {
-            int f = frameTop - 1;
+        while (stackSize > 0) {
+            int pos = stackSize - 1;
 
-            if (frameIndex[f] >= frameSize[f]) {
-                // pop frame
-                frameTop--;
-                if (frameTop > 0) { // root has no path
+            int containerSize = keysStack[pos] != null
+                    ? ((Map<?,?>) containerStack[pos]).size()
+                    : ((List<?>) containerStack[pos]).size();
+
+            if (indexStack[pos] >= containerSize) {
+                // pop
+                stackSize--;
+                if (pathSize > 0) { // root has no path
                     pathSize--;
                     path[pathSize] = null;
                 }
-                frameContainer[frameTop] = null;
-                frameKeys[frameTop] = null;
+                containerStack[stackSize] = null;
+                keysStack[stackSize] = null;
                 continue;
             }
 
             Object key;
             Object value;
 
-            if (frameKeys[f] != null) { // Map
-                key = frameKeys[f][frameIndex[f]];
+            int ix = indexStack[pos];
+            if (keysStack[pos] != null) { // Map
+                key = keysStack[pos][ix];
                 @SuppressWarnings("unchecked")
-                Map<Object, Object> map = (Map<Object, Object>) frameContainer[f];
+                Map<Object, Object> map = (Map<Object, Object>) containerStack[pos];
                 value = map.get(key);
             } else { // List
-                int idx = frameIndex[f];
-                key = idx;
+                key = ix;
                 @SuppressWarnings("unchecked")
-                List<Object> list = (List<Object>) frameContainer[f];
-                value = list.get(idx);
+                List<Object> list = (List<Object>) containerStack[pos];
+                value = list.get(ix);
             }
-            frameIndex[f]++;
+            indexStack[pos]++;
 
             ensurePathCapacity(pathSize + 1);
             path[pathSize++] = key;
@@ -83,7 +86,7 @@ class DFS {
             visit(value);
 
             if (value instanceof Map || value instanceof List) {
-                pushFrame(value);
+                push(value);
             } else { // leaf
                 pathSize--;
                 path[pathSize] = null;
@@ -105,35 +108,32 @@ class DFS {
         }
     }
 
-    private void pushFrame(Object container) {
-        ensureFrameCapacity(frameTop + 1);
-        frameContainer[frameTop] = container;
-        frameIndex[frameTop] = 0;
+    private void push(Object container) {
+        ensureCapacity(stackSize + 1);
+        containerStack[stackSize] = container;
+        indexStack[stackSize] = 0;
 
         if (container instanceof Map<?, ?> map) {
-            frameKeys[frameTop] = map.keySet().toArray();
-            frameSize[frameTop] = map.size();
-            frameTop++;
-        } else if (container instanceof List<?> list) {
-            frameKeys[frameTop] = null;
-            frameSize[frameTop] = list.size();
-            frameTop++;
+            keysStack[stackSize] = map.keySet().toArray();
+            stackSize++;
+        } else if (container instanceof List<?>) {
+            keysStack[stackSize] = null;
+            stackSize++;
         }
     }
 
-    private void ensureFrameCapacity(int minCapacity) {
-        if (minCapacity > frameContainer.length) {
-            int newCap = Math.max(minCapacity, frameContainer.length * 2);
-            frameContainer = Arrays.copyOf(frameContainer, newCap);
-            frameKeys = Arrays.copyOf(frameKeys, newCap);
-            frameIndex = Arrays.copyOf(frameIndex, newCap);
-            frameSize = Arrays.copyOf(frameSize, newCap);
+    private void ensureCapacity(int min) {
+        if (min > containerStack.length) {
+            int newCap = Math.max(min, containerStack.length * 2);
+            containerStack = Arrays.copyOf(containerStack, newCap);
+            keysStack = Arrays.copyOf(keysStack, newCap);
+            indexStack = Arrays.copyOf(indexStack, newCap);
         }
     }
 
-    private void ensurePathCapacity(int minCapacity) {
-        if (minCapacity > path.length) {
-            path = Arrays.copyOf(path, Math.max(minCapacity, path.length * 2));
+    private void ensurePathCapacity(int min) {
+        if (min > path.length) {
+            path = Arrays.copyOf(path, Math.max(min, path.length * 2));
         }
     }
 }
