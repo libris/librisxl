@@ -67,6 +67,7 @@ class Whelk {
     ResourceCache resourceCache
     ElasticFind elasticFind
     Relations relations
+    ChipCache chipCache
     DocumentNormalizer normalizer
     Romanizer romanizer
     FeatureFlags features = FeatureFlags.uninitialized()
@@ -154,6 +155,8 @@ class Whelk {
         logRoot = new File(System.getProperty("xl.logRoot", "./logs"))
 
         loadCoreData(systemContextUri)
+
+        chipCache = new ChipCache(this)
 
         if (this.esMode == EsMode.ELASTIC_ENABLED) {
             this.elastic = new ElasticSearch(configuration, jsonld)
@@ -711,7 +714,7 @@ class Whelk {
      * @param iris
      * @return map from all thing and record identifiers (including sameAs) to corresponding card of whole document 
      */
-    Map<String, Map> getCards(Iterable<String> iris) {
+    <T extends String> Map<String, Map> getCards(Iterable<T> iris) {
         Map<String, Map> result = [:]
         storage.getCards(iris).each { card ->
             List<Map> graph = (List<Map>) card[JsonLd.GRAPH_KEY]

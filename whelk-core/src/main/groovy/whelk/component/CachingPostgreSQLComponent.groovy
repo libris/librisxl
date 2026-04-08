@@ -25,7 +25,7 @@ class CachingPostgreSQLComponent extends PostgreSQLComponent {
     }
 
     @Override
-    Iterable<Map> getCards(Iterable<String> iris) {
+    <T extends String> Iterable<Map> getCards(Iterable<T> iris) {
         cardCache.getAll(iris).values().findAll{ !it.isEmpty() }
     }
 
