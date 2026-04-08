@@ -74,6 +74,10 @@ class SiteSearch {
     }
 
     protected Map<?, ?> getAndIndexDescription(String id) {
+        if (appsIndex.containsKey(id)) {
+            return appsIndex.get(id);
+        }
+
         Map<?, ?> data = localDevAppsJsonLd();
 
         if (data == null) {
