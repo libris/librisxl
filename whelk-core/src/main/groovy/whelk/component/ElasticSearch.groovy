@@ -1,6 +1,5 @@
 package whelk.component
 
-import groovy.json.JsonOutput
 import groovy.transform.Memoized
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.codec.binary.Base64
@@ -500,7 +499,7 @@ class ElasticSearch {
         try {
             Map responseMap = client.performRequest('POST',
                     "/${allIndexNames().join(',')}/_delete_by_query",
-                    JsonOutput.toJson(dsl))
+                    mapper.writeValueAsString(dsl))
 
             if (log.isDebugEnabled()) {
                 log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
@@ -704,7 +703,7 @@ class ElasticSearch {
             log.trace("Framed data: ${searchCard}")
         }
 
-        return JsonOutput.toJson(searchCard)
+        return mapper.writeValueAsString(searchCard)
     }
     
     static String flattenedLangMapKey(key) {
@@ -902,18 +901,18 @@ class ElasticSearch {
 
     Map multiQuery(List jsonDslList, Collection<String> indexNames = Collections.emptyList()) {
         return performQuery(
-                jsonDslList.collect { [[:], it].collect { JsonOutput.toJson(it) + '\n' } }.flatten().join(),
+                jsonDslList.collect { [[:], it].collect { mapper.writeValueAsString(jsonDsl) + '\n' } }.flatten().join(),
                 getMultiSearchQueryUrl(indexNames)
         )
     }
 
     Map query(Map jsonDsl, Collection<String> indexNames = Collections.emptyList()) {
-        return performQuery(JsonOutput.toJson(jsonDsl), getQueryUrl([], indexNames))
+        return performQuery(mapper.writeValueAsString(jsonDsl), getQueryUrl([], indexNames))
     }
 
     Map queryIds(Map jsonDsl, Collection<String> indexNames = Collections.emptyList()) {
         return performQuery(
-                JsonOutput.toJson(jsonDsl),
+                mapper.writeValueAsString(jsonDsl),
                 getQueryUrl(['took','hits.total','hits.hits._id'], indexNames)
         )
     }
@@ -1013,7 +1012,7 @@ class ElasticSearch {
     
     private Map performRequest(String method, String path, Map body = null) {
         try {
-            return client.performRequest(method, path, body ? JsonOutput.toJson(body) : null)
+            return client.performRequest(method, path, body ? mapper.writeValueAsString(body) : null)
         }
         catch (UnexpectedHttpStatusException e) {
             tryMapAndThrow(e)
