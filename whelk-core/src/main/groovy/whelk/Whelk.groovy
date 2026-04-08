@@ -306,7 +306,11 @@ class Whelk {
             idMap.putAll(idToIri)
         }
 
-        return storage.bulkLoad(systemIds, asOf)
+        Map<String, Document> loaded = (asOf == null && storage instanceof CachingPostgreSQLComponent)
+                ? ((CachingPostgreSQLComponent) storage).cachedBulkLoad(systemIds)
+                : storage.bulkLoad(systemIds, asOf)
+
+        return loaded
                 .findAll { id, doc -> !doc.deleted }
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)): doc] }
     }
