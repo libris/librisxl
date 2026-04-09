@@ -1281,7 +1281,7 @@ class PostgreSQLComponent {
         return loadCard(systemId) ?: makeCardData(systemId)
     }
 
-    Iterable<Map> getCards(Iterable<String> iris) {
+    <T extends String> Iterable<Map> getCards(Iterable<T> iris) {
         return createAndAddMissingCards(bulkLoadCards(getSystemIdsByIris(iris).values())).values()
     }
 

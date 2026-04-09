@@ -1,7 +1,6 @@
 package whelk.search2;
 
 import com.google.common.base.Predicates;
-import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
@@ -566,33 +565,21 @@ public class Query {
     }
 
     private class LinkLoader {
-        private final Map<String, Collection<Link>> links = new HashMap<>();
+        private final Map<String, Collection<Link>> linkMap = new HashMap<>();
 
         private void loadChips() {
-            var cards = whelk.getCards(links.keySet());
+            var chips = whelk.getChipCache().getChips(linkMap.keySet());
 
-            links.forEach((id, links) -> {
-                var cardGraph = cards.get(id);
-                if (cardGraph != null) {
-                    var chip = castToStringObjectMap(whelk.getJsonld().toChip(new Document(cardGraph).getThing()));
-                    links.forEach(link -> link.setChip(chip));
-                } else {
-                    links.forEach(link -> link.setChip(dummyChip(id)));
-                }
+            linkMap.forEach((id, links) -> {
+                var chip = chips.get(id);
+                links.forEach(link -> link.setChip(chip));
             });
 
-            links.clear();
-        }
-
-        private Map<String, Object> dummyChip(String id) {
-            return Map.of(
-                    JsonLd.ID_KEY, id,
-                    JsonLd.Rdfs.LABEL, id
-            );
+            linkMap.clear();
         }
 
         private void queue(Link link) {
-            links.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
+            linkMap.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
         }
 
         private void queue(Collection<Link> links) {
