@@ -146,7 +146,7 @@ class ElasticSearch {
         // initSettings() waits for ES available. Do this after
         for (var type : elasticSubIndexTypes) {
             // is this a physical index with a numerical suffix? it is the case when indexing to a new index
-            var suffix = mainIndex.find('_\\d$')
+            var suffix = mainIndex.find('_\\d+$')
             var base = suffix ? Unicode.stripSuffix(mainIndex, suffix) : mainIndex
             // elastic index names must be lowercase
             var ix = base + SUB_IX_SEPARATOR + type.toLowerCase() + (suffix ?: '')
