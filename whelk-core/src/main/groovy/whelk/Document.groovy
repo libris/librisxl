@@ -772,25 +772,10 @@ class Document {
         return node
     }
 
+    // This assumes that orig is a JSON-compatible thing. It should always be fine for our use,
+    // since the stuff passed to it was initially deserialized by Jackson anyway.
     static Object deepCopy(Object orig) {
-        //TODO: see https://jira.kb.se/browse/LXL-270
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream()
-            ObjectOutputStream oos = new ObjectOutputStream(bos)
-            oos.writeObject(orig); oos.flush()
-            ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray())
-            ObjectInputStream ois = new ObjectInputStream(bin)
-            return ois.readObject()
-        } catch (any) {
-            //§println "ERROR! ${any.message} in deepCopy. Cloning using other approach"
-            def o = orig.inspect()
-            ByteArrayOutputStream bos = new ByteArrayOutputStream()
-            ObjectOutputStream oos = new ObjectOutputStream(bos)
-            oos.writeObject(o); oos.flush()
-            ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray())
-            ObjectInputStream ois = new ObjectInputStream(bin)
-            return Eval.me(ois.readObject())
-        }
+        return mapper.readValue(mapper.writeValueAsBytes(orig), Object)
     }
 
     /**
