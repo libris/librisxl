@@ -2,8 +2,11 @@ package whelk.converter.marc
 
 import spock.lang.*
 import whelk.filter.LinkFinder
+import whelk.util.DocumentUtil
+import whelk.util.WhelkFactory
 
 import whelk.Whelk
+import static whelk.JsonLd.ID_KEY as ID
 
 @Unroll
 class MarcFrameConverterSpec extends Specification {
@@ -13,6 +16,12 @@ class MarcFrameConverterSpec extends Specification {
     static Map marcframe
 
     static {
+        try {
+            whelk = WhelkFactory.getSingletonWhelk()
+        } catch (Exception e) {
+            System.err.println("Unable to instantiate whelk: $e")
+        }
+
         converter = MarcFrameCli.newMarcFrameConverter()
         marcframe = converter.readConfig(converter.marcframeFile)
         converter.conversion.doPostProcessing = false
@@ -272,7 +281,7 @@ class MarcFrameConverterSpec extends Specification {
         result.fields[1]["008"] == "900101|        |  |||||||||||000 1dswe| "
     }
 
-    def "should handle postprocessing on convert"() {
+    def "should handle postprocessing on convert - #item.spec.name"() {
         given:
         def data = deepcopy(item.spec.source)
         def record = data
@@ -288,7 +297,7 @@ class MarcFrameConverterSpec extends Specification {
         item << postProcStepSpecs.findAll { it.spec.source }
     }
 
-    def "should handle postprocessing on revert"() {
+    def "should handle postprocessing on revert - #item.spec.name"() {
         given:
         def data = getSpecPiece(item.spec, 'result')
         def record = data
@@ -299,6 +308,9 @@ class MarcFrameConverterSpec extends Specification {
         then:
         if (item.spec.back) {
             def expected = getSpecPiece(item.spec, 'back')
+            if (item.spec.back == 'source') {
+                reduceToLinkedForComparison(data)
+            }
             assertJsonEquals(data, expected)
         }
 
@@ -420,6 +432,23 @@ class MarcFrameConverterSpec extends Specification {
         def resultJson = json(result)
         def expectedJson = json(expected)
         assert resultJson == expectedJson
+    }
+
+    boolean reduceToLinkedForComparison(Map entity) {
+        DocumentUtil.traverse(entity) { value, path ->
+            if (!path.isEmpty() && path[-1] != 'mainEntity' && path[-1] != 'instanceOf') {
+                if (value instanceof List && value.isEmpty()) {
+                    return new DocumentUtil.Remove()
+                }
+                if (value instanceof Map && '_revertedBy' in value) {
+                    value.remove('_revertedBy')
+                }
+                if (value instanceof Map && ID in value) {
+                    return new DocumentUtil.Replace([(ID): value[ID]])
+                }
+                return
+            }
+        }
     }
 
     void assertJsonEqualsOnRevert(result, expected) {

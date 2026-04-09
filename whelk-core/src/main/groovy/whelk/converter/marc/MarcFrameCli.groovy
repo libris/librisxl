@@ -11,6 +11,7 @@ import whelk.ResourceCache
 import whelk.TypeCategoryNormalizer
 import whelk.Whelk
 import whelk.filter.LinkFinder
+import whelk.util.WhelkFactory
 
 import static whelk.util.Jackson.mapper
 
@@ -30,7 +31,7 @@ if (fpaths.size() > 1) {
 }
 
 if (cmd == "cachebytype") {
-  var whelk = Whelk.createLoadedSearchWhelk()
+  var whelk = WhelkFactory.getSingletonWhelk()
   var start = new Date().time
   for (type in ['Category', 'marc:EnumeratedTerm']) {
     System.err.println "getByType: ${type}"
@@ -166,7 +167,7 @@ if (perf) {
 
 static MarcFrameConverter newMarcFrameConverter() {
     if (System.properties.getProperty('xl.secret.properties')) {
-        def whelk = Whelk.createLoadedCoreWhelk()
+        var whelk = WhelkFactory.getSingletonWhelk()
         return whelk.getMarcFrameConverter()
     }
 
