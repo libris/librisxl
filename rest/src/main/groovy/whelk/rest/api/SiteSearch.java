@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.QueryParams;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static whelk.JsonLd.findInData;
+import static whelk.search2.QueryParams.ApiParams.APP_CONFIG;
 import static whelk.util.Jackson.mapper;
 
 class SiteSearch {
@@ -74,6 +76,10 @@ class SiteSearch {
     }
 
     protected Map<?, ?> getAndIndexDescription(String id) {
+        if (appsIndex.containsKey(id)) {
+            return appsIndex.get(id);
+        }
+
         Map<?, ?> data = localDevAppsJsonLd();
 
         if (data == null) {
@@ -133,8 +139,8 @@ class SiteSearch {
             Map appDesc = getAndIndexDescription(appId);
             if (appDesc != null) {
                 Map findDesc = getAndIndexDescription(appId + "find");
-                if (!queryParameters.containsKey("_appConfig")) {
-                    queryParameters.put("_appConfig", new String[]{mapper.writeValueAsString(search2.buildAppConfig(findDesc))});
+                if (!queryParameters.containsKey(APP_CONFIG)) {
+                    queryParameters.put(APP_CONFIG, new String[]{mapper.writeValueAsString(search2.buildAppConfig(findDesc))});
                 }
             }
             return search2.doSearch(queryParameters);
