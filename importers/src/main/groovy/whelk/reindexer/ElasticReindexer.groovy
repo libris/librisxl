@@ -109,7 +109,9 @@ class ElasticReindexer {
             }
 
             threadPool.awaitAllAndShutdown()
-            log.info("Done! $counter documents reindexed in ${(System.currentTimeMillis() - startTime) / 1000} seconds.")
+            long elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
+            String elapsed = String.format("%02dh%02dm%02ds", (int) (elapsedSeconds / 3600), (int) ((elapsedSeconds % 3600) / 60), (int) (elapsedSeconds % 60))
+            log.info("Done! $counter documents reindexed in ${elapsed}")
             for (var ix : whelk.elastic.allIndexNames()) {
                 log.info("New number of mappings/fields in ES: ${ix} : ${whelk.elastic.getFieldCount(ix)}")
             }
