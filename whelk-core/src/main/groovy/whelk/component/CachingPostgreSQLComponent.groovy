@@ -15,7 +15,7 @@ import static whelk.util.Jackson.mapper
 @Log
 class CachingPostgreSQLComponent extends PostgreSQLComponent {
     private static final int CARD_CACHE_MAX_SIZE = 250_000
-    private static final int DOC_CACHE_MAX_SIZE = 250_000
+    private static final int DOC_CACHE_MAX_SIZE = 500_000
     private static final int IRI_CACHE_MAX_SIZE = 500_000
     private LoadingCache<String, Map> cardCache
     private LoadingCache<String, byte[]> docCache
