@@ -9,7 +9,7 @@ import whelk.util.Unicode
 
 @Log
 class ElasticReindexer {
-    static final int BATCH_SIZE = 300
+    static final int BATCH_SIZE = 600
     static final int MAX_RETRIES = 5
     static final int INITIAL_RETRY_WAIT_MS = 3000
     static final int MAX_RETRY_WAIT_MS = 60000
