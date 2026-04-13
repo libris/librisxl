@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static whelk.search.ESQuery.SPELL_CHECK_FIELD;
 import static whelk.util.DocumentUtil.NOP;
 
 public class EsMappings {
@@ -25,6 +26,8 @@ public class EsMappings {
     private final Set<String> longTypeFields;
 
     private final Set<String> nestedNotInParentFields;
+
+    private final boolean spellFieldExists;
 
     public static String KEYWORD = "keyword";
     public static String FOUR_DIGITS_KEYWORD_SUFFIX = "_4_digits_keyword";
@@ -41,6 +44,9 @@ public class EsMappings {
         this.nestedNotInParentFields = new HashSet<>(nestedTypeFields);
         var includeInParent = union(mappings, m -> getFieldsWithSetting("include_in_parent", true, m));
         this.nestedNotInParentFields.removeAll(includeInParent);
+        this.spellFieldExists = mappings
+                .stream()
+                .anyMatch(m -> DocumentUtil.getAtPath(m, List.of(SPELL_CHECK_FIELD.split("\\.")), null) != null);
     }
 
     public boolean hasKeywordSubfield(String fieldPath) {
@@ -90,6 +96,10 @@ public class EsMappings {
         return nestedTypeFields;
     }
 
+    public boolean spellFieldExists() {
+        return spellFieldExists;
+    }
+    
     private static Set<String> getFourDigitsKeywordFields(Map<?, ?> mappings) {
         return getFieldsWithSuffix(mappings, FOUR_DIGITS_KEYWORD_SUFFIX);
     }
