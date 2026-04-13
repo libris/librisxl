@@ -1,9 +1,3 @@
-/**
- * Fix documents (possibly) messed up by a bug in lxl-2134-descriptionUpgrader-must-be-list.groovy
- *
- * See LXL-3457 for more info.
- */
-
 import whelk.Document
 import whelk.diff.Diff
 import whelk.diff.Patch

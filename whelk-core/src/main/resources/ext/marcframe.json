@@ -63,7 +63,7 @@
       "1": "marc:JurisdictionName",
       "2": "marc:NameInDirectOrder"
     },
-    "NOTE-TypeOfRecordType": "Position b OBSOLETE since 1995 (was ArchivalUnit)",
+    "NOTE:TypeOfRecordType": "Position b OBSOLETE since 1995 (was ArchivalUnit)",
     "TypeOfRecordType": {
       "a": "Text",
       "c": "NotatedMusic",
@@ -968,7 +968,7 @@
         "[15]": null,
         "[16]": {
           "NOTE:LC": "Transposition and arrangement - # - nac",
-          "ignore": true,
+          "ignored": true,
           "fixedDefault": "|"
         },
         "[17]": null
@@ -1854,7 +1854,7 @@
         "[9]": {
           "NOTE:LC": "09 - Production elements",
           "NOTE": "LC ignores all but c & d",
-          "ignore": true,
+          "ignored": true,
           "NOTE:record-count": 0
         },
         "[10]": {
@@ -2600,7 +2600,7 @@
         "[32]": null,
         "[33]": {
           "NOTE:LC": "Transposition and arrangement - # - nac",
-          "ignore": true,
+          "ignored": true,
           "fixedDefault": "|"
         },
         "[34]": null
@@ -2758,6 +2758,122 @@
                               {"@id": "https://id.kb.se/marc/BooksBiographyType-a"}
                 ]
               }
+            }
+          }
+        },
+        {
+          "name": "With publication place, agent and date (264 $a $b $c) and 008",
+          "source": [
+            {"008": "|     s2020    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Stockholm :"},
+              {"b": "Norstedts,"},
+              {"c": "2020"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/sw"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2020"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Norstedts"},
+                  "place": {"@type": "Place", "label": "Stockholm"},
+                  "year": "2020"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "No publication place (264 $a) and 008",
+          "source": [
+            {"008": "|     s2021    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Bonnier,"},
+              {"c": "2021"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/sw"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2021"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Bonnier"},
+                  "year": "2021"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Publisher only (264 $b) with unknown date/country in 008",
+          "source": [
+            {"008": "|     snnnn    xx |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Saga Egmont"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/xx"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "nnnn"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Saga Egmont"}
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Conflicting 008 year and 264$c year are both preserved",
+          "source": [
+            {"008": "|     s2020    sw |||||||||||000 ||   | "},
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Norstedts,"},
+              {"c": "2019"}
+            ]}}
+          ],
+          "result": {
+            "mainEntity": {
+              "marc:primaryProvisionActivity": {
+                "@type": "PrimaryProvisionActivity",
+                "country": [
+                  {"@id": "https://id.kb.se/country/sw"}
+                ],
+                "marc:publicationStatus": "marc:SingleKnownDateProbableDate",
+                "year": "2020"
+              },
+              "publication": [
+                {
+                  "@type": "Publication",
+                  "agent": {"@type": "Agent", "label": "Norstedts"},
+                  "year": "2019"
+                }
+              ]
             }
           }
         },
@@ -4577,7 +4693,28 @@
       "$a": {"property": "value"},
       "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
       "$b": {"link": "source", "resourceType": "Source", "property": "label"},
-      "$6": null
+      "$6": null,
+      "_spec": [
+        {
+          "name": "PostalRegistration with source in $b",
+          "source": {"032": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "PA-12345"},
+            {"b": "Registering agency"}
+          ]}},
+          "result": {"mainEntity": {
+            "identifiedBy": [
+              {
+                "@type": "PostalRegistration",
+                "value": "PA-12345",
+                "source": {
+                  "@type": "Source",
+                  "label": "Registering agency"
+                }
+              }
+            ]
+          }}
+        }
+      ]
   },
     "033": {
       "NOTE:record-count": 852,
@@ -4961,7 +5098,28 @@
     "resourceType": "StudyNumber",
     "TODO": "$b assigner - Agent - rdfs:label in BF2 conversion 1.6",
     "$b": {"link": "source", "resourceType": "Source", "property": "label"},
-    "$6": null
+    "$6": null,
+    "_spec": [
+      {
+        "name": "StudyNumber with source in $b",
+        "source": {"036": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "SN-2026-001"},
+          {"b": "Study authority"}
+        ]}},
+        "result": {"mainEntity": {
+          "identifiedBy": [
+            {
+              "@type": "StudyNumber",
+              "value": "SN-2026-001",
+              "source": {
+                "@type": "Source",
+                "label": "Study authority"
+              }
+            }
+          ]
+        }}
+      }
+    ]
     },
     "037": {
       "addLink": "acquisitionSource",
@@ -5429,7 +5587,7 @@
     },
     "043": {
       "NOTE:local": "ANVÄNDS NORMALT EJ - Används normalt inte i Bibliografiska formatet, men ska ligga kvar oförändrat i importerade poster.",
-      "NOTE:lc": "Is geographicCoverage in BF2",
+      "NOTE:LC": "Is geographicCoverage in BF2",
       "aboutEntity": "?work",
       "link": "marc:hasGeographicAreaCode",
       "resourceType": "marc:GeographicAreaCode",
@@ -5504,6 +5662,7 @@
       ]
     },
     "046": {
+      "NOTE:LC": "Guidelines on how to transcribe a date in subfields are generally the same as those specified under 008/06",
       "addLink": "marc:hasSpecialCodedDates",
       "resourceType": "marc:SpecialCodedDates",
       "$a": {"property": "marc:typeOfDateCode"},
@@ -5515,7 +5674,73 @@
       "$o": null,
       "$p": null,
       "$2": null,
-      "$6": null
+      "$6": null,
+      "_spec": [
+        {
+          "name": "coded dates using date1BC/date2CE fields",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"b": "456"},
+              {"c": "1234"},
+              {"e": "1250"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasSpecialCodedDates": [ {
+                "@type": "marc:SpecialCodedDates",
+                "marc:date1BCDate": "456",
+                "marc:date1CEDate": "1234",
+                "marc:date2CEDateFieldMustAlsoContainASubfieldC": "1250"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "type of date code with validity range, inclusive dates",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "i"},
+              {"m": "1890"},
+              {"n": "1899"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasSpecialCodedDates": [ {
+                "@type": "marc:SpecialCodedDates",
+                "marc:typeOfDateCode": "i",
+                "marc:beginningOfDateValid": "1890",
+                "marc:endOfDateValid": "1899"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "combined coded date values in one 046 field",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "q"},
+              {"c": "1978"},
+              {"e": "1981"},
+              {"m": "1978"},
+              {"n": "1981"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasSpecialCodedDates": [ {
+                "@type": "marc:SpecialCodedDates",
+                "marc:typeOfDateCode": "q",
+                "marc:date1CEDate": "1978",
+                "marc:date2CEDateFieldMustAlsoContainASubfieldC": "1981",
+                "marc:beginningOfDateValid": "1978",
+                "marc:endOfDateValid": "1981"
+              } ]
+            }
+          }
+        }
+      ]
     },
     "047": {
       "NOTE:local":"ANVÄNDS NORMALT EJ",
@@ -5765,11 +5990,12 @@
       "resourceType": "marc:NationalAgriculturalLibraryCallNumber",
       "i1": null,
       "$a": {"addProperty": "classificationPortion"},
-      "$b": {"ignored": true},
+      "$b": {"ignored": true, "NOTE:LC": "Item number (NR)"},
       "$0": {"property": "marc:recordControlNumber"},
-      "$1": {"ignore": true, "NOTE:LC": "nac"},
+      "$1": {"ignored": true, "NOTE:LC": "nac"},
       "_spec": [
         {
+          "name": "NAL classification, item number ignored",
           "source": {
             "070": {"ind1": "0", "ind2": " ", "subfields": [{"a": "QH301.A5"},{"b": "1981"}]}
           },
@@ -8405,7 +8631,7 @@
 
     "249": {
       "ignored": true,
-      "NOTE:Local": "LIBRIS-definierat fält, OBSOLET sedan 2004",
+      "NOTE:local": "LIBRIS-definierat fält, OBSOLET sedan 2004",
       "NOTE": "Global cleanup of existing occurrences. See LXL-3103 for more info"
     },
 
@@ -8492,7 +8718,7 @@
 
     "256": {
       "NOTE:LC": "Prior to the definition of this field in 1987, file characteristics were recorded in subfield $a of field 300",
-      "NOTE:Local": "Until librisxl version 1.7 mapped to digitalCharacteristic",
+      "NOTE:local": "Until librisxl version 1.7 mapped to digitalCharacteristic",
       "aboutEntity": "?thing",
       "addLink": "hasNote",
       "resourceType": "marc:ComputerFileCharacteristics",
@@ -9245,6 +9471,7 @@
       "subfieldOrder": "6 3 ...",
       "_spec": [
         {
+          "name": "publication and manufacture split from i2=1 and i2=3",
           "source": [
             {"264": {"ind1": " ", "ind2": "1", "subfields": [
               {"a": "Stockholm :"}, {"b": "Bonnier,"}, {"c": "1996"}
@@ -9271,6 +9498,125 @@
           }}
         },
         {
+          "name": "publication place only from i2=1 $a",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"a": "Lund"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "place": {"@type": "Place", "label": "Lund"}
+              }
+            ]
+          }}
+        },
+        {
+          "name": "publication agent only from i2=1 $b",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"b": "Bonnier"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "agent": {"@type": "Agent", "label": "Bonnier"}
+              }
+            ]
+          }}
+        },
+        {
+          "name": "publication malformed date token from i2=1 $c",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "1", "subfields": [
+              {"c": "circa 199x?"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "publication": [
+              {
+                "@type": "Publication",
+                "date": "circa 199x?"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "production from i2=0",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "0", "subfields": [
+              {"a": "Malmö :"}, {"b": "Malmö stad,"}, {"c": "2022"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "production": [
+              {
+                "@type": "Production",
+                "place": {"@type": "Place", "label": "Malmö"},
+                "agent": {"@type": "Agent", "label": "Malmö stad"},
+                "year": "2022"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "distribution from i2=2",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "2", "subfields": [
+              {"a": "Göteborg :"}, {"b": "Disa Distribution,"}, {"c": "2019"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "distribution": [
+              {
+                "@type": "Distribution",
+                "place": {"@type": "Place", "label": "Göteborg"},
+                "agent": {"@type": "Agent", "label": "Disa Distribution"},
+                "year": "2019"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "manufacture appliesTo from $3",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "3", "subfields": [
+              {"3": "Originalboxen:"}, {"a": "Uppsala :"}, {"b": "Tryckhuset"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "manufacture": [
+              {
+                "@type": "Manufacture",
+                "appliesTo": {"@type": "Resource", "label": "Originalboxen"},
+                "place": {"@type": "Place", "label": "Uppsala"},
+                "agent": {"@type": "Agent", "label": "Tryckhuset"}
+              }
+            ]
+          }}
+        },
+        {
+          "name": "copyright from i2=4 $c",
+          "source": [
+            {"264": {"ind1": " ", "ind2": "4", "subfields": [
+              {"c": "©2012"}
+            ]}}
+          ],
+          "result": {"mainEntity": {
+            "copyright": [
+              {
+                "@type": "Copyright",
+                "date": "©2012"
+              }
+            ]
+          }}
+        },
+        {
+          "name": "publication multi-part with copyright from i2=4",
           "source": [
             {"264": {"ind1": " ", "ind2": "1", "subfields": [
               {"a": "Stockholm"}, {"b": "Bonnier"}, {"c": "1996"},
@@ -10914,7 +11260,7 @@
        ]
      },
     "351": {
-      "NOTE:Local": "ignoreOnRevert?",
+      "NOTE:local": "ignoreOnRevert?",
       "addLink": "collectionArrangement",
       "resourceType": "CollectionArrangement",
       "$a": {"addProperty": "collectionOrganization"},
@@ -11454,7 +11800,7 @@
     "490": {
       "include": ["inseries"],
       "groupId": "#seriesmember-$seq",
-      "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing ": "SetFlagsByPatterns"},
+      "i1": {"property": "marc:seriesTracingPolicy", "NOTE:marcDefault": 0, "NOTE:postProcessing": "SetFlagsByPatterns"},
       "i2": null,
       "$a": {"addProperty": "seriesStatement"},
       "$l": {"ignored": true},
@@ -11860,11 +12206,37 @@
       ]
     },
     "508": {
-      "aboutEntity": "?work", 
+      "NOTE:LC": "I - credits",
+      "aboutEntity": "?work",
       "addLink": "hasNote",
       "resourceType": "marc:CreationProductionCreditsNote",
       "$a": {"property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "NOTE:$7": "BF2.1: $7 - Data provenance (R) nac",
+      "_spec": [
+        {
+          "source": [
+            {"508": {"ind1": " ", "ind2": " ", "subfields": [{"a": "credits"}]}},
+            {"511": {"ind1": "0", "ind2": " ", "subfields": [{"a": "cast"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:CreationProductionCreditsNote",
+                  "label": "credits"
+                },
+                {
+                  "@type": "marc:ParticipantOrPerformerNote",
+                  "label": "cast",
+                  "marc:displayConstantController": "marc:NoDisplayConstantGenerated"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "510": {
       "addLink": "indexedIn",
@@ -11890,6 +12262,7 @@
     },
 
     "511": {
+      "NOTE:LC": "I - credits (Add Cast: before $a content)",
       "aboutEntity": "?work",
       "addLink": "hasNote",
       "resourceType": "marc:ParticipantOrPerformerNote",
@@ -11902,7 +12275,45 @@
         }
       },
       "$a": {"property": "label"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "source": [
+            {"511": {"ind1": "1", "ind2": " ", "subfields": [{"a": "cast"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:ParticipantOrPerformerNote",
+                  "label": "cast",
+                  "marc:displayConstantController": "marc:Cast"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "source": [
+            {"511": {"ind1": " ", "ind2": " ", "subfields": [{"a": "participant"}]}}
+          ],
+          "normalized": [
+            {"511": {"ind1": "0", "ind2": " ", "subfields": [{"a": "participant"}]}}
+          ],
+          "result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "hasNote": [
+                {
+                  "@type": "marc:ParticipantOrPerformerNote",
+                  "label": "participant"
+                }
+              ]
+            }
+          }}
+        }
+      ]
     },
     "513": {
       "addLink": "hasNote",
@@ -11915,7 +12326,7 @@
 
     "514": {
       "NOTE:LC": "514 - DATA QUALITY NOTE (NR) nac",
-      "NOTE:Local": "Removed from bibliographic marc-export",
+      "NOTE:local": "Removed from bibliographic marc-export",
       "ignored": true,
       "NOTE:record-count": 0
     },
@@ -12417,13 +12828,58 @@
     "535": {
       "addLink": "marc:hasLocationOfOriginalsDuplicatesNote",
       "resourceType": "marc:LocationOfOriginalsDuplicatesNote",
-      "i1": {"property": "marc:holderOf"},
+      "i1": {"property": "marc:holderOf", "NOTE:LC": "Custodial role"},
       "$a": {"property": "marc:custodian"},
       "$b": {"property": "marc:postalAddress"},
-      "$c": {"ignore": true, "NOTE": "Country"},
+      "$c": {"ignored": true, "NOTE": "Country"},
       "$d": {"addProperty": "marc:telecommunicationsAddress"},
       "$g": {"property": "marc:repositoryLocationCode"},
-      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+      "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+      "_spec": [
+        {
+          "name": "ignored: 535$c is dropped",
+          "source": {
+            "535": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Holder"},
+              {"c": "Country"},
+              {"g": "Location"}
+            ]}
+          },
+          "normalized": {
+            "535": {"ind1": "1", "ind2": " ", "subfields": [
+              {"a": "Holder"},
+              {"g": "Location"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasLocationOfOriginalsDuplicatesNote": [ {
+                "@type": "marc:LocationOfOriginalsDuplicatesNote",
+                "marc:custodian": "Holder",
+                "marc:holderOf": "1",
+                "marc:repositoryLocationCode": "Location"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "ignored-only: no 535 emitted on revert",
+          "source": {
+            "535": {"ind1": "2", "ind2": " ", "subfields": [
+              {"c": "Sweden"}
+            ]}
+          },
+          "normalized": [],
+          "result": {
+            "mainEntity": {
+              "marc:hasLocationOfOriginalsDuplicatesNote": [ {
+                "@type": "marc:LocationOfOriginalsDuplicatesNote",
+                "marc:holderOf": "2"
+              } ]
+            }
+          }
+        }
+      ]
     },
     "536": {
       "NOTE:local": "ANVÄNDS NORMALT EJ",
@@ -12449,7 +12905,27 @@
       "$u": {"addProperty": "marc:uniformResourceIdentifier"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "NOTE:$5": {"link": "applicableInstitution", "resourceType": "Agent", "property": "code", "NOTE:local": "Används ej"},
-      "$6": {"property": "marc:fieldref"}
+      "$6": {"property": "marc:fieldref"},
+      "_spec": [
+        {
+          "name": "system details note with uri",
+          "source": {
+            "538": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "DVD-spelare krävs"},
+              {"u": "https://example.org/system-details"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasSystemDetailsNote": [ {
+                "@type": "marc:SystemDetailsNote",
+                "marc:systemDetailsNote": "DVD-spelare krävs",
+                "marc:uniformResourceIdentifier": ["https://example.org/system-details"]
+              } ]
+            }
+          }
+        }
+      ]
     },
     "540": {
       "aboutEntity": "?thing",
@@ -12624,7 +13100,7 @@
       "aboutEntity": "?thing",
       "addLink": "marc:hasLocationOfOtherArchivalMaterialsNote",
       "resourceType": "marc:LocationOfOtherArchivalMaterialsNote",
-      "NOTE:Local": "Removed from bibliographic marc-export",
+      "NOTE:local": "Removed from bibliographic marc-export",
       "i1": {"marcDefault": " "},
       "$a": {"addProperty": "marc:custodian"}
     },
@@ -12725,11 +13201,11 @@
           }}
         },
         {
-          "name": "LanguageNote and Notation in same field.",
+          "name": "LanguageNote and Notation in same field. Removed interpunction in normalized",
           "source": {
             "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin;"},{"b": "Roman alphabet."}]}
           },
-          "source": {
+          "normalized": {
             "546": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Latin"},{"b": "Roman alphabet"}]}
           },
           "result": {"mainEntity": {
@@ -12914,7 +13390,9 @@
     },
     "562": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
-      "Note:LC": "nac",
+      "NOTE:LC": "nac",
+      "TODO": "$a: Identifying Markings not item Condition, hold inherits bib",
+      "NOTE": "$e: number of copies in marc not inventoryLevel, less of a semantic variant but see test #2",
       "addLink": "marc:hasCopyAndVersionIdentificationNote",
       "resourceType": "marc:CopyAndVersionIdentificationNote",
       "embedded": true,
@@ -12924,7 +13402,53 @@
       "$d": {"addProperty": "marc:presentationFormat"},
       "$e": {"addProperty": "marc:inventoryLevel"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
-      "$8": {"property": "marc:groupid"}
+      "$8": {"property": "marc:groupid"},
+      "_spec": [
+        {
+          "name": "copy and version identification details",
+          "source": {
+            "562": {"ind1": " ", "ind2": " ", "subfields": [
+              {"a": "Annotations"},
+              {"b": "Copy 1"},
+              {"8": "grp-1"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasCopyAndVersionIdentificationNote": [ {
+                "@type": "marc:CopyAndVersionIdentificationNote",
+                "marc:itemCondition": ["Annotations"],
+                "marc:copyIdentification": ["Copy 1"],
+                "marc:groupid": "grp-1"
+              } ]
+            }
+          }
+        },
+        {
+          "name": "description used to distinguish one copy of the described materials from other copies",
+          "source": {
+            "562": {"ind1": " ", "ind2": " ", "subfields": [
+              {"e": "3 copies kept"},
+              {"b": "Labelled as president's desk copy, board of directors' working file copy, and public release copy."}
+            ]}
+          },
+          "normalized": {
+            "562": {"ind1": " ", "ind2": " ", "subfields": [
+              {"b": "Labelled as president's desk copy, board of directors' working file copy, and public release copy."},
+              {"e": "3 copies kept"}
+            ]}
+          },
+          "result": {
+            "mainEntity": {
+              "marc:hasCopyAndVersionIdentificationNote": [ {
+                "@type": "marc:CopyAndVersionIdentificationNote",
+                "marc:inventoryLevel": ["3 copies kept"],
+                "marc:copyIdentification": ["Labelled as president's desk copy, board of directors' working file copy, and public release copy."]
+              } ]
+            }
+          }
+        }
+      ]
     },
     "563": {
       "NOTE:local": "ANVÄNDS NORMALT EJ I BIBLIOGRAFISK POST",
@@ -13056,7 +13580,7 @@
           "source": {"583": {"ind1": "1", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
-          "source": {"583": {"ind1": " ", "ind2": " ", "subfields": [
+          "normalized": {"583": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Foo"}
           ]}},
           "result": {"mainEntity": {
@@ -15435,17 +15959,20 @@
           }}
         },
         {
+          "name": "Malformed: blank ind2 with $2 present, normalize ind2 to 7",
+          "TODO": "Requires converter change. Needs ind2 normalization before match rules?",
           "source": {"655": {"ind1": " ", "ind2": " ", "subfields": [{"a": "True crime stories"}, {"2": "lcgft"}]}},
-          "TODO:EmptyInd2-result": {"mainEntity": {
+          "normalized": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "True crime stories"}, {"2": "lcgft"}]}},
+          "TODO:result": {"mainEntity": {
             "instanceOf": {
               "@type": "Text",
               "genreForm": [
                 {
                   "@type": "GenreForm",
-                  "@id": "hhttp://id.loc.gov/authorities/genreForms/gf2014026203.html",
+                  "@id": "http://id.loc.gov/authorities/genreForms/gf2014026203",
                   "inScheme": {
                     "@type": "ConceptScheme",
-                    "@id": "http://id.loc.gov/authorities/genreForms",
+                    "@id": "https://id.kb.se/term/lcgft",
                     "code": "lcgft"
                   },
                   "prefLabel": "True crime stories"
@@ -15455,10 +15982,41 @@
           }}
         },
         {
-          "source": {"655": {"ind1": "7", "ind2": " ", "subfields": [{"a": "Artikeldatabaser"}, {"2": "saogf"}]}},
-          "TODO:": {"mainEntity": {
+          "name": "Malformed: blank ind2 without $2, normalize ind2 to 4",
+          "source": {"655": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Festskrifter"}]}},
+          "normalized": {"655": {"ind1": " ", "ind2": "4", "subfields": [{"a": "Festskrifter"}]}},
+          "result": {"mainEntity": {
             "instanceOf": {
-              "@type": "Text"
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@type": "GenreForm",
+                  "prefLabel": "Festskrifter"
+                }
+              ]
+            }
+          }}
+        },
+        {
+          "name": "Malformed: ind1/ind2 swapped, normalize using $2 presence",
+          "TODO": "Requires converter change. Needs ind2 normalization before match rules? Make types normalization compatible?",
+          "source": {"655": {"ind1": "7", "ind2": " ", "subfields": [{"a": "Artikeldatabaser"}, {"2": "saogf"}]}},
+          "normalized": {"655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Artikeldatabaser"}, {"2": "saogf"}]}},
+          "TODO:result": {"mainEntity": {
+            "instanceOf": {
+              "@type": "Text",
+              "genreForm": [
+                {
+                  "@type": "GenreForm",
+                  "@id": "https://id.kb.se/term/saogf/Artikeldatabaser",
+                  "inScheme": {
+                    "@type": "ConceptScheme",
+                    "@id": "https://id.kb.se/term/saogf",
+                    "code": "saogf"
+                  },
+                  "prefLabel": "Artikeldatabaser"
+                }
+              ]
             }
           }}
         },
@@ -17136,6 +17694,7 @@
           }}
         },
         {
+          "name": "Normalized 711 has removed interpunction in $a",
           "source": {
             "711": {"ind1": "2", "ind2": " ", "subfields": [
               {"a": "Westminster Assembly"},
@@ -17143,7 +17702,7 @@
               {"n": "10"},
               {"x": "2222-2222"}
             ]}},
-            "source": {
+            "normalized": {
               "711": {"ind1": "2", "ind2": " ", "subfields": [
                 {"a": "Westminster Assembly,"},
                 {"n": "10"},
@@ -20028,6 +20587,7 @@
         {"when": "i2=2", "addLink": "isPrimaryTopicOf", "resourceType": "Document"},
         {"when": "i2=8", "addLink": "relatedTo", "resourceType": "Document"}
       ],
+      "TODO:i2-3-4": "LoC 2022 added i2=3/4 for component-part relationships. Evaluate explicit mapping for those values.",
       "TODO?": {
         "if $x=digipic or $y=bild": {"addLink": "depiction"},
         "if $z=Wikipedia|IMDB": {"addLink": "isPrimaryTopicOf"}
@@ -20035,14 +20595,35 @@
       "$2": {"requires-i1": "7", "property": "marc:electronicLocatorType", "marcDefault": "http"},
       "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
       "$6": {"property": "marc:fieldref"},
+      "NOTE:$7": "$7 - Access status (NR) [NEW, 2019; REDESCRIBED, 2025]. Applies to $g and/or $u.",
+      "TODO:$7": "Evaluate mapping of access-status codes (0,1,u,z) to explicit open/restricted status in RDF.",
       "$8": {"property": "marc:groupid"},
       "$a": {"addProperty": "marc:hostName"},
+      "NOTE:$b": "$b - Access number [OBSOLETE, 2020]",
+      "NOTE:$c": "$c - Compression information (R)",
+      "NOTE:$d": "$d - Path (R)",
+      "NOTE:$e": "$e - Data provenance [NEW, 2022]",
       "$f": {"addProperty": "marc:electronicName"},
-      "$q": {"link": "encodingFormat", "resourceType": "EncodingFormat", "property": "label", "infer": true},
-      "$r": {"ignored": true, "NOTE:LC": "$r - Settings [OBSOLETE, 2020]"},
+      "NOTE:$g": "$g - Persistent identifier (R) [NEW, 2022]. Earlier: Uniform Resource Name [OBSOLETE, 2000].",
+      "NOTE:$h": "$h - Non-functioning Uniform Resource Identifier (R) [NEW, 2022]. Earlier: Processor of request [OBSOLETE, 2020].",
+      "TODO:$g/$h": "Evaluate mapping for PID links ($g) and stale links ($h) without breaking legacy export/revert behavior.",
+      "NOTE:$i": "$i - Instruction [OBSOLETE, 2020]",
+      "NOTE:$j": "$j - Bits per second [OBSOLETE, 2020]",
+      "NOTE:$k": "$k - Password [OBSOLETE, 2020]",
+      "NOTE:$l": "$l - Standardized information governing access (R) [NEW, 2022]. Earlier: Logon [OBSOLETE, 2020].",
+      "NOTE:$m": "$m - Contact for access assistance (R)",
+      "NOTE:$n": "$n - Terms governing access (R) [NEW, 2022]. Earlier: Name of location of host [OBSOLETE, 2020].",
+      "TODO:$l/$n": "Evaluate mapping of 2022 access-rights semantics ($l/$n) as equivalents to 506 structured/text terms.",
+      "NOTE:$o": "$o - Operating system (NR)",
+      "NOTE:$p": "$p - Port (NR)",
+      "$q": {"link": "encodingFormat", "resourceType": "EncodingFormat", "property": "label", "infer": true, "NOTE:LC": "$q - Electronic format type (R) [CHANGED, 2022] [REDESCRIBED, 2022]"},
+      "$r": {"ignored": true, "NOTE:LC": "$r - Settings [OBSOLETE, 2020]. NEW 2022: standardized information governing use and reproduction (equivalent to 540$f/$2/$u).", "TODO": "If mapped, model structured rights/use terms (vocabulary/URI) without clashing with legacy settings usage."},
       "$s": {"addProperty": "contentSize"},
-      "$t": {"ignored": true, "NOTE:LC": "$t - Terminal emulation [OBSOLETE, 2020]"},
+      "$t": {"ignored": true, "NOTE:LC": "$t - Terminal emulation [OBSOLETE, 2020]. NEW 2022: terms governing use and reproduction (equivalent to 540$a).", "TODO": "If mapped, model textual rights/use terms while preserving legacy data safety."},
+      "NOTE:$u": "$u - Uniform Resource Identifier (R) [REDESCRIBED, 2022]. Repeatable; non-functioning URI should go in $h.",
       "$u": {"addProperty": "uri"},
+      "NOTE:$v": "$v - Hours access method available (R)",
+      "NOTE:$w": "$w - Record control number (R)",
       "$x": {"addProperty": "cataloguersNote"},
       "$y": {"addProperty": "marc:linkText"},
       "$z": {"addProperty": "marc:publicNote"},
@@ -20151,6 +20732,36 @@
               }
             ]
           }}
+        },
+        {
+          "name": "TODO baseline: i2=3 currently falls back to default electronicLocator mapping",
+          "source": {"856": {"ind1": "4", "ind2": "3", "subfields": [{"u": "http://example.com/component-part"}]}},
+          "normalized": {"856": {"ind1": "4", "ind2": " ", "subfields": [{"u": "http://example.com/component-part"}]}},
+          "result": {"mainEntity": {
+            "electronicLocator": [{"@type": "Document", "uri": ["http://example.com/component-part"]}]
+          }}
+        },
+        {
+          "name": "TODO baseline: i2=4 currently falls back to default electronicLocator mapping",
+          "source": {"856": {"ind1": "4", "ind2": "4", "subfields": [{"u": "http://example.com/component-version"}]}},
+          "normalized": {"856": {"ind1": "4", "ind2": " ", "subfields": [{"u": "http://example.com/component-version"}]}},
+          "result": {"mainEntity": {
+            "electronicLocator": [{"@type": "Document", "uri": ["http://example.com/component-version"]}]
+          }}
+        },
+        {
+          "name": "TODO baseline: $7 currently remains unhandled and is preserved in _marcUncompleted",
+          "source": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/open-access.pdf"}, {"7": "0"}]}},
+          "normalized": {"856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/open-access.pdf"}]}},
+          "result": {
+            "mainEntity": {
+              "associatedMedia": [{"@type": "MediaObject", "uri": ["http://example.com/open-access.pdf"]}]
+            },
+            "_marcUncompleted": [{
+              "856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.com/open-access.pdf"}, {"7": "0"}]},
+              "_unhandled": ["7"]
+            }]
+          }
         }
       ]
     },
@@ -20333,7 +20944,7 @@
     },
 
     "976": {
-      "Note:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
+      "NOTE:local": "Librisdefinierat fält. Fältet är avsett för maskinell uppdatering och förekommer normalt endast i äldre poster konverterade från ett ursprungligt LIBRISIII-format, respektive i de MTM-poster som maskinellt har lästs in från Bibliotekstjänst.",
       "aboutEntity": "?thing",
       "addLink": "marc:hasBib976",
       "resourceType": "marc:Bib976",

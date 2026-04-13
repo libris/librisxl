@@ -29,6 +29,7 @@ class TestData {
                 'p12'             : ['p12'] as Set,
                 'p13'             : ['p13'] as Set,
                 'p14'             : ['p14'] as Set,
+                'p15'             : ['p15'] as Set,
                 'ctx.p'           : ['ctxProp'] as Set,
                 'type'            : ['rdf:type'] as Set,
                 'rdf:type'        : ['rdf:type'] as Set,
@@ -42,7 +43,8 @@ class TestData {
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
                 'nonecategory'    : ['librissearch:noneCategory'] as Set,
                 'p3p1'            : ['p3p1'] as Set,
-                'bibliography'    : ['bibliography'] as Set
+                'bibliography'    : ['bibliography'] as Set,
+                'meta'            : ['meta'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -173,6 +175,10 @@ class TestData {
                         'domain': ['@id': 'T4']
                 ],
                 [
+                        '@id'  : 'p15',
+                        '@type': 'ObjectProperty'
+                ],
+                [
                         '@id'  : 'ctxProp',
                         '@type': 'DatatypeProperty',
                         'domain': ['@id': 'T4']
@@ -262,7 +268,8 @@ class TestData {
         def ctx = [
                 '@context': [
                         '@vocab': 'https://id.kb.se/vocab/',
-                        'p2'    : ['@type': '@vocab']
+                        'p2'    : ['@type': '@vocab'],
+                        'p4'    : ['@container': '@set']
                 ]
         ]
         return new JsonLd(ctx, [:], vocab)
@@ -271,10 +278,19 @@ class TestData {
     static def getEsMappings() {
         def mappings = [
                 'properties': [
-                        'p3'                    : ['type': 'nested'],
-                        '@reverse.instanceOf.p3': ['type': 'nested']
+                        'p3'                                : ['type': 'nested'],
+                        '@reverse.instanceOf.p3'            : ['type': 'nested'],
+                        'p15'                               : ['type': 'nested', "include_in_parent": true],
+                        '@type'                             : ['type': 'keyword'],
+                        'p2'                                : ['type': 'keyword'],
+                        'p3.p4.@id'                         : ['type': 'keyword'],
+                        '_categoryByCollection.find.@id'    : ['type': 'keyword'],
+                        '_categoryByCollection.identify.@id': ['type': 'keyword'],
+                        '_categoryByCollection.@none.@id'   : ['type': 'keyword'],
+                        '@reverse.instanceOf.category.@id'  : ['type': 'keyword']
                 ]
         ]
-        return new EsMappings(mappings)
+        // TODO
+        return new EsMappings(List.of(mappings))
     }
 }

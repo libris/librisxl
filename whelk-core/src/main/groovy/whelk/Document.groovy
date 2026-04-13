@@ -2,6 +2,7 @@ package whelk
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
+import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
 import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
@@ -14,6 +15,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Predicate
 
+import static whelk.JsonLd.TYPE_KEY
 import static whelk.util.Jackson.mapper
 
 /**
@@ -54,6 +56,7 @@ class Document {
     static final List recordPath = ["@graph", 0]
     static final List recordIdPath = ["@graph", 0, "@id"]
     static final List workIdPath = ["@graph", 1, "instanceOf", "@id"]
+    static final List workTypePath = ["@graph", 1, "instanceOf", "@type"]
     static final List thingMetaPath = ["@graph", 1, "meta", "@id"]
     static final List recordSameAsPath = ["@graph", 0, "sameAs"]
     static final List recordTypedIDsPath = ["@graph", 0, "identifiedBy"]
@@ -929,6 +932,22 @@ class Document {
         return getRecordIdentifiers().first().endsWith("#work-record")
     }
 
+    // FIXME
+    // All these "virtual record" methods are hardcoded for blank Works
+    String singleThingTypeOrVirtualThingType() {
+        var types = isVirtual()
+            ? _get(workTypePath, data)
+            : _get(thingTypePath, data)
+
+        if (types instanceof String) {
+            return (String) types
+        }
+        else if (types instanceof List) {
+            return (String) ((List) types).getFirst()
+        }
+        throw new WhelkRuntimeException("Unexpected ${TYPE_KEY}: ${types}")
+    }
+
     // All these "virtual record" methods are hardcoded for blank Works
     void centerOnVirtualMainEntity() {
         if (!isVirtual()) {
@@ -955,7 +974,7 @@ class Document {
 
         // TODO...
         if (!work['hasTitle']) {
-            work['hasTitle'] = (instance['hasTitle'] ?: []).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
+            work['hasTitle'] = JsonLd.asList(instance['hasTitle']).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
         }
 
         set(["@graph", 1], work)

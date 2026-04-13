@@ -7,7 +7,7 @@
                     "limit": 100000
                 }
             },
-            "number_of_shards": 15,
+            "number_of_shards": 5,
             "number_of_replicas": 2,
             "similarity": {
                 "bm25-ignore-length": {
@@ -261,14 +261,6 @@
                             "keyword": {
                                 "type": "keyword",
                                 "normalizer": "custom_case_insensitive"
-                            },
-                            "trigram": {
-                                "type": "text",
-                                "analyzer": "trigram"
-                            },
-                            "reverse": {
-                                "type": "text",
-                                "analyzer": "reverse"
                             }
                         }
                     },
@@ -328,6 +320,16 @@
                 }
             },
             {
+                "control_number_template": {
+                    "mapping": {
+                        "index": true,
+                        "type": "keyword"
+                    },
+                    "match": "controlNumber",
+                    "match_mapping_type": "string"
+                }
+            },
+            {
                 "date_template": {
                     "match": ["created", "modified", "generationDate"],
                     "mapping": {
@@ -372,7 +374,7 @@
             },
             {
                 "year_template": {
-                    "match": ["year", "startYear", "endYear"],
+                    "match": ["year", "startYear", "endYear", "librissearch:year"],
                     "mapping": {
                         "fields": {
                             "keyword": {
@@ -476,8 +478,34 @@
                 }
             },
             {
+                "chipStr-spell-and-ignore-length_template": {
+                    "match": "_chipStr",
+                    "mapping": {
+                        "fields": {
+                            "exact": {
+                                "type": "text",
+                                "analyzer": "standard",
+                                "similarity": "bm25-only-idf-ignore-tf"
+                            },
+                            "trigram": {
+                                "type": "text",
+                                "analyzer": "trigram"
+                            },
+                            "reverse": {
+                                "type": "text",
+                                "analyzer": "reverse"
+                            }
+                        },
+                        "analyzer": "softmatcher",
+                        "similarity": "bm25-only-idf-ignore-tf",
+                        "type": "text",
+                        "index": true
+                    }
+                }
+            },
+            {
                 "str-ignore-length_template": {
-                    "match": ["_chipStr", "_cardStr", "_searchCardStr"],
+                    "match": ["_cardStr", "_searchCardStr"],
                     "mapping": {
                         "fields": {
                             "exact": {
@@ -498,6 +526,15 @@
                     "match_mapping_type": "string",
                     "mapping": {
                         "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "lang_container_template": {
+                    "match": "*ByLang",
+                    "mapping": {
+                        "type": "object",
+                        "enabled": false
                     }
                 }
             }

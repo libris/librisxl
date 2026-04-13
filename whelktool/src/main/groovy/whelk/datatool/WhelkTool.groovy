@@ -533,7 +533,35 @@ class WhelkTool {
                     }
                     counter.countModified()
                 } else {
-                    assert allowLoud: "To save *new* records, loud changes need to be explicitly allowed. These cannot be silent - there is no old modified-time to preserve."
+                    assert allowLoud: """ *
+ * To save *new* records, loud changes need to be explicitly allowed. These cannot be silent - there is no old modified-time to preserve.
+ *
+ *      So! You want to create new records with you script, huh? Good for you! Now before you just add that pesky --allow-loud and
+ *      charge ahead, CAREFULLY consider the following, and BE SURE you UNDERSTAND THE RISKS here: 
+ *
+ *      1. When you create a record, that will not *in and of itself* cause any MARC to be exported (even though it's "loud")
+ *      2. Linking to a record in a silent script (without --allow-loud) also will not *in and of itself* cause exports.
+ *
+ *      So you're OK, right?
+ *      NO! YOU ARE NOT OK!
+ *
+ *      Because doing the above 1 AND 2, on the same day. absolutely WILL cause exports, that are potentially
+ *      enormous if the tree of things that ends up linking your new thing is large.
+ *
+ *      What happens is this:
+ *      1. You create a new record loud (fine no exports yet, (unless you created a holding record)).
+ *      2. You run through a bunch of other records, and link to your new thing (you think you're ok, because you didn't do *this* loud)
+ *      3. The batch export runs the following night and sees: Oh! Hey! There's a record here that's been modified (creation is a modification)
+ *         since yesterday! Gotta go export anything affected by it! Oh what do you know? There's a bunch of things linked to it, that I need
+ *         to export (and now you're in trouble).
+ *
+ *      This is why you're asked to --allow-loud when creating new records. It's not for fun. It's because there's a risk in doing so,
+ *      that you need to be aware of.
+ *      The easiest and safest way to get around this problem is to create your new records first (separately!) and then wait until all exports
+ *      have already passed that creation time, before you link anything to your new record. Since batch exports are the slowest form of exports
+ *      and these run nightly, the time you need to wait is; at least 24 hours.  
+ *
+"""
                     doSaveNew(item)
                     counter.countNewSaved()
                 }
@@ -781,7 +809,7 @@ class WhelkTool {
         if (whelk.elastic) {
             log "  ElasticSearch:"
             log "    hosts:   ${whelk.elastic.elasticHosts}"
-            log "    index:   ${whelk.elastic.defaultIndex}"
+            log "    index:   ${whelk.elastic.mainIndex}"
         }
         log "Using script: $script"
         log "Using report dir: $reportsDir"

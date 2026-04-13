@@ -10,6 +10,8 @@ import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
+import java.util.function.Function
+
 import static whelk.component.ElasticSearch.flattenedLangMapKey
 import static whelk.util.Jackson.mapper
 import static whelk.util.Unicode.stripPrefix
@@ -49,8 +51,8 @@ class ESQuery {
     private static final String FILTERED_AGG_NAME = 'a'
     private static final String NESTED_AGG_NAME = 'n'
 
-    private static final String SPELL_CHECK_FIELD = '_sortKeyByLang.sv.trigram'
-    private static final String SPELL_CHECK_FIELD_REVERSE = '_sortKeyByLang.sv.reverse'
+    private static final String SPELL_CHECK_FIELD = '_chipStr.trigram'
+    private static final String SPELL_CHECK_FIELD_REVERSE = '_chipStr.reverse'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
@@ -86,15 +88,17 @@ class ESQuery {
 
     void initFieldMappings(Whelk whelk) {
         if (whelk.elastic) {
-            Map mappings = whelk.elastic.getMappings()
-            this.keywordFields = getKeywordFields(mappings)
-            this.fourDigitShortFields = getFourDigitShortFields(mappings)
-            this.fourDigitKeywordFields = getFourDigitKeywordFields(mappings)
-            this.dateFields = getFieldsOfType('date', mappings)
-            this.nestedFields = getFieldsOfType('nested', mappings)
-            this.nestedNotInParentFields = nestedFields - getFieldsWithSetting('include_in_parent', true, mappings)
+            var allMappings = whelk.elastic.getAllMappings()
+            var union = (Function<Map, Set> f) -> (Set) allMappings.collect{f(it)}.sum()
+            this.keywordFields = union{ Map m -> getKeywordFields(m) }
+            this.fourDigitShortFields = union{ Map m -> getFourDigitShortFields(m) }
+            this.fourDigitKeywordFields = union{ Map m -> getFourDigitKeywordFields(m) }
+            this.dateFields = union{ Map m -> getFieldsOfType('date', m) }
+            this.nestedFields = union{ Map m -> getFieldsOfType('nested', m) }
+            var includeInParent = union{ Map m -> getFieldsWithSetting('include_in_parent', true, m) }
+            this.nestedNotInParentFields = nestedFields - includeInParent
 
-            if (DocumentUtil.getAtPath(mappings, ['properties', '_sortKeyByLang', 'properties', 'sv', 'fields', 'trigram'], null)) {
+            if (allMappings.any {DocumentUtil.getAtPath(it, ['properties', '_sortKeyByLang', 'properties', 'sv', 'fields', 'trigram'], null) }) {
                 ENABLE_SPELL_CHECK = true
             }
             log.info("ENABLE_SPELL_CHECK = ${ENABLE_SPELL_CHECK}")

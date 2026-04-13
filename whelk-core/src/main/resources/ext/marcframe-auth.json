@@ -222,7 +222,23 @@
 
   "003": {"ignored": true, "NOTE:local": "FÖREKOMMER EJ I LIBRIS AUKTORITETSFORMAT"},
 
-  "005": {"inherit": "bib"},
+  "005": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {"005": "20130814170612.0"},
+        "result": {
+          "@type": "Record",
+          "modified": "2013-08-14T17:06:12.0+02:00",
+          "mainEntity": {}
+        },
+        "addOnRevert": {
+          "mainEntity": {"@type": "Identity"}
+        }
+      }
+    ]
+  },
 
   "008": {
     "[0:6]": {
@@ -560,7 +576,28 @@
 
   "010": {
     "inherit": "bib",
-    "NOTE:local": "ANVÄNDS NORMALT EJ"
+    "NOTE:local": "ANVÄNDS NORMALT EJ",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "010": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "a 54009564"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "identifiedBy": [
+              {
+                "@type": "LCCN",
+                "value": "a 54009564"
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "014": {
     "NOTE:LC": "014 - Link to Bibliographic Record for Serial or Multipart Item (R) - nac",
@@ -579,7 +616,30 @@
     "ignored": true,
     "NOTE:record-count": 0
   },
-  "022": {"inherit": "bib"},
+  "022": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "022": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "0345-0856"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "identifiedBy": [
+              {
+                "@type": "ISSN",
+                "value": "0345-0856"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
   "024": {
     "include": ["identifier"],
     "match": [
@@ -706,7 +766,34 @@
     "ignored": true,
     "NOTE:record-count": 0
   },
-  "035": {"inherit": "bib", "$6": null, "$8": null},
+  "035": {
+    "inherit": "bib",
+    "$6": null,
+    "$8": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "035": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "(OCoLC)123"}
+          ]}
+        },
+        "result": {
+          "identifiedBy": [
+            {
+              "@type": "SystemNumber",
+              "value": "(OCoLC)123"
+            }
+          ]
+        },
+        "addOnRevert": {
+          "mainEntity": {
+            "@type": "Identity"
+          }
+        }
+      }
+    ]
+  },
   "040": {
     "inherit": "bib",
     "TODO": "if no $f, drop entire record (or mark as obsolete)",
@@ -821,7 +908,26 @@
   },
   "045" : {
     "inherit": "bib",
-    "aboutEntity": "?thing"
+    "aboutEntity": "?thing",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "045": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "1998"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "marc:hasTimePeriodOfContent": {
+              "@type": "marc:TimePeriodOfContent",
+              "marc:timePeriodCode": ["1998"]
+            }
+          }
+        }
+      }
+    ]
   },
 
   "046" : {
@@ -833,7 +939,55 @@
       "$s": {"property": "activityStartDate"},
       "$t": {"property": "activityEndDate"},
       "$2": {"property": "marc:sourceOfDateScheme"},
-      "TODO:edtf": "?"
+      "TODO:edtf": "?",
+      "_spec": [
+        {
+          "name": "person birth/death dates, no source scheme",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"f": "1910-02-14"},
+              {"g": "1983-06-03"}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "@type": "Identity",
+            "birthDate": "1910-02-14",
+            "deathDate": "1983-06-03"
+          }}
+        },
+        {
+          "name": "establishment and termination dates with source scheme edtf",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"q": "1957"},
+              {"r": "1999"},
+              {"2": "edtf"}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "@type": "Identity",
+            "establishDate": "1957",
+            "terminateDate": "1999",
+            "marc:sourceOfDateScheme": "edtf"
+          }}
+        },
+        {
+          "name": "activity period dates with source scheme iso8601",
+          "source": {
+            "046": {"ind1": " ", "ind2": " ", "subfields": [
+              {"s": "1980"},
+              {"t": "1989"},
+              {"2": "iso8601"}
+            ]}
+          },
+          "result": {"mainEntity": {
+            "@type": "Identity",
+            "activityStartDate": "1980",
+            "activityEndDate": "1989",
+            "marc:sourceOfDateScheme": "iso8601"
+          }}
+        }
+      ]
   },
   "050": {
     "NOTE:LC": "050 - Library of Congress Call Number (R)",
@@ -937,7 +1091,31 @@
   "082" : {
     "NOTE:local": "ANVÄNDS NORMALT EJ",
     "inherit": "bib",
-    "aboutEntity": "?thing"
+    "aboutEntity": "?thing",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "082": {"ind1": "0", "ind2": "4", "subfields": [
+            {"a": "158.1"},
+            {"2": "23"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "classification": [
+              {
+                "@type": "ClassificationDdc",
+                "code": "158.1",
+                "editionEnumeration": "23",
+                "edition": "full"
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "083" : {
     "aboutEntity": "?thing",
@@ -2098,7 +2276,24 @@
     "$a": {"addProperty": "label"},
     "$0": {"addProperty": "marc:recordControlNumber"},
     "$1": {"ignored": true, "NOTE:LC": "nac"},
-    "$2": {"property": "marc:sourceOfTerm"}
+    "$2": {"property": "marc:sourceOfTerm"},
+     "_spec": [     {
+        "name": "genreForm unlinked",
+        "source": [
+          {"380": {"ind1": " ", "ind2": " ", "subfields": [{"a": "CD-böcker"}]}}
+        ],
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "genreForm" : [ {
+              "@type" : "GenreForm",
+              "label" : [ "CD-böcker" ]
+            }
+           ]
+          }
+        }
+      }
+    ]
   },
   "381": {
     "NOTE:LC": "381 - Other Distinguishing Characteristics of Work or Expression (R)",
@@ -4342,8 +4537,28 @@
   "680": {
     "addLink": "hasNote",
     "resourceType": "Note",
+    "NOTE:local": "Allmän offentlig anmärkning",
     "$a": {"addProperty": "marc:headingOrSubdivisionTerm"},
-    "$i": {"addProperty": "scopeNote"}
+    "$i": {"addProperty": "scopeNote"},
+    "_spec": [
+      {
+        "name": "maps heading/subdivision term and scope note",
+        "source": {
+          "680": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Ska ej förväxlas"},
+            {"i": "Anmärkning"}
+          ]}
+        },
+        "result": {"mainEntity": {
+          "@type": "Identity",
+          "hasNote": [ {
+            "@type": "Note",
+            "marc:headingOrSubdivisionTerm": [ "Ska ej förväxlas" ],
+            "scopeNote": [ "Anmärkning" ]
+          } ]
+        }}
+      }
+    ]
   },
   "681": {
     "NOTE:LC": "681 - Subject Example Tracing Note (R)",
@@ -4356,7 +4571,21 @@
     "NOTE:record-count": 0
   },
   "688": {
-    "$a": {"addProperty": "historyNote"}
+    "$a": {"addProperty": "historyNote"},
+    "_spec": [
+      {
+        "name": "history note text",
+        "source": {
+          "688": {"ind1": " ", "ind2": " ", "subfields": [
+            {"a": "Tidigare term. Ändrad 2026-01-01."}
+          ]}
+        },
+        "result": {"mainEntity": {
+          "@type": "Identity",
+          "historyNote": [ "Tidigare term. Ändrad 2026-01-01." ]
+        }}
+      }
+    ]
   },
 
   "700": {
@@ -4552,7 +4781,30 @@
     "$2": {"property": "marc:sourceOfHeadingOrTerm"},
     "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
     "$4": {"addProperty": "marc:relatorCode"},
-    "$0": {"addProperty": "marc:recordControlNumber"}
+    "$0": {"addProperty": "marc:recordControlNumber"},
+    "_spec": [
+      {
+        "source": {
+          "751": {
+            "ind1": " ", "ind2": "0",
+            "subfields": [{"a": "Stockholm (Sweden)"}, {"0": "(DLC)sh 000"}]
+          }
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "marc:hasAddedEntryGeographicName": [
+              {
+                "@type": "marc:AddedEntryGeographicName",
+                "marc:thesaurus": "marc:LibraryOfCongressSubjectHeadingsNameAuthorityFile",
+                "marc:geographicName": "Stockholm (Sweden)",
+                "marc:recordControlNumber": ["(DLC)sh 000"]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "755": {
     "include": ["subjectbaseSansUri"],
@@ -4625,6 +4877,92 @@
       {"when": "i2=1", "addLink": "describedBy"},
       {"when": "i2=2", "addLink": "relatedTo"},
       {"when": "i2=8", "addLink": "seeAlso"}
+    ],
+    "_spec": [
+      {
+        "name": "inheritance regression test (auth i2=0 describedBy)",
+        "source": {
+          "856": {"ind1": "4", "ind2": "0", "subfields": [
+            {"u": "http://example.com/Resource"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "describedBy": [
+              {
+                "@type": "Document",
+                "uri": ["http://example.com/Resource"]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "inheritance overide regression test (auth i2=1 describedBy) NOTE:reverts to ind2=0",
+        "source": {
+          "856": {"ind1": "4", "ind2": "1", "subfields": [
+            {"u": "http://example.com/VersionOfResource"},
+            {"z": "Fritt tillgänglig"}
+          ]}
+        },
+        "normalized": {
+          "856": {"ind1": "4", "ind2": "0", "subfields": [
+            {"u": "http://example.com/VersionOfResource"},
+            {"z": "Fritt tillgänglig"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "describedBy": [
+              {
+                "@type": "Document",
+                "marc:publicNote" : [ "Fritt tillgänglig" ],
+                "uri": ["http://example.com/VersionOfResource"]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "inheritance override regression test (auth i2=2 relatedTo)",
+        "source": {
+          "856": {"ind1": "4", "ind2": "2", "subfields": [
+            {"u": "http://example.org/RelatedResource"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "relatedTo": [
+              {
+                "@type": "Document",
+                "uri": ["http://example.org/RelatedResource"]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "inheritance override regression test (auth i2=8 seeAlso)",
+        "source": {
+          "856": {"ind1": "4", "ind2": "8", "subfields": [
+            {"u": "http://example.net/NoDisplayConstant"}
+          ]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Identity",
+            "seeAlso": [
+              {
+                "@type": "Document",
+                "uri": ["http://example.net/NoDisplayConstant"]
+              }
+            ]
+          }
+        }
+      }
     ]
   },
   "880": {

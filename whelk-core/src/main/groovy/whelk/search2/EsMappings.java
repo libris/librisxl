@@ -7,37 +7,44 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static whelk.util.DocumentUtil.NOP;
 
 public class EsMappings {
-    private final Set<String> keywordFields;
+    private final Set<String> keywordSubfieldFields;
+
     private final Set<String> fourDigitsKeywordFields;
     private final Set<String> fourDigitsShortFields;
+
+    private final Set<String> keywordTypeFields;
     private final Set<String> dateTypeFields;
     private final Set<String> nestedTypeFields;
     private final Set<String> longTypeFields;
+
     private final Set<String> nestedNotInParentFields;
 
     public static String KEYWORD = "keyword";
     public static String FOUR_DIGITS_KEYWORD_SUFFIX = "_4_digits_keyword";
     public static String FOUR_DIGITS_SHORT_SUFFIX = "_4_digits_short";
 
-    public EsMappings(Map<?, ?> mappings) {
-        this.keywordFields = getKeywordFields(mappings);
-        this.fourDigitsKeywordFields = getFourDigitsKeywordFields(mappings);
-        this.fourDigitsShortFields = getFourDigitsShortFields(mappings);
-        this.dateTypeFields = getFieldsOfType("date", mappings);
-        this.nestedTypeFields = getFieldsOfType("nested", mappings);
-        this.longTypeFields = getFieldsOfType("long", mappings);
+    public EsMappings(List<Map<?, ?>> mappings) {
+        this.keywordSubfieldFields = union(mappings, EsMappings::getKeywordSubfieldFields);
+        this.fourDigitsKeywordFields = union(mappings, EsMappings::getFourDigitsKeywordFields);
+        this.fourDigitsShortFields = union(mappings, EsMappings::getFourDigitsShortFields);
+        this.keywordTypeFields = union(mappings, m -> getFieldsOfType("keyword", m));
+        this.dateTypeFields = union(mappings, m -> getFieldsOfType("date", m));
+        this.nestedTypeFields = union(mappings, m -> getFieldsOfType("nested", m));
+        this.longTypeFields = union(mappings, m -> getFieldsOfType("long", m));
         this.nestedNotInParentFields = new HashSet<>(nestedTypeFields);
-        this.nestedNotInParentFields.removeAll(getFieldsWithSetting("include_in_parent", true, mappings));
+        var includeInParent = union(mappings, m -> getFieldsWithSetting("include_in_parent", true, m));
+        this.nestedNotInParentFields.removeAll(includeInParent);
     }
 
     public boolean hasKeywordSubfield(String fieldPath) {
-        return keywordFields.contains(fieldPath);
+        return keywordSubfieldFields.contains(fieldPath);
     }
 
     public boolean hasFourDigitsKeywordField(String fieldPath) {
@@ -60,8 +67,23 @@ public class EsMappings {
         return longTypeFields.contains(fieldPath);
     }
 
+    public boolean isKeywordTypeField(String fieldPath) {
+        return keywordTypeFields.contains(fieldPath);
+    }
+
     public boolean isNestedNotInParentField(String fieldPath) {
         return nestedNotInParentFields.contains(fieldPath);
+    }
+
+    public boolean isAggregatable(String fieldPath) {
+        // Simple check based on current mappings.
+        // Doesn't consider
+        // - text fields with `"fielddata": true` (aggregatable)
+        // - fields with "doc_values": false` (not aggregatable)
+        // This is fine since the current index settings do not use these options.
+        return keywordTypeFields.contains(fieldPath)
+                || dateTypeFields.contains(fieldPath)
+                || longTypeFields.contains(fieldPath);
     }
 
     public Set<String> getNestedTypeFields() {
@@ -76,7 +98,7 @@ public class EsMappings {
         return getFieldsWithSuffix(mappings, FOUR_DIGITS_SHORT_SUFFIX);
     }
 
-    private static Set<String> getKeywordFields(Map<?, ?> mappings) {
+    private static Set<String> getKeywordSubfieldFields(Map<?, ?> mappings) {
         return getFieldsWithSetting("fields", v -> v instanceof Map<?, ?> m && m.containsKey(KEYWORD), mappings);
     }
 
@@ -111,4 +133,11 @@ public class EsMappings {
         DocumentUtil.traverse(mappings.get("properties"), visitor);
         return fields;
     }
+
+    private static <T, U> Set<U> union (List<T> mappings, Function<T, Set<U>> f) {
+        return mappings.stream()
+                .map(f)
+                .reduce(new HashSet<>(), (a,b) -> {a.addAll(b); return a;});
+    }
+
 }

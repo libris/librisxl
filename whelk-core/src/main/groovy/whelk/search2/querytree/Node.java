@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -16,7 +17,7 @@ public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Grou
 
     ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes);
 
-    Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink);
+    Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink);
 
     String toQueryString(boolean topLevel);
 

@@ -104,6 +104,7 @@ class JsonLd {
         public static final String EQUIVALENT_CLASS = "equivalentClass"
         public static final String EQUIVALENT_PROPERTY = "equivalentProperty"
         public static final String SAME_AS = "sameAs"
+        public static final String DEPRECATED = "deprecated"
     }
 
     static final class Rdfs {
@@ -742,6 +743,12 @@ class JsonLd {
         return superTermOf
     }
 
+    /**
+     *
+     * @param type
+     * @param baseType
+     * @return true if types is a subclass of baseType OR type == baseType
+     */
     boolean isSubClassOf(String type, String baseType) {
         if (!type) {
             return false
@@ -783,6 +790,10 @@ class JsonLd {
 
     boolean isCategoryPending(String property) {
         getCategoryMembers(Category.PENDING).contains(property)
+    }
+
+    boolean isDeprecated(String term) {
+        return vocabIndex[term]?[Owl.DEPRECATED];
     }
 
     /**
@@ -1167,7 +1178,7 @@ class JsonLd {
         }
     }
 
-    private static Object retainLinks(Object o, Set<String> preserveLinks) {
+    static Object retainLinks(Object o, Collection<String> preserveLinks) {
         if (o instanceof Map) {
             if (preserveLinks.contains(o.get(ID_KEY))) {
                 return o.subMap([ID_KEY])

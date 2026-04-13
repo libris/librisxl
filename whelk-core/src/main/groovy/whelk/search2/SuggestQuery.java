@@ -2,9 +2,22 @@ package whelk.search2;
 
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.*;
+import whelk.search2.querytree.And;
+import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.EsQuery;
+import whelk.search2.querytree.EsQueryTree;
+import whelk.search2.querytree.FreeText;
+import whelk.search2.querytree.Link;
+import whelk.search2.querytree.Node;
+import whelk.search2.querytree.Or;
+import whelk.search2.querytree.Property;
+import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.QueryTreeBuilder;
+import whelk.search2.querytree.Selector;
+import whelk.search2.querytree.Token;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,19 +29,23 @@ import java.util.stream.Stream;
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.asList;
+import static whelk.search2.Operator.EQUALS;
+import static whelk.search2.Operator.LIKE;
 import static whelk.search2.QueryUtil.parenthesize;
 
 public class SuggestQuery extends Query {
     // TODO: Don't hardcode
-    private static final List<String> defaultBaseTypes = List.of("Agent", "Concept", "Language", "Work");
+    private static final List<String> defaultBaseTypes = List.of("Agent", "Concept", "Language", "Work", "bibdb:Organization");
 
     private static final Map<String, List<String>> suggestPredicatesForType = new LinkedHashMap<>() {{
         put("Bibliography", List.of("bibliography"));
         put("Library", List.of("itemHeldBy"));
+        put("bibdb:Organization", List.of("itemHeldByOrg"));
         put("Subject", List.of("subject"));
-        put("GenreForm", List.of("category"));
         put("Language", List.of("language", "originalLanguage"));
         put("BibliographicAgent", List.of("contributor", "subject"));
+        put("WorkCategory", List.of("category"));
+        put("InstanceCategory", List.of("hasInstanceCategory"));
     }};
 
     private record Edited(Node node, Token token) {
@@ -61,7 +78,8 @@ public class SuggestQuery extends Query {
                             .map(selector -> {
                                 String formattedLink = new Link((String) item.get(ID_KEY)).queryForm();
                                 Link placeholderLink = new Link("http://PLACEHOLDER_LINK");
-                                Condition placeholderNode = new Condition(selector, Operator.EQUALS, placeholderLink);
+                                var op = selector instanceof Property p && p.isPreferLike() ? LIKE : EQUALS;
+                                Condition placeholderNode = new Condition(selector, op, placeholderLink);
                                 String template = qTree.replace(edited.node(), placeholderNode).toQueryString();
                                 int placeholderLinkStart = template.indexOf(placeholderLink.queryForm());
                                 if (placeholderLinkStart == -1) {
@@ -90,12 +108,12 @@ public class SuggestQuery extends Query {
     }
 
     @Override
-    protected Map<String, Object> doGetEsQueryDsl() {
+    protected EsQuery doGetEsQuery() {
         var queryTree = getFullQueryTree(suggestQueryTree).expand(whelk.getJsonld());
         var esQueryTree = new EsQueryTree(queryTree, esSettings);
         var queryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
         queryDsl.remove("sort");
-        return queryDsl;
+        return new EsQuery(queryDsl, Collections.emptyList());
     }
 
     private List<Selector> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {
@@ -137,12 +155,13 @@ public class SuggestQuery extends Query {
     }
 
     private QueryTree getSuggestQueryTree() throws InvalidQueryException {
-        if (edited.node() instanceof Condition c && c.operator().equals(Operator.EQUALS)) {
+        if (edited.node() instanceof Condition c && c.operator().equals(EQUALS)) {
             Selector selector = c.selector();
             String searchableTypes = selector.range().stream()
                     .filter(type -> defaultBaseTypes.stream()
                             .filter(Predicate.not("Work"::equals))
                             .anyMatch(baseType -> whelk.getJsonld().isSubClassOf(type, baseType)))
+                    .map(SuggestQuery::quotePrefixed)
                     .collect(Collectors.joining(" OR "));
 
             FreeText ft = (FreeText) c.value();
@@ -161,7 +180,8 @@ public class SuggestQuery extends Query {
             Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
             return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
         } else if (edited.node() instanceof FreeText ft && qTree.isSimpleFreeText()) {
-            String rawTypeFilter = "\"rdf:type\":" + parenthesize(String.join(" OR ", defaultBaseTypes));
+            String orJoinedTypes = defaultBaseTypes.stream().map(SuggestQuery::quotePrefixed).collect(Collectors.joining(" OR "));
+            String rawTypeFilter = "\"rdf:type\":" + parenthesize(orJoinedTypes);
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);
             return qTree.replace(ft, new Or(List.of(editedTokenAsPrefix(ft), ft)))
                     .add(typeFilter);
@@ -176,5 +196,9 @@ public class SuggestQuery extends Query {
         Token editedAsPrefix = new Token.Raw(edited.token().value() + Operator.WILDCARD);
         tokensCopy.set(editedIdx, editedAsPrefix);
         return ft.withTokens(tokensCopy);
+    }
+
+    private static String quotePrefixed(String s) {
+        return s.contains(":") ? QueryUtil.quote(s) : s;
     }
 }

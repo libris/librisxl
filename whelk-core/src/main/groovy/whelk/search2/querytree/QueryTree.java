@@ -57,7 +57,10 @@ public class QueryTree {
     }
 
     public Map<String, Object> toSearchMapping(QueryParams queryParams, String apiParam) {
-        return tree.toSearchMapping(n -> Map.of(JsonLd.ID_KEY, makeViewFindUrl(remove(n).toQueryString(), queryParams, apiParam)));
+        return tree.toSearchMapping(
+                n -> Map.of(JsonLd.ID_KEY, makeViewFindUrl(remove(n).toQueryString(), queryParams, apiParam)),
+                (n, n2) -> Map.of(JsonLd.ID_KEY, makeViewFindUrl(remove(n).add(n2).toQueryString(), queryParams, apiParam))
+        );
     }
 
     public QueryTree remove(Node node) {
@@ -195,6 +198,9 @@ public class QueryTree {
         }
         if (tree instanceof Group g) {
             return g.mapAndReinstantiate(c -> _replace(c, replace, replacement));
+        }
+        if (tree instanceof Not(Node node)) {
+            return new Not(_replace(node, replace, replacement));
         }
         return tree;
     }

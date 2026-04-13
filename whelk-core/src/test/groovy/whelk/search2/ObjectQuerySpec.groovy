@@ -32,6 +32,7 @@ class ObjectQuerySpec extends Specification {
                                         ],
                                         "p6": [
                                                 "nested": [
+                                                        "ignore_unmapped" : true,
                                                         "path" : "p3",
                                                         "query": [
                                                                 "bool": [

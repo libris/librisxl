@@ -1,6 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.component.ElasticSearch;
 import whelk.search2.QueryUtil;
 import whelk.util.Restrictions;
 
@@ -42,7 +43,9 @@ public non-sealed class Property extends PathElement {
     protected List<String> domain;
     protected List<String> range;
     protected String inverseOf;
+    protected String langAlias;
     protected boolean isVocabTerm;
+    protected boolean isLdSetContainer;
 
     protected Property superProperty;
     protected List<Restrictions.OnProperty> objectOnPropertyRestrictions;
@@ -58,7 +61,9 @@ public non-sealed class Property extends PathElement {
     public Property(String name, JsonLd jsonLd) {
         this(jsonLd.vocabIndex.get(name), jsonLd);
         this.name = name;
+        this.langAlias =(String) jsonLd.langContainerAlias.get(name);
         this.isVocabTerm = jsonLd.isVocabTerm(name);
+        this.isLdSetContainer = jsonLd.isSetContainer(name);
     }
 
     protected Property(Map<String, Object> definition, JsonLd jsonLd) {
@@ -106,6 +111,9 @@ public non-sealed class Property extends PathElement {
         if (RECORD_KEY.equals(propertyKey)) {
             return new Meta(jsonLd, queryKey);
         }
+        if ("textQuery".equals(propertyKey)) {
+            return new TextQuery(jsonLd, queryKey);
+        }
         return new Property(propertyKey, jsonLd, queryKey);
     }
 
@@ -116,7 +124,9 @@ public non-sealed class Property extends PathElement {
 
     @Override
     public String esField() {
-        return indexKey != null ? indexKey : substitutions.getOrDefault(name, name);
+        return indexKey != null
+                ? indexKey
+                : (hasLangAlias() ? ElasticSearch.flattenedLangMapKey(name) : substitutions.getOrDefault(name, name));
     }
 
     @Override
@@ -149,6 +159,11 @@ public non-sealed class Property extends PathElement {
     @Override
     public boolean isObjectProperty() {
         return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
+    }
+
+    @Override
+    public boolean isLdSetContainer() {
+        return isLdSetContainer;
     }
 
     @Override
@@ -300,10 +315,10 @@ public non-sealed class Property extends PathElement {
                 .flatMap(List::stream)
                 .collect(Collectors.toSet());
 
+        boolean isRecordProperty = this.hasDomainAdminMetadata(jsonLd);
+
         Predicate<Property> followIntegralRelation = integralProp ->
-                integralProp.range()
-                        .stream()
-                        .anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
+                isRecordProperty || integralProp.range().stream().anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
 
         List<List<Property>> altPaths = integralRelations.stream()
                 .filter(followIntegralRelation)
@@ -318,20 +333,8 @@ public non-sealed class Property extends PathElement {
                 })
                 .collect(Collectors.toList());
 
-        if (altPaths.isEmpty() || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+        if (altPaths.isEmpty() || isRecordProperty || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
             altPaths.add(List.of(this));
-        }
-
-        /*
-        FIXME:
-         Integral relations are generally not applied to records.
-         Bibliography is an exception: we need to search both meta.bibliography and hasInstance.meta.bibliography
-         */
-        if ("bibliography".equals(name)) {
-            integralRelations.stream().filter(ir -> "hasInstance".equals(ir.name()))
-                    .findFirst()
-                    .map(hasInstance -> List.of(hasInstance, this))
-                    .ifPresent(altPaths::add);
         }
 
         return altPaths.stream()
@@ -365,6 +368,15 @@ public non-sealed class Property extends PathElement {
     private boolean isPlatformTerm() {
         // FIXME: don't hardcode
         return isCategory("https://id.kb.se/vocab/platform", definition);
+    }
+
+    private boolean hasLangAlias() {
+        return langAlias != null;
+    }
+
+    public boolean isPreferLike() {
+        // FIXME: don't hardcode
+        return isCategory("https://id.kb.se/ns/librissearch/preferLike", definition);
     }
 
     private static boolean isComposite(Map<String, Object> definition) {
@@ -423,6 +435,10 @@ public non-sealed class Property extends PathElement {
         public TextQuery(JsonLd jsonLd) {
             super("textQuery", jsonLd);
         }
+
+        public TextQuery(JsonLd jsonLd, Key.RecognizedKey key) {
+            super("textQuery", jsonLd, key);
+        }
     }
 
     public static final class RdfType extends Property {
@@ -477,6 +493,11 @@ public non-sealed class Property extends PathElement {
         @Override
         public boolean isRestrictedSubProperty() {
             return true;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return super.equals(obj) || superProperty.equals(obj);
         }
     }
 
@@ -563,7 +584,7 @@ public non-sealed class Property extends PathElement {
         private List<Selector> getComponents(JsonLd jsonLd) {
             List<Selector> components = new ArrayList<>();
 
-            ((List<?>) definition.get(PROPERTY_CHAIN_AXIOM))
+            ((List<?>) definition.getOrDefault(PROPERTY_CHAIN_AXIOM, List.of()))
                     .stream()
                     .filter(Map.class::isInstance)
                     .filter(l -> ((Map<?,?>) l).containsKey(JsonLd.LIST_KEY) )

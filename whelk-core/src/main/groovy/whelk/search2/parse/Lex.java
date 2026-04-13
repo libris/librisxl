@@ -25,6 +25,9 @@ public class Lex {
     }
 
     public record Symbol(TokenName name, String value, int offset) {
+        public boolean isQuoted() {
+            return TokenName.QUOTED_STRING.equals(name);
+        }
     }
 
     public static LinkedList<Symbol> lexQuery(String queryString) throws InvalidQueryException {
@@ -45,7 +48,7 @@ public class Lex {
         }
     }
 
-    private static final List<Character> reservedCharsInString = Arrays.asList('<', '>', '=', '(', ')', ':');
+    private static final List<Character> reservedCharsInString = Arrays.asList('<', '>', '=', '(', ')', ':', '~');
 
     private static Symbol getNextSymbol(StringBuilder query, MutableInteger offset) throws InvalidQueryException {
         consumeWhiteSpace(query, offset);

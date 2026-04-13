@@ -38,9 +38,7 @@ public class Ast {
     }
 
     public static Node buildFrom(Parse.OrComb orComb) throws InvalidQueryException {
-        Node ast = reduce(orComb);
-        Analysis.checkSemantics(ast);
-        return ast;
+        return reduce(orComb);
     }
 
     private static Node reduce(Parse.OrComb orComb) throws InvalidQueryException {
@@ -117,7 +115,7 @@ public class Ast {
             }
         }
 
-        // Code equals (:/=) term
+        // Code equals (:/=/~) term
         else if (term.string1() == null &&
                 term.uop() == null &&
                 term.term() != null &&
@@ -125,7 +123,7 @@ public class Ast {
                 term.bop() == null &&
                 term.bopeq() != null &&
                 term.string2() != null) {
-            return new Code(term.string2(), Operator.EQUALS, reduce(term.term()));
+            return new Code(term.string2(), Operator.symbolMappings().get(term.bopeq().op().value()), reduce(term.term()));
         }
 
         // Code less/greater than

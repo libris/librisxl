@@ -5,6 +5,7 @@ import whelk.JsonLd;
 import whelk.search2.querytree.*;
 import whelk.util.Restrictions;
 
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -148,8 +149,8 @@ public class Disambiguate {
             }
         }
 
-        // TODO: Get valid keys from ES index?
-        if (LD_KEYS.contains(token.value()) || token.value().startsWith("_")) {
+        // TODO: Get valid keys from ES index? Add totalItemsByRelation to vocab?
+        if (LD_KEYS.contains(token.value()) || token.value().startsWith("_") || "totalItemsByRelation".equals(token.value())) {
             return new Key.RecognizedKey(token);
         }
 
@@ -161,6 +162,9 @@ public class Disambiguate {
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {
+        if (property instanceof Property.TextQuery textQuery) {
+            return Optional.of(new FreeText(textQuery, token));
+        }
         if (value.equals(Operator.WILDCARD)) {
             return Optional.of(new Any.Wildcard());
         }
@@ -169,7 +173,11 @@ public class Disambiguate {
             if (yearRange != null) {
                 return Optional.of(yearRange);
             }
-            return Optional.ofNullable(DateTime.parse(value, token));
+            try {
+                return Optional.of(DateTime.parse(value, token));
+            } catch (DateTimeParseException e) {
+                return Optional.of(token != null ? InvalidValue.forbidden(token) : InvalidValue.forbidden(value));
+            }
         }
         if (property.isType() || property.isVocabTerm()) {
             for (String ns : nsPrecedenceOrder) {

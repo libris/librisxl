@@ -205,7 +205,30 @@
     ]
   },
 
-  "001" : {"inherit": "bib"},
+  "001" : {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "fields": [
+            {"001": "0000000"},
+            {"004": "7149594"}
+          ]
+        },
+        "result": {
+          "@type": "Record",
+          "controlNumber": "0000000",
+          "mainEntity": {
+            "@type": "Item",
+            "itemOf": {
+              "@id": "http://libris.kb.se/resource/bib/7149594"
+            }
+          }
+        }
+      }
+    ]
+  },
 
   "003": {
     "ignored": true,
@@ -217,12 +240,107 @@
     "link": "itemOf", "uriTemplate": "http://libris.kb.se/resource/bib/{_}",
     "matchUriToken": "^\\d{1,14}$",
     "TODO:meta": {"property": "controlNumber"},
-    "repeatable": false
+    "repeatable": false,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "fields": [
+            {"001": "0000000"},
+            {"004": "1234567"}
+          ]
+        },
+        "result": {
+          "mainEntity": {
+            "itemOf": {
+              "@id": "http://libris.kb.se/resource/bib/1234567"
+            }
+          }
+        }
+      }
+    ]
   },
 
-  "005": {"inherit": "bib"},
+  "005": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {"005": "20130814170612.0"},
+        "result": {"modified": "2013-08-14T17:06:12.0+02:00"}
+      }
+    ]
+  },
 
-  "007": {"inherit": "bib"},
+  "007": {
+    "inherit": "bib",
+    "TODO": "Revert may omit 007 in hold when mainEntity @type collapses to Item. _spec.addOnRevert used only for test validation.",
+    "_spec": [
+      {
+        "name": "inheritance regression test (007 o| is dropped)",
+        "source": {"007": "o|"},
+          "normalized": [],
+        "result": {
+          "mainEntity": {
+            "@type": "Item"
+          }
+        }
+      },
+      {
+        "name": "inheritance regression test (video mapping)",
+        "source": {"007": "vf cb|||s"},
+        "normalized": {"007": "vf cb|||s              "},
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "carrierType": [{"@id": "https://id.kb.se/marc/VideoMaterialType-f"}],
+            "colorContent": [{"@id": "https://id.kb.se/marc/VideoColorType-c"}],
+            "videoCharacteristic": [{"@id": "https://id.kb.se/marc/VideoFormatType-b"}],
+            "soundCharacteristic": [{"@id": "https://id.kb.se/marc/MotionPicConfigurationOrVideoPlaybackType-s"}]
+          }
+        },
+        "addOnRevert": {
+          "mainEntity": {
+            "@type": ["Item", "VideoRecording"]
+          }
+        }
+      },
+      {
+        "name": "inheritance regression test (electronic remote)",
+        "source": {"007": "cr |||   |||||"},
+        "normalized": {"007": "cr |||   |||||         "},
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "carrierType": [{"@id": "https://id.kb.se/marc/ComputerMaterialType-r"}]
+          }
+        },
+        "addOnRevert": {
+          "mainEntity": {
+            "@type": ["Item", "Electronic"]
+          }
+        }
+      },
+      {
+        "name": "inheritance regression test (still image drawing)",
+        "source": {"007": "kd ao|"},
+        "normalized": {"007": "kd ao|                 "},
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "baseMaterial": [{"@id": "https://id.kb.se/marc/NonProjectedType-o"}],
+            "genreForm": [{"@id": "https://id.kb.se/marc/NonProjMaterialType-d"}],
+            "colorContent": [{"@id": "https://id.kb.se/marc/ColorType-a"}]
+          }
+        },
+        "addOnRevert": {
+          "mainEntity": {
+            "@type": ["Item", "StillImageInstance"]
+          }
+        }
+      }
+    ]
+  },
 
   "008": {
     "[0:6]": {
@@ -483,18 +601,92 @@
   },
   "016": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
   "017": {"ignored": true, "NOTE:record-count": 0, "NOTE:local": "ANVÄNDS NORMALT EJ"},
-  "020": {"inherit": "bib"},
-  "022": {"inherit": "bib"},
-  "024": {"inherit": "bib"},
+  "020": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "ISBN 020 inheritance regression test",
+        "source": {
+          "020": {"ind1": " ", "ind2": " ", "subfields": [{"a": "9781137368331 (e-book)"}]}
+        },
+        "normalized": {
+          "020": {"ind1": " ", "ind2": " ", "subfields": [{"a": "9781137368331"}, {"q": "e-book"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "identifiedBy": [
+              {"@type": "ISBN", "value": "9781137368331", "qualifier": "e-book"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "022": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "ISSN 022 inheritance regression test",
+        "source": {
+          "022": {"ind1": " ", "ind2": " ", "subfields": [{"a": "0345-0856"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "identifiedBy": [
+              {"@type": "ISSN", "value": "0345-0856"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "024": {
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "Identifer 024 inheritance regression test",
+        "source": {
+          "024": {"ind1": "2", "ind2": " ", "subfields": [{"a": "9790692006282"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "identifiedBy": [
+              {"@type": "ISMN", "value": "9790692006282"}
+            ]
+          }
+        }
+      }
+    ]
+  },
   "027": {"ignored": true, "NOTE:record-count": 0, "TODO": "inherit-bib?"},
   "030": {"ignored": true, "NOTE:record-count": 0, "TODO": "inherit-bib?"},
   "035": {
     "inherit": "bib",
     "aboutEntity": null,
+    "NOTE:record-count": 15770916,
     "NOTE:local": "Fältet förekommer normalt inte i beståndsposter, men kan användas för dubblettkontroll/länkning vid postexport till lokalt system.",
     "$6": {"property": "marc:hold035-fieldref", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
     "$8": {"addProperty": "marc:hold035-groupid", "NOTE": "Qualified with field to avoid collision when put directly on top-level resource!"},
-    "$9": null
+    "$9": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "035": {"ind1": " ", "ind2": " ", "subfields": [{"a": "(ALMA)991001091647205936"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "identifiedBy": [
+              {"@type": "SystemNumber", "value": "(ALMA)991001091647205936"}
+            ]
+          }
+        }
+      }
+    ]
   },
   "040": {"ignored": true, "NOTE:record-count": 4, "NOTE:local": "ANVÄNDS NORMALT EJ I BESTÅNDSFORMATET"}, 
   "050": {
@@ -606,12 +798,13 @@
     "inherit": "bib",
     "aboutEntity": "?thing",
     "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "resourceType": "ClassificationDdc",
     "$b": {"property": "itemPortion"},
     "$m": null,
     "$q": null,
     "_spec": [
       {
-        "name": "In contrast to bib, continue to map $b to itemPortion ",
+        "name": "ClassificationDdc. In contrast to bib, continue to map $b to itemPortion ",
         "source": {
           "082": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "808"}, {"b": ".066"}, {"2": "21"}
@@ -640,10 +833,9 @@
     "aboutEntity": "?thing",
     "NOTE:local": "LIBRIS-definierat beståndsfält.",
     "$b": {"property": "itemPortion"},
-    "TODO:_spec": [
+    "_spec": [
       {
-        "TODO": "Add ignoreOnRevert. As it is now, it collides with 082. See bug issue LXL-3287",
-        "name": "In contrast to bib, continue to map $b to itemPortion.",
+        "name": "Classification. In contrast to bib, continue to map $b to itemPortion.",
         "source": {
           "084": {"ind1": " ", "ind2": " ", "subfields": [
             {"a": "Ncba/VP"}, {"b": "Nc"}, {"2": "kssb/8"}
@@ -673,11 +865,89 @@
   "500": {
     "inherit": "bib",
     "NOTE:local": "LIBRIS-definierat beståndsfält.",
-    "onRevertPrefer": ["562", "563", "583"]
+    "TODO": "500 and 852 clashes in the reconvert",
+    "onRevertPrefer": ["562", "563", "583"],
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "500": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Lokal anmärkning"}]}
+        },
+        "normalized": [
+          {"500": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Lokal anmärkning"}]}},
+          {"852": {"ind1": " ", "ind2": " ", "subfields": [{"z": "Lokal anmärkning"}]}}
+        ],
+        "result": {
+          "mainEntity": {
+            "hasNote": [
+              {"@type": "Note", "label": "Lokal anmärkning"}
+            ]
+          }
+        }
+      }
+    ]
   },
-  "506": {"inherit": "bib", "aboutEntity": "?thing"},
-  "520": {"inherit": "bib", "aboutEntity": "?thing", "NOTE:local": "LIBRIS-definierat beståndsfält."},
-  "538": {"inherit": "bib", "$5": null},
+  "506": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "506": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Tillgänglig för personer med läsnedsättning enligt § 17 Upphovsrättslagen"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "usageAndAccessPolicy": [
+              {"@type": "UsageAndAccessPolicy", "label": "Tillgänglig för personer med läsnedsättning enligt § 17 Upphovsrättslagen"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "520": {
+    "inherit": "bib",
+    "aboutEntity": "?thing",
+    "NOTE:local": "LIBRIS-definierat beståndsfält.",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "520": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Samlingen innehåller annonsinformation och reklam"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "summary": [
+              {"@type": "Summary", "label": "Samlingen innehåller annonsinformation och reklam"}
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "538": {
+    "inherit": "bib",
+    "$5": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "538": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Systemkrav: PDF-läsare"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "marc:hasSystemDetailsNote": [
+              {
+                "@type": "marc:SystemDetailsNote",
+                "marc:systemDetailsNote": "Systemkrav: PDF-läsare"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
   "541": {
     "groupId": "?example-$seq",
     "NOTE": "groupId has created only sameAs links in the actual converted data.",
@@ -762,14 +1032,52 @@
   },
   "562": {
     "inherit": "bib",
-    "groupId": "?example-$seq"
+    "groupId": "?example-$seq",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "562": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Exemplar med anteckningar"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "marc:hasCopyAndVersionIdentificationNote": [
+              {
+                "@id": "?example-g1-1",
+                "@type": "marc:CopyAndVersionIdentificationNote",
+                "marc:itemCondition": ["Exemplar med anteckningar"]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "563": {
     "addLink": "marc:hasBindingInformation", "embedded": true, "resourceType": "marc:BindingInformationNote",
     "groupId": "?example-$seq",
     "$a": {"property": "label"},
     "$8": {"property": "marc:groupid"},
-    "repeatable": true
+    "repeatable": true,
+    "_spec": [
+      {
+        "name": "Lokal anmärkning: Bokband",
+        "source": {
+          "563": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Samtida grönt silkesband"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "marc:hasBindingInformation": [
+              {
+                "@id": "?example-g1-1",
+                "@type": "marc:BindingInformationNote",
+                "label": "Samtida grönt silkesband"
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "583": {
     "addLink": "marc:hasActionNote",
@@ -822,42 +1130,442 @@
   "600": {
     "NOTE:local": "LIBRIS-definierat beståndsfält.",
     "inherit": "bib:600",
-    "aboutEntity": null
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "600": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Doe, Jane"}, {"d": "1970-"}]}
+        },
+        "normalized": {
+          "600": {"ind1": "1", "ind2": "4", "subfields": [{"a": "Doe, Jane,"}, {"d": "1970-"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "subject": [
+              {
+                "@type": "Person",
+                "familyName": "Doe",
+                "givenName": "Jane",
+                "lifeSpan": "1970-"
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
-  "610": {"inherit": "bib:610", "aboutEntity": null},
-  "611": {"inherit": "bib:611", "aboutEntity": null},
-  "630": {"inherit": "bib:630", "aboutEntity": null},
-  "648": {"inherit": "bib:648", "aboutEntity": null},
-  "650": {"inherit": "bib:650", "aboutEntity": null},
-  "651": {"inherit": "bib:651", "aboutEntity": null},
-  "653": {"inherit": "bib:653", "aboutEntity": null},
-  "655": {"inherit": "bib:655", "aboutEntity": null},
+  "610": {
+    "inherit": "bib:610",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "610": {"ind1": "2", "ind2": " ", "subfields": [{"a": "United Nations"}]}
+        },
+        "normalized": {
+          "610": {"ind1": "2", "ind2": "4", "subfields": [{"a": "United Nations"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "subject": [
+              {
+                "@type": "Organization",
+                "name": "United Nations"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "611": {
+    "inherit": "bib:611",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "611": {"ind1": "2", "ind2": " ", "subfields": [{"a": "International Conference on Libraries"}]}
+        },
+        "normalized": {
+          "611": {"ind1": "2", "ind2": "4", "subfields": [{"a": "International Conference on Libraries"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "subject": [
+              {
+                "@type": "Meeting",
+                "name": "International Conference on Libraries"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "630": {
+    "inherit": "bib:630",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "630": {"ind1": "0", "ind2": "0", "subfields": [{"a": "Bible"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "subject": [
+              {
+                "@type": "Work",
+                "hasTitle": [
+                  {"@type": "Title", "mainTitle": "Bible"}
+                ],
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/lcsh",
+                  "@type": "ConceptScheme",
+                  "code": "lcsh"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "648": {
+    "inherit": "bib:648",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "648": {"ind1": " ", "ind2": "7", "subfields": [{"a": "2000-talet"}, {"2": "sao"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "subject": [
+              {
+                "@id": "https://id.kb.se/term/sao/2000-talet",
+                "@type": "Temporal",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/sao",
+                  "@type": "ConceptScheme",
+                  "code": "sao"
+                },
+                "prefLabel": "2000-talet"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "650": {
+    "inherit": "bib:650",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "650": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Bibliotek"}, {"2": "sao"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "subject": [
+              {
+                "@id": "https://id.kb.se/term/sao/Bibliotek",
+                "@type": "Topic",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/sao",
+                  "@type": "ConceptScheme",
+                  "code": "sao"
+                },
+                "prefLabel": "Bibliotek"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "651": {
+    "inherit": "bib:651",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "651": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Sverige"}, {"2": "sao"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "subject": [
+              {
+                "@id": "https://id.kb.se/term/sao/Sverige",
+                "@type": "Geographic",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/sao",
+                  "@type": "ConceptScheme",
+                  "code": "sao"
+                },
+                "prefLabel": "Sverige"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "653": {
+    "inherit": "bib:653",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "653": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Nyckelord"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "subject": [
+              {
+                "@type": "Topic",
+                "label": "Nyckelord"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "655": {
+    "inherit": "bib:655",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "655": {"ind1": " ", "ind2": "7", "subfields": [{"a": "Kataloger"}, {"2": "saogf"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "genreForm": [
+              {
+                "@id": "https://id.kb.se/term/saogf/Kataloger",
+                "@type": "GenreForm",
+                "inScheme": {
+                  "@id": "https://id.kb.se/term/saogf",
+                  "@type": "ConceptScheme",
+                  "code": "saogf"
+                },
+                "prefLabel": "Kataloger"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
   "698": {
     "addLink": "marc:hasLocalSubjectAndHeading",
     "resourceType": "marc:LocalSubjectAndHeading",
     "NOTE:local": "LIBRIS-definierat beståndsfält.",
     "$a": {"property": "code"},
-    "$b": {"property": "label"}
+    "$b": {"property": "label"},
+    "_spec": [
+      {
+        "name": "Lokala ämnesord - Kod",
+        "source": {
+          "698": {"ind1": " ", "ind2": " ", "subfields": [{"a": "20080911"}]}
+        },
+        "result": {
+          "mainEntity": {
+          "@type": "Item",
+          "marc:hasLocalSubjectAndHeading": [
+              {
+                "@type": "marc:LocalSubjectAndHeading",
+                "code": "20080911"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "Lokala ämnesord - Ämnesord/Rubrik",
+        "source": {
+          "698": {"ind1": " ", "ind2": " ", "subfields": [{"b": "EKONOMI"}]}
+        },
+        "result": {
+          "mainEntity": {
+          "@type": "Item",
+          "marc:hasLocalSubjectAndHeading": [
+              {
+                "@type": "marc:LocalSubjectAndHeading",
+                "label": "EKONOMI"
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
 
-  "700": {"inherit": "bib:700", "aboutEntity": null},
-  "710": {"inherit": "bib:710", "aboutEntity": null},
+  "700": {
+    "inherit": "bib:700",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test (familyName + givenName)",
+        "source": {
+          "700": {"ind1": "1", "ind2": " ", "subfields": [{"a": "Doe, John"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Person",
+                  "familyName": "Doe",
+                  "givenName": "John"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "inheritance regression test (name + role)",
+        "source": {
+          "700": {"ind1": "0", "ind2": " ", "subfields": [{"a": "Aristoteles"}, {"4": "aut"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Person",
+                  "name": "Aristoteles"
+                },
+                "role": [
+                  {
+                    "@id" : "https://id.kb.se/relator/aut",
+                    "@type": "Role",
+                    "code": "aut"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "710": {
+    "inherit": "bib:710",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "710": {"ind1": "2", "ind2": " ", "subfields": [{"a": "Kungliga biblioteket"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "contribution": [
+              {
+                "@type": "Contribution",
+                "agent": {
+                  "@type": "Organization",
+                  "name": "Kungliga biblioteket"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
   "752": {
     "inherit": "bib:752",
     "aboutEntity": null,
-    "$4": {"addProperty": "marc:relatorCode"}
+    "$4": {"addProperty": "marc:relatorCode"},
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "752": {"ind1": " ", "ind2": " ", "subfields": [{"a": "Sweden"}, {"d": "Stockholm"}, {"4": "asn"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "marc:hasAddedEntryHierarchicalPlaceName": [
+              {
+                "@type": "marc:AddedEntryHierarchicalPlaceName",
+                "marc:countryOrLargerEntity": ["Sweden"],
+                "marc:city": "Stockholm",
+                "marc:relatorCode": ["asn"]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
-  "787": {"inherit": "bib:787", "aboutEntity": null},
+  "787": {
+    "inherit": "bib:787",
+    "aboutEntity": null,
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "787": {"ind1": "0", "ind2": " ", "subfields": [{"t": "Relaterad titel"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "relatedTo": [
+              {
+                "@type": "Instance",
+                "hasTitle": [
+                  {"@type": "Title", "mainTitle": "Relaterad titel"}
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
 
   "841": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS EJ"},
   "842": {
     "NOTE:LC": "nac",
+    "NOTE:local": "Kan även anges i kodad form i Beståndspostens fält 007.",
     "addLink": "hasNote",
     "NOTE:marc-repeatable": false,
     "resourceType": "marc:TextualPhysicalFormDesignator",
     "$a": {"property": "label"},
     "$8": {"property": "marc:groupid"},
-    "repeatable": false
+    "repeatable": false,
+    "_spec": [
+      {
+        "name": "Physical description",
+        "source": {"842": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Mikrofilm"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "hasNote": [
+            {
+              "@type": "marc:TextualPhysicalFormDesignator",
+              "label": "Mikrofilm"
+            }
+          ]
+        }}
+      }
+    ]
   },
   "843": {
     "addLink": "hasNote",
@@ -869,12 +1577,44 @@
     "$c": {"addProperty": "marc:agencyResponsibleForReproduction"},
     "$d": {"property": "marc:dateOfReproduction"},
     "$e": {"property": "marc:physicalDescriptionOfReproduction"},
-    "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"}
+    "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
+    "_spec": [
+      {
+        "name": "Simple reproduction note",
+        "source": {"843": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Elektronisk reproduktion"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "hasNote": [
+            {
+              "@type": "marc:ReproductionNote",
+              "marc:typeOfReproduction": "Elektronisk reproduktion"
+            }
+          ]
+        }}
+      }
+    ]
   },
   "844": {
     "link": "marc:hasNameOfUnit",
     "resourceType": "marc:NameOfUnit",
-    "$a": {"property": "label"}
+    "$a": {"property": "label"},
+    "_spec": [
+      {
+        "name": "Named unit test :)",
+        "source": {"844": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Box 1"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasNameOfUnit": {
+            "@type": "marc:NameOfUnit",
+            "label": "Box 1"
+          }
+        }}
+      }
+    ]
   },
   "845": {
     "addLink": "hasNote",
@@ -882,7 +1622,28 @@
     "NOTE:LC": "nac",
     "$a": {"property": "marc:termsGoverningUseAndReproduction"},
     "$b": {"property": "marc:jurisdiction"},
-    "$c": {"property": "marc:authorization"}
+    "$c": {"property": "marc:authorization"},
+    "_spec": [
+      {
+        "name": "Usage terms",
+        "source": {"845": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Endast läsesal"},
+          {"b": "SE"},
+          {"c": "KB"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "hasNote": [
+            {
+              "@type": "marc:TermsGoverningUseAndReproductionNote",
+              "marc:termsGoverningUseAndReproduction": "Endast läsesal",
+              "marc:jurisdiction": "SE",
+              "marc:authorization": "KB"
+            }
+          ]
+        }}
+      }
+    ]
   },
 
   "852": {
@@ -998,8 +1759,8 @@
         }
       },
       {
-        "TODO": "a revert-only case",
-        "jsonLd": {
+        "name": "revert-only: heldBy as @id with no other data",
+        "result": {
           "mainEntity": {
             "@type": "Item",
             "copyNumber": "1",
@@ -1008,7 +1769,7 @@
             "physicalLocation": ["MAG"]
           }
         },
-        "resultMarc": {"852": {
+        "normalized": {"852": {
           "ind1": " ",
           "ind2": " ",
           "subfields": [{"b": "H"}, {"c": "MAG"}, {"j": "65.465"}, {"t": "1"}]
@@ -1072,7 +1833,25 @@
   "855": {"ignored": true, "NOTE:record-count": 35, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"},
 
   "856": {
-    "inherit": "bib"
+    "inherit": "bib",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "856": {"ind1": "4", "ind2": "0", "subfields": [{"u": "http://example.org/resource"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "associatedMedia": [
+              {
+                "@type": "MediaObject",
+                "uri": ["http://example.org/resource"]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
 
   "863": {
@@ -1092,7 +1871,29 @@
     "$z": {"addProperty": "marc:publicNote"},
     "$8": {"property": "marc:groupid"},
     "$9": {"addProperty": "marc:organizationalUnit"},
-    "repeatable": true
+    "repeatable": true,
+    "_spec": [
+      {
+        "source": {"863": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "v.1"},
+          {"p": "pt.2"},
+          {"x": "Intern notering"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasEnumerationAndChronologyBasicBibliographicUnit": [
+            {
+              "@type": "marc:EnumerationAndChronologyBasicBibliographicUnit",
+              "marc:firstLevelOfEnumeration": "v.1",
+              "marc:pieceDesignation": "pt.2",
+              "marc:cataloguersNote": [
+                "Intern notering"
+              ]
+            }
+          ]
+        }}
+      }
+    ]
   },
   "864": {"ignored": true, "NOTE:record-count": 6, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
   "865": {"ignored": true, "NOTE:record-count": 8, "NOTE:LC": "nac", "NOTE:local": "ANVÄNDS NORMALT EJ"}, 
@@ -1185,7 +1986,28 @@
     "$a": {"property": "marc:textualString"},
     "$x": {"addProperty": "marc:cataloguersNote"},
     "$z": {"addProperty": "marc:publicNote"},
-    "repeatable": true
+    "repeatable": true,
+    "_spec": [
+      {
+        "name": "Supplementary material description",
+        "source": {"867": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Bilagor: karta"},
+          {"z": "Saknas i ex. 2"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasTextualHoldingsSupplementaryMaterial": [
+            {
+              "@type": "marc:TextualHoldingsSupplementaryMaterial",
+              "marc:textualString": "Bilagor: karta",
+              "marc:publicNote": [
+                "Saknas i ex. 2"
+              ]
+            }
+          ]
+        }}
+      }
+    ]
   },
   "868": {
     "addLink": "marc:hasTextualHoldingsIndexes",
@@ -1196,7 +2018,27 @@
     "$a": {"property": "marc:textualString"},
     "$x": {"addProperty": "marc:cataloguersNote"},
     "$z": {"addProperty": "marc:publicNote"},
-    "repeatable": true
+    "repeatable": true,
+    "_spec": [
+      {
+        "source": {"868": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "Index 1999-2005"},
+          {"x": "Ofullständigt"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasTextualHoldingsIndexes": [
+            {
+              "@type": "marc:TextualHoldingsIndexes",
+              "marc:textualString": "Index 1999-2005",
+              "marc:cataloguersNote": [
+                "Ofullständigt"
+              ]
+            }
+          ]
+        }}
+      }
+    ]
   },
 
   "876": {
@@ -1218,13 +2060,60 @@
     "$z": {"addProperty": "marc:publicNote"},
     "$3": {"link": "appliesTo", "resourceType": "Resource", "property": "label"},
     "$8": {"property": "marc:groupid"},
-    "$9": {"addProperty": "marc:organizationalUnit"}
+    "$9": {"addProperty": "marc:organizationalUnit"},
+    "_spec": [
+      {
+        "source": {"876": {"ind1": " ", "ind2": " ", "subfields": [
+          {"a": "123456"},
+          {"t": "1"}
+        ]}},
+        "result": {"mainEntity": {
+          "@type": "Item",
+          "marc:hasItemInformationBasicBibliographicUnit": [
+            {
+              "@type": "marc:ItemInformationBasicBibliographicUnit",
+              "marc:internalItemNumber": "123456",
+              "marc:copyNumber": "1"
+            }
+          ]
+        }}
+      }
+    ]
   },
   "877": {
     "inherit": "876",
     "addLink": "marc:hasItemInformationSupplementaryMaterial",
     "resourceType": "marc:ItemInformationSupplementaryMaterial",
-    "NOTE:LC": "nac"
+    "NOTE:LC": "nac",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "877": {
+            "ind1": " ",
+            "ind2": " ",
+            "subfields": [
+              { "a": "B" },
+              { "b": "Default" },
+              { "c": "MDV" }
+            ]
+          }
+        },
+        "result": {
+          "mainEntity": {
+            "@type": "Item",
+            "marc:hasItemInformationSupplementaryMaterial": [
+              {
+                "@type": "marc:ItemInformationSupplementaryMaterial",
+                "marc:internalItemNumber": "B",
+                "marc:invalidOrCanceledInternalItemNumber": ["Default"],
+                "marc:cost": ["MDV"]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "878": {"ignored": true, "NOTE:record-count": 9, "NOTE:LC": "nac"},
 
@@ -1233,7 +2122,30 @@
   "884": {"ignored": true, "NOTE:record-count": 0, "NOTE:LC": "nac", "NOTE:local": "LIBRIS-definierat beståndsfält."},
   "886": {
     "inherit": "bib",
-    "NOTE:LC": "nac"
+    "NOTE:LC": "nac",
+    "_spec": [
+      {
+        "name": "inheritance regression test",
+        "source": {
+          "886": {"ind1": "2", "ind2": " ", "subfields": [{"2": "intermrc"}, {"a": "917"}, {"o": "OPL"}]}
+        },
+        "result": {
+          "mainEntity": {
+            "marc:hasForeignMARCInformationField": [
+              {
+                "@type": "marc:ForeignMARCInformationField",
+                "marc:foreignMarcSubfield-i1": "2",
+                "marc:partList": [
+                  {"marc:foreignMarcSubfield-2": "intermrc"},
+                  {"marc:foreignMarcSubfield-a": "917"},
+                  {"marc:foreignMarcSubfield-o": "OPL"}
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   "887": {"ignored": true, "NOTE:LC": "nac", "NOTE:local": "Maskinellt genererad information från LIBRIS XL till Voyager"},
 

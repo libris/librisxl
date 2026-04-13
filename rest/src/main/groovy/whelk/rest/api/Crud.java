@@ -298,9 +298,9 @@ public class Crud extends WhelkHttpServlet {
             if (siteSearch.isSearchResource(request.getHttpServletRequest().getPathInfo())) {
                 @SuppressWarnings("unchecked")
                 List<Object> items = (List<Object>) data.get("items");
-                whelk.getFresnelUtil().insertComputedLabels(items, new FresnelUtil.LangCode(request.computedLabelLocale()));
+                whelk.getFresnelUtil().insertComputedLabels(items, request.computedLabelLocale());
             } else {
-                whelk.getFresnelUtil().insertComputedLabels(data, new FresnelUtil.LangCode(request.computedLabelLocale()));
+                whelk.getFresnelUtil().insertComputedLabels(data, request.computedLabelLocale());
             }
         }
 
