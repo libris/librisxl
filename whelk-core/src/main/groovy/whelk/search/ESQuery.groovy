@@ -51,7 +51,7 @@ class ESQuery {
     private static final String FILTERED_AGG_NAME = 'a'
     private static final String NESTED_AGG_NAME = 'n'
 
-    private static final String SPELL_CHECK_FIELD = '_chipStr.trigram'
+    public static final String SPELL_CHECK_FIELD = '_chipStr.trigram'
     private static final String SPELL_CHECK_FIELD_REVERSE = '_chipStr.reverse'
 
     private static final Map recordsOverCacheRecordsBoost = [
@@ -98,7 +98,7 @@ class ESQuery {
             var includeInParent = union{ Map m -> getFieldsWithSetting('include_in_parent', true, m) }
             this.nestedNotInParentFields = nestedFields - includeInParent
 
-            if (allMappings.any {DocumentUtil.getAtPath(it, ['properties', '_sortKeyByLang', 'properties', 'sv', 'fields', 'trigram'], null) }) {
+            if (allMappings.any {DocumentUtil.getAtPath(it, SPELL_CHECK_FIELD.split('\\.') as List, null) }) {
                 ENABLE_SPELL_CHECK = true
             }
             log.info("ENABLE_SPELL_CHECK = ${ENABLE_SPELL_CHECK}")
