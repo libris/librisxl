@@ -49,6 +49,17 @@ class PropertyLoader {
             props.load(propStream)
         }
 
+        // Let system properties prefixed with "xl." override loaded properties.
+        // E.g. -Dxl.sqlMaxPoolSize=20 overrides the sqlMaxPoolSize property.
+        System.getProperties().each { k, v ->
+            if (k instanceof String && k.startsWith(SYSTEM_PROPERTY_PREFIX)) {
+                String unprefixed = k.substring(SYSTEM_PROPERTY_PREFIX.length())
+                if (!unprefixed.endsWith(PROPERTY_EXTENSION)) {
+                    props.setProperty(unprefixed, v)
+                }
+            }
+        }
+
         return props
     }
 }
