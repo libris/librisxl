@@ -12,11 +12,30 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.JsonLd.SEARCH_KEY;
+import static whelk.component.ElasticSearch.CARD_STR;
+import static whelk.component.ElasticSearch.CHIP_STR;
+import static whelk.component.ElasticSearch.SEARCH_CARD_STR;
+import static whelk.component.ElasticSearch.TOP_STR;
 import static whelk.search2.QueryUtil.matchAny;
 import static whelk.util.Jackson.mapper;
 
 public class ESSettings {
     private static final String BOOST_SETTINGS_FILE = "libris_search_boost.json";
+
+    private static final List<String> SYSTEM_SOURCE_EXCLUDES = List.of(
+            "*.__*",
+            "*." + SEARCH_KEY,
+            "_es_id",
+            "_links",
+            "_outerEmbellishments",
+            "_ids",
+            "_sortKeyByLang",
+            TOP_STR,
+            CHIP_STR,
+            CARD_STR,
+            SEARCH_CARD_STR
+    );
 
     private EsMappings mappings;
     private final Boost boost;
@@ -76,7 +95,10 @@ public class ESSettings {
 
     private List<String> loadSourceExcludesSettings() {
         Map<?, ?> settings = toMap(Boost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
-        return getAsStream(settings, "source_excludes").map(String.class::cast).toList();
+        return Stream.concat(
+                SYSTEM_SOURCE_EXCLUDES.stream(),
+                getAsStream(settings, "source_excludes").map(String.class::cast)
+        ).toList();
     }
 
     public static Boost loadBoostSettings(String json) {

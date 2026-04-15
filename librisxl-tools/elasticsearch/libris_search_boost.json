@@ -122,6 +122,7 @@
     }
   ],
   "source_excludes": [
+    "*_4_digits_*",
     "@reverse.instanceOf.@reverse.itemOf.hasComponent",
     "@reverse.instanceOf.@reverse.itemOf.itemOf",
     "@reverse.instanceOf.@reverse.itemOf.librissearch:itemNote",

@@ -403,17 +403,7 @@ public class Query {
     }
 
     private static Map<String, Object> removeSystemInternalProperties(Map<String, Object> framedThing) {
-        DocumentUtil.traverse(framedThing, (value, path) -> {
-            if (value instanceof Map<?, ?> m) {
-                m.keySet().removeIf(k ->
-                        k instanceof String key
-                                && key.startsWith("_")
-                                && !JsonLd.Platform.CATEGORY_BY_COLLECTION.equals(key)
-                );
-            }
-
-            return DocumentUtil.NOP;
-        });
+        framedThing.remove("_id");
         return framedThing;
     }
 
