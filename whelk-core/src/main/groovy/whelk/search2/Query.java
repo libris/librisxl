@@ -143,6 +143,7 @@ public class Query {
         EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings, getSelectedFacets());
         var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
         esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectTypesList()));
+
         return new EsQuery(esQueryDsl, indexNames);
     }
 
@@ -266,6 +267,10 @@ public class Query {
             // Scores won't be calculated when also using sort unless explicitly asked for
             queryDsl.put("track_scores", true);
             queryDsl.put("fields", List.of("*"));
+        }
+
+        if (!esSettings.sourceExcludes().isEmpty()) {
+            queryDsl.put("_source", Map.of("excludes", esSettings.sourceExcludes()));
         }
 
         return queryDsl;

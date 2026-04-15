@@ -120,5 +120,27 @@
       "value": "VirtualRecord",
       "score": 1000
     }
+  ],
+  "source_excludes": [
+    "@reverse.instanceOf.@reverse.itemOf.hasComponent",
+    "@reverse.instanceOf.@reverse.itemOf.itemOf",
+    "@reverse.instanceOf.@reverse.itemOf.librissearch:itemNote",
+    "@reverse.instanceOf.@reverse.itemOf.librissearch:shelf",
+    "@reverse.instanceOf.@reverse.itemOf.meta",
+    "@reverse.instanceOf.@reverse.itemOf.sameAs",
+    "@reverse.instanceOf.@reverse.itemOf.shelfControlNumber",
+    "@reverse.instanceOf.@reverse.itemOf.shelfMark",
+    "@reverse.instanceOf.@reverse.itemOf.subject",
+    "@reverse.instanceOf.@reverse.itemOf.summary",
+    "@reverse.itemOf.hasComponent",
+    "@reverse.itemOf.itemOf",
+    "@reverse.itemOf.librissearch:itemNote",
+    "@reverse.itemOf.librissearch:shelf",
+    "@reverse.itemOf.meta",
+    "@reverse.itemOf.sameAs",
+    "@reverse.itemOf.shelfControlNumber",
+    "@reverse.itemOf.shelfMark",
+    "@reverse.itemOf.subject",
+    "@reverse.itemOf.summary"
   ]
 }
