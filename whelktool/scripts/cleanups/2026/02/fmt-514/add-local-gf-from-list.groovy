@@ -16,14 +16,14 @@ input.drop(1).each { line ->
     def broaderLabel = cols[labelIndex]
 
     ids << iValue
-    idToLabelMap.get(iValue, []) << [broaderLabel]
+    idToLabelMap.get(iValue, []) << broaderLabel
 }
 
 selectByIds(ids) { instanceDoc ->
     def instance = instanceDoc.graph[1]
-    def instanceId = instance["@id"]
+    def instanceRecordShortId = instanceDoc.doc.shortId
 
-    for (broader in idToLabelMap[instanceId]) {
+    for (broader in idToLabelMap[instanceRecordShortId]) {
 
         Map complementaryGf = [
                 "@type": "GenreForm",
@@ -44,6 +44,9 @@ selectByIds(ids) { instanceDoc ->
                 work.category << complementaryGf
                 incrementStats('complement', broader)
             }
+
+            instanceDoc.scheduleSave()
+
         }
         else {
             String workId = instance["instanceOf"]["@id"]
@@ -61,8 +64,5 @@ selectByIds(ids) { instanceDoc ->
             }
         }
     }
-
-    instanceDoc.scheduleSave()
-
 }
 
