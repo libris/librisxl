@@ -1,6 +1,6 @@
 package whelk.component
 
-import groovy.json.JsonOutput
+import groovy.transform.CompileStatic
 import groovy.transform.Memoized
 import groovy.util.logging.Log4j2 as Log
 import org.apache.commons.codec.binary.Base64
@@ -32,6 +32,16 @@ import static whelk.JsonLd.REVERSE_KEY
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
+import static whelk.component.ElasticSearch.SystemFields.CARD_STR
+import static whelk.component.ElasticSearch.SystemFields.CHIP_STR
+import static whelk.component.ElasticSearch.SystemFields.ES_ID
+import static whelk.component.ElasticSearch.SystemFields.FLATTENED_LANG_MAP_PREFIX
+import static whelk.component.ElasticSearch.SystemFields.IDS
+import static whelk.component.ElasticSearch.SystemFields.LINKS
+import static whelk.component.ElasticSearch.SystemFields.OUTER_EMBELLISHMENTS
+import static whelk.component.ElasticSearch.SystemFields.SEARCH_CARD_STR
+import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG
+import static whelk.component.ElasticSearch.SystemFields.TOP_STR
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
 import static whelk.util.FresnelUtil.Options.NO_FALLBACK
@@ -42,18 +52,38 @@ import static whelk.util.Jackson.mapper
 
 @Log
 class ElasticSearch {
+
+    static class SystemFields {
+        /**
+        In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged
+        for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
+        we follow the advice and use a separate field.
+        (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html). */
+        public static final String ES_ID = '_es_id'
+
+        public static final String LINKS = '_links'
+        public static final String OUTER_EMBELLISHMENTS = '_outerEmbellishments'
+        public static final String SORT_KEY_BY_LANG = '_sortKeyByLang'
+
+        public static final String IDS = '_ids'
+        public static final String TOP_STR = '_topStr'
+        public static final String CHIP_STR = '_chipStr'
+        public static final String CARD_STR = '_cardStr'
+        public static final String SEARCH_CARD_STR = '_searchCardStr'
+
+        public static final String FLATTENED_LANG_MAP_PREFIX = '__'
+    }
+
+    private static final Set<String> SEARCH_STRINGS = [
+            JsonLd.SEARCH_KEY,
+            TOP_STR,
+            CHIP_STR,
+            CARD_STR,
+            SEARCH_CARD_STR
+    ] as Set
+
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final String SEARCH_TYPE = "dfs_query_then_fetch"
-
-    // FIXME: de-KBV/Libris-ify: configurable
-    static final List<String> REMOVABLE_BASE_URIS = [
-            'http://libris.kb.se/',
-            'https://libris.kb.se/',
-            'http://id.kb.se/vocab/',
-            'https://id.kb.se/vocab/',
-            'http://id.kb.se/',
-            'https://id.kb.se/',
-    ]
 
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
     public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
@@ -87,19 +117,6 @@ class ElasticSearch {
                 List.of(FresnelUtil.CHIP_CHAIN, FresnelUtil.CARD_CHAIN)
         )
     }
-
-    public static final String TOP_STR = '_topStr'
-    public static final String CHIP_STR = '_chipStr'
-    public static final String CARD_STR = '_cardStr'
-    public static final String SEARCH_CARD_STR = '_searchCardStr'
-
-    private static final Set<String> SEARCH_STRINGS = [
-            JsonLd.SEARCH_KEY,
-            TOP_STR,
-            CHIP_STR,
-            CARD_STR,
-            SEARCH_CARD_STR
-    ] as Set
 
     ElasticSearch(Properties props, JsonLd jsonLd) {
         this(
@@ -147,7 +164,7 @@ class ElasticSearch {
         // initSettings() waits for ES available. Do this after
         for (var type : elasticSubIndexTypes) {
             // is this a physical index with a numerical suffix? it is the case when indexing to a new index
-            var suffix = mainIndex.find('_\\d$')
+            var suffix = mainIndex.find('_\\d+$')
             var base = suffix ? Unicode.stripSuffix(mainIndex, suffix) : mainIndex
             // elastic index names must be lowercase
             var ix = base + SUB_IX_SEPARATOR + type.toLowerCase() + (suffix ?: '')
@@ -500,7 +517,7 @@ class ElasticSearch {
         try {
             Map responseMap = client.performRequest('POST',
                     "/${allIndexNames().join(',')}/_delete_by_query",
-                    JsonOutput.toJson(dsl))
+                    mapper.writeValueAsString(dsl))
 
             if (log.isDebugEnabled()) {
                 log.debug("Response: ${responseMap.deleted} of ${responseMap.total} objects deleted")
@@ -523,6 +540,7 @@ class ElasticSearch {
         }
     }
 
+    @CompileStatic
     static String getShapeForIndex(Document document, Whelk whelk) {
         Document copy = document.clone()
 
@@ -532,7 +550,7 @@ class ElasticSearch {
             log.debug("Framing ${document.getShortId()}")
         }
 
-        Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri }
+        Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri } as Set<String>
 
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
         var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
@@ -594,8 +612,8 @@ class ElasticSearch {
 
         Map searchCard = JsonLd.frame(thingId, copy.data)
 
-        searchCard['_links'] = links
-        searchCard['_outerEmbellishments'] = copy.getEmbellishments() - links
+        searchCard[LINKS] = links
+        searchCard[OUTER_EMBELLISHMENTS] = copy.getEmbellishments() - links
 
         Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
         var totalItems = incomingLinkCountByRelation.values().sum(0)
@@ -607,7 +625,7 @@ class ElasticSearch {
         var itemPath = ["@reverse", "instanceOf", "*", "@reverse", "itemOf", "*"]
         var itemCount = ((List) DocumentUtil.getAtPath(searchCard, itemPath, []))
                 .collect{ it['heldBy']?[JsonLd.ID_KEY] }.grep().unique().size()
-        incomingLinkCountByRelation.put('itemOf.instanceOf', itemCount)
+        incomingLinkCountByRelation.put('itemOf.instanceOf', (long) itemCount)
 
         searchCard['reverseLinks'] = [
                 (JsonLd.TYPE_KEY) : 'PartialCollectionView',
@@ -616,7 +634,7 @@ class ElasticSearch {
         ]
 
         try {
-            searchCard['_sortKeyByLang'] = buildSortKeyByLang(searchCard, whelk)
+            searchCard[SORT_KEY_BY_LANG] = buildSortKeyByLang(searchCard, whelk)
         } catch (Exception e) {
             log.error("Couldn't create sort key for {}: {}", document.shortId, e, e)
         }
@@ -629,14 +647,14 @@ class ElasticSearch {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard['_ids'] = collectIds(embellishedGraph, integralIds)
+        searchCard[IDS] = collectIds(embellishedGraph, integralIds)
 
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
                 // TODO: replace with elastic ICU Analysis plugin?
                 // https://www.elastic.co/guide/en/elasticsearch/plugins/current/analysis-icu.html
                 if (value instanceof List) {
-                    return new DocumentUtil.Replace(value.collect { !Unicode.isNormalizedForSearch(it) ? Unicode.normalizeForSearch(it) : it })
+                    return new DocumentUtil.Replace(((List<String>) value).collect { String s -> !Unicode.isNormalizedForSearch(s) ? Unicode.normalizeForSearch(s) : s })
                 }
                 if (value instanceof String && !Unicode.isNormalizedForSearch(value)) {
                     return new DocumentUtil.Replace(Unicode.normalizeForSearch(value))
@@ -659,14 +677,14 @@ class ElasticSearch {
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
                 // -->
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
-                var flattened = [:]
+                Map<String, List> flattened = [:]
                 value.each { k, v ->
                     if (k in whelk.jsonld.langContainerAlias) {
-                        var __k = flattenedLangMapKey(k)
-                        flattened[__k] = (flattened[__k] ?: []) + asList(v)
+                        var __k = flattenedLangMapKey((String) k)
+                        flattened[__k] = ((List) (flattened[__k] ?: [])) + asList(v)
                     } else if (k in whelk.jsonld.langContainerAliasInverted) {
-                        var __k = flattenedLangMapKey(whelk.jsonld.langContainerAliasInverted[k])
-                        flattened[__k] = (flattened[__k] ?: []) + ((Map) v).values().flatten()
+                        var __k = flattenedLangMapKey((String) whelk.jsonld.langContainerAliasInverted[k])
+                        flattened[__k] = ((List) (flattened[__k] ?: [])) + ((Map) v).values().flatten()
                     }
                 }
                 if (!flattened.isEmpty()) {
@@ -694,21 +712,18 @@ class ElasticSearch {
             return DocumentUtil.NOP
         }
 
-        // In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged
-        // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
-        // we follow the advice and use a separate field.
-        // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
-        searchCard["_es_id"] =  toElasticId(copy.getShortId())
+        searchCard[ES_ID] = toElasticId(copy.getShortId())
 
         if (log.isTraceEnabled()) {
             log.trace("Framed data: ${searchCard}")
         }
 
-        return JsonOutput.toJson(searchCard)
+        return mapper.writeValueAsString(searchCard)
     }
     
-    static String flattenedLangMapKey(key) {
-        return '__' + key
+    @CompileStatic
+    static String flattenedLangMapKey(String key) {
+        return FLATTENED_LANG_MAP_PREFIX + key
     }
 
     private static Set<String> collectIds(List embellishedGraph, Collection<String> integralIds) {
@@ -726,6 +741,7 @@ class ElasticSearch {
         return ids
     }
 
+    @CompileStatic
     private static Map<String, String> buildSortKeyByLang(Map<String, Object> thing, Whelk whelk) {
         List<String> locales =  whelk.jsonld.locales
 
@@ -753,6 +769,7 @@ class ElasticSearch {
         return s.replaceFirst(/^[^\p{Lu}\p{Ll}\p{Lt}\p{Lo}\p{N}]+/, "")
     }
 
+    @CompileStatic
     private static void addSearchStr(Map<String, Object> thing, Whelk whelk, Lens lens, String key) {
         if (!thing[TYPE_KEY]) {
             return
@@ -768,6 +785,7 @@ class ElasticSearch {
         }
     }
 
+    @CompileStatic
     private static Set<String> collectIntegralIds(List<Map> graph, JsonLd jsonLd) {
         return JsonLd.getExternalReferences([(GRAPH_KEY): graph])
                 .findAll {
@@ -782,16 +800,18 @@ class ElasticSearch {
                 .toSet()
     }
 
+    @CompileStatic
     private static Map getShapeForEmbellishment(FresnelUtil fresnelUtil, Map embellishData, Set<String> integralIds, Closure restoreCategoryByCollection) {
-        def graph = ((List) embellishData[GRAPH_KEY])
+        List graph = ((List) embellishData[GRAPH_KEY])
         if (graph) {
-            def (record, thing) = graph
+            Map record = (Map) graph[0]
+            Map thing = (Map) graph[1]
             thing[RECORD_KEY] = record
-            def shapedThing = integralIds.contains(thing[ID_KEY])
+            Map<String, Object> shapedThing = integralIds.contains(thing[ID_KEY])
                     ? toSearchCard(fresnelUtil, thing) // Do we really want the full search card here?
                     : toSearchChip(fresnelUtil, thing)
-            def shapedRecord = minimalRecord((Map) record) + ((Map) shapedThing.remove(RECORD_KEY) ?: [:])
-            def shapedGraph = [shapedRecord, shapedThing]
+            Map shapedRecord = minimalRecord(record) + ((Map) shapedThing.remove(RECORD_KEY) ?: [:])
+            List shapedGraph = [shapedRecord, shapedThing]
             if (integralIds.contains(thing[ID_KEY]) && restoreCategoryByCollection) {
                 restoreCategoryByCollection(shapedGraph, graph)
             }
@@ -801,22 +821,27 @@ class ElasticSearch {
         return embellishData
     }
 
+    @CompileStatic
     private static Map<String, Object> toSearchChip(FresnelUtil fresnelUtil, Map thing) {
         return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CHIP)
     }
 
+    @CompileStatic
     private static Map<String, Object> toSearchCard(FresnelUtil fresnelUtil, Map thing) {
         return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD)
     }
 
+    @CompileStatic
     private static Map<String, Object> mapThroughLensForIndex(FresnelUtil fresnelUtil, Map thing, Lens lens) {
         return fresnelUtil.mapThroughLens(thing, lens, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], [])
     }
 
+    @CompileStatic
     private static FresnelUtil.LensMappingBatch batchToSearchCard(FresnelUtil fresnelUtil, List<Map<String, Object>> thing, Collection<String> preserveLinks) {
         return fresnelUtil.mapBatchThroughLens(thing, FresnelUtil.Lenses.SEARCH_CARD, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks)
     }
 
+    @CompileStatic
     private static Map minimalRecord(Map record) {
         return record.subMap([ID_KEY, TYPE_KEY, THING_KEY])
     }
@@ -849,10 +874,12 @@ class ElasticSearch {
         }
     }
 
-    private static lastPathSegment(String uri) {
+    @CompileStatic
+    private static String lastPathSegment(String uri) {
         uri.contains('/') ? uri.substring(uri.lastIndexOf('/') + 1) : uri
     }
 
+    @CompileStatic
     private static String stripHash(String s) {
         s.contains('#') ? s.substring(0, s.indexOf('#')) : s
     }
@@ -902,18 +929,18 @@ class ElasticSearch {
 
     Map multiQuery(List jsonDslList, Collection<String> indexNames = Collections.emptyList()) {
         return performQuery(
-                jsonDslList.collect { [[:], it].collect { JsonOutput.toJson(it) + '\n' } }.flatten().join(),
+                jsonDslList.collect { [[:], it].collect { mapper.writeValueAsString(jsonDsl) + '\n' } }.flatten().join(),
                 getMultiSearchQueryUrl(indexNames)
         )
     }
 
     Map query(Map jsonDsl, Collection<String> indexNames = Collections.emptyList()) {
-        return performQuery(JsonOutput.toJson(jsonDsl), getQueryUrl([], indexNames))
+        return performQuery(mapper.writeValueAsString(jsonDsl), getQueryUrl([], indexNames))
     }
 
     Map queryIds(Map jsonDsl, Collection<String> indexNames = Collections.emptyList()) {
         return performQuery(
-                JsonOutput.toJson(jsonDsl),
+                mapper.writeValueAsString(jsonDsl),
                 getQueryUrl(['took','hits.total','hits.hits._id'], indexNames)
         )
     }
@@ -925,8 +952,8 @@ class ElasticSearch {
      * @return an Iterable of system IDs.
      */
     Iterable<String> getAffectedIds(Collection<String> iris) {
-        def t1 = iris.collect {['term': ['_links': ['value': it]]]}
-        def t2 = iris.collect {['term': ['_outerEmbellishments': ['value': it]]]}
+        def t1 = iris.collect {['term': [(LINKS): ['value': it]]]}
+        def t2 = iris.collect {['term': [(OUTER_EMBELLISHMENTS): ['value': it]]]}
         Map query = [
                 'bool': ['should': t1 + t2 ]
         ]
@@ -1013,7 +1040,7 @@ class ElasticSearch {
     
     private Map performRequest(String method, String path, Map body = null) {
         try {
-            return client.performRequest(method, path, body ? JsonOutput.toJson(body) : null)
+            return client.performRequest(method, path, body ? mapper.writeValueAsString(body) : null)
         }
         catch (UnexpectedHttpStatusException e) {
             tryMapAndThrow(e)
@@ -1024,7 +1051,7 @@ class ElasticSearch {
     private abstract class Scroll<T> implements Iterator<T> {
         final int FETCH_SIZE = 500
 
-        protected final List SORT = [['_es_id': 'asc']]
+        protected final List SORT = [[(ES_ID): 'asc']]
         protected final List FILTER_PATH = ['took', 'hits.hits.sort', 'pit_id', 'hits.total.value']
 
         Iterator<T> fetchedItems

@@ -1,9 +1,9 @@
 package whelk.search2;
 
 import com.google.common.base.Predicates;
-import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.component.ElasticSearch;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
@@ -21,7 +21,6 @@ import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
-
 import whelk.util.DocumentUtil;
 import whelk.util.FresnelUtil;
 
@@ -42,6 +41,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.component.ElasticSearch.SystemFields.ES_ID;
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
@@ -150,6 +150,7 @@ public class Query {
         EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings, getSelectedFacets());
         var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
         esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectTypesList()));
+
         return new EsQuery(esQueryDsl, indexNames);
     }
 
@@ -255,7 +256,7 @@ public class Query {
         queryDsl.put("from", queryParams.offset);
         queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
 
-        if (queryParams.spell.suggest) {
+        if (queryParams.spell.suggest && esSettings.mappings().spellFieldExists()) {
             var spellQuery = Spell.getSpellQuery(qTree);
             if (spellQuery.isPresent()) {
                 if (queryParams.spell.suggestOnly) {
@@ -273,6 +274,10 @@ public class Query {
             // Scores won't be calculated when also using sort unless explicitly asked for
             queryDsl.put("track_scores", true);
             queryDsl.put("fields", List.of("*"));
+        }
+
+        if (!esSettings.sourceExcludes().isEmpty()) {
+            queryDsl.put("_source", Map.of("excludes", esSettings.sourceExcludes()));
         }
 
         return queryDsl;
@@ -397,22 +402,15 @@ public class Query {
     private Map<String, Object> applyLens(Map<String, Object> framedThing) {
         Set<String> preserveLinks = Stream.ofNullable(queryParams.object).collect(Collectors.toSet());
 
-        var res = switch (queryParams.lens) {
-            case "chips" -> whelk.getJsonld().toChip(framedThing, preserveLinks);
-            case "full" -> removeSystemInternalProperties(framedThing);
-            default -> whelk.getJsonld().toCard(framedThing, false, false, false, preserveLinks, true);
-        };
+        var res = "chips".equals(queryParams.lens)
+            ? whelk.getJsonld().toChip(framedThing, preserveLinks)
+            : removeSystemInternalProperties(framedThing);
 
         return castToStringObjectMap(res);
     }
 
     private static Map<String, Object> removeSystemInternalProperties(Map<String, Object> framedThing) {
-        DocumentUtil.traverse(framedThing, (value, path) -> {
-            if (!path.isEmpty() && ((String) path.getLast()).startsWith("_")) {
-                return new DocumentUtil.Remove();
-            }
-            return DocumentUtil.NOP;
-        });
+        framedThing.remove("_id");
         return framedThing;
     }
 
@@ -545,7 +543,7 @@ public class Query {
                             "aggs", Map.of(
                                     REVERSE_NESTED_AGG_NAME, Map.of(
                                             "cardinality", Map.of(
-                                                    "field", "_es_id"
+                                                    "field", ES_ID
                                             )
                                     )
                             )
@@ -568,33 +566,21 @@ public class Query {
     }
 
     private class LinkLoader {
-        private final Map<String, Collection<Link>> links = new HashMap<>();
+        private final Map<String, Collection<Link>> linkMap = new HashMap<>();
 
         private void loadChips() {
-            var cards = whelk.getCards(links.keySet());
+            var chips = whelk.getChipCache().getChips(linkMap.keySet());
 
-            links.forEach((id, links) -> {
-                var cardGraph = cards.get(id);
-                if (cardGraph != null) {
-                    var chip = castToStringObjectMap(whelk.getJsonld().toChip(new Document(cardGraph).getThing()));
-                    links.forEach(link -> link.setChip(chip));
-                } else {
-                    links.forEach(link -> link.setChip(dummyChip(id)));
-                }
+            linkMap.forEach((id, links) -> {
+                var chip = chips.get(id);
+                links.forEach(link -> link.setChip(chip));
             });
 
-            links.clear();
-        }
-
-        private Map<String, Object> dummyChip(String id) {
-            return Map.of(
-                    JsonLd.ID_KEY, id,
-                    JsonLd.Rdfs.LABEL, id
-            );
+            linkMap.clear();
         }
 
         private void queue(Link link) {
-            links.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
+            linkMap.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
         }
 
         private void queue(Collection<Link> links) {
@@ -825,6 +811,7 @@ public class Query {
             public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFacets selectedFacets) {
                 var s = getSliceByDimension(slices, selectedFacets, null, null);
 
+                /*
                 // Move @none to under selected find/identify
                 // TODO don't hardcode this if we decide it is what we want
                 var none = s.remove(NONE_CATEGORY);
@@ -840,7 +827,7 @@ public class Query {
                             return DocumentUtil.NOP;
                         });
                     }
-                }
+                }*/
 
                 return s;
             }

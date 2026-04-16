@@ -160,10 +160,14 @@ public class LegacyMarcAPI extends WhelkHttpServlet {
 
             Vector<MarcRecord> result = MarcExport.compileVirtualMarcRecord(profile, rootDocument, whelk, toMarcXmlConverter);
 
+            boolean isXml = "MARCXML".equalsIgnoreCase(request.getParameter("format"))
+                    || profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML");
+
             response.setContentType("application/octet-stream");
             response.setHeader("Cache-Control", "no-cache");
-            response.setHeader("Content-Disposition", "attachment; filename=\"libris_marc_" + rootDocument.getShortId() + "\"");
-            MarcRecordWriter writer = profile.getProperty("format", "ISO2709").equalsIgnoreCase("MARCXML") ?
+            var fileName = rootDocument.getShortId() + (isXml ? ".marc.xml" : ".marc");
+            response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+            MarcRecordWriter writer = isXml ?
                     new MarcXmlRecordWriter(response.getOutputStream(), "UTF-8") :
                     new Iso2709MarcRecordWriter(response.getOutputStream(), "UTF-8");
             for (MarcRecord record : result) {

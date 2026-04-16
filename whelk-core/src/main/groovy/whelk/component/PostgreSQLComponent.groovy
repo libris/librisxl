@@ -126,7 +126,7 @@ class PostgreSQLComponent {
     private static final String GET_DOCUMENT_VERSION =
             "SELECT id, data FROM lddb__versions WHERE id = ? AND checksum = ?"
 
-    private static final String BULK_LOAD_DOCUMENTS = """
+    protected static final String BULK_LOAD_DOCUMENTS = """
             SELECT id, data, created, modified, deleted
             FROM unnest(?) AS in_id, lddb l 
             WHERE in_id = l.id
@@ -356,7 +356,7 @@ class PostgreSQLComponent {
             JOIN lddb ON lddb__identifiers.id = lddb.id WHERE lddb__identifiers.iri = ? 
             """.stripIndent()
 
-    private static final String GET_SYSTEMIDS_BY_IRIS = """
+    protected static final String GET_SYSTEMIDS_BY_IRIS = """
             SELECT lddb__identifiers.iri, lddb__identifiers.id, lddb.deleted
             FROM lddb__identifiers, lddb, unnest(?) as in_iri
             WHERE lddb__identifiers.iri = in_iri
@@ -1281,7 +1281,7 @@ class PostgreSQLComponent {
         return loadCard(systemId) ?: makeCardData(systemId)
     }
 
-    Iterable<Map> getCards(Iterable<String> iris) {
+    <T extends String> Iterable<Map> getCards(Iterable<T> iris) {
         return createAndAddMissingCards(bulkLoadCards(getSystemIdsByIris(iris).values())).values()
     }
 
@@ -2586,7 +2586,7 @@ class PostgreSQLComponent {
         }
     }
 
-    private static Document assembleDocument(ResultSet rs) {
+    protected static Document assembleDocument(ResultSet rs) {
         Document doc = new Document(mapper.readValue(rs.getString("data"), Map))
         doc.setModified(new Date(rs.getTimestamp("modified").getTime()))
         doc.setDeleted(rs.getBoolean("deleted"))

@@ -67,6 +67,7 @@ class Whelk {
     ResourceCache resourceCache
     ElasticFind elasticFind
     Relations relations
+    ChipCache chipCache
     DocumentNormalizer normalizer
     Romanizer romanizer
     FeatureFlags features = FeatureFlags.uninitialized()
@@ -155,10 +156,14 @@ class Whelk {
 
         loadCoreData(systemContextUri)
 
+        chipCache = new ChipCache(this)
+
         if (this.esMode == EsMode.ELASTIC_ENABLED) {
             this.elastic = new ElasticSearch(configuration, jsonld)
             elasticFind = new ElasticFind(new ESQuery(this))
         }
+
+        initDocumentNormalizers()
 
         sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
         sparqlQueryClient = new SparqlQueryClient(configuration.getProperty('sparqlEndpoint', null), jsonld);
@@ -251,7 +256,6 @@ class Whelk {
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
-        initDocumentNormalizers()
         this.fresnelUtil = new FresnelUtil(jsonld)
     }
 
@@ -306,7 +310,11 @@ class Whelk {
             idMap.putAll(idToIri)
         }
 
-        return storage.bulkLoad(systemIds, asOf)
+        Map<String, Document> loaded = (asOf == null && storage instanceof CachingPostgreSQLComponent)
+                ? ((CachingPostgreSQLComponent) storage).cachedBulkLoad(systemIds)
+                : storage.bulkLoad(systemIds, asOf)
+
+        return loaded
                 .findAll { id, doc -> !doc.deleted }
                 .collectEntries { id, doc -> [(idMap.getOrDefault(id, id)): doc] }
     }
@@ -711,7 +719,7 @@ class Whelk {
      * @param iris
      * @return map from all thing and record identifiers (including sameAs) to corresponding card of whole document 
      */
-    Map<String, Map> getCards(Iterable<String> iris) {
+    <T extends String> Map<String, Map> getCards(Iterable<T> iris) {
         Map<String, Map> result = [:]
         storage.getCards(iris).each { card ->
             List<Map> graph = (List<Map>) card[JsonLd.GRAPH_KEY]

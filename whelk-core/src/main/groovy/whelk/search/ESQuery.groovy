@@ -6,12 +6,16 @@ import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 import java.util.function.Function
 
+import static whelk.component.ElasticSearch.SystemFields.CHIP_STR
+import static whelk.component.ElasticSearch.SystemFields.LINKS
+import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG
 import static whelk.component.ElasticSearch.flattenedLangMapKey
 import static whelk.util.Jackson.mapper
 import static whelk.util.Unicode.stripPrefix
@@ -51,8 +55,8 @@ class ESQuery {
     private static final String FILTERED_AGG_NAME = 'a'
     private static final String NESTED_AGG_NAME = 'n'
 
-    private static final String SPELL_CHECK_FIELD = '_chipStr.trigram'
-    private static final String SPELL_CHECK_FIELD_REVERSE = '_chipStr.reverse'
+    public static final String SPELL_CHECK_FIELD = CHIP_STR + '.trigram'
+    private static final String SPELL_CHECK_FIELD_REVERSE = CHIP_STR + '.reverse'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
@@ -98,7 +102,7 @@ class ESQuery {
             var includeInParent = union{ Map m -> getFieldsWithSetting('include_in_parent', true, m) }
             this.nestedNotInParentFields = nestedFields - includeInParent
 
-            if (allMappings.any {DocumentUtil.getAtPath(it, ['properties', '_sortKeyByLang', 'properties', 'sv', 'fields', 'trigram'], null) }) {
+            if (allMappings.any {DocumentUtil.getAtPath(it, SPELL_CHECK_FIELD.split('\\.') as List, null) }) {
                 ENABLE_SPELL_CHECK = true
             }
             log.info("ENABLE_SPELL_CHECK = ${ENABLE_SPELL_CHECK}")
@@ -186,7 +190,7 @@ class ESQuery {
         }
 
         if (queryParameters.containsKey('o')) {
-            queryParameters.put('_links', queryParameters.get('o'))
+            queryParameters.put(LINKS, queryParameters.get('o'))
         }
 
         q = Unicode.normalizeForSearch(getQueryString(queryParameters))
@@ -271,7 +275,7 @@ class ESQuery {
                             'bool': [
                                     'must'  : [
                                             'prefix': [
-                                                    ("_sortKeyByLang.${suggest}.keyword".toString()): [
+                                                    ("${SORT_KEY_BY_LANG}.${suggest}.keyword".toString()): [
                                                             'value': q
                                                     ]
                                             ]
@@ -279,7 +283,7 @@ class ESQuery {
                             ]
                     ],
                     'sort' : [
-                            ("_sortKeyByLang.${suggest}.keyword".toString()): 'asc'
+                            ("${SORT_KEY_BY_LANG}.${suggest}.keyword".toString()): 'asc'
                     ]
             ]
         } else {
@@ -718,7 +722,7 @@ class ESQuery {
         parameters.each { String key, value ->
             if (key == 'p') {
                 value.each {
-                    p.put(it, parameters['_links'])
+                    p.put(it, parameters[LINKS])
                 }
             } else if (key.startsWith(OR_PREFIX)) {
                 or.put(key.substring(OR_PREFIX.size()), value)
