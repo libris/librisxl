@@ -129,7 +129,7 @@ class EsQueryTreeSpec extends Specification {
                 "statistics": [
                         "sliceList": [
                                 ["dimensionChain": ["findCategory"], "slice": ["dimensionChain": ["identifyCategory"]]],
-                                ["dimensionChain": ["workCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]]
+                                ["dimensionChain": ["noneCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]]
                         ]
                 ]
         ]
@@ -152,14 +152,6 @@ class EsQueryTreeSpec extends Specification {
                 "bool": [
                         "must": [[
                                          "bool": [
-                                                 "filter": [
-                                                         "term": [
-                                                                 "_categoryByCollection.identify.@id": "https://id.kb.se/term/ktg/Y"
-                                                         ]
-                                                 ]
-                                         ]
-                                 ], [
-                                         "bool": [
                                                  "should": [[
                                                                     "bool": [
                                                                             "filter": [
@@ -177,6 +169,14 @@ class EsQueryTreeSpec extends Specification {
                                                                             ]
                                                                     ]
                                                             ]]
+                                         ]],
+                                 [
+                                         "bool": [
+                                                 "filter": [
+                                                         "term": [
+                                                                 "_categoryByCollection.identify.@id": "https://id.kb.se/term/ktg/Y"
+                                                         ]
+                                                 ]
                                          ]
                                  ]]
                 ]

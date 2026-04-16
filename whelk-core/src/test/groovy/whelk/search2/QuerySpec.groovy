@@ -23,7 +23,7 @@ class QuerySpec extends Specification {
             "statistics": [
                     "sliceList": [
                             ["dimensionChain": ["findCategory"], "slice": ["dimensionChain": ["identifyCategory"]]],
-                            ["dimensionChain": ["workCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]],
+                            ["dimensionChain": ["noneCategory"], "itemLimit": 100, "connective": "OR", "showIf": ["category"]],
                             ["dimensionChain": ["instanceCategory"], "itemLimit": 100]
                     ]
             ]
@@ -242,53 +242,53 @@ class QuerySpec extends Specification {
         expect:
         aggQuery == [
             "_categoryByCollection.find.@id" : [
+                "filter" : [
+                    "match_all" : [:]
+                ],
                 "aggs" : [
                     "librissearch:findCategory" : [
                         "terms" : [
+                            "size" : 10,
+                            "field" : "_categoryByCollection.find.@id",
                             "order" : [
                                 "_count" : "desc"
-                            ],
-                            "field" : "_categoryByCollection.find.@id",
-                            "size" : 10
+                            ]
                         ],
                         "aggs" : [
                             "_categoryByCollection.identify.@id" : [
+                                "filter" : [
+                                    "match_all" : [:]
+                                ],
                                 "aggs" : [
                                     "librissearch:identifyCategory" : [
                                         "terms" : [
+                                            "size" : 10,
+                                            "field" : "_categoryByCollection.identify.@id",
                                             "order" : [
                                                 "_count" : "desc"
-                                            ],
-                                            "field" : "_categoryByCollection.identify.@id",
-                                            "size" : 10
+                                            ]
                                         ]
                                     ]
-                                ],
-                                "filter" : [
-                                        "match_all": [:]
                                 ]
                             ]
                         ]
                     ]
-                ],
-                "filter" : [
-                        "match_all": [:]
                 ]
             ],
             "@reverse.instanceOf._categoryByCollection.@none.@id" : [
+                "filter" : [
+                    "match_all" : [:]
+                ],
                 "aggs" : [
                     "librissearch:instanceCategory" : [
                         "terms" : [
+                            "size" : 100,
+                            "field" : "@reverse.instanceOf._categoryByCollection.@none.@id",
                             "order" : [
                                 "_count" : "desc"
-                            ],
-                            "field" : "@reverse.instanceOf._categoryByCollection.@none.@id",
-                            "size" : 100
+                            ]
                         ]
                     ]
-                ],
-                "filter" : [
-                        "match_all": [:]
                 ]
             ]
         ]
@@ -337,7 +337,7 @@ class QuerySpec extends Specification {
             ],
             "_categoryByCollection.@none.@id" : [
                 "aggs" : [
-                    "librissearch:workCategory" : [
+                    "librissearch:noneCategory" : [
                         "terms" : [
                             "order" : [
                                 "_count" : "desc"
@@ -425,7 +425,7 @@ class QuerySpec extends Specification {
             ],
             "instanceOf._categoryByCollection.@none.@id" : [
                 "aggs" : [
-                    "librissearch:workCategory" : [
+                    "librissearch:noneCategory" : [
                         "terms" : [
                             "size" : 100,
                             "field" : "instanceOf._categoryByCollection.@none.@id",

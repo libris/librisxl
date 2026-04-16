@@ -86,6 +86,9 @@ public class Disambiguate {
         var coercing = tryCoerce(property.name(), value);
         if (coercing != null) {
             return new Property.CoercingSubProperty(property, coercing, jsonLd);
+        } else if (property.name().equals("librissearch:workCategory")) {
+            // FIXME: Don't hardcode
+            return new Property.CoercingSubProperty(property, "librissearch:noneCategory", jsonLd);
         }
         return property;
     }

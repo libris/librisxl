@@ -42,6 +42,7 @@ class TestData {
                 'instancecategory': ['librissearch:instanceCategory'] as Set,
                 'findcategory'    : ['librissearch:findCategory'] as Set,
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
+                'nonecategory'    : ['librissearch:noneCategory'] as Set,
                 'p3p1'            : ['p3p1'] as Set,
                 'bibliography'    : ['bibliography'] as Set,
                 'meta'            : ['meta'] as Set
@@ -208,9 +209,9 @@ class TestData {
                 ],
                 [
                         '@id'        : 'librissearch:workCategory',
+                        'category'   : ['@id': "https://id.kb.se/ns/librissearch/composite"],
                         '@type'      : 'ObjectProperty',
-                        'domain'     : ['@id': 'T2'],
-                        'ls:indexKey': '_categoryByCollection.@none'
+                        'domain'     : ['@id': 'T2']
                 ],
                 [
                         '@id'        : 'librissearch:instanceCategory',
@@ -231,6 +232,13 @@ class TestData {
                         'subPropertyOf': [['@id': 'librissearch:workCategory']],
                         'category'     : ['@id': "https://id.kb.se/ns/librissearch/coercing"],
                         'ls:indexKey'  : '_categoryByCollection.identify'
+                ],
+                [
+                        '@id'          : 'librissearch:noneCategory',
+                        '@type'        : 'ObjectProperty',
+                        'subPropertyOf': [['@id': 'librissearch:workCategory']],
+                        'category'     : ['@id': "https://id.kb.se/ns/librissearch/coercing"],
+                        'ls:indexKey'  : '_categoryByCollection.@none'
                 ],
                 ['@id': 'textQuery', '@type': 'DatatypeProperty'],
                 ['@id': 'rdf:type', '@type': 'ObjectProperty'],
