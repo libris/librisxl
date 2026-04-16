@@ -85,16 +85,6 @@ class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final String SEARCH_TYPE = "dfs_query_then_fetch"
 
-    // FIXME: de-KBV/Libris-ify: configurable
-    static final List<String> REMOVABLE_BASE_URIS = [
-            'http://libris.kb.se/',
-            'https://libris.kb.se/',
-            'http://id.kb.se/vocab/',
-            'https://id.kb.se/vocab/',
-            'http://id.kb.se/',
-            'https://id.kb.se/',
-    ]
-
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
     public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
     
