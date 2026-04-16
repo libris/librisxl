@@ -3,6 +3,7 @@ package whelk.search2;
 import com.google.common.base.Predicates;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.component.ElasticSearch;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
@@ -41,6 +42,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.component.ElasticSearch.SystemFields.ES_ID;
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
@@ -537,7 +539,7 @@ public class Query {
                             "aggs", Map.of(
                                     REVERSE_NESTED_AGG_NAME, Map.of(
                                             "cardinality", Map.of(
-                                                    "field", "_es_id"
+                                                    "field", ES_ID
                                             )
                                     )
                             )
