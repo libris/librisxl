@@ -96,7 +96,7 @@ public class Disambiguate {
     private String tryCoerce(String property, String value) {
         var coercingSubPropertyKey = vocabMappings.propertiesRestrictedByValue()
                 .getOrDefault(property, Map.of())
-                .get(expandPrefixed(value));
+                .get(value);
         if (coercingSubPropertyKey != null) {
             return coercingSubPropertyKey.getFirst();
         }
