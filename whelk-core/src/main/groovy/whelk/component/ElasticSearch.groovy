@@ -32,6 +32,16 @@ import static whelk.JsonLd.REVERSE_KEY
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
+import static whelk.component.ElasticSearch.SystemFields.CARD_STR
+import static whelk.component.ElasticSearch.SystemFields.CHIP_STR
+import static whelk.component.ElasticSearch.SystemFields.ES_ID
+import static whelk.component.ElasticSearch.SystemFields.FLATTENED_LANG_MAP_PREFIX
+import static whelk.component.ElasticSearch.SystemFields.IDS
+import static whelk.component.ElasticSearch.SystemFields.LINKS
+import static whelk.component.ElasticSearch.SystemFields.OUTER_EMBELLISHMENTS
+import static whelk.component.ElasticSearch.SystemFields.SEARCH_CARD_STR
+import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG
+import static whelk.component.ElasticSearch.SystemFields.TOP_STR
 import static whelk.exception.UnexpectedHttpStatusException.isBadRequest
 import static whelk.exception.UnexpectedHttpStatusException.isNotFound
 import static whelk.util.FresnelUtil.Options.NO_FALLBACK
@@ -42,18 +52,38 @@ import static whelk.util.Jackson.mapper
 
 @Log
 class ElasticSearch {
+
+    static class SystemFields {
+        /**
+        In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged
+        for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
+        we follow the advice and use a separate field.
+        (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html). */
+        public static final String ES_ID = '_es_id'
+
+        public static final String LINKS = '_links'
+        public static final String OUTER_EMBELLISHMENTS = '_outerEmbellishments'
+        public static final String SORT_KEY_BY_LANG = '_sortKeyByLang'
+
+        public static final String IDS = '_ids'
+        public static final String TOP_STR = '_topStr'
+        public static final String CHIP_STR = '_chipStr'
+        public static final String CARD_STR = '_cardStr'
+        public static final String SEARCH_CARD_STR = '_searchCardStr'
+
+        public static final String FLATTENED_LANG_MAP_PREFIX = '__'
+    }
+
+    private static final Set<String> SEARCH_STRINGS = [
+            JsonLd.SEARCH_KEY,
+            TOP_STR,
+            CHIP_STR,
+            CARD_STR,
+            SEARCH_CARD_STR
+    ] as Set
+
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final String SEARCH_TYPE = "dfs_query_then_fetch"
-
-    // FIXME: de-KBV/Libris-ify: configurable
-    static final List<String> REMOVABLE_BASE_URIS = [
-            'http://libris.kb.se/',
-            'https://libris.kb.se/',
-            'http://id.kb.se/vocab/',
-            'https://id.kb.se/vocab/',
-            'http://id.kb.se/',
-            'https://id.kb.se/',
-    ]
 
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
     public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
@@ -87,19 +117,6 @@ class ElasticSearch {
                 List.of(FresnelUtil.CHIP_CHAIN, FresnelUtil.CARD_CHAIN)
         )
     }
-
-    public static final String TOP_STR = '_topStr'
-    public static final String CHIP_STR = '_chipStr'
-    public static final String CARD_STR = '_cardStr'
-    public static final String SEARCH_CARD_STR = '_searchCardStr'
-
-    private static final Set<String> SEARCH_STRINGS = [
-            JsonLd.SEARCH_KEY,
-            TOP_STR,
-            CHIP_STR,
-            CARD_STR,
-            SEARCH_CARD_STR
-    ] as Set
 
     ElasticSearch(Properties props, JsonLd jsonLd) {
         this(
@@ -595,8 +612,8 @@ class ElasticSearch {
 
         Map searchCard = JsonLd.frame(thingId, copy.data)
 
-        searchCard['_links'] = links
-        searchCard['_outerEmbellishments'] = copy.getEmbellishments() - links
+        searchCard[LINKS] = links
+        searchCard[OUTER_EMBELLISHMENTS] = copy.getEmbellishments() - links
 
         Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
         var totalItems = incomingLinkCountByRelation.values().sum(0)
@@ -617,7 +634,7 @@ class ElasticSearch {
         ]
 
         try {
-            searchCard['_sortKeyByLang'] = buildSortKeyByLang(searchCard, whelk)
+            searchCard[SORT_KEY_BY_LANG] = buildSortKeyByLang(searchCard, whelk)
         } catch (Exception e) {
             log.error("Couldn't create sort key for {}: {}", document.shortId, e, e)
         }
@@ -630,7 +647,7 @@ class ElasticSearch {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard['_ids'] = collectIds(embellishedGraph, integralIds)
+        searchCard[IDS] = collectIds(embellishedGraph, integralIds)
 
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
@@ -695,11 +712,7 @@ class ElasticSearch {
             return DocumentUtil.NOP
         }
 
-        // In ES up until 7.8 we could use the _id field for aggregations and sorting, but it was discouraged
-        // for performance reasons. In 7.9 such use was deprecated, and since 8.x it's no longer supported, so
-        // we follow the advice and use a separate field.
-        // (https://www.elastic.co/guide/en/elasticsearch/reference/8.8/mapping-id-field.html).
-        searchCard["_es_id"] =  toElasticId(copy.getShortId())
+        searchCard[ES_ID] = toElasticId(copy.getShortId())
 
         if (log.isTraceEnabled()) {
             log.trace("Framed data: ${searchCard}")
@@ -710,7 +723,7 @@ class ElasticSearch {
     
     @CompileStatic
     static String flattenedLangMapKey(String key) {
-        return '__' + key
+        return FLATTENED_LANG_MAP_PREFIX + key
     }
 
     private static Set<String> collectIds(List embellishedGraph, Collection<String> integralIds) {
@@ -939,8 +952,8 @@ class ElasticSearch {
      * @return an Iterable of system IDs.
      */
     Iterable<String> getAffectedIds(Collection<String> iris) {
-        def t1 = iris.collect {['term': ['_links': ['value': it]]]}
-        def t2 = iris.collect {['term': ['_outerEmbellishments': ['value': it]]]}
+        def t1 = iris.collect {['term': [(LINKS): ['value': it]]]}
+        def t2 = iris.collect {['term': [(OUTER_EMBELLISHMENTS): ['value': it]]]}
         Map query = [
                 'bool': ['should': t1 + t2 ]
         ]
@@ -1038,7 +1051,7 @@ class ElasticSearch {
     private abstract class Scroll<T> implements Iterator<T> {
         final int FETCH_SIZE = 500
 
-        protected final List SORT = [['_es_id': 'asc']]
+        protected final List SORT = [[(ES_ID): 'asc']]
         protected final List FILTER_PATH = ['took', 'hits.hits.sort', 'pit_id', 'hits.total.value']
 
         Iterator<T> fetchedItems
