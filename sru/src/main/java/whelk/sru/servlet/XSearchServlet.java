@@ -75,6 +75,7 @@ import static whelk.JsonLd.Platform.CATEGORY_BY_COLLECTION;
 import static whelk.JsonLd.TYPE_KEY;
 import static whelk.JsonLd.WORK_KEY;
 import static whelk.JsonLd.asList;
+import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG;
 import static whelk.util.DocumentUtil.getAtPath;
 
 /**
@@ -110,8 +111,8 @@ public class XSearchServlet extends WhelkHttpServlet {
 
     private static final Map<String, String> ORDER = Map.of(
             // "rank" is default
-            "alphabetical", "_sortKeyByLang.sv",
-            "-alphabetical", "-_sortKeyByLang.sv",
+            "alphabetical", SORT_KEY_BY_LANG + ".sv",
+            "-alphabetical", "-" + SORT_KEY_BY_LANG + ".sv",
             "chronological", "-publication.year", // reverse of XL
             "-chronological", "publication.year"
     );
