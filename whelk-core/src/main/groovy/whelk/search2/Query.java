@@ -807,6 +807,7 @@ public class Query {
             public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFacets selectedFacets) {
                 var s = getSliceByDimension(slices, selectedFacets, null, null);
 
+                /*
                 // Move @none to under selected find/identify
                 // TODO don't hardcode this if we decide it is what we want
                 var none = s.remove(Restrictions.NONE_CATEGORY);
@@ -822,7 +823,7 @@ public class Query {
                             return DocumentUtil.NOP;
                         });
                     }
-                }
+                }*/
 
                 return s;
             }
