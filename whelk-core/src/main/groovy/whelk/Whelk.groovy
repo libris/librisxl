@@ -163,6 +163,8 @@ class Whelk {
             elasticFind = new ElasticFind(new ESQuery(this))
         }
 
+        initDocumentNormalizers()
+
         sparqlUpdater = SparqlUpdater.build(storage, jsonld.context, configuration)
         sparqlQueryClient = new SparqlQueryClient(configuration.getProperty('sparqlEndpoint', null), jsonld);
     }
@@ -254,7 +256,6 @@ class Whelk {
     void setJsonld(JsonLd jsonld) {
         this.jsonld = jsonld
         storage.setJsonld(jsonld)
-        initDocumentNormalizers()
         this.fresnelUtil = new FresnelUtil(jsonld)
     }
 
