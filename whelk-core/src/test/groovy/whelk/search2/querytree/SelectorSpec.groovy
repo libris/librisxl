@@ -27,7 +27,7 @@ class SelectorSpec extends Specification {
         Selector p = ((Condition) QueryTreeBuilder.buildTree("$_p:v", disambiguate)).selector()
 
         expect:
-        p.getAltSelectors(jsonLd, types).collect { it.path().collect { it.toString() }.join(".") } == result
+        p.getAltSelectors(jsonLd, types, true).collect { it.path().collect { it.toString() }.join(".") } == result
 
         where:
         _p               | types        | result
@@ -49,9 +49,7 @@ class SelectorSpec extends Specification {
         "p9"             | ["T1", "T2"] | ["p9"]
         "p9"             | ["T3"]       | ["p9"]
         "hasInstance.p7" | ["T2"]       | ["hasInstance.p7"]
-        "instanceOf.p8"  | ["T2"]       | ["p8"]
         "type"           | ["T2"]       | ["rdf:type"]
-        "hasInstance.p7" | ["T1"]       | ["p7"]
         "instanceOf.p8"  | ["T1"]       | ["instanceOf.p8"]
         "type"           | ["T1"]       | ["rdf:type"]
         "p7.p14"         | ["T2"]       | ["hasInstance.p7.hasComponent.p14", "hasInstance.p7.p14"]

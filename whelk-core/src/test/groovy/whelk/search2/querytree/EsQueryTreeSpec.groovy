@@ -123,7 +123,7 @@ class EsQueryTreeSpec extends Specification {
 
     def "category ES query"() {
         given:
-        def q = 'type:T1x category:"https://id.kb.se/term/ktg/Y" category:("https://id.kb.se/term/ktg/A" OR "https://id.kb.se/term/ktg/B")'
+        def q = 'type:T2x workCategory:"https://id.kb.se/term/ktg/Y" workCategory:("https://id.kb.se/term/ktg/A" OR "https://id.kb.se/term/ktg/B")'
         QueryTree qt = new QueryTree(q, disambiguate)
         def appConfig = [
                 "statistics": [
@@ -143,7 +143,7 @@ class EsQueryTreeSpec extends Specification {
                 "bool": [
                         "filter": [
                                 "term": [
-                                        "@type": "T1x"
+                                        "@type": "T2x"
                                 ]
                         ]
                 ]
@@ -169,8 +169,8 @@ class EsQueryTreeSpec extends Specification {
                                                                             ]
                                                                     ]
                                                             ]]
-                                         ]
-                                 ], [
+                                         ]],
+                                 [
                                          "bool": [
                                                  "filter": [
                                                          "term": [

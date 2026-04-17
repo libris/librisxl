@@ -38,7 +38,8 @@ class TestData {
                 'p'               : ['p', 'p1'] as Set,
                 'plabel'          : ['p2', 'p3'] as Set,
                 'pp'              : ['p3', 'p4'] as Set,
-                'category'        : ['category'] as Set,
+                'workcategory'    : ['librissearch:workCategory'] as Set,
+                'instancecategory': ['librissearch:instanceCategory'] as Set,
                 'findcategory'    : ['librissearch:findCategory'] as Set,
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
                 'nonecategory'    : ['librissearch:noneCategory'] as Set,
@@ -65,7 +66,7 @@ class TestData {
         Stream.of(propertyMappings, classMappings, enumMappings).forEach(insertNamespace)
 
         def propertiesRestrictedByValue = [
-                'category': [
+                'librissearch:workCategory': [
                         'https://id.kb.se/term/ktg/X': ['librissearch:findCategory'],
                         'https://id.kb.se/term/ktg/Y': ['librissearch:identifyCategory']
                 ]
@@ -207,38 +208,36 @@ class TestData {
                         'range'   : ['@id': 'T4']
                 ],
                 [
-                        '@id'  : 'category',
-                        '@type': 'ObjectProperty'
+                        '@id'        : 'librissearch:workCategory',
+                        'category'   : ['@id': "https://id.kb.se/ns/librissearch/composite"],
+                        '@type'      : 'ObjectProperty',
+                        'domain'     : ['@id': 'T2']
                 ],
                 [
-                        '@id'               : 'hasInstanceCategory',
-                        'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
-                        'domain'            : ['@id': 'T2'],
-                        '@type'             : 'ObjectProperty',
-                        'propertyChainAxiom': [['@list': [
-                                ['@id': 'hasInstance'],
-                                ['@id': 'category']
-                        ]]]
+                        '@id'        : 'librissearch:instanceCategory',
+                        '@type'      : 'ObjectProperty',
+                        'domain'     : ['@id': 'T1'],
+                        'ls:indexKey': '_categoryByCollection.@none'
                 ],
                 [
                         '@id'          : 'librissearch:findCategory',
                         '@type'        : 'ObjectProperty',
-                        'subPropertyOf': [['@id': 'category']],
-                        'domain'       : ['@id': 'T2'],
+                        'subPropertyOf': [['@id': 'librissearch:workCategory']],
+                        'category'     : ['@id': "https://id.kb.se/ns/librissearch/coercing"],
                         'ls:indexKey'  : '_categoryByCollection.find'
                 ],
                 [
                         '@id'          : 'librissearch:identifyCategory',
                         '@type'        : 'ObjectProperty',
-                        'subPropertyOf': [['@id': 'category']],
-                        'domain'       : ['@id': 'T2'],
+                        'subPropertyOf': [['@id': 'librissearch:workCategory']],
+                        'category'     : ['@id': "https://id.kb.se/ns/librissearch/coercing"],
                         'ls:indexKey'  : '_categoryByCollection.identify'
                 ],
                 [
                         '@id'          : 'librissearch:noneCategory',
                         '@type'        : 'ObjectProperty',
-                        'subPropertyOf': [['@id': 'category']],
-                        'domain'       : ['@id': 'T2'],
+                        'subPropertyOf': [['@id': 'librissearch:workCategory']],
+                        'category'     : ['@id': "https://id.kb.se/ns/librissearch/coercing"],
                         'ls:indexKey'  : '_categoryByCollection.@none'
                 ],
                 ['@id': 'textQuery', '@type': 'DatatypeProperty'],
@@ -278,16 +277,19 @@ class TestData {
     static def getEsMappings() {
         def mappings = [
                 'properties': [
-                        'p3'                                : ['type': 'nested'],
-                        '@reverse.instanceOf.p3'            : ['type': 'nested'],
-                        'p15'                               : ['type': 'nested', "include_in_parent": true],
-                        '@type'                             : ['type': 'keyword'],
-                        'p2'                                : ['type': 'keyword'],
-                        'p3.p4.@id'                         : ['type': 'keyword'],
-                        '_categoryByCollection.find.@id'    : ['type': 'keyword'],
-                        '_categoryByCollection.identify.@id': ['type': 'keyword'],
-                        '_categoryByCollection.@none.@id'   : ['type': 'keyword'],
-                        '@reverse.instanceOf.category.@id'  : ['type': 'keyword']
+                        'p3'                                                 : ['type': 'nested'],
+                        '@reverse.instanceOf.p3'                             : ['type': 'nested'],
+                        'p15'                                                : ['type': 'nested', "include_in_parent": true],
+                        '@type'                                              : ['type': 'keyword'],
+                        'p2'                                                 : ['type': 'keyword'],
+                        'p3.p4.@id'                                          : ['type': 'keyword'],
+                        '_categoryByCollection.find.@id'                     : ['type': 'keyword'],
+                        '_categoryByCollection.identify.@id'                 : ['type': 'keyword'],
+                        '_categoryByCollection.@none.@id'                    : ['type': 'keyword'],
+                        'instanceOf._categoryByCollection.find.@id'          : ['type': 'keyword'],
+                        'instanceOf._categoryByCollection.identify.@id'      : ['type': 'keyword'],
+                        'instanceOf._categoryByCollection.@none.@id'         : ['type': 'keyword'],
+                        '@reverse.instanceOf._categoryByCollection.@none.@id': ['type': 'keyword']
                 ]
         ]
         // TODO

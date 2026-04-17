@@ -135,10 +135,10 @@ public class QueryTreeBuilder {
 
     private static Condition buildCondition(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
         Token token = getToken(leaf.value());
-        if (disambiguate.isRestrictedByValue(selector)) {
-            selector = disambiguate.restrictByValue(selector, token.value());
-        }
         Value value = disambiguate.mapValueForSelector(selector, token).orElse(new FreeText(token));
+        if (value instanceof Resource r && disambiguate.isRestrictedByValue(selector)) {
+            selector = disambiguate.restrictByValue(selector, r.jsonForm());
+        }
         Condition condition = new Condition(selector, operator, value);
         return condition.isTypeNode() ? condition.asTypeNode() : condition;
     }

@@ -3,7 +3,6 @@ package whelk.search2;
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
 import whelk.search2.querytree.*;
-import whelk.util.Restrictions;
 
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -14,6 +13,8 @@ import java.util.stream.Stream;
 import static whelk.JsonLd.LD_KEYS;
 import static whelk.JsonLd.VOCAB_KEY;
 import static whelk.JsonLd.looksLikeIri;
+import static whelk.search2.Query.NONE_CATEGORY;
+import static whelk.search2.Query.WORK_CATEGORY;
 import static whelk.search2.QueryUtil.encodeUri;
 import static whelk.search2.VocabMappings.expandPrefixed;
 
@@ -69,10 +70,10 @@ public class Disambiguate {
         return switch (selector) {
             case Property p -> restrictByValue(p, value);
             case Path path -> {
-                var narrowed = restrictByValue(path.last(), value);
+                var coerced = restrictByValue(path.last(), value);
                 List<PathElement> newPath = new ArrayList<>(path.path());
                 newPath.removeLast();
-                newPath.addAll(narrowed.path());
+                newPath.addAll(coerced.path());
                 yield new Path(newPath, path.token());
             }
             case Key k -> k;
@@ -84,22 +85,22 @@ public class Disambiguate {
     }
 
     private Property restrictByValue(Property property, String value) {
-        var narrowed = tryNarrow(property.name(), value);
-        if (narrowed != null) {
-            return new Property.NarrowedRestrictedProperty(property, narrowed, jsonLd);
+        var coercing = tryCoerce(property.name(), value);
+        if (coercing != null) {
+            return new Property.CoercingSubProperty(property, coercing, jsonLd);
+        } else if (property.name().equals(WORK_CATEGORY)) {
+            // FIXME: Don't hardcode
+            return new Property.CoercingSubProperty(property, NONE_CATEGORY, jsonLd);
         }
         return property;
     }
 
-    private String tryNarrow(String property, String value) {
-        var narrowedByValue = vocabMappings.propertiesRestrictedByValue()
+    private String tryCoerce(String property, String value) {
+        var coercingSubPropertyKey = vocabMappings.propertiesRestrictedByValue()
                 .getOrDefault(property, Map.of())
-                .get(expandPrefixed(value));
-        if (narrowedByValue != null) {
-            return narrowedByValue.getFirst();
-        } else if (property.equals(Restrictions.CATEGORY)) {
-            // FIXME: Don't hardcode
-            return Restrictions.NONE_CATEGORY;
+                .get(value);
+        if (coercingSubPropertyKey != null) {
+            return coercingSubPropertyKey.getFirst();
         }
         return null;
     }
