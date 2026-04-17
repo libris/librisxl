@@ -91,7 +91,7 @@ public class ObjectQuery extends Query {
         }
 
         List<String> subjectTypes = Stream.concat(givenSubjectTypes.stream(), inferredSubjectTypes.stream()).toList();
-        var aggQuery = getEsAggQuery(subjectTypes);
+        var aggQuery = new LinkedHashMap<>(getEsAggQuery(subjectTypes));
         aggQuery.putAll(getPAggQuery(predicateToSubjectTypes));
         esQueryDsl.put("aggs", aggQuery);
 
