@@ -12,6 +12,17 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.JsonLd.SEARCH_KEY;
+import static whelk.component.ElasticSearch.SystemFields.FLATTENED_LANG_MAP_PREFIX;
+import static whelk.component.ElasticSearch.SystemFields.CARD_STR;
+import static whelk.component.ElasticSearch.SystemFields.CHIP_STR;
+import static whelk.component.ElasticSearch.SystemFields.ES_ID;
+import static whelk.component.ElasticSearch.SystemFields.IDS;
+import static whelk.component.ElasticSearch.SystemFields.LINKS;
+import static whelk.component.ElasticSearch.SystemFields.OUTER_EMBELLISHMENTS;
+import static whelk.component.ElasticSearch.SystemFields.SEARCH_CARD_STR;
+import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG;
+import static whelk.component.ElasticSearch.SystemFields.TOP_STR;
 import static whelk.search2.QueryUtil.matchAny;
 import static whelk.util.Jackson.mapper;
 
@@ -75,8 +86,27 @@ public class ESSettings {
     }
 
     private List<String> loadSourceExcludesSettings() {
+        var systemSourceExcludes = List.of(
+                ES_ID,
+                LINKS,
+                OUTER_EMBELLISHMENTS,
+                SORT_KEY_BY_LANG,
+
+                IDS,
+                TOP_STR,
+                CHIP_STR,
+                CARD_STR,
+                SEARCH_CARD_STR,
+
+                "*." + FLATTENED_LANG_MAP_PREFIX + "*",
+                "*." + SEARCH_KEY
+        );
+
         Map<?, ?> settings = toMap(Boost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
-        return getAsStream(settings, "source_excludes").map(String.class::cast).toList();
+        return Stream.concat(
+                systemSourceExcludes.stream(),
+                getAsStream(settings, "source_excludes").map(String.class::cast)
+        ).toList();
     }
 
     public static Boost loadBoostSettings(String json) {

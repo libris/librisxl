@@ -2,6 +2,7 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.component.ElasticSearch;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
@@ -28,6 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.component.ElasticSearch.SystemFields.LINKS;
 import static whelk.search2.QueryParams.ApiParams.CUSTOM_SITE_FILTER;
 import static whelk.search2.QueryParams.ApiParams.OBJECT;
 import static whelk.search2.QueryParams.ApiParams.PREDICATES;
@@ -128,7 +130,7 @@ public class ObjectQuery extends Query {
     }
 
     private Condition objectFilter() {
-        return new Condition("_links", Operator.EQUALS, new Term(object.iri()));
+        return new Condition(LINKS, Operator.EQUALS, new Term(object.iri()));
     }
 
     private Map<String, Object> getPAggQuery(Map<Property, List<String>> predicateToSubjectTypes) {

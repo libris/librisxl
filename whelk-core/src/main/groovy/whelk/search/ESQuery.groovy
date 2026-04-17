@@ -6,12 +6,17 @@ import groovy.transform.TypeCheckingMode
 import groovy.util.logging.Log4j2 as Log
 import whelk.JsonLd
 import whelk.Whelk
+import whelk.component.ElasticSearch
 import whelk.exception.InvalidQueryException
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 
 import java.util.function.Function
 
+import static whelk.component.ElasticSearch.SystemFields.CHIP_STR
+import static whelk.component.ElasticSearch.SystemFields.FLATTENED_LANG_MAP_PREFIX
+import static whelk.component.ElasticSearch.SystemFields.LINKS
+import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG
 import static whelk.component.ElasticSearch.flattenedLangMapKey
 import static whelk.util.Jackson.mapper
 import static whelk.util.Unicode.stripPrefix
@@ -51,8 +56,8 @@ class ESQuery {
     private static final String FILTERED_AGG_NAME = 'a'
     private static final String NESTED_AGG_NAME = 'n'
 
-    public static final String SPELL_CHECK_FIELD = '_chipStr.trigram'
-    private static final String SPELL_CHECK_FIELD_REVERSE = '_chipStr.reverse'
+    public static final String SPELL_CHECK_FIELD = CHIP_STR + '.trigram'
+    private static final String SPELL_CHECK_FIELD_REVERSE = CHIP_STR + '.reverse'
 
     private static final Map recordsOverCacheRecordsBoost = [
             'bool': ['should': [
@@ -186,7 +191,7 @@ class ESQuery {
         }
 
         if (queryParameters.containsKey('o')) {
-            queryParameters.put('_links', queryParameters.get('o'))
+            queryParameters.put(LINKS, queryParameters.get('o'))
         }
 
         q = Unicode.normalizeForSearch(getQueryString(queryParameters))
@@ -271,7 +276,7 @@ class ESQuery {
                             'bool': [
                                     'must'  : [
                                             'prefix': [
-                                                    ("_sortKeyByLang.${suggest}.keyword".toString()): [
+                                                    ("${SORT_KEY_BY_LANG}.${suggest}.keyword".toString()): [
                                                             'value': q
                                                     ]
                                             ]
@@ -279,7 +284,7 @@ class ESQuery {
                             ]
                     ],
                     'sort' : [
-                            ("_sortKeyByLang.${suggest}.keyword".toString()): 'asc'
+                            ("${SORT_KEY_BY_LANG}.${suggest}.keyword".toString()): 'asc'
                     ]
             ]
         } else {
@@ -401,16 +406,13 @@ class ESQuery {
     }
 
     private static final List<String> CONCEPT_BOOST = [
-            'prefLabel^1500',
-            'prefLabelByLang.sv^1500',
-            'label^500',
-            'labelByLang.sv^500',
+            FLATTENED_LANG_MAP_PREFIX + 'prefLabel^1500',
+            FLATTENED_LANG_MAP_PREFIX + 'label^500',
             'code^200',
             'termComponentList._str.exact^125',
             'termComponentList._str^75',
-            'altLabel^150',
-            'altLabelByLang.sv^150',
-            'hasVariant.prefLabel.exact^150',
+            FLATTENED_LANG_MAP_PREFIX + 'altLabel^150',
+            'hasVariant.' + FLATTENED_LANG_MAP_PREFIX + 'prefLabel.exact^150',
             '_str.exact^100',
             'inScheme._str.exact^100',
             'inScheme._str^100',
@@ -718,7 +720,7 @@ class ESQuery {
         parameters.each { String key, value ->
             if (key == 'p') {
                 value.each {
-                    p.put(it, parameters['_links'])
+                    p.put(it, parameters[LINKS])
                 }
             } else if (key.startsWith(OR_PREFIX)) {
                 or.put(key.substring(OR_PREFIX.size()), value)

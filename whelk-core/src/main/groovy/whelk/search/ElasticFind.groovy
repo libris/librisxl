@@ -3,6 +3,8 @@ package whelk.search
 import groovy.transform.CompileStatic
 import whelk.component.ElasticSearch
 
+import static whelk.component.ElasticSearch.SystemFields.ES_ID
+
 @CompileStatic
 class ElasticFind {
     private static final int PAGE_SIZE = 100
@@ -96,7 +98,7 @@ class ElasticFind {
         p.put("_offset", [Integer.toString(offset)] as String[])
         p.put("_limit", [Integer.toString(PAGE_SIZE)] as String[])
 
-        p.putIfAbsent("_sort", ["_es_id"] as String[])
+        p.putIfAbsent("_sort", [ES_ID] as String[])
 
         return p
     }
