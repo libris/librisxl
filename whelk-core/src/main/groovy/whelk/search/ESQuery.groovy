@@ -14,6 +14,7 @@ import whelk.util.Unicode
 import java.util.function.Function
 
 import static whelk.component.ElasticSearch.SystemFields.CHIP_STR
+import static whelk.component.ElasticSearch.SystemFields.FLATTENED_LANG_MAP_PREFIX
 import static whelk.component.ElasticSearch.SystemFields.LINKS
 import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG
 import static whelk.component.ElasticSearch.flattenedLangMapKey
@@ -405,16 +406,13 @@ class ESQuery {
     }
 
     private static final List<String> CONCEPT_BOOST = [
-            'prefLabel^1500',
-            'prefLabelByLang.sv^1500',
-            'label^500',
-            'labelByLang.sv^500',
+            FLATTENED_LANG_MAP_PREFIX + 'prefLabel^1500',
+            FLATTENED_LANG_MAP_PREFIX + 'label^500',
             'code^200',
             'termComponentList._str.exact^125',
             'termComponentList._str^75',
-            'altLabel^150',
-            'altLabelByLang.sv^150',
-            'hasVariant.prefLabel.exact^150',
+            FLATTENED_LANG_MAP_PREFIX + 'altLabel^150',
+            'hasVariant.' + FLATTENED_LANG_MAP_PREFIX + 'prefLabel.exact^150',
             '_str.exact^100',
             'inScheme._str.exact^100',
             'inScheme._str^100',
