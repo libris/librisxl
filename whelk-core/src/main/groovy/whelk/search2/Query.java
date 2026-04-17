@@ -70,11 +70,11 @@ public class Query {
 
     private ReducedQueryTree fullQueryTree;
 
-    private static final String WORK_CATEGORY = "librissearch:workCategory";
+    static final String WORK_CATEGORY = "librissearch:workCategory";
 
     private static final String FIND_CATEGORY = "librissearch:findCategory";
     private static final String IDENTIFY_CATEGORY = "librissearch:identifyCategory";
-    private static final String NONE_CATEGORY = "librissearch:noneCategory";
+    static final String NONE_CATEGORY = "librissearch:noneCategory";
 
     public enum SearchMode {
         SUGGEST,

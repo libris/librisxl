@@ -13,6 +13,8 @@ import java.util.stream.Stream;
 import static whelk.JsonLd.LD_KEYS;
 import static whelk.JsonLd.VOCAB_KEY;
 import static whelk.JsonLd.looksLikeIri;
+import static whelk.search2.Query.NONE_CATEGORY;
+import static whelk.search2.Query.WORK_CATEGORY;
 import static whelk.search2.QueryUtil.encodeUri;
 import static whelk.search2.VocabMappings.expandPrefixed;
 
@@ -86,9 +88,9 @@ public class Disambiguate {
         var coercing = tryCoerce(property.name(), value);
         if (coercing != null) {
             return new Property.CoercingSubProperty(property, coercing, jsonLd);
-        } else if (property.name().equals("librissearch:workCategory")) {
+        } else if (property.name().equals(WORK_CATEGORY)) {
             // FIXME: Don't hardcode
-            return new Property.CoercingSubProperty(property, "librissearch:noneCategory", jsonLd);
+            return new Property.CoercingSubProperty(property, NONE_CATEGORY, jsonLd);
         }
         return property;
     }
