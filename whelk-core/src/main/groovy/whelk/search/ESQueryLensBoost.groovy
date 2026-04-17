@@ -3,6 +3,7 @@ package whelk.search
 import whelk.JsonLd
 
 import static whelk.JsonLd.asList
+import static whelk.component.ElasticSearch.SystemFields.FLATTENED_LANG_MAP_PREFIX
 
 /**
  * A utility to compute a list of boosted fields for ElasticSearch.
@@ -95,7 +96,7 @@ class ESQueryLensBoost {
             if (termType == 'ObjectProperty') {
                 key = "${key}.${JsonLd.SEARCH_KEY}"
             } else if (jsonld.isLangContainer(jsonld.context[it])) {
-                key = "${key}.${jsonld.locales[0]}"
+                key = FLATTENED_LANG_MAP_PREFIX + key
             } else {
                 // this property is part of the JsonLd.SEARCH_KEY value
                 // but keep it anyway
@@ -132,7 +133,7 @@ class ESQueryLensBoost {
                 key = "${key}.${JsonLd.SEARCH_KEY}"
             }
         } else if (jsonld.isLangContainer(jsonld.context[prop])) {
-            key = "${key}.${jsonld.locales[0]}"
+            key = FLATTENED_LANG_MAP_PREFIX + key
         }
 
         if (key in seenKeys) {
