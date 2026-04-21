@@ -73,8 +73,8 @@ class TestData {
         ]
 
         def vocabMappings = new ResourceLookup.VocabMappings(propertyMappings, classMappings, enumMappings, propertiesRestrictedByValue)
-        def otherMappings = new ResourceLookup.ExternalMappings(['T5': ['XYZ': ['@id': 'https://libris.kb.se/XYZ']]])
-        def resourceMappings = new ResourceLookup(vocabMappings, otherMappings)
+        def externalMappings = new ResourceLookup.ExternalMappings(['T5': ['xyz': ['@id': 'https://libris.kb.se/XYZ']]])
+        def resourceLookup = new ResourceLookup(vocabMappings, externalMappings)
 
         def filterAliases = [
                 excludeFilter,
@@ -82,7 +82,7 @@ class TestData {
                 XYFilter
         ]
 
-        return new Disambiguate(resourceMappings, filterAliases, getJsonLd())
+        return new Disambiguate(resourceLookup, filterAliases, getJsonLd())
     }
 
     static def getJsonLd() {
