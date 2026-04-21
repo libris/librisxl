@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter
 import java.util.function.Predicate
 
 import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.asList
 import static whelk.util.Jackson.mapper
 
 /**
@@ -995,7 +996,7 @@ class Document {
 
     private boolean isSuppressedRecord() {
         (get(["@graph", 0, "technicalNote"]) ?: []).any {
-            it instanceof Map && it.label == 'SUPPRESSRECORD' && it[JsonLd.TYPE_KEY] == 'TechnicalNote'
+            it instanceof Map && asList(it.label).contains('SUPPRESSRECORD') && it[JsonLd.TYPE_KEY] == 'TechnicalNote'
         }
     }
 }
