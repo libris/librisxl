@@ -62,6 +62,10 @@ public final class Link extends Resource {
         return token;
     }
 
+    public boolean isChipLoaded() {
+        return !chip.isEmpty();
+    }
+
     @Override
     public Map<String, Object> description() {
         return chip;

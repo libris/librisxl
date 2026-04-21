@@ -578,7 +578,9 @@ public class Query {
         }
 
         private void queue(Link link) {
-            linkMap.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
+            if (!link.isChipLoaded()) {
+                linkMap.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
+            }
         }
 
         private void queue(Collection<Link> links) {
