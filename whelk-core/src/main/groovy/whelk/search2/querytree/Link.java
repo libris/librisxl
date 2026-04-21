@@ -1,7 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.search2.QueryUtil;
-import whelk.search2.VocabMappings;
+import whelk.search2.ResourceLookup;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -69,7 +69,7 @@ public final class Link extends Resource {
 
     @Override
     public String queryForm() {
-        return token != null ? token.formatted() : QueryUtil.quote(VocabMappings.toPrefixed(iri));
+        return token != null ? token.formatted() : QueryUtil.quote(ResourceLookup.toPrefixed(iri));
     }
 
     @Override
@@ -79,7 +79,7 @@ public final class Link extends Resource {
 
     @Override
     public String toString() {
-        return VocabMappings.toPrefixed(iri);
+        return ResourceLookup.toPrefixed(iri);
     }
 
     @Override

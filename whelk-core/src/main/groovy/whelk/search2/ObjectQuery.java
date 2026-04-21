@@ -2,7 +2,6 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.component.ElasticSearch;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
@@ -40,8 +39,8 @@ public class ObjectQuery extends Query {
     protected final Link object;
     private final List<Property> curatedPredicates;
 
-    public ObjectQuery(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
-        super(queryParams, appParams, vocabMappings, esSettings, whelk);
+    public ObjectQuery(QueryParams queryParams, AppParams appParams, ResourceLookup resourceLookup, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
+        super(queryParams, appParams, resourceLookup, esSettings, whelk);
         this.object = loadObject();
         this.curatedPredicates = loadCuratedPredicates();
     }

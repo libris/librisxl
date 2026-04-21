@@ -21,7 +21,7 @@ import whelk.search2.AppParams;
 import whelk.search2.ESSettings;
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
-import whelk.search2.VocabMappings;
+import whelk.search2.ResourceLookup;
 import whelk.util.DocumentUtil;
 import whelk.util.FresnelUtil;
 import whelk.util.http.HttpTools;
@@ -58,7 +58,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -145,14 +144,14 @@ public class XSearchServlet extends WhelkHttpServlet {
 
     JsonLD2MarcXMLConverter converter;
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
-    VocabMappings vocabMappings;
+    ResourceLookup resourceLookup;
     ESSettings esSettings;
     Map<Format, Templates> transformers;
 
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
-        vocabMappings = VocabMappings.load(whelk);
+        resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
 
         try {
@@ -226,7 +225,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 
             QueryParams qp = new QueryParams(paramsAsIfSearch);
             AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
-            var results = new Query(qp, ap, vocabMappings, esSettings, whelk).collectResults();
+            var results = new Query(qp, ap, resourceLookup, esSettings, whelk).collectResults();
 
             @SuppressWarnings("unchecked")
             List<Map<?,?>> items = (List<Map<?,?>>) results.get("items");
