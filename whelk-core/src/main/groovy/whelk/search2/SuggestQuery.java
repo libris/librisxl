@@ -179,7 +179,7 @@ public class SuggestQuery extends Query {
             Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
             Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
             return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
-        } else if (edited.node() instanceof FreeText ft && qTree.isSimpleFreeText()) {
+        } else if (edited.node() instanceof FreeText ft) {
             String orJoinedTypes = defaultBaseTypes.stream().map(SuggestQuery::quotePrefixed).collect(Collectors.joining(" OR "));
             String rawTypeFilter = "\"rdf:type\":" + parenthesize(orJoinedTypes);
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);

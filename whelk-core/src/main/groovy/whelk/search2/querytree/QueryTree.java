@@ -144,10 +144,6 @@ public class QueryTree {
         return tree.implies(node, jsonLd);
     }
 
-    public boolean isSimpleFreeText() {
-        return findSimpleFreeText().map(tree::equals).orElse(false);
-    }
-
     public String getFreeTextPart() {
         return findSimpleFreeText().map(FreeText::queryForm).orElse("");
     }
