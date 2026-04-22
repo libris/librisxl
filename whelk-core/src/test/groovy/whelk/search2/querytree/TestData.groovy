@@ -3,7 +3,7 @@ package whelk.search2.querytree
 import whelk.JsonLd
 import whelk.search2.Disambiguate
 import whelk.search2.EsMappings
-import whelk.search2.VocabMappings
+import whelk.search2.ResourceLookup
 
 import java.util.stream.Stream
 
@@ -72,7 +72,9 @@ class TestData {
                 ]
         ]
 
-        def vocabMappings = new VocabMappings(propertyMappings, classMappings, enumMappings, propertiesRestrictedByValue)
+        def vocabMappings = new ResourceLookup.VocabMappings(propertyMappings, classMappings, enumMappings, propertiesRestrictedByValue)
+        def externalMappings = new ResourceLookup.ExternalMappings(['T5': ['xyz': ['@id': 'https://libris.kb.se/XYZ']]])
+        def resourceLookup = new ResourceLookup(vocabMappings, externalMappings)
 
         def filterAliases = [
                 excludeFilter,
@@ -80,7 +82,7 @@ class TestData {
                 XYFilter
         ]
 
-        return new Disambiguate(vocabMappings, filterAliases, getJsonLd())
+        return new Disambiguate(resourceLookup, filterAliases, getJsonLd())
     }
 
     static def getJsonLd() {
@@ -177,7 +179,8 @@ class TestData {
                 ],
                 [
                         '@id'  : 'p15',
-                        '@type': 'ObjectProperty'
+                        '@type': 'ObjectProperty',
+                        'range': ['@id': 'T5']
                 ],
                 [
                         '@id'  : 'ctxProp',
@@ -250,6 +253,7 @@ class TestData {
                 ['@id': 'T2x', '@type': 'Class', 'subClassOf': [['@id': 'T2']]],
                 ['@id': 'T3x', '@type': 'Class', 'subClassOf': [['@id': 'T3']]],
                 ['@id': 'T4', '@type': 'Class'],
+                ['@id': 'T5', '@type': 'Class'],
                 ['@id': 'E1', '@type': 'Class'],
                 ['@id': 'E2', '@type': 'Class'],
                 ['@id': 'p', '@type': 'DatatypeProperty'],

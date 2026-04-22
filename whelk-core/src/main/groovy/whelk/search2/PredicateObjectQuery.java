@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PredicateObjectQuery extends ObjectQuery {
-    public PredicateObjectQuery(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
-        super(queryParams, appParams, vocabMappings, esSettings, whelk);
+    public PredicateObjectQuery(QueryParams queryParams, AppParams appParams, ResourceLookup resourceLookup, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
+        super(queryParams, appParams, resourceLookup, esSettings, whelk);
     }
 
     @Override

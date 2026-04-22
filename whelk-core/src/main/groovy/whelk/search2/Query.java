@@ -3,7 +3,6 @@ package whelk.search2;
 import com.google.common.base.Predicates;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.component.ElasticSearch;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
@@ -21,7 +20,6 @@ import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
-import whelk.util.DocumentUtil;
 import whelk.util.FresnelUtil;
 
 import java.util.ArrayList;
@@ -93,12 +91,12 @@ public class Query {
 
     public Query(QueryParams queryParams,
                  AppParams appParams,
-                 VocabMappings vocabMappings,
+                 ResourceLookup resourceLookup,
                  ESSettings esSettings,
                  Whelk whelk) throws InvalidQueryException {
         this.queryParams = queryParams;
         this.appParams = appParams;
-        this.disambiguate = new Disambiguate(vocabMappings, appParams.filterAliases, queryParams.aliased, whelk.getJsonld());
+        this.disambiguate = new Disambiguate(resourceLookup, appParams.filterAliases, queryParams.aliased, whelk.getJsonld());
         this.esSettings = esSettings;
         this.whelk = whelk;
         this.qTree = new QueryTree(queryParams.q, disambiguate);
@@ -108,12 +106,12 @@ public class Query {
         this.stats = new Stats();
     }
 
-    public static Query init(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
+    public static Query init(QueryParams queryParams, AppParams appParams, ResourceLookup resourceLookup, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
         return switch (getSearchMode(queryParams)) {
-            case STANDARD_SEARCH -> new Query(queryParams, appParams, vocabMappings, esSettings, whelk);
-            case OBJECT_SEARCH -> new ObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
-            case PREDICATE_OBJECT_SEARCH -> new PredicateObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
-            case SUGGEST -> new SuggestQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
+            case STANDARD_SEARCH -> new Query(queryParams, appParams, resourceLookup, esSettings, whelk);
+            case OBJECT_SEARCH -> new ObjectQuery(queryParams, appParams, resourceLookup, esSettings, whelk);
+            case PREDICATE_OBJECT_SEARCH -> new PredicateObjectQuery(queryParams, appParams, resourceLookup, esSettings, whelk);
+            case SUGGEST -> new SuggestQuery(queryParams, appParams, resourceLookup, esSettings, whelk);
         };
     }
 
@@ -580,7 +578,9 @@ public class Query {
         }
 
         private void queue(Link link) {
-            linkMap.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
+            if (!link.isChipLoaded()) {
+                linkMap.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
+            }
         }
 
         private void queue(Collection<Link> links) {

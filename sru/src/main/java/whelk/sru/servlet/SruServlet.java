@@ -32,13 +32,13 @@ public class SruServlet extends WhelkHttpServlet {
 
     JsonLD2MarcXMLConverter converter;
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
-    VocabMappings vocabMappings;
+    ResourceLookup resourceLookup;
     ESSettings esSettings;
 
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
-        vocabMappings = VocabMappings.load(whelk);
+        resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
     }
 
@@ -74,7 +74,7 @@ public class SruServlet extends WhelkHttpServlet {
             paramsAsIfSearch.put("_stats", new String[] { "false" }); // don't need facets
             QueryParams qp = new QueryParams(paramsAsIfSearch);
             AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
-            Query query = new Query(qp, ap, vocabMappings, esSettings, whelk);
+            Query query = new Query(qp, ap, resourceLookup, esSettings, whelk);
             results = query.collectResults();
         } catch (InvalidQueryException | ParseCancellationException e) {
             logger.info("Bad query: \"" + parameters.get("query")[0] + "\" -> " + e.getMessage());

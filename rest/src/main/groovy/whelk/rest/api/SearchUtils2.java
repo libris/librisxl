@@ -9,7 +9,7 @@ import whelk.search2.AppParams;
 import whelk.search2.ESSettings;
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
-import whelk.search2.VocabMappings;
+import whelk.search2.ResourceLookup;
 
 import java.io.IOException;
 import java.util.*;
@@ -18,14 +18,14 @@ import java.util.stream.Stream;
 import static whelk.util.Jackson.mapper;
 
 public class SearchUtils2 {
-    private final VocabMappings vocabMappings;
+    private final ResourceLookup resourceLookup;
     private final Whelk whelk;
     private final ESSettings esSettings;
 
     SearchUtils2(Whelk whelk) {
         this.whelk = whelk;
         this.esSettings = new ESSettings(whelk);
-        this.vocabMappings = VocabMappings.load(whelk);
+        this.resourceLookup = ResourceLookup.load(whelk);
     }
 
     Map<String, Object> doSearch(Map<String, String[]> queryParameters) throws InvalidQueryException, IOException {
@@ -36,7 +36,7 @@ public class SearchUtils2 {
         QueryParams queryParams = new QueryParams(queryParameters);
         AppParams appParams = new AppParams(getAppConfig(queryParameters), whelk.getJsonld());
 
-        Query query = Query.init(queryParams, appParams, vocabMappings, esSettings, whelk);
+        Query query = Query.init(queryParams, appParams, resourceLookup, esSettings, whelk);
 
         return query.collectResults();
     }

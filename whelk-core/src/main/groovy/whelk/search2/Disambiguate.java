@@ -10,24 +10,25 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.LD_KEYS;
 import static whelk.JsonLd.VOCAB_KEY;
 import static whelk.JsonLd.looksLikeIri;
 import static whelk.search2.Query.NONE_CATEGORY;
 import static whelk.search2.Query.WORK_CATEGORY;
 import static whelk.search2.QueryUtil.encodeUri;
-import static whelk.search2.VocabMappings.expandPrefixed;
+import static whelk.search2.ResourceLookup.expandPrefixed;
 
 public class Disambiguate {
     private final JsonLd jsonLd;
 
-    private final VocabMappings vocabMappings;
+    private final ResourceLookup resourceLookup;
     private final Map<String, FilterAlias> filterAliasMappings;
 
     private final List<String> nsPrecedenceOrder;
 
-    public Disambiguate(VocabMappings vocabMappings, Collection<FilterAlias> appFilterAliases, Collection<FilterAlias.QueryDefinedAlias> queryFilterAliases, JsonLd jsonLd) {
-        this.vocabMappings = vocabMappings;
+    public Disambiguate(ResourceLookup resourceLookup, Collection<FilterAlias> appFilterAliases, Collection<FilterAlias.QueryDefinedAlias> queryFilterAliases, JsonLd jsonLd) {
+        this.resourceLookup = resourceLookup;
         this.filterAliasMappings = getFilterAliasMappings(appFilterAliases, queryFilterAliases);
         this.jsonLd = jsonLd;
         this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "bulk", "marc"); // FIXME
@@ -35,8 +36,8 @@ public class Disambiguate {
 
     // For test only
     @PackageScope
-    public Disambiguate(VocabMappings vocabMappings, Collection<FilterAlias> filterAliasMappings, JsonLd jsonLd) {
-        this.vocabMappings = vocabMappings;
+    public Disambiguate(ResourceLookup resourceLookup, Collection<FilterAlias> filterAliasMappings, JsonLd jsonLd) {
+        this.resourceLookup = resourceLookup;
         this.filterAliasMappings = getFilterAliasMappings(filterAliasMappings, List.of());
         this.jsonLd = jsonLd;
         this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "bulk", "marc"); // FIXME
@@ -81,7 +82,7 @@ public class Disambiguate {
     }
 
     private boolean isRestrictedByValue(String propertyKey) {
-        return vocabMappings.propertiesRestrictedByValue().containsKey(propertyKey);
+        return resourceLookup.vocabMappings().propertiesRestrictedByValue().containsKey(propertyKey);
     }
 
     private Property restrictByValue(Property property, String value) {
@@ -96,7 +97,7 @@ public class Disambiguate {
     }
 
     private String tryCoerce(String property, String value) {
-        var coercingSubPropertyKey = vocabMappings.propertiesRestrictedByValue()
+        var coercingSubPropertyKey = resourceLookup.vocabMappings().propertiesRestrictedByValue()
                 .getOrDefault(property, Map.of())
                 .get(value);
         if (coercingSubPropertyKey != null) {
@@ -126,7 +127,7 @@ public class Disambiguate {
 
     private PathElement mapSingleKey(Token token) {
         for (String ns : nsPrecedenceOrder) {
-            Set<String> mappedProperties = vocabMappings.properties()
+            Set<String> mappedProperties = resourceLookup.vocabMappings().properties()
                     .getOrDefault(token.value().toLowerCase(), Map.of())
                     .getOrDefault(ns, Set.of());
             if (mappedProperties.size() == 1) {
@@ -182,6 +183,7 @@ public class Disambiguate {
         }
         if (property.isType() || property.isVocabTerm()) {
             for (String ns : nsPrecedenceOrder) {
+                var vocabMappings = resourceLookup.vocabMappings();
                 var mappings = property.isType() ? vocabMappings.classes() : vocabMappings.enums();
                 Set<String> mappedClasses = mappings.getOrDefault(value.toLowerCase(), Map.of()).getOrDefault(ns, Set.of());
                 if (mappedClasses.size() == 1) {
@@ -202,6 +204,16 @@ public class Disambiguate {
             String expanded = expandPrefixed(value);
             if (looksLikeIri(expanded)) {
                 return Optional.of(new Link(encodeUri(expanded), token));
+            } else if (property.range().size() == 1){
+                var range = property.range().getFirst();
+                var mappedResourceDescription = resourceLookup.externalMappings().byType()
+                        .getOrDefault(range, Map.of())
+                        .getOrDefault(value.toLowerCase(), Map.of());
+                if (!mappedResourceDescription.isEmpty()) {
+                    var link = new Link((String) mappedResourceDescription.get(ID_KEY), token);
+                    link.setChip(mappedResourceDescription);
+                    return Optional.of(link);
+                }
             }
         }
         /*

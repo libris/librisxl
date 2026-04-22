@@ -80,5 +80,6 @@ class DisambiguateSpec extends Specification {
         'p12'      | 'xyz'                                   | InvalidValue.forbidden('xyz')
         'p12'      | '19900101'                              | InvalidValue.forbidden('19900101')
         'p12'      | '1990/01/01'                            | InvalidValue.forbidden('1990/01/01')
+        'p15'      | 'XYZ'                                   | new Link('https://libris.kb.se/XYZ')
     }
 }
