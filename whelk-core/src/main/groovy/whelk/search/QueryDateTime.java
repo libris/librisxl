@@ -11,14 +11,15 @@ public class QueryDateTime {
         YEAR(   "uuuu",                  "uuuu'||/y'"),
         MONTH(  "uuuu-MM",               "uuuu-MM'||/M'"),
         DAY(    "uuuu-MM-dd",            "uuuu-MM-dd'||/d'"),
+        DAY2(   "uuuuMMdd",              "uuuu-MM-dd'||/d'"),
         HOUR(   "uuuu-MM-dd'T'HH",       "uuuu-MM-dd'T'HH'||/H'"),
         MINUTE( "uuuu-MM-dd'T'HH:mm",    "uuuu-MM-dd'T'HH:mm'||/m'"),
         SECOND( "uuuu-MM-dd'T'HH:mm:ss", "uuuu-MM-dd'T'HH:mm:ss'||/s'"),
         WEEK(   "YYYY'-W'ww",            "YYYY'W'ww'1||/w'");
 
-        String format;
-        DateTimeFormatter parser;
-        DateTimeFormatter elasticFormat;
+        final String format;
+        final DateTimeFormatter parser;
+        final DateTimeFormatter elasticFormat;
 
         Precision(String format, String elasticFormat) {
             this.format = format;
