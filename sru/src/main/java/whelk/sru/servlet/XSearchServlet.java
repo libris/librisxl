@@ -288,12 +288,13 @@ public class XSearchServlet extends WhelkHttpServlet {
 
         items.parallelStream()
                 .map(i -> {
-                    String systemID = whelk.getStorage().getSystemIdByIri( (String) i.get("@id"));
-                    Document embellished = whelk.loadEmbellished(systemID);
-                    var bibXml = (String) converter.convert(embellished.data, embellished.getShortId())
+                    String systemID = whelk.getStorage().getSystemIdByIri((String) i.get("@id"));
+                    var doc = whelk.getDocument(systemID);
+                    whelk.embellish(doc);
+                    var bibXml = (String) converter.convert(doc.data, doc.getShortId())
                             .get(JsonLd.NON_JSON_CONTENT_KEY);
 
-                    bibXml = expandRecord(bibXml, embellished, includeHoldings, include9xx);
+                    bibXml = expandRecord(bibXml, doc, includeHoldings, include9xx);
 
                     return bibXml;
                 }).forEachOrdered( convertedText -> {

@@ -109,14 +109,15 @@ public class SruServlet extends WhelkHttpServlet {
             for (Object o : items) {
                 Map m = (Map) o;
 
-                String systemID = whelk.getStorage().getSystemIdByIri( (String) m.get("@id"));
-                Document embellished = whelk.loadEmbellished(systemID);
-                String convertedText = (String) converter.convert(embellished.data, embellished.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
+                String systemID = whelk.getStorage().getSystemIdByIri((String) m.get("@id"));
+                var doc = whelk.getDocument(systemID);
+                whelk.embellish(doc);
+                String convertedText = (String) converter.convert(doc.data, doc.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
 
                 writer.writeStartElement("record");
 
                 writer.writeStartElement("recordIdentifier");
-                writer.writeCharacters(embellished.getControlNumber()); // This is a MARC-protocol
+                writer.writeCharacters(doc.getControlNumber()); // This is a MARC-protocol
                 writer.writeEndElement(); // recordIdentifier
 
                 writer.writeStartElement("recordPacking");
