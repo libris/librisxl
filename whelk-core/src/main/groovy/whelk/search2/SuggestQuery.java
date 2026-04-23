@@ -61,7 +61,7 @@ public class SuggestQuery extends Query {
 
     public SuggestQuery(QueryParams queryParams, AppParams appParams, ResourceLookup resourceLookup, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
         super(queryParams, appParams, resourceLookup, esSettings, whelk);
-        this.edited = getEdited();
+        this.edited = getCurrentlyEdited();
         this.suggestQueryTree = getSuggestQueryTree();
     }
 
@@ -137,19 +137,19 @@ public class SuggestQuery extends Query {
         return applicablePredicates;
     }
 
-    private Edited getEdited() {
-        return qTree.allDescendants().flatMap(node ->
-                        switch (node) {
-                            case FreeText ft -> ft.getCurrentlyEditedToken(queryParams.cursor)
-                                    .map(token -> new Edited(ft, token))
-                                    .stream();
-                            case Condition c -> c.value() instanceof FreeText ft
-                                    ? ft.getCurrentlyEditedToken(queryParams.cursor)
-                                    .map(token -> new Edited(node, token))
-                                    .stream()
-                                    : Stream.empty();
-                            default -> Stream.empty();
-                        })
+    private Edited getCurrentlyEdited() {
+        return qTree.allDescendants()
+                .flatMap(node -> switch (node) {
+                    case FreeText ft -> ft.tokens().stream().map(t -> new Edited(node, t));
+                    case Condition c when c.value() instanceof FreeText ft -> ft.tokens().stream().map(t -> new Edited(node, t));
+                    case Condition c when c.value() instanceof Link l && l.isMappedFromCode() -> Stream.of(new Edited(node, l.token()));
+                    default -> Stream.empty();
+                })
+                .filter(edited -> {
+                    Token t = edited.token();
+                    int pos = queryParams.cursor;
+                    return pos > t.offset() && pos <= t.offset() + t.value().length();
+                })
                 .findFirst()
                 .orElse(Edited.empty());
     }
@@ -164,7 +164,7 @@ public class SuggestQuery extends Query {
                     .map(SuggestQuery::quotePrefixed)
                     .collect(Collectors.joining(" OR "));
 
-            FreeText ft = (FreeText) c.value();
+            FreeText ft = c.value() instanceof Link l ? new FreeText(l.token()) : (FreeText) c.value();
             FreeText prefixFt = editedTokenAsPrefix(ft);
 
             if (searchableTypes.isEmpty()) {
