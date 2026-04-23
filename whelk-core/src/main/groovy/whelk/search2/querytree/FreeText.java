@@ -117,12 +117,6 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
         return Objects.hashCode(toString());
     }
 
-    public Optional<Token> getCurrentlyEditedToken(int cursorPos) {
-        return tokens.stream()
-                .filter(t -> cursorPos > t.offset() && cursorPos <= t.offset() + t.value().length())
-                .findFirst();
-    }
-
     public FreeText withTokens(List<Token> tokens) {
         return new FreeText(textQuery, tokens, connective);
     }

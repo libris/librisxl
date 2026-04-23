@@ -15,6 +15,8 @@ public final class Link extends Resource {
     private final Map<String, Object> thing = new LinkedHashMap<>();
     private final Map<String, Object> chip = new LinkedHashMap<>();
 
+    private boolean mappedFromCode = false;
+
     private Token token;
     private String needle;
 
@@ -25,6 +27,12 @@ public final class Link extends Resource {
     public Link(String iri, Token token) {
         this.iri = iri;
         this.token = token;
+    }
+
+    public Link(String iri, Token token, boolean mappedFromCode) {
+        this.iri = iri;
+        this.token = token;
+        this.mappedFromCode = mappedFromCode;
     }
 
     public Link(String iri, Map<String, Object> thing) {
@@ -64,6 +72,10 @@ public final class Link extends Resource {
 
     public boolean isChipLoaded() {
         return !chip.isEmpty();
+    }
+
+    public boolean isMappedFromCode() {
+        return mappedFromCode;
     }
 
     @Override

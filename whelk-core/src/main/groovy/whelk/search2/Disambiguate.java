@@ -210,7 +210,7 @@ public class Disambiguate {
                         .getOrDefault(range, Map.of())
                         .getOrDefault(value.toLowerCase(), Map.of());
                 if (!mappedResourceDescription.isEmpty()) {
-                    var link = new Link((String) mappedResourceDescription.get(ID_KEY), token);
+                    var link = new Link((String) mappedResourceDescription.get(ID_KEY), token, true);
                     link.setChip(mappedResourceDescription);
                     return Optional.of(link);
                 }
