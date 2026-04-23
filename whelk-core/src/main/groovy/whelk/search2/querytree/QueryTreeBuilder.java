@@ -130,7 +130,9 @@ public class QueryTreeBuilder {
         selector = disambiguate.mapQueryKey(getToken(c.code()));
         return selector.isValid()
                 ? buildTree(c.operand(), disambiguate, selector, c.operator(), q)
-                : asFreeText(c, q, disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
+                : LegacyCodes.isQueryCode(c, selector)
+                    ? LegacyCodes.build(c, disambiguate, selector)
+                    : asFreeText(c, q, disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
     }
 
     private static Condition buildCondition(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
@@ -230,5 +232,101 @@ public class QueryTreeBuilder {
         }
 
         return -1;
+    }
+
+    /**
+     * Hardcoded handling of some legacy query codes that are used by xsearch clients
+     */
+    private static final class LegacyCodes {
+        /** Specialindex för maskinell gruppering, namngivning och behandling av materialtyper (bok, tidskrift, e-bok, bild etc.). */
+        static final String MAT = "MAT";
+        /** Kod för bibliografisk nivå / publikationstyp MARC 000/07 */
+        static final String BIBN = "BIBN";
+
+        static final List<String> CODES = List.of(MAT, BIBN);
+
+        static final String BOOK = "workType:Monograph instanceCategory:\"https://id.kb.se/term/rda/Volume\"";
+        static final String NOTATED_MUSIC = "workCategory:\"https://id.kb.se/term/rda/NotatedMusic\"";
+        static final String MONOGRAPH = "workType:Monograph";
+        static final String SERIAL = "workType:Serial";
+        static final String COLLECTION = "workType:Collection";
+        static final String INTEGRATING = "workType:Integrating";
+
+        static boolean isQueryCode(Ast.Code c, Selector selector) {
+            if (c.operator() != Operator.EQUALS) {
+                return false;
+            }
+
+            return CODES.contains(selector.queryKey().toUpperCase());
+        }
+
+        static Node build(Ast.Code c, Disambiguate disambiguate, Selector selector) throws InvalidQueryException {
+            var queryCode = selector.queryKey().toUpperCase();
+
+            return switch (c.operand()) {
+                // webbsök treats mat:(barn skol) as barn OR skol
+                case Ast.Group g -> new Or(g.operands().stream().map(n -> {
+                    try {
+                        return build(queryCode, n, disambiguate);
+                    } catch (InvalidQueryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).toList());
+                case Ast.Leaf l -> build(queryCode, l, disambiguate);
+                default -> throw new InvalidQueryException("Could not handle:" + c);
+            };
+        }
+
+        static Node build(String queryCode, Ast.Node n, Disambiguate disambiguate) throws InvalidQueryException {
+            if (n instanceof Ast.Leaf leaf) {
+                return build(queryCode, leaf, disambiguate);
+            }
+            throw new RuntimeException("Could not handle: " + queryCode + ": " + n);
+        }
+
+        static Node build(String queryCode, Ast.Leaf leaf, Disambiguate disambiguate) throws InvalidQueryException {
+            var value = leaf.value().value();
+
+            if (LegacyCodes.MAT.equals(queryCode)) {
+                //seen in queries but gives no result: art, kon, kap, sam, foto, dok
+
+                var query = switch (value) {
+                    case "bok",
+                         "böcker",
+                         "book",
+                         "books" -> BOOK;
+
+                    case "seriell publikation",
+                         "seriella publikationer",
+                         "serial",
+                         "serials" -> SERIAL;
+
+                    case "noter" -> NOTATED_MUSIC;
+
+                    /* very little use
+                        "ebook"
+                       "barn",
+                       "skol",
+                       "bokannat"
+                    */
+
+                    default -> value;
+                };
+                return buildTree(query, disambiguate);
+            }
+
+            if (LegacyCodes.BIBN.equals(queryCode)) {
+                var query = switch (value) {
+                    case "m" -> MONOGRAPH;
+                    case "s" -> SERIAL;
+                    case "c" -> COLLECTION;
+                    case "i" -> INTEGRATING;
+                    default -> value;
+                };
+                return buildTree(query, disambiguate);
+            }
+
+            throw new RuntimeException("Unknown code: " + queryCode);
+        }
     }
 }
