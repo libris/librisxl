@@ -99,7 +99,7 @@ public non-sealed class Property extends PathElement {
         if (isComposite(propDef)) {
             return new CompositeProperty(propertyKey, jsonLd, queryKey);
         }
-        if (isShorthand(propDef)) {
+        if (isShorthand(propDef) && !propDef.containsKey("ls:indexKey")) {
             return new ShorthandProperty(propertyKey, jsonLd, queryKey);
         }
         if (isCoercing(propDef)) {
