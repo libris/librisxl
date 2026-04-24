@@ -238,12 +238,18 @@ public class QueryTreeBuilder {
      * Hardcoded handling of some legacy query codes that are used by xsearch clients
      */
     private static final class LegacyCodes {
-        /** Specialindex för maskinell gruppering, namngivning och behandling av materialtyper (bok, tidskrift, e-bok, bild etc.). */
+        /** "Specialindex för maskinell gruppering, namngivning och behandling av materialtyper (bok, tidskrift, e-bok, bild etc.)." */
         static final String MAT = "MAT";
-        /** Kod för bibliografisk nivå / publikationstyp MARC 000/07 */
+        /** "Kod för bibliografisk nivå / publikationstyp MARC 000/07" */
         static final String BIBN = "BIBN";
+        /** "Sekundärt materialtypsindex. Kompletterande materialtyper på mer detaljerad nivå. Varje katalogpost kan ha 0, 1 eller flera sådana sekundära typer" */
+        static final String MTAG = "MTAG";
 
-        static final List<String> CODES = List.of(MAT, BIBN);
+        static final List<String> CODES = List.of(
+                MAT,
+                BIBN,
+                MTAG
+        );
 
         static final String BOOK = "workType:Monograph instanceCategory:\"https://id.kb.se/term/rda/Volume\"";
         static final String NOTATED_MUSIC = "workCategory:\"https://id.kb.se/term/rda/NotatedMusic\"";
@@ -321,6 +327,14 @@ public class QueryTreeBuilder {
                     case "s" -> SERIAL;
                     case "c" -> COLLECTION;
                     case "i" -> INTEGRATING;
+                    default -> value;
+                };
+                return buildTree(query, disambiguate);
+            }
+
+            if (LegacyCodes.MTAG.equals(queryCode)) {
+                var query = switch (value) {
+                    case "free" -> "freeOnline"; // the only one seen in logs
                     default -> value;
                 };
                 return buildTree(query, disambiguate);
