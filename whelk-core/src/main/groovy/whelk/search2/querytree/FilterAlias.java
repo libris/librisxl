@@ -80,7 +80,7 @@ public sealed class FilterAlias implements Node {
 
     @Override
     public RdfSubjectType rdfSubjectType() {
-        return RdfSubjectType.noType();
+        return parsed.rdfSubjectType();
     }
 
     @Override
