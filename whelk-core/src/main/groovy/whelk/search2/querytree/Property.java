@@ -48,7 +48,7 @@ public non-sealed class Property extends PathElement {
     protected boolean isLdSetContainer;
 
     protected Property superProperty;
-    protected List<Restrictions.HasValue> objectOnPropertyRestrictions;
+    protected List<Restrictions.HasValue> objectRestrictions;
 
     private static final String LIBRIS_SEARCH_NS = "librissearch:";
 
@@ -72,7 +72,7 @@ public non-sealed class Property extends PathElement {
         this.range = getRange(jsonLd);
         this.inverseOf = getInverseOf(jsonLd);
         this.indexKey = (String) definition.get("ls:indexKey"); // FIXME: This shouldn't have a different prefix (ls: vs librissearch:)
-        this.objectOnPropertyRestrictions = getObjectHasValueRestrictions(jsonLd);
+        this.objectRestrictions = getObjectRestrictions(jsonLd);
     }
 
     private Property(String name, JsonLd jsonLd, Key.RecognizedKey queryKey) {
@@ -239,18 +239,64 @@ public non-sealed class Property extends PathElement {
     }
 
     public List<Restrictions.HasValue> objectOnPropertyRestrictions() {
-        return objectOnPropertyRestrictions != null ? objectOnPropertyRestrictions : List.of();
+        return objectRestrictions != null ? objectRestrictions : List.of();
     }
 
-    protected List<Restrictions.HasValue> getObjectHasValueRestrictions(JsonLd jsonLd) {
-        return getObjectHasValueRestrictions(definition, jsonLd);
+    protected List<Restrictions.HasValue> getObjectRestrictions(JsonLd jsonLd) {
+        return buildObjectRestrictions(definition, jsonLd, false);
     }
 
-    public static List<Restrictions.HasValue> getObjectHasValueRestrictions(Map<String, Object> definition, JsonLd jsonLd) {
+    public static List<Restrictions.HasValue> buildObjectRestrictions(Map<String, Object> definition, JsonLd jsonLd, boolean restrictByRangeType) {
+        List<Map<String, Object>> rdfsRange = ((List<?>) asList(definition.get(RANGE)))
+                .stream()
+                .map(QueryUtil::castToStringObjectMap)
+                .toList();
+
+        if (restrictByRangeType) {
+            Restrictions.HasValue objectTypeRestriction = buildObjectTypeRestriction(rdfsRange, jsonLd);
+            if (objectTypeRestriction != null) {
+                return List.of(objectTypeRestriction);
+            }
+        }
+
+        return buildObjectOnPropertyRestrictions(rdfsRange, jsonLd);
+    }
+
+    protected Property getSuperProperty(JsonLd jsonLd) {
+        return getProperty(getSuperKey(definition, jsonLd), jsonLd);
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Property p && name().equals(p.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(toString());
+    }
+
+
+    private static Restrictions.HasValue buildObjectTypeRestriction(List<Map<String, Object>> rdfsRange, JsonLd jsonLd) {
+        boolean isUnambiguousRange = rdfsRange.size() == 1 && JsonLd.isLink(rdfsRange.getFirst());
+        if (isUnambiguousRange) {
+            String rangeType = jsonLd.toTermKey((String) rdfsRange.getFirst().get(ID_KEY));
+            RdfType rdfType = new RdfType(jsonLd);
+            VocabTerm value = new VocabTerm(rangeType, jsonLd.vocabIndex.get(rangeType));
+            return new Restrictions.HasValue(rdfType, value);
+        }
+        return null;
+    }
+
+    private static List<Restrictions.HasValue> buildObjectOnPropertyRestrictions(List<Map<String, Object>> rdfsRange, JsonLd jsonLd) {
         List<Restrictions.HasValue> restrictions = new ArrayList<>();
 
-        ((List<?>) asList(definition.get(RANGE))).stream()
-                .map(Map.class::cast)
+        rdfsRange.stream()
                 .map(m -> (List<?>) m.get(SUBCLASS_OF))
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
@@ -284,25 +330,6 @@ public non-sealed class Property extends PathElement {
                 });
 
         return restrictions;
-    }
-
-    protected Property getSuperProperty(JsonLd jsonLd) {
-        return getProperty(getSuperKey(definition, jsonLd), jsonLd);
-    }
-
-    @Override
-    public String toString() {
-        return name;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof Property p && name().equals(p.name());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(toString());
     }
 
     private List<Selector> _getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
@@ -421,7 +448,7 @@ public non-sealed class Property extends PathElement {
         return getTermKeys(asList(definition.get(SUB_PROPERTY_OF)), jsonLd);
     }
 
-    protected static Stream<String> getTermKeys(List<?> terms, JsonLd jsonLd) {
+    private static Stream<String> getTermKeys(List<?> terms, JsonLd jsonLd) {
         return terms.stream()
                 .map(Property::getIri)
                 .filter(Objects::nonNull)
@@ -530,10 +557,8 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        protected List<Restrictions.HasValue> getObjectHasValueRestrictions(JsonLd jsonLd) {
-            var range = getUnambiguousRange(jsonLd);
-            if (range != null) {
-               /*
+        protected List<Restrictions.HasValue> getObjectRestrictions(JsonLd jsonLd) {
+            /*
                 We interpret the range of an anonymous sub-property as a restriction.
 
                 For example
@@ -548,12 +573,8 @@ public non-sealed class Property extends PathElement {
                     [ rdfs:subPropertyOf :identifiedBy ;
                         rdfs:range [ rdfs:subClassOf [ a owl:Restriction ; owl:onProperty rdf:type ; owl:hasValue :ISBN ] ] ]
                     :value ) .
-                 */
-                RdfType rdfType = new RdfType(jsonLd);
-                VocabTerm value = new VocabTerm(range, jsonLd.vocabIndex.get(range));
-                return List.of(new Restrictions.HasValue(rdfType, value));
-            }
-            return super.getObjectHasValueRestrictions(jsonLd);
+            */
+            return Property.buildObjectRestrictions(definition, jsonLd, true);
         }
 
         @Override
@@ -562,11 +583,6 @@ public non-sealed class Property extends PathElement {
                 return superProperty.toString();
             }
             return "AnonymousProperty";
-        }
-
-        private String getUnambiguousRange(JsonLd jsonLd) {
-            List<String> range = getTermKeys(asList(definition.get(RANGE)), jsonLd).toList();
-            return range.size() == 1 ? range.getFirst() : null;
         }
     }
 
