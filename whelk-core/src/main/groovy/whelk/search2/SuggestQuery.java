@@ -40,8 +40,8 @@ public class SuggestQuery extends Query {
 
     private static final Map<String, List<String>> suggestPredicatesForType = new LinkedHashMap<>() {{
         put("Bibliography", List.of("bibliography"));
-        put("Library", List.of("itemHeldBy"));
-        put("bibdb:Organization", List.of("itemHeldByOrg"));
+        put("Library", List.of("library"));
+        put("bibdb:Organization", List.of("library"));
         put("Subject", List.of("subject"));
         put("Language", List.of("language", "originalLanguage"));
         put("BibliographicAgent", List.of("contributor", "subject"));
