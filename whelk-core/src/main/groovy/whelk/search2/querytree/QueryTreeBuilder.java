@@ -9,6 +9,7 @@ import whelk.search2.parse.Lex;
 import whelk.search2.parse.Parse;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -130,7 +131,9 @@ public class QueryTreeBuilder {
         selector = disambiguate.mapQueryKey(getToken(c.code()));
         return selector.isValid()
                 ? buildTree(c.operand(), disambiguate, selector, c.operator(), q)
-                : asFreeText(c, q, disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
+                : LegacyCodes.isQueryCode(c, selector)
+                    ? LegacyCodes.build(c, disambiguate, selector)
+                    : asFreeText(c, q, disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
     }
 
     private static Condition buildCondition(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
@@ -230,5 +233,102 @@ public class QueryTreeBuilder {
         }
 
         return -1;
+    }
+
+    /**
+     * Hardcoded handling of some legacy query codes that are used by xsearch clients
+     */
+    private static final class LegacyCodes {
+        enum LegacyCode {
+            /** "Specialindex för maskinell gruppering, namngivning och behandling av materialtyper (bok, tidskrift, e-bok, bild etc.)." */
+            MAT,
+
+            /** "Kod för bibliografisk nivå / publikationstyp MARC 000/07" */
+            BIBN,
+
+            /** "Sekundärt materialtypsindex. Kompletterande materialtyper på mer detaljerad nivå. Varje katalogpost kan ha 0, 1 eller flera sådana sekundära typer" */
+            MTAG
+        }
+
+        static final List<String> CODES = Arrays.stream(LegacyCode.values()).map(LegacyCode::toString).toList();
+
+        static final String BOOK = "workType:Monograph instanceCategory:\"https://id.kb.se/term/rda/Volume\"";
+        static final String NOTATED_MUSIC = "workCategory:\"https://id.kb.se/term/rda/NotatedMusic\"";
+        static final String MONOGRAPH = "workType:Monograph";
+        static final String SERIAL = "workType:Serial";
+        static final String COLLECTION = "workType:Collection";
+        static final String INTEGRATING = "workType:Integrating";
+
+        static boolean isQueryCode(Ast.Code c, Selector selector) {
+            if (c.operator() != Operator.EQUALS) {
+                return false;
+            }
+
+            return CODES.contains(selector.queryKey().toUpperCase());
+        }
+
+        static Node build(Ast.Code c, Disambiguate disambiguate, Selector selector) throws InvalidQueryException {
+            var code = LegacyCode.valueOf(selector.queryKey().toUpperCase());
+
+            return switch (c.operand()) {
+                // webbsök treats mat:(barn skol) as barn OR skol
+                case Ast.Group g -> new Or(g.operands().stream().map(n -> {
+                    try {
+                        return build(code, n, disambiguate);
+                    } catch (InvalidQueryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).toList());
+                case Ast.Leaf l -> build(code, l, disambiguate);
+                default -> throw new InvalidQueryException("Could not handle:" + c);
+            };
+        }
+
+        static Node build(LegacyCode code, Ast.Node n, Disambiguate disambiguate) throws InvalidQueryException {
+            if (n instanceof Ast.Leaf leaf) {
+                return build(code, leaf, disambiguate);
+            }
+            throw new RuntimeException("Could not handle: " + code + ": " + n);
+        }
+
+        static Node build(LegacyCode code, Ast.Leaf leaf, Disambiguate disambiguate) throws InvalidQueryException {
+            var value = leaf.value().value();
+
+            var mappedQuery = switch(code) {
+                case MAT -> switch (value) {
+                    case "bok",
+                         "böcker",
+                         "book",
+                         "books" -> BOOK;
+
+                    case "seriell publikation",
+                         "seriella publikationer",
+                         "serial",
+                         "serials" -> SERIAL;
+
+                    case "noter" -> NOTATED_MUSIC;
+
+                    // TODO? very little use: ebook, barn, skol, bokannat
+                    // seen in queries but gives no result: art, kon, kap, sam, foto, dok
+
+                    default -> value;
+                };
+
+                case BIBN -> switch (value) {
+                    case "m" -> MONOGRAPH;
+                    case "s" -> SERIAL;
+                    case "c" -> COLLECTION;
+                    case "i" -> INTEGRATING;
+                    default -> value;
+                };
+
+                case MTAG -> switch (value) {
+                    case "free" -> "freeOnline"; // the only one seen in logs
+                    default -> value;
+                };
+            };
+
+            return buildTree(mappedQuery, disambiguate);
+        }
     }
 }
