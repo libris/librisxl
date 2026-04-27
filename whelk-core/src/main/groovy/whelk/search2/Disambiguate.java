@@ -204,15 +204,16 @@ public class Disambiguate {
             String expanded = expandPrefixed(value);
             if (looksLikeIri(expanded)) {
                 return Optional.of(new Link(encodeUri(expanded), token));
-            } else if (property.range().size() == 1){
-                var range = property.range().getFirst();
-                var mappedResourceDescription = resourceLookup.externalMappings().byType()
-                        .getOrDefault(range, Map.of())
-                        .getOrDefault(value.toLowerCase(), Map.of());
-                if (!mappedResourceDescription.isEmpty()) {
-                    var link = new Link((String) mappedResourceDescription.get(ID_KEY), token, true);
-                    link.setChip(mappedResourceDescription);
-                    return Optional.of(link);
+            } else {
+                for (String range : property.range()) {
+                    var mappedResourceDescription = resourceLookup.externalMappings().byType()
+                            .getOrDefault(range, Map.of())
+                            .getOrDefault(value.toLowerCase(), Map.of());
+                    if (!mappedResourceDescription.isEmpty()) {
+                        var link = new Link((String) mappedResourceDescription.get(ID_KEY), token, true);
+                        link.setChip(mappedResourceDescription);
+                        return Optional.of(link);
+                    }
                 }
             }
         }

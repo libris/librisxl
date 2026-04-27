@@ -10,6 +10,7 @@ import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
+import whelk.search2.querytree.Path;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.QueryTreeBuilder;
@@ -39,8 +40,8 @@ public class SuggestQuery extends Query {
 
     private static final Map<String, List<String>> suggestPredicatesForType = new LinkedHashMap<>() {{
         put("Bibliography", List.of("bibliography"));
-        put("Library", List.of("itemHeldBy"));
-        put("bibdb:Organization", List.of("itemHeldByOrg"));
+        put("Library", List.of("library"));
+        put("bibdb:Organization", List.of("library"));
         put("Subject", List.of("subject"));
         put("Language", List.of("language", "originalLanguage"));
         put("BibliographicAgent", List.of("contributor", "subject"));
@@ -156,8 +157,13 @@ public class SuggestQuery extends Query {
 
     private QueryTree getSuggestQueryTree() throws InvalidQueryException {
         if (edited.node() instanceof Condition c && c.operator().equals(EQUALS)) {
-            Selector selector = c.selector();
-            String searchableTypes = selector.range().stream()
+            List<String> range = switch (c.selector()) {
+                case Property.CoercingSubProperty p -> p.getSuperProperty().range();
+                case Path path when path.last() instanceof Property.CoercingSubProperty p -> p.getSuperProperty().range();
+                default -> c.selector().range();
+            };
+
+            String searchableTypes = range.stream()
                     .filter(type -> defaultBaseTypes.stream()
                             .filter(Predicate.not("Work"::equals))
                             .anyMatch(baseType -> whelk.getJsonld().isSubClassOf(type, baseType)))

@@ -243,10 +243,10 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
                         var iri = doc.getThingIdentifiers().stream().findFirst().orElseThrow();
                         for (var n : coercing) {
                             var propDef = ld.vocabIndex.getOrDefault(n, Map.of());
-                            Property.getObjectHasValueRestrictions(propDef, ld).forEach(hasValueRestriction -> {
+                            Property.buildObjectRestrictions(propDef, ld, true).forEach(hasValueRestriction -> {
                                 var onProperty = hasValueRestriction.onProperty();
                                 var hasValue = hasValueRestriction.value();
-                                var path = List.of(JsonLd.GRAPH_KEY, 1, onProperty.name());
+                                var path = List.of(JsonLd.GRAPH_KEY, 1, onProperty.esField());
                                 Predicate<Object> hasMatchingValue = o -> switch (hasValue) {
                                     case Term term -> o instanceof String s && s.equals(term.term());
                                     case VocabTerm vocabTerm -> o instanceof String s && s.equals(vocabTerm.key());
