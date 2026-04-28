@@ -12,7 +12,6 @@ import static whelk.JsonLd.asList;
 
 public final class Link extends Resource {
     private final String iri;
-    private final Map<String, Object> thing = new LinkedHashMap<>();
     private final Map<String, Object> chip = new LinkedHashMap<>();
 
     private boolean mappedFromCode = false;
@@ -35,19 +34,14 @@ public final class Link extends Resource {
         this.mappedFromCode = mappedFromCode;
     }
 
-    public Link(String iri, Map<String, Object> thing) {
+    public Link(String iri, Map<String, Object> chip) {
         this.iri = iri;
-        setThing(thing);
+        setChip(chip);
     }
 
     public void setChip(Map<String, Object> chip) {
         this.chip.clear();
         this.chip.putAll(chip);
-    }
-
-    public void setThing(Map<String, Object> thing) {
-        this.chip.clear();
-        this.thing.putAll(thing);
     }
 
     public void setSearchNeedle(String needle) {
@@ -60,10 +54,6 @@ public final class Link extends Resource {
 
     public String iri() {
         return iri;
-    }
-
-    public Map<String, Object> thing() {
-        return thing;
     }
 
     public Token token() {
@@ -110,6 +100,6 @@ public final class Link extends Resource {
 
     @Override
     public String getType() {
-        return (String) asList(thing.get(TYPE_KEY)).getFirst();
+        return (String) asList(chip.get(TYPE_KEY)).getFirst();
     }
 }

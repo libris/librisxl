@@ -29,10 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.component.ElasticSearch.SystemFields.LINKS;
-import static whelk.search2.QueryParams.ApiParams.CUSTOM_SITE_FILTER;
-import static whelk.search2.QueryParams.ApiParams.OBJECT;
-import static whelk.search2.QueryParams.ApiParams.PREDICATES;
-import static whelk.search2.QueryParams.ApiParams.SORT;
+import static whelk.search2.QueryParams.ApiParams.QUERY;
 import static whelk.search2.QueryUtil.makeFindUrl;
 
 public class ObjectQuery extends Query {
@@ -104,26 +101,23 @@ public class ObjectQuery extends Query {
         Map<String, Integer> counts = getQueryResult().pAggs.stream()
                 .collect(Collectors.toMap(QueryResult.Bucket::value, QueryResult.Bucket::count));
 
-        curatedPredicates.stream()
-                .map(Property::name)
-                .forEach(p -> {
-                    if (!counts.containsKey(p)) {
-                        return;
-                    }
+        curatedPredicates.forEach(p -> {
+            if (!counts.containsKey(p.name())) {
+                return;
+            }
 
-                    int count = counts.get(p);
+            int count = counts.get(p.name());
 
-                    if (count > 0) {
-                        Map<String, String> params = queryParams.getCustomParamsMap(List.of(CUSTOM_SITE_FILTER, SORT, OBJECT));
-                        params.put(PREDICATES, p);
-                        result.add(Map.of(
-                                "totalItems", count,
-                                "view", Map.of(JsonLd.ID_KEY, makeFindUrl(params)),
-                                "object", whelk.getJsonld().vocabIndex.get(p),
-                                "_selected", queryParams.predicates.contains(p)
-                        ));
-                    }
-                });
+            if (count > 0) {
+                var q = new Condition(p, p.isPreferLike() ? Operator.LIKE : Operator.EQUALS, object).toQueryString(true);
+                result.add(Map.of(
+                        "totalItems", count,
+                        "view", Map.of(JsonLd.ID_KEY, makeFindUrl(Map.of(QUERY, q))),
+                        "predicate", whelk.getJsonld().vocabIndex.get(p.name()),
+                        "object", object.description()
+                ));
+            }
+        });
 
         return result;
     }
@@ -164,7 +158,8 @@ public class ObjectQuery extends Query {
         if (o != null) {
             Map<String, Object> thing = QueryUtil.loadThing(o, whelk);
             if (!thing.isEmpty()) {
-                return new Link(o, thing);
+                var chip = QueryUtil.castToStringObjectMap(whelk.jsonld.toChip(thing));
+                return new Link(o, chip);
             }
         }
         throw new InvalidQueryException("No resource with id " + o + " was found");
