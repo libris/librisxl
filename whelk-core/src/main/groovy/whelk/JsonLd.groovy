@@ -54,7 +54,8 @@ class JsonLd {
     public static final List<String> NS_SEPARATORS = ['#', '/', ':']
 
     public static final List<String> NON_DEPENDANT_RELATIONS = ['narrower', 'broader', 'expressionOf', 'related',
-                                                                'derivedFrom']
+                                                                'derivedFrom', 'broadMatch', 'closeMatch', 'exactMatch',
+                                                                'narrowMatch', 'isReplacedBy', 'relatedMatch']
 
     // The following relations may hold links to deleted resources.
     // In general we don't allow dead links within XL so don't add to this list without good reason.
