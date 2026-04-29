@@ -3,19 +3,12 @@ package whelk.search2.querytree;
 import java.util.List;
 
 public class RdfSubjectType {
-    private Node typeNode;
+    private final Node typeNode;
 
     private List<Type> list;
 
     public RdfSubjectType(Node node) {
         this.typeNode = node;
-    }
-
-    public RdfSubjectType(List<Type> typeList) {
-        if (!typeList.isEmpty()) {
-            this.typeNode = typeList.size() > 1 ? new Or(typeList) : typeList.getFirst();
-            this.list = typeList;
-        }
     }
 
     public Node asNode() {
@@ -53,6 +46,6 @@ public class RdfSubjectType {
     }
 
     public static RdfSubjectType noType() {
-        return new RdfSubjectType(List.of());
+        return new RdfSubjectType(null);
     }
 }
