@@ -692,9 +692,6 @@ class ElasticSearch {
                 if (!flattened.isEmpty()) {
                     value.putAll(flattened)
                 }
-
-
-                (asList(value['classification']))
             }
 
             if (path && path.last() == 'classification') {
