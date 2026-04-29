@@ -16,8 +16,11 @@ import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.RdfSubjectType;
 import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
+import whelk.search2.querytree.Selector;
+import whelk.search2.querytree.Type;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
 import whelk.util.FresnelUtil;
@@ -352,7 +355,31 @@ public class Query {
             for (QueryTree o : other) {
                 var otherRdfSubjectType = o.getRdfSubjectType();
                 if (!otherRdfSubjectType.isNoType()) {
-                    baseTree = baseTree.add(otherRdfSubjectType.asNode());
+                    List<Selector> selectorsInBaseTree = baseTree.getTopNodesOfType(Condition.class)
+                            .stream()
+                            .map(Condition::selector)
+                            .toList();
+                    if (selectorsInBaseTree.isEmpty()) {
+                        baseTree = baseTree.add(otherRdfSubjectType.asNode());
+                    } else {
+                        List<String> otherTypeList = otherRdfSubjectType.asList().stream().map(Type::type).toList();
+                        boolean anySelectorCompatible = selectorsInBaseTree.stream()
+                                .anyMatch(s -> otherTypeList.stream()
+                                        .anyMatch(t -> s.mayAppearOnType(t, whelk.getJsonld()) || s.indirectlyAppearsOnType(t, whelk.getJsonld())));
+                        // Add type filter only when at least one condition in the base tree applies to that type.
+                        // For example, avoid adding type:Work if all conditions in the base tree apply exclusively to Agent.
+                        if (anySelectorCompatible) {
+                            baseTree = baseTree.add(otherRdfSubjectType.asNode());
+                        } else {
+                            List<Type> implicitTypes = selectorsInBaseTree.stream()
+                                    .map(Selector::domain)
+                                    .flatMap(List::stream)
+                                    .map(d -> new Type(d, whelk.getJsonld()))
+                                    .toList();
+                            var inferredBaseTreeRdfSubjectType = new RdfSubjectType(implicitTypes);
+                            baseTree = baseTree.add(inferredBaseTreeRdfSubjectType.asNode());
+                        }
+                    }
                     break;
                 }
             }
