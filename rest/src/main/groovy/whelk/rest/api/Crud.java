@@ -309,9 +309,6 @@ public class Crud extends WhelkHttpServlet {
                 // TODO? should we support this?
                 throw new BadRequestException("Cannot generate find links when not framed");
             }
-            if (!request.shouldComputeLabels()) {
-                throw new BadRequestException("Cannot generate find links without computedLabel");
-            }
 
             // FIXME FresnelUtil can't handle the whole search response because of @container @index in stats
             // TODO at least compute labels in stats observations and search mappings predicate/object?
