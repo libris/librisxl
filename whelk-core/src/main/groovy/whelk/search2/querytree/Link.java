@@ -1,7 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.search2.QueryUtil;
-import whelk.search2.VocabMappings;
+import whelk.search2.ResourceLookup;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,8 +12,9 @@ import static whelk.JsonLd.asList;
 
 public final class Link extends Resource {
     private final String iri;
-    private final Map<String, Object> thing = new LinkedHashMap<>();
     private final Map<String, Object> chip = new LinkedHashMap<>();
+
+    private boolean mappedFromCode = false;
 
     private Token token;
     private String needle;
@@ -27,19 +28,20 @@ public final class Link extends Resource {
         this.token = token;
     }
 
-    public Link(String iri, Map<String, Object> thing) {
+    public Link(String iri, Token token, boolean mappedFromCode) {
         this.iri = iri;
-        setThing(thing);
+        this.token = token;
+        this.mappedFromCode = mappedFromCode;
+    }
+
+    public Link(String iri, Map<String, Object> chip) {
+        this.iri = iri;
+        setChip(chip);
     }
 
     public void setChip(Map<String, Object> chip) {
         this.chip.clear();
         this.chip.putAll(chip);
-    }
-
-    public void setThing(Map<String, Object> thing) {
-        this.chip.clear();
-        this.thing.putAll(thing);
     }
 
     public void setSearchNeedle(String needle) {
@@ -54,12 +56,16 @@ public final class Link extends Resource {
         return iri;
     }
 
-    public Map<String, Object> thing() {
-        return thing;
-    }
-
     public Token token() {
         return token;
+    }
+
+    public boolean isChipLoaded() {
+        return !chip.isEmpty();
+    }
+
+    public boolean isMappedFromCode() {
+        return mappedFromCode;
     }
 
     @Override
@@ -69,7 +75,7 @@ public final class Link extends Resource {
 
     @Override
     public String queryForm() {
-        return token != null ? token.formatted() : QueryUtil.quote(VocabMappings.toPrefixed(iri));
+        return token != null ? token.formatted() : QueryUtil.quote(ResourceLookup.toPrefixed(iri));
     }
 
     @Override
@@ -79,7 +85,7 @@ public final class Link extends Resource {
 
     @Override
     public String toString() {
-        return VocabMappings.toPrefixed(iri);
+        return ResourceLookup.toPrefixed(iri);
     }
 
     @Override
@@ -94,6 +100,6 @@ public final class Link extends Resource {
 
     @Override
     public String getType() {
-        return (String) asList(thing.get(TYPE_KEY)).getFirst();
+        return (String) asList(chip.get(TYPE_KEY)).getFirst();
     }
 }

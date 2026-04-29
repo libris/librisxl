@@ -3,7 +3,6 @@ package whelk.search2;
 import com.google.common.base.Predicates;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.component.ElasticSearch;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
@@ -21,9 +20,7 @@ import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
-import whelk.util.DocumentUtil;
 import whelk.util.FresnelUtil;
-import whelk.util.Restrictions;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,6 +68,12 @@ public class Query {
 
     private ReducedQueryTree fullQueryTree;
 
+    static final String WORK_CATEGORY = "librissearch:workCategory";
+
+    private static final String FIND_CATEGORY = "librissearch:findCategory";
+    private static final String IDENTIFY_CATEGORY = "librissearch:identifyCategory";
+    static final String NONE_CATEGORY = "librissearch:noneCategory";
+
     public enum SearchMode {
         SUGGEST,
         STANDARD_SEARCH,
@@ -88,12 +91,12 @@ public class Query {
 
     public Query(QueryParams queryParams,
                  AppParams appParams,
-                 VocabMappings vocabMappings,
+                 ResourceLookup resourceLookup,
                  ESSettings esSettings,
                  Whelk whelk) throws InvalidQueryException {
         this.queryParams = queryParams;
         this.appParams = appParams;
-        this.disambiguate = new Disambiguate(vocabMappings, appParams.filterAliases, queryParams.aliased, whelk.getJsonld());
+        this.disambiguate = new Disambiguate(resourceLookup, appParams.filterAliases, queryParams.aliased, whelk.getJsonld());
         this.esSettings = esSettings;
         this.whelk = whelk;
         this.qTree = new QueryTree(queryParams.q, disambiguate);
@@ -103,12 +106,12 @@ public class Query {
         this.stats = new Stats();
     }
 
-    public static Query init(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
+    public static Query init(QueryParams queryParams, AppParams appParams, ResourceLookup resourceLookup, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
         return switch (getSearchMode(queryParams)) {
-            case STANDARD_SEARCH -> new Query(queryParams, appParams, vocabMappings, esSettings, whelk);
-            case OBJECT_SEARCH -> new ObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
-            case PREDICATE_OBJECT_SEARCH -> new PredicateObjectQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
-            case SUGGEST -> new SuggestQuery(queryParams, appParams, vocabMappings, esSettings, whelk);
+            case STANDARD_SEARCH -> new Query(queryParams, appParams, resourceLookup, esSettings, whelk);
+            case OBJECT_SEARCH -> new ObjectQuery(queryParams, appParams, resourceLookup, esSettings, whelk);
+            case PREDICATE_OBJECT_SEARCH -> new PredicateObjectQuery(queryParams, appParams, resourceLookup, esSettings, whelk);
+            case SUGGEST -> new SuggestQuery(queryParams, appParams, resourceLookup, esSettings, whelk);
         };
     }
 
@@ -450,14 +453,13 @@ public class Query {
 
         Property property = slice.getProperty();
 
-        if (!slice.getShowIf().isEmpty()) {
+        if (!slice.getShowIf().isEmpty()
+                && ctx.selectedFacets.isInactive(FIND_CATEGORY)
+                && ctx.selectedFacets.isInactive(IDENTIFY_CATEGORY)
+                && ctx.selectedFacets.isInactive(NONE_CATEGORY)) {
             // Enable @none facet if find/identify/@none in query
             // TODO don't hardcode this if we decide it is what we want
-            if (ctx.selectedFacets().getSelected(Restrictions.FIND_CATEGORY).isEmpty()
-                && ctx.selectedFacets().getSelected(Restrictions.IDENTIFY_CATEGORY).isEmpty()
-                && ctx.selectedFacets().getSelected(Restrictions.NONE_CATEGORY).isEmpty()) {
-                return;
-            }
+            return;
         }
 
         if (property.isRestrictedSubProperty() && !property.hasIndexKey()) {
@@ -465,7 +467,7 @@ public class Query {
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
-        property.getAltSelectors(ctx.jsonLd, ctx.rdfSubjectTypes).stream()
+        property.getAltSelectors(ctx.jsonLd, ctx.rdfSubjectTypes, false).stream()
                 .map(s -> s.withPrependedMetaProperty(ctx.jsonLd))
                 .forEach(selector -> {
                     String field = selector.esField();
@@ -494,8 +496,8 @@ public class Query {
                             m.remove(slice.subSlice().propertyKey());
                         }
                         // TODO don't hardcode this if we decide it is what we want
-                        if (Restrictions.FIND_CATEGORY.equals(pKey) || Restrictions.IDENTIFY_CATEGORY.equals(pKey)) {
-                            m.remove(Restrictions.NONE_CATEGORY);
+                        if (FIND_CATEGORY.equals(pKey) || IDENTIFY_CATEGORY.equals(pKey)) {
+                            m.remove(NONE_CATEGORY);
                         }
                         //if ("_categoryByCollection.@none".equals(pKey)) {
                         //    m.remove("_categoryByCollection.find");
@@ -509,7 +511,7 @@ public class Query {
                     query.put(field, filterWrap(aggs, property.name(), filter));
                 });
     }
-    
+
     private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {
         return buildCoreAqqQuery(field, slice, ctx, false);
     }
@@ -576,7 +578,9 @@ public class Query {
         }
 
         private void queue(Link link) {
-            linkMap.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
+            if (!link.isChipLoaded()) {
+                linkMap.computeIfAbsent(link.iri(), k -> new ArrayList<>()).add(link);
+            }
         }
 
         private void queue(Collection<Link> links) {
@@ -667,13 +671,15 @@ public class Query {
 
                 var property = slice.getProperty();
                 String propertyKey = slice.propertyKey();
-                List<Map<String, Object>> observations = new ArrayList<>();
 
-                Connective connective = selectedFacets.getConnective(propertyKey);
-
-                QueryTree qt = selectedFacets.isRangeFilter(propertyKey)
+                QueryTree qt = slice.isRange()
                         ? qTree.removeAll(selectedFacets.getRangeSelected(propertyKey))
                         : qTree;
+
+                List<Condition> selected = selectedFacets.getSelected(propertyKey);
+                Connective connective = selectedFacets.inferConnective(propertyKey).orElse(slice.defaultConnective());
+
+                List<Map<String, Object>> observations = new ArrayList<>();
 
                 this.buckets.entrySet()
                         .stream()
@@ -697,7 +703,7 @@ public class Query {
                             // TODO
                             boolean isSelected = selectedValue != null && !selectedValue.isEmpty()
                                     ? selectedValue.stream().anyMatch(n -> n instanceof Condition c2 && c2.value() instanceof Link l && v instanceof Link l2 && l.iri().equals(l2.iri()))
-                                    : selectedFacets.isSelected(c, propertyKey);
+                                    : selected.contains(c);
 
                             Consumer<QueryTree> addObservation = alteredTree -> {
                                 Map<String, Object> observation = new LinkedHashMap<>();
@@ -731,9 +737,8 @@ public class Query {
                                 //List<Node> selected = selectedValue != null ? selectedValue : Collections.emptyList();
                                 //addObservation.accept(qt.remove(selected).add(pv));
                                 Predicate<Node> f = (Node n) -> n instanceof Condition c2
-                                        && c2.selector().path().getLast() instanceof Property p
-                                        && "category".equals(p.queryKey())
-                                        && p.isRestrictedSubProperty();
+                                        && c2.selector() instanceof Property p
+                                        && p instanceof Property.CoercingSubProperty coercing && coercing.getSuperProperty().name().equals(WORK_CATEGORY);
 
                                 var qt2 = qt.removeAll(qt.findTopNodesByCondition(n -> f.test(n) || n instanceof Or or && or.children().stream().anyMatch(f)));
                                 if (selectedValue == null || !selectedValue.contains(c)) {
@@ -744,7 +749,6 @@ public class Query {
                                 return;
                             }
 
-                            var selected = selectedFacets.getSelected(propertyKey);
                             if (isSelected) {
                                 selected.stream()
                                         .filter(c::equals)
@@ -807,22 +811,23 @@ public class Query {
             public Map<String, Object> getSliceByDimension(List<AppParams.Slice> slices, SelectedFacets selectedFacets) {
                 var s = getSliceByDimension(slices, selectedFacets, null, null);
 
+                /*
                 // Move @none to under selected find/identify
                 // TODO don't hardcode this if we decide it is what we want
-                var none = s.remove(Restrictions.NONE_CATEGORY);
+                var none = s.remove(NONE_CATEGORY);
                 if (none != null) {
-                    var find =  s.get(Restrictions.FIND_CATEGORY);
+                    var find =  s.get(FIND_CATEGORY);
                     if (find != null) {
                         DocumentUtil.traverse(find, (value, path) -> {
-                            if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true) && !path.contains(Restrictions.NONE_CATEGORY)) {
+                            if (value instanceof Map m && m.containsKey("_selected") && m.get("_selected").equals(true) && !path.contains(NONE_CATEGORY)) {
                                 var newV = new HashMap<>(m);
-                                ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put(Restrictions.NONE_CATEGORY, none);
+                                ((Map) newV.computeIfAbsent("sliceByDimension", k -> new HashMap<>())).put(NONE_CATEGORY, none);
                                 return new DocumentUtil.Replace(newV);
                             }
                             return DocumentUtil.NOP;
                         });
                     }
-                }
+                }*/
 
                 return s;
             }
@@ -864,13 +869,13 @@ public class Query {
                     var sliceNode = new LinkedHashMap<>();
                     var observations = sliceResult.getObservations(slice, parentValue, mySelectedValue, selectedFacets);
                     if (!observations.isEmpty() || parentValue != null) {
-                        if (selectedFacets.isRangeFilter(propertyKey)) {
+                        if (slice.isRange()) {
                             sliceNode.put("search", getRangeTemplate(property));
                         }
                         sliceNode.put("dimension", property.name());
                         sliceNode.put("observation", observations);
                         sliceNode.put("maxItems", slice.size());
-                        sliceNode.put("_connective", selectedFacets.getConnective(propertyKey).name());
+                        sliceNode.put("_connective", selectedFacets.inferConnective(propertyKey).orElse(slice.defaultConnective()));
                         result.put(property.name(), sliceNode);
                     }
                 });

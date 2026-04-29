@@ -10,6 +10,7 @@ import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
+import whelk.search2.querytree.Path;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.QueryTreeBuilder;
@@ -39,13 +40,13 @@ public class SuggestQuery extends Query {
 
     private static final Map<String, List<String>> suggestPredicatesForType = new LinkedHashMap<>() {{
         put("Bibliography", List.of("bibliography"));
-        put("Library", List.of("itemHeldBy"));
-        put("bibdb:Organization", List.of("itemHeldByOrg"));
+        put("Library", List.of("library"));
+        put("bibdb:Organization", List.of("library"));
         put("Subject", List.of("subject"));
         put("Language", List.of("language", "originalLanguage"));
         put("BibliographicAgent", List.of("contributor", "subject"));
-        put("WorkCategory", List.of("category"));
-        put("InstanceCategory", List.of("hasInstanceCategory"));
+        put("WorkCategory", List.of("workCategory"));
+        put("InstanceCategory", List.of("instanceCategory"));
     }};
 
     private record Edited(Node node, Token token) {
@@ -59,9 +60,9 @@ public class SuggestQuery extends Query {
 
     private boolean propertySearch = false;
 
-    public SuggestQuery(QueryParams queryParams, AppParams appParams, VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
-        super(queryParams, appParams, vocabMappings, esSettings, whelk);
-        this.edited = getEdited();
+    public SuggestQuery(QueryParams queryParams, AppParams appParams, ResourceLookup resourceLookup, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
+        super(queryParams, appParams, resourceLookup, esSettings, whelk);
+        this.edited = getCurrentlyEdited();
         this.suggestQueryTree = getSuggestQueryTree();
     }
 
@@ -137,34 +138,39 @@ public class SuggestQuery extends Query {
         return applicablePredicates;
     }
 
-    private Edited getEdited() {
-        return qTree.allDescendants().flatMap(node ->
-                        switch (node) {
-                            case FreeText ft -> ft.getCurrentlyEditedToken(queryParams.cursor)
-                                    .map(token -> new Edited(ft, token))
-                                    .stream();
-                            case Condition c -> c.value() instanceof FreeText ft
-                                    ? ft.getCurrentlyEditedToken(queryParams.cursor)
-                                    .map(token -> new Edited(node, token))
-                                    .stream()
-                                    : Stream.empty();
-                            default -> Stream.empty();
-                        })
+    private Edited getCurrentlyEdited() {
+        return qTree.allDescendants()
+                .flatMap(node -> switch (node) {
+                    case FreeText ft -> ft.tokens().stream().map(t -> new Edited(node, t));
+                    case Condition c when c.value() instanceof FreeText ft -> ft.tokens().stream().map(t -> new Edited(node, t));
+                    case Condition c when c.value() instanceof Link l && l.isMappedFromCode() -> Stream.of(new Edited(node, l.token()));
+                    default -> Stream.empty();
+                })
+                .filter(edited -> {
+                    Token t = edited.token();
+                    int pos = queryParams.cursor;
+                    return pos > t.offset() && pos <= t.offset() + t.value().length();
+                })
                 .findFirst()
                 .orElse(Edited.empty());
     }
 
     private QueryTree getSuggestQueryTree() throws InvalidQueryException {
         if (edited.node() instanceof Condition c && c.operator().equals(EQUALS)) {
-            Selector selector = c.selector();
-            String searchableTypes = selector.range().stream()
+            List<String> range = switch (c.selector()) {
+                case Property.CoercingSubProperty p -> p.getSuperProperty().range();
+                case Path path when path.last() instanceof Property.CoercingSubProperty p -> p.getSuperProperty().range();
+                default -> c.selector().range();
+            };
+
+            String searchableTypes = range.stream()
                     .filter(type -> defaultBaseTypes.stream()
                             .filter(Predicate.not("Work"::equals))
                             .anyMatch(baseType -> whelk.getJsonld().isSubClassOf(type, baseType)))
                     .map(SuggestQuery::quotePrefixed)
                     .collect(Collectors.joining(" OR "));
 
-            FreeText ft = (FreeText) c.value();
+            FreeText ft = c.value() instanceof Link l ? new FreeText(l.token()) : (FreeText) c.value();
             FreeText prefixFt = editedTokenAsPrefix(ft);
 
             if (searchableTypes.isEmpty()) {
@@ -179,7 +185,7 @@ public class SuggestQuery extends Query {
             Node typeFilter = QueryTreeBuilder.buildTree("\"rdf:type\":" + parenthesize(searchableTypes), disambiguate);
             Node reverseLinksFilter = QueryTreeBuilder.buildTree("reverseLinks.totalItems>0", disambiguate);
             return new QueryTree(new And(List.of(or, typeFilter, reverseLinksFilter)));
-        } else if (edited.node() instanceof FreeText ft && qTree.isSimpleFreeText()) {
+        } else if (edited.node() instanceof FreeText ft) {
             String orJoinedTypes = defaultBaseTypes.stream().map(SuggestQuery::quotePrefixed).collect(Collectors.joining(" OR "));
             String rawTypeFilter = "\"rdf:type\":" + parenthesize(orJoinedTypes);
             Node typeFilter = QueryTreeBuilder.buildTree(rawTypeFilter, disambiguate);

@@ -48,7 +48,7 @@ public non-sealed class Property extends PathElement {
     protected boolean isLdSetContainer;
 
     protected Property superProperty;
-    protected List<Restrictions.OnProperty> objectOnPropertyRestrictions;
+    protected List<Restrictions.HasValue> objectRestrictions;
 
     private static final String LIBRIS_SEARCH_NS = "librissearch:";
 
@@ -72,7 +72,7 @@ public non-sealed class Property extends PathElement {
         this.range = getRange(jsonLd);
         this.inverseOf = getInverseOf(jsonLd);
         this.indexKey = (String) definition.get("ls:indexKey"); // FIXME: This shouldn't have a different prefix (ls: vs librissearch:)
-        this.objectOnPropertyRestrictions = getObjectHasValueRestrictions(jsonLd);
+        this.objectRestrictions = getObjectRestrictions(jsonLd);
     }
 
     private Property(String name, JsonLd jsonLd, Key.RecognizedKey queryKey) {
@@ -102,8 +102,8 @@ public non-sealed class Property extends PathElement {
         if (isShorthand(propDef)) {
             return new ShorthandProperty(propertyKey, jsonLd, queryKey);
         }
-        if (Restrictions.isNarrowingProperty(propertyKey)) {
-            return new NarrowedRestrictedProperty(propertyKey, jsonLd, queryKey);
+        if (isCoercing(propDef)) {
+            return new CoercingSubProperty(propertyKey, jsonLd, queryKey);
         }
         if (RDF_TYPE.equals(propertyKey)) {
             return new RdfType(jsonLd, queryKey);
@@ -119,7 +119,9 @@ public non-sealed class Property extends PathElement {
 
     @Override
     public String queryKey() {
-        return queryKey != null ? queryKey.queryKey() : name;
+        return queryKey != null
+                ? queryKey.queryKey()
+                : (name.startsWith(LIBRIS_SEARCH_NS) ? name.replace(LIBRIS_SEARCH_NS, "") : name); // FIXME
     }
 
     @Override
@@ -135,8 +137,8 @@ public non-sealed class Property extends PathElement {
     }
 
     @Override
-    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return _getAltSelectors(jsonLd, rdfSubjectTypes);
+    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
+        return _getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
     }
 
     @Override
@@ -153,7 +155,7 @@ public non-sealed class Property extends PathElement {
 
     @Override
     public boolean isType() {
-        return isRdfType();
+        return isRdfType() || TYPE_KEY.equals(indexKey);
     }
 
     @Override
@@ -236,21 +238,65 @@ public non-sealed class Property extends PathElement {
         return indexKey != null;
     }
 
-    public List<Restrictions.OnProperty> objectOnPropertyRestrictions() {
-        return objectOnPropertyRestrictions != null ? objectOnPropertyRestrictions : List.of();
+    public List<Restrictions.HasValue> objectOnPropertyRestrictions() {
+        return objectRestrictions != null ? objectRestrictions : List.of();
     }
 
-    protected List<Restrictions.OnProperty> getObjectHasValueRestrictions(JsonLd jsonLd) {
-        return getObjectHasValueRestrictions(definition, jsonLd).stream()
-                .map(Restrictions.OnProperty.class::cast)
+    protected List<Restrictions.HasValue> getObjectRestrictions(JsonLd jsonLd) {
+        return buildObjectRestrictions(definition, jsonLd, false);
+    }
+
+    public static List<Restrictions.HasValue> buildObjectRestrictions(Map<String, Object> definition, JsonLd jsonLd, boolean restrictByRangeType) {
+        List<Map<String, Object>> rdfsRange = ((List<?>) asList(definition.get(RANGE)))
+                .stream()
+                .map(QueryUtil::castToStringObjectMap)
                 .toList();
+
+        if (restrictByRangeType) {
+            Restrictions.HasValue objectTypeRestriction = buildObjectTypeRestriction(rdfsRange, jsonLd);
+            if (objectTypeRestriction != null) {
+                return List.of(objectTypeRestriction);
+            }
+        }
+
+        return buildObjectOnPropertyRestrictions(rdfsRange, jsonLd);
     }
 
-    public static List<Restrictions.HasValue> getObjectHasValueRestrictions(Map<String, Object> definition, JsonLd jsonLd) {
+    protected Property getSuperProperty(JsonLd jsonLd) {
+        return getProperty(getSuperKey(definition, jsonLd), jsonLd);
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Property p && name().equals(p.name());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(toString());
+    }
+
+
+    private static Restrictions.HasValue buildObjectTypeRestriction(List<Map<String, Object>> rdfsRange, JsonLd jsonLd) {
+        boolean isUnambiguousRange = rdfsRange.size() == 1 && JsonLd.isLink(rdfsRange.getFirst());
+        if (isUnambiguousRange) {
+            String rangeType = jsonLd.toTermKey((String) rdfsRange.getFirst().get(ID_KEY));
+            RdfType rdfType = new RdfType(jsonLd);
+            VocabTerm value = new VocabTerm(rangeType, jsonLd.vocabIndex.get(rangeType));
+            return new Restrictions.HasValue(rdfType, value);
+        }
+        return null;
+    }
+
+    private static List<Restrictions.HasValue> buildObjectOnPropertyRestrictions(List<Map<String, Object>> rdfsRange, JsonLd jsonLd) {
         List<Restrictions.HasValue> restrictions = new ArrayList<>();
 
-        ((List<?>) asList(definition.get(RANGE))).stream()
-                .map(Map.class::cast)
+        rdfsRange.stream()
                 .map(m -> (List<?>) m.get(SUBCLASS_OF))
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
@@ -286,26 +332,7 @@ public non-sealed class Property extends PathElement {
         return restrictions;
     }
 
-    protected Property getSuperProperty(JsonLd jsonLd) {
-        return getProperty(getSuperKey(definition, jsonLd), jsonLd);
-    }
-
-    @Override
-    public String toString() {
-        return name;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof Property p && name().equals(p.name());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(toString());
-    }
-
-    private List<Selector> _getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+    private List<Selector> _getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
         if (rdfSubjectTypes.isEmpty() || isPlatformTerm() || isRdfType()) {
             return List.of(this);
         }
@@ -322,18 +349,14 @@ public non-sealed class Property extends PathElement {
 
         List<List<Property>> altPaths = integralRelations.stream()
                 .filter(followIntegralRelation)
-                .map(ir -> {
-                    var altPath = new ArrayList<>(path());
-                    if (ir.isInverseOf(altPath.getFirst())) {
-                        altPath.removeFirst();
-                    } else {
-                        altPath.addFirst(ir);
-                    }
-                    return altPath;
-                })
+                .map(ir -> Stream.concat(Stream.of(ir), path().stream()).toList())
                 .collect(Collectors.toList());
 
-        if (altPaths.isEmpty() || isRecordProperty || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+        if (isRecordProperty || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+            altPaths.add(List.of(this));
+        }
+
+        if (altPaths.isEmpty() && allowIncompatible) {
             altPaths.add(List.of(this));
         }
 
@@ -384,6 +407,11 @@ public non-sealed class Property extends PathElement {
         return isCategory("https://id.kb.se/ns/librissearch/composite", definition);
     }
 
+    private static boolean isCoercing(Map<String, Object> definition) {
+        // FIXME: don't hardcode
+        return isCategory("https://id.kb.se/ns/librissearch/coercing", definition);
+    }
+
     private static boolean isShorthand(Map<String, Object> definition) {
         // FIXME: don't hardcode
         return isCategory("https://id.kb.se/vocab/shorthand", definition);
@@ -420,7 +448,7 @@ public non-sealed class Property extends PathElement {
         return getTermKeys(asList(definition.get(SUB_PROPERTY_OF)), jsonLd);
     }
 
-    protected static Stream<String> getTermKeys(List<?> terms, JsonLd jsonLd) {
+    private static Stream<String> getTermKeys(List<?> terms, JsonLd jsonLd) {
         return terms.stream()
                 .map(Property::getIri)
                 .filter(Objects::nonNull)
@@ -462,15 +490,19 @@ public non-sealed class Property extends PathElement {
         }
     }
 
-    public static final class NarrowedRestrictedProperty extends Property {
-        public NarrowedRestrictedProperty(Property superProperty, String subPropertyKey, JsonLd jsonLd) {
+    public static final class CoercingSubProperty extends Property {
+        public CoercingSubProperty(Property superProperty, String subPropertyKey, JsonLd jsonLd) {
             super(subPropertyKey, jsonLd);
             this.superProperty = superProperty;
         }
 
-        public NarrowedRestrictedProperty(String subPropertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+        public CoercingSubProperty(String subPropertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
             super(subPropertyKey, jsonLd, queryKey);
             this.superProperty = getSuperProperty(jsonLd);
+        }
+
+        public Property getSuperProperty() {
+            return superProperty;
         }
 
         @Override
@@ -483,6 +515,7 @@ public non-sealed class Property extends PathElement {
             return superProperty.definition();
         }
 
+        @Override
         public String esField() {
             if (hasIndexKey()) {
                 return indexKey;
@@ -493,11 +526,6 @@ public non-sealed class Property extends PathElement {
         @Override
         public boolean isRestrictedSubProperty() {
             return true;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return super.equals(obj) || superProperty.equals(obj);
         }
     }
 
@@ -529,10 +557,8 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        protected List<Restrictions.OnProperty> getObjectHasValueRestrictions(JsonLd jsonLd) {
-            var range = getUnambiguousRange(jsonLd);
-            if (range != null) {
-               /*
+        protected List<Restrictions.HasValue> getObjectRestrictions(JsonLd jsonLd) {
+            /*
                 We interpret the range of an anonymous sub-property as a restriction.
 
                 For example
@@ -547,12 +573,8 @@ public non-sealed class Property extends PathElement {
                     [ rdfs:subPropertyOf :identifiedBy ;
                         rdfs:range [ rdfs:subClassOf [ a owl:Restriction ; owl:onProperty rdf:type ; owl:hasValue :ISBN ] ] ]
                     :value ) .
-                 */
-                RdfType rdfType = new RdfType(jsonLd);
-                VocabTerm value = new VocabTerm(range, jsonLd.vocabIndex.get(range));
-                return List.of(new Restrictions.HasValue(rdfType, value));
-            }
-            return super.getObjectHasValueRestrictions(jsonLd);
+            */
+            return Property.buildObjectRestrictions(definition, jsonLd, true);
         }
 
         @Override
@@ -562,11 +584,6 @@ public non-sealed class Property extends PathElement {
             }
             return "AnonymousProperty";
         }
-
-        private String getUnambiguousRange(JsonLd jsonLd) {
-            List<String> range = getTermKeys(asList(definition.get(RANGE)), jsonLd).toList();
-            return range.size() == 1 ? range.getFirst() : null;
-        }
     }
 
     private static class CompositeProperty extends Property {
@@ -575,9 +592,9 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
             return getComponents(jsonLd).stream()
-                    .flatMap(s -> s.getAltSelectors(jsonLd, rdfSubjectTypes).stream())
+                    .flatMap(s -> s.getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible).stream())
                     .toList();
         }
 
@@ -627,8 +644,8 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-            return new Path(propertyChain).getAltSelectors(jsonLd, rdfSubjectTypes);
+        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
+            return new Path(propertyChain).getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
         }
 
         @Override

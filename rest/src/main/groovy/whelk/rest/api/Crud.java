@@ -933,7 +933,7 @@ public class Crud extends WhelkHttpServlet {
             sendError(request, response, e);
         } finally {
             measurement.complete();
-            log.debug("Sending DELETE response with status {} for {}", 
+            log.info("Sending DELETE response with status {} for {}",
                      response.getStatus(), request.getPathInfo());
         }
     }

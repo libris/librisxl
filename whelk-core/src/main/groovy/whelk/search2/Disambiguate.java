@@ -3,7 +3,6 @@ package whelk.search2;
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
 import whelk.search2.querytree.*;
-import whelk.util.Restrictions;
 
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -11,22 +10,25 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.LD_KEYS;
 import static whelk.JsonLd.VOCAB_KEY;
 import static whelk.JsonLd.looksLikeIri;
+import static whelk.search2.Query.NONE_CATEGORY;
+import static whelk.search2.Query.WORK_CATEGORY;
 import static whelk.search2.QueryUtil.encodeUri;
-import static whelk.search2.VocabMappings.expandPrefixed;
+import static whelk.search2.ResourceLookup.expandPrefixed;
 
 public class Disambiguate {
     private final JsonLd jsonLd;
 
-    private final VocabMappings vocabMappings;
+    private final ResourceLookup resourceLookup;
     private final Map<String, FilterAlias> filterAliasMappings;
 
     private final List<String> nsPrecedenceOrder;
 
-    public Disambiguate(VocabMappings vocabMappings, Collection<FilterAlias> appFilterAliases, Collection<FilterAlias.QueryDefinedAlias> queryFilterAliases, JsonLd jsonLd) {
-        this.vocabMappings = vocabMappings;
+    public Disambiguate(ResourceLookup resourceLookup, Collection<FilterAlias> appFilterAliases, Collection<FilterAlias.QueryDefinedAlias> queryFilterAliases, JsonLd jsonLd) {
+        this.resourceLookup = resourceLookup;
         this.filterAliasMappings = getFilterAliasMappings(appFilterAliases, queryFilterAliases);
         this.jsonLd = jsonLd;
         this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "bulk", "marc"); // FIXME
@@ -34,8 +36,8 @@ public class Disambiguate {
 
     // For test only
     @PackageScope
-    public Disambiguate(VocabMappings vocabMappings, Collection<FilterAlias> filterAliasMappings, JsonLd jsonLd) {
-        this.vocabMappings = vocabMappings;
+    public Disambiguate(ResourceLookup resourceLookup, Collection<FilterAlias> filterAliasMappings, JsonLd jsonLd) {
+        this.resourceLookup = resourceLookup;
         this.filterAliasMappings = getFilterAliasMappings(filterAliasMappings, List.of());
         this.jsonLd = jsonLd;
         this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "bulk", "marc"); // FIXME
@@ -69,10 +71,10 @@ public class Disambiguate {
         return switch (selector) {
             case Property p -> restrictByValue(p, value);
             case Path path -> {
-                var narrowed = restrictByValue(path.last(), value);
+                var coerced = restrictByValue(path.last(), value);
                 List<PathElement> newPath = new ArrayList<>(path.path());
                 newPath.removeLast();
-                newPath.addAll(narrowed.path());
+                newPath.addAll(coerced.path());
                 yield new Path(newPath, path.token());
             }
             case Key k -> k;
@@ -80,26 +82,26 @@ public class Disambiguate {
     }
 
     private boolean isRestrictedByValue(String propertyKey) {
-        return vocabMappings.propertiesRestrictedByValue().containsKey(propertyKey);
+        return resourceLookup.vocabMappings().propertiesRestrictedByValue().containsKey(propertyKey);
     }
 
     private Property restrictByValue(Property property, String value) {
-        var narrowed = tryNarrow(property.name(), value);
-        if (narrowed != null) {
-            return new Property.NarrowedRestrictedProperty(property, narrowed, jsonLd);
+        var coercing = tryCoerce(property.name(), value);
+        if (coercing != null) {
+            return new Property.CoercingSubProperty(property, coercing, jsonLd);
+        } else if (property.name().equals(WORK_CATEGORY)) {
+            // FIXME: Don't hardcode
+            return new Property.CoercingSubProperty(property, NONE_CATEGORY, jsonLd);
         }
         return property;
     }
 
-    private String tryNarrow(String property, String value) {
-        var narrowedByValue = vocabMappings.propertiesRestrictedByValue()
+    private String tryCoerce(String property, String value) {
+        var coercingSubPropertyKey = resourceLookup.vocabMappings().propertiesRestrictedByValue()
                 .getOrDefault(property, Map.of())
-                .get(expandPrefixed(value));
-        if (narrowedByValue != null) {
-            return narrowedByValue.getFirst();
-        } else if (property.equals(Restrictions.CATEGORY)) {
-            // FIXME: Don't hardcode
-            return Restrictions.NONE_CATEGORY;
+                .get(value);
+        if (coercingSubPropertyKey != null) {
+            return coercingSubPropertyKey.getFirst();
         }
         return null;
     }
@@ -125,7 +127,7 @@ public class Disambiguate {
 
     private PathElement mapSingleKey(Token token) {
         for (String ns : nsPrecedenceOrder) {
-            Set<String> mappedProperties = vocabMappings.properties()
+            Set<String> mappedProperties = resourceLookup.vocabMappings().properties()
                     .getOrDefault(token.value().toLowerCase(), Map.of())
                     .getOrDefault(ns, Set.of());
             if (mappedProperties.size() == 1) {
@@ -181,6 +183,7 @@ public class Disambiguate {
         }
         if (property.isType() || property.isVocabTerm()) {
             for (String ns : nsPrecedenceOrder) {
+                var vocabMappings = resourceLookup.vocabMappings();
                 var mappings = property.isType() ? vocabMappings.classes() : vocabMappings.enums();
                 Set<String> mappedClasses = mappings.getOrDefault(value.toLowerCase(), Map.of()).getOrDefault(ns, Set.of());
                 if (mappedClasses.size() == 1) {
@@ -201,6 +204,17 @@ public class Disambiguate {
             String expanded = expandPrefixed(value);
             if (looksLikeIri(expanded)) {
                 return Optional.of(new Link(encodeUri(expanded), token));
+            } else {
+                for (String range : property.range()) {
+                    var mappedResourceDescription = resourceLookup.externalMappings().byType()
+                            .getOrDefault(range, Map.of())
+                            .getOrDefault(value.toLowerCase(), Map.of());
+                    if (!mappedResourceDescription.isEmpty()) {
+                        var link = new Link((String) mappedResourceDescription.get(ID_KEY), token, true);
+                        link.setChip(mappedResourceDescription);
+                        return Optional.of(link);
+                    }
+                }
             }
         }
         /*
