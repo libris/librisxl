@@ -247,7 +247,10 @@ public class QueryTreeBuilder {
             BIBN,
 
             /** "Sekundärt materialtypsindex. Kompletterande materialtyper på mer detaljerad nivå. Varje katalogpost kan ha 0, 1 eller flera sådana sekundära typer" */
-            MTAG
+            MTAG,
+
+            /** "Kod för trunkerad sökning på Deweyklassifikation" */
+            DDCT
         }
 
         static final List<String> CODES = Arrays.stream(LegacyCode.values()).map(LegacyCode::toString).toList();
@@ -326,6 +329,8 @@ public class QueryTreeBuilder {
                     case "free" -> "freeOnline"; // the only one seen in logs
                     default -> value;
                 };
+
+                case DDCT -> String.format("ddc:%s%s", value, Operator.WILDCARD);
             };
 
             return buildTree(mappedQuery, disambiguate);
