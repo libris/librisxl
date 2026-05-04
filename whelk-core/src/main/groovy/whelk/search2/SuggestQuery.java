@@ -47,6 +47,7 @@ public class SuggestQuery extends Query {
         put("BibliographicAgent", List.of("contributor", "subject"));
         put("WorkCategory", List.of("workCategory"));
         put("InstanceCategory", List.of("instanceCategory"));
+        put("Country", List.of("publicationCountry"));
     }};
 
     private record Edited(Node node, Token token) {
