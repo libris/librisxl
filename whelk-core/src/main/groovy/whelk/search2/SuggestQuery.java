@@ -36,7 +36,7 @@ import static whelk.search2.QueryUtil.parenthesize;
 
 public class SuggestQuery extends Query {
     // TODO: Don't hardcode
-    private static final List<String> defaultBaseTypes = List.of("Agent", "Concept", "Language", "Work", "bibdb:Organization");
+    private static final List<String> defaultBaseTypes = List.of("Agent", "Concept", "Language", "Work", "bibdb:Organization", "Country");
 
     private static final Map<String, List<String>> suggestPredicatesForType = new LinkedHashMap<>() {{
         put("Bibliography", List.of("bibliography"));
@@ -47,6 +47,7 @@ public class SuggestQuery extends Query {
         put("BibliographicAgent", List.of("contributor", "subject"));
         put("WorkCategory", List.of("workCategory"));
         put("InstanceCategory", List.of("instanceCategory"));
+        put("Country", List.of("publicationCountry"));
     }};
 
     private record Edited(Node node, Token token) {

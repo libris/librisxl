@@ -286,6 +286,7 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
                 [
                     "Library"           : ["s": ["https://libris.kb.se/library/S"]],
                     "bibdb:Organization": ["kb": ["https://libris.kb.se/library/org/KB"]]
+                    "Country"           : ["sw": ["https://id.kb.se/country/sw"]]
                 ]
             */
             Map<String, Map<String, Map<String, Object>>> byType
@@ -294,10 +295,13 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
             return loadMappings(whelk);
         }
 
+        // TODO: get from vocab
         private static ExternalMappings loadMappings(Whelk whelk) {
             Map<String, Map<String, Map<String, Object>>> mappings = new HashMap<>();
             mappings.put("Library", loadMappingsForType("Library", List.of("sigel"), whelk));
             mappings.put("bibdb:Organization", loadMappingsForType("bibdb:Organization", List.of("code"), whelk));
+            mappings.put("Country", loadMappingsForType("Country", List.of("code"), whelk));
+            mappings.put("IntendedAudience", loadMappingsForType("marc:AudienceType", List.of("code"), whelk));
             return new ExternalMappings(mappings);
         }
 
@@ -329,6 +333,8 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
         nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
         nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
         nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
+        nsToPrefix.put("https://id.kb.se/term/ktg/", "ktg:");
+        nsToPrefix.put("https://id.kb.se/term/rda/", "idrda:");
         nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
         nsToPrefix.put("https://id.kb.se/language/", "lang:");
         nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");
@@ -357,6 +363,8 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
         nsToPrefix.put("https://id.kb.se/term/saogf/", "saogf:");
         nsToPrefix.put("https://id.kb.se/term/barn/", "barn:");
         nsToPrefix.put("https://id.kb.se/term/barngf/", "barngf:");
+        nsToPrefix.put("https://id.kb.se/term/ktg/", "ktg:");
+        nsToPrefix.put("https://id.kb.se/term/rda/", "idrda:");
         nsToPrefix.put("https://libris.kb.se/library/", "sigel:");
         nsToPrefix.put("https://id.kb.se/language/", "lang:");
         nsToPrefix.put(Document.getBASE_URI().toString(), "libris:");

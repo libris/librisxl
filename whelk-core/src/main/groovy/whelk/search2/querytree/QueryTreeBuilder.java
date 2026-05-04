@@ -261,6 +261,7 @@ public class QueryTreeBuilder {
         static final String SERIAL = "workType:Serial";
         static final String COLLECTION = "workType:Collection";
         static final String INTEGRATING = "workType:Integrating";
+        static final String DIGITAL = "instanceType:DigitalResource";
 
         static boolean isQueryCode(Ast.Code c, Selector selector) {
             if (c.operator() != Operator.EQUALS) {
@@ -310,6 +311,11 @@ public class QueryTreeBuilder {
                          "serials" -> SERIAL;
 
                     case "noter" -> NOTATED_MUSIC;
+
+                    case "eresurs",
+                         "eresurser",
+                         "eresource",
+                         "eresources" -> DIGITAL;
 
                     // TODO? very little use: ebook, barn, skol, bokannat
                     // seen in queries but gives no result: art, kon, kap, sam, foto, dok
