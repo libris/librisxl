@@ -61,8 +61,8 @@ public class SuggestQuery extends Query {
 
     private boolean propertySearch = false;
 
-    public SuggestQuery(QueryParams queryParams, AppParams appParams, ResourceLookup resourceLookup, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
-        super(queryParams, appParams, resourceLookup, esSettings, whelk);
+    public SuggestQuery(QueryParams queryParams, AppParams appParams, ResourceLookup.VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
+        super(queryParams, appParams, new ResourceLookup(vocabMappings), esSettings, whelk);
         this.edited = getCurrentlyEdited();
         this.suggestQueryTree = getSuggestQueryTree();
     }
