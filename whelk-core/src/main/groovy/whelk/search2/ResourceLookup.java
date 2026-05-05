@@ -299,6 +299,7 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
         private static ExternalMappings loadMappings(Whelk whelk) {
             Map<String, Map<String, Map<String, Object>>> mappings = new HashMap<>();
             mappings.put("Library", loadMappingsForType("Library", List.of("sigel"), whelk));
+            mappings.put("Bibliography", loadMappingsForType("Bibliography", List.of("sigel"), whelk));
             mappings.put("bibdb:Organization", loadMappingsForType("bibdb:Organization", List.of("code"), whelk));
             mappings.put("Country", loadMappingsForType("Country", List.of("code"), whelk));
             mappings.put("IntendedAudience", loadMappingsForType("marc:AudienceType", List.of("code"), whelk));
