@@ -61,8 +61,8 @@ public class SuggestQuery extends Query {
 
     private boolean propertySearch = false;
 
-    public SuggestQuery(QueryParams queryParams, AppParams appParams, ResourceLookup resourceLookup, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
-        super(queryParams, appParams, resourceLookup, esSettings, whelk);
+    public SuggestQuery(QueryParams queryParams, AppParams appParams, ResourceLookup.VocabMappings vocabMappings, ESSettings esSettings, Whelk whelk) throws InvalidQueryException {
+        super(queryParams, appParams, new ResourceLookup(vocabMappings), esSettings, whelk);
         this.edited = getCurrentlyEdited();
         this.suggestQueryTree = getSuggestQueryTree();
     }
@@ -144,7 +144,6 @@ public class SuggestQuery extends Query {
                 .flatMap(node -> switch (node) {
                     case FreeText ft -> ft.tokens().stream().map(t -> new Edited(node, t));
                     case Condition c when c.value() instanceof FreeText ft -> ft.tokens().stream().map(t -> new Edited(node, t));
-                    case Condition c when c.value() instanceof Link l && l.isMappedFromCode() -> Stream.of(new Edited(node, l.token()));
                     default -> Stream.empty();
                 })
                 .filter(edited -> {
@@ -171,7 +170,7 @@ public class SuggestQuery extends Query {
                     .map(SuggestQuery::quotePrefixed)
                     .collect(Collectors.joining(" OR "));
 
-            FreeText ft = c.value() instanceof Link l ? new FreeText(l.token()) : (FreeText) c.value();
+            FreeText ft = (FreeText) c.value();
             FreeText prefixFt = editedTokenAsPrefix(ft);
 
             if (searchableTypes.isEmpty()) {

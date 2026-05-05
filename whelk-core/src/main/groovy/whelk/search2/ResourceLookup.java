@@ -36,6 +36,10 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
         return new ResourceLookup(VocabMappings.load(whelk), ExternalMappings.load(whelk));
     }
 
+    public ResourceLookup(VocabMappings vocabMappings) {
+        this(vocabMappings, new ExternalMappings(Map.of()));
+    }
+
     public record VocabMappings(
         /*
         Map<Code, Map<Namespace, Set<TermKey>>>
