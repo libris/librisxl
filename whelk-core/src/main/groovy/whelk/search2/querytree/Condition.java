@@ -210,7 +210,7 @@ public non-sealed class Condition implements Node {
         if (operator == LIKE) {
             m.put("toEquals", makeReplaceLink.apply(this, new Condition(selector, EQUALS, value)));
         }
-        if (operator == EQUALS && selector instanceof Property p && p.isPreferLike()) {
+        if (operator == EQUALS && selector instanceof Property p && !(value instanceof FreeText) && p.isPreferLike()) {
             m.put("toLike", makeReplaceLink.apply(this, new Condition(selector, LIKE, value)));
         }
 
