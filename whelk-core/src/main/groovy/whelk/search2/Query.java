@@ -111,7 +111,7 @@ public class Query {
             case STANDARD_SEARCH -> new Query(queryParams, appParams, resourceLookup, esSettings, whelk);
             case OBJECT_SEARCH -> new ObjectQuery(queryParams, appParams, resourceLookup, esSettings, whelk);
             case PREDICATE_OBJECT_SEARCH -> new PredicateObjectQuery(queryParams, appParams, resourceLookup, esSettings, whelk);
-            case SUGGEST -> new SuggestQuery(queryParams, appParams, resourceLookup, esSettings, whelk);
+            case SUGGEST -> new SuggestQuery(queryParams, appParams, resourceLookup.vocabMappings(), esSettings, whelk);
         };
     }
 
