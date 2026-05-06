@@ -84,7 +84,7 @@ public class EsQueryTree {
                         ? getNestedTree(g.getInverse(), esMappings)
                         : new Not(getNestedTree(node, esMappings));
                 case Condition c -> c.selector().getEsNestedStem(esMappings)
-                        .filter(esMappings::isNestedNotInParentField)
+                        .filter(stem -> esMappings.isNestedNotInParentField(stem) || c.value().isMultiToken())
                         .map(stem -> (Condition) new NestedCondition(c, stem))
                         .orElse(c);
                 default -> tree;
