@@ -60,13 +60,6 @@ public class EsQueryTree {
         }
 
         private static Node getNestedTree(Node tree, EsMappings esMappings) {
-            if (tree instanceof And and) {
-                tree = regroupAltSelectorsByNestedStem(and, esMappings);
-            }
-            return _getNestedTree(tree, esMappings);
-        }
-
-        private static Node _getNestedTree(Node tree, EsMappings esMappings) {
             return switch (tree) {
                 case And and -> {
                     List<NestedAnd> nestedAndGroups = collectNestedGroups(and, esMappings);
@@ -139,32 +132,6 @@ public class EsQueryTree {
             harvestNested.run();
 
             return nestedAndGroups;
-        }
-
-        private static Group regroupAltSelectorsByNestedStem(And and, EsMappings esMappings) {
-            List<Node> newChildren = new ArrayList<>(and.children());
-
-            List<List<Or.AltSelectors>> altSelectorsGroupedByOrigSelector = and.children().stream()
-                    .filter(Or.AltSelectors.class::isInstance)
-                    .map(Or.AltSelectors.class::cast)
-                    .collect(Collectors.groupingBy(Or.AltSelectors::origSelector))
-                    .values()
-                    .stream()
-                    .filter(altSelectors -> altSelectors.size() > 1)
-                    .toList();
-
-            for (List<Or.AltSelectors> altSelectors : altSelectorsGroupedByOrigSelector) {
-                Map<Optional<String>, List<Node>> groupedByNestedStem = altSelectors.stream()
-                        .map(Node::children)
-                        .flatMap(List::stream)
-                        .collect(Collectors.groupingBy(n -> findUnambiguousNestedStem(n, esMappings)));
-                if (!groupedByNestedStem.containsKey(Optional.empty())) {
-                    newChildren.removeAll(altSelectors);
-                    newChildren.add(new Or(groupedByNestedStem.values().stream().map(And::new).toList()));
-                }
-            }
-
-            return newChildren.size() == 1 ? (Or) newChildren.getFirst() : new And(newChildren);
         }
 
         private static Optional<String> findUnambiguousNestedStem(Node node, EsMappings esMappings) {
