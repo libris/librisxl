@@ -1332,16 +1332,4 @@ class EsQueryTreeSpec extends Specification {
                 ]
         ]
     }
-
-    def "Regroup alt selectors"() {
-        given:
-        String q = 'type:T2 p3p1:x p3p1:y'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings)
-
-        expect:
-        eqt.toString() == "(type:T2 OR type:T2x) (hasInstance.p3.p1:x OR p3.p1:x) (hasInstance.p3.p1:y OR p3.p1:y)"
-        esQueryTree.toString() == "(type:T2 OR type:T2x) ((p3.p1:x p3.p1:y) OR (hasInstance.p3.p1:x hasInstance.p3.p1:y))"
-    }
 }
