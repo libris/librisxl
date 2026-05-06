@@ -1,5 +1,7 @@
 package whelk.search2;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -32,6 +34,8 @@ import static whelk.search2.QueryUtil.loadThing;
 import static whelk.util.DocumentUtil.getAtPath;
 
 public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings externalMappings) {
+    private static final Logger logger = LogManager.getLogger(ResourceLookup.class);
+
     public static ResourceLookup load(Whelk whelk) {
         return new ResourceLookup(VocabMappings.load(whelk), ExternalMappings.load(whelk));
     }
@@ -307,6 +311,7 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
             mappings.put("bibdb:Organization", loadMappingsForType("bibdb:Organization", List.of("code"), whelk));
             mappings.put("Country", loadMappingsForType("Country", List.of("code"), whelk));
             mappings.put("IntendedAudience", loadMappingsForType("marc:AudienceType", List.of("code"), whelk));
+            mappings.put("Language", loadMappingsForType("Language", List.of("langCode", "langCodeFull", "langCodeTerm", "langCodeShort", "langCodeLibrisLocal"), whelk));
             return new ExternalMappings(mappings);
         }
 
@@ -322,6 +327,8 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
                             }
                         });
                     });
+
+            logger.info("Loaded {} mappings for {}", mappings.size(), type);
             return mappings;
         }
     }
