@@ -26,6 +26,7 @@ import whelk.util.DocumentUtil
 import whelk.util.FresnelUtil
 import whelk.util.PropertyLoader
 import whelk.util.Romanizer
+import whelk.util.Unicode
 
 import java.time.Instant
 import java.time.ZoneId
@@ -292,7 +293,7 @@ class Whelk {
         def otherIris = []
         List<String> systemIds = []
         ids.each { id ->
-            if (id.startsWith(Document.BASE_URI.toString())) {
+            if (id.startsWith(Document.BASE_URI.toString()) && !Unicode.stripPrefix(id, Document.BASE_URI.toString()).contains("/")) {
                 def systemId = Document.BASE_URI.resolve(id).getPath().substring(1)
                 idMap[systemId] = id
                 systemIds << systemId
