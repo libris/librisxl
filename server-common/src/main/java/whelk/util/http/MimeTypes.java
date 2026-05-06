@@ -7,4 +7,5 @@ public class MimeTypes {
     public static final String RDF = "application/rdf+xml";
     public static final String JSON = "application/json";
     public static final String N3 = "text/n3";
+    public static final String ATOM = "application/atom+xml";
 }
