@@ -1649,11 +1649,9 @@
   "852": {
     "aboutType": "Item",
     "required": true,
-    "linkEveryIfRepeated": {
-      "addLink": "hasComponent",
-      "embedded": true,
-      "resourceType": "Item"
-    },
+    "addLink": "hasComponent",
+    "embedded": true,
+    "resourceType": "Item",
     "match": [
       {
         "when": {
