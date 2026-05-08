@@ -147,19 +147,22 @@ public class ESSettings {
             }
 
             public FieldBoost withField(String name) {
-                return withField(name, defaultBoostFactor);
+                return withFields(List.of(name));
             }
 
-            public FieldBoost withField(String name, float boost) {
-                var fieldSettings = new HashMap<>() {{
-                    put("name", name);
-                    put("boost", boost);
-                }};
-                return withFields(List.of(fieldSettings));
+            public FieldBoost withFields(List<String> fieldNames) {
+                return withFields(fieldNames, defaultBoostFactor);
             }
 
-            public FieldBoost withFields(List<Map<?, ?>> fieldSettings) {
-                List<Field> fields = fieldSettings.stream().map(Field::new).toList();
+            public FieldBoost withFields(List<String> fieldNames, float boost) {
+                List<Field> fields = fieldNames.stream()
+                        .map(f -> {
+                            var fieldSettings = new HashMap<>();
+                            fieldSettings.put("name", f);
+                            fieldSettings.put("boost", boost);
+                            return new Field(fieldSettings);
+                        })
+                        .toList();
                 return _withFields(fields);
             }
 

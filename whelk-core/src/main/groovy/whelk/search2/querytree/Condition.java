@@ -31,6 +31,7 @@ import static whelk.search2.Operator.LIKE;
 import static whelk.search2.QueryUtil.boolWrap;
 import static whelk.search2.QueryUtil.mustNotWrap;
 import static whelk.search2.QueryUtil.mustWrap;
+import static whelk.search2.QueryUtil.nestedWrap;
 import static whelk.search2.QueryUtil.parenthesize;
 import static whelk.search2.QueryUtil.shouldWrap;
 

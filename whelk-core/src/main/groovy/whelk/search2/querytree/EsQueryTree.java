@@ -1,11 +1,13 @@
 package whelk.search2.querytree;
 
+import whelk.JsonLd;
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
 import whelk.search2.SelectedFacets;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +22,7 @@ import static whelk.search2.QueryUtil.nestedWrap;
 
 public class EsQueryTree {
     private final ESSettings esSettings;
-    private final NestedTree nestedTree;
+    private final MainQueryTree mainQueryTree;
     private final PostFilterTree postFilterTree;
 
     public EsQueryTree(ExpandedQueryTree queryTree, ESSettings esSettings) {
@@ -29,12 +31,12 @@ public class EsQueryTree {
 
     public EsQueryTree(ExpandedQueryTree queryTree, ESSettings esSettings, SelectedFacets selectedFacets) {
         this.esSettings = esSettings;
-        this.nestedTree = NestedTree.from(queryTree, esSettings.mappings());
-        this.postFilterTree = PostFilterTree.from(queryTree, nestedTree, selectedFacets);
+        this.mainQueryTree = MainQueryTree.from(queryTree, esSettings.mappings());
+        this.postFilterTree = PostFilterTree.from(queryTree, mainQueryTree, selectedFacets);
     }
 
     public Map<String, Object> getMainQuery() {
-        return nestedTree.remove(postFilterTree).tree().toEs(esSettings);
+        return mainQueryTree.remove(postFilterTree).tree().toEs(esSettings);
     }
 
     public Map<String, Object> getPostFilter() {
@@ -43,30 +45,31 @@ public class EsQueryTree {
 
     @Override
     public String toString() {
-        return nestedTree.tree().toString();
+        return mainQueryTree.tree().toString();
     }
 
-    private record NestedTree(Node tree) {
-        static NestedTree from(ExpandedQueryTree queryTree, EsMappings esMappings) {
-            return new NestedTree(getNestedTree(queryTree.tree(), esMappings));
+    private record MainQueryTree(Node tree) {
+        static MainQueryTree from(ExpandedQueryTree queryTree, EsMappings esMappings) {
+            var nodeTree = restructureForEs(queryTree.tree(), invertMap(queryTree.nodeMap()), esMappings);
+            return new MainQueryTree(nodeTree);
         }
 
-        NestedTree remove(PostFilterTree postFilterTree) {
+        MainQueryTree remove(PostFilterTree postFilterTree) {
             if (postFilterTree.isEmpty()) {
                 return this;
             }
             var modified = remove(tree, flattenedConditions(postFilterTree.tree()));
-            return new NestedTree(modified == null ? new Any.EmptyString() : modified);
+            return new MainQueryTree(modified == null ? new Any.EmptyString() : modified);
         }
 
-        private static Node getNestedTree(Node tree, EsMappings esMappings) {
+        private static Node restructureForEs(Node tree, Map<Node, Node> nodeMap, EsMappings esMappings) {
             return switch (tree) {
                 case And and -> {
                     List<NestedAnd> nestedAndGroups = collectNestedGroups(and, esMappings);
                     List<Node> nested = nestedAndGroups.stream().map(And::children).flatMap(List::stream).toList();
                     List<Node> nonNested = and.children().stream()
                             .filter(Predicate.not(nested::contains))
-                            .map(n -> getNestedTree(n, esMappings)).toList();
+                            .map(n -> restructureForEs(n, nodeMap, esMappings)).toList();
                     if (nestedAndGroups.size() == 1 && nonNested.isEmpty()) {
                         yield nestedAndGroups.getFirst();
                     }
@@ -76,13 +79,16 @@ public class EsQueryTree {
                     var nestedOr = findUnambiguousNestedStem(or, esMappings)
                             .filter(esMappings::isNestedNotInParentField)
                             .map(stem -> new NestedOr(or.children(), stem));
-                    yield nestedOr.isPresent()
+                    var newOr = nestedOr.isPresent()
                             ? nestedOr.get()
-                            : or.mapAndReinstantiate(n -> getNestedTree(n, esMappings));
+                            : (Or) or.mapAndReinstantiate(n -> restructureForEs(n, nodeMap, esMappings));
+                    yield nodeMap.get(or) instanceof Condition c && c.selector().isComposite()
+                            ? new MultiCondition(c, newOr)
+                            : newOr;
                 }
                 case Not(Node node) -> node instanceof Group g
-                        ? getNestedTree(g.getInverse(), esMappings)
-                        : new Not(getNestedTree(node, esMappings));
+                        ? restructureForEs(g.getInverse(), nodeMap, esMappings)
+                        : new Not(restructureForEs(node, nodeMap, esMappings));
                 case Condition c -> c.selector().getEsNestedStem(esMappings)
                         .filter(stem -> esMappings.isNestedNotInParentField(stem) || c.value().isMultiToken())
                         .map(stem -> (Condition) new NestedCondition(c, stem))
@@ -163,10 +169,16 @@ public class EsQueryTree {
             }
             return tree;
         }
+
+        private static Map<Node, Node> invertMap(Map<Node, Node> nodeMap) {
+            Map<Node, Node> inverted = new HashMap<>();
+            nodeMap.forEach((k, v) -> inverted.put(v, k));
+            return inverted;
+        }
     }
 
     private record PostFilterTree(Node tree) {
-        static PostFilterTree from(ExpandedQueryTree eqt, NestedTree nestedTree, SelectedFacets selectedFacets) {
+        static PostFilterTree from(ExpandedQueryTree eqt, MainQueryTree mainQueryTree, SelectedFacets selectedFacets) {
             if (selectedFacets == null) {
                 return new PostFilterTree(null);
             }
@@ -181,7 +193,7 @@ public class EsQueryTree {
                 return new PostFilterTree(null);
             }
 
-            List<NestedNode> nestedNodes = new QueryTree(nestedTree.tree()).getTopNodesOfType(NestedNode.class);
+            List<NestedNode> nestedNodes = new QueryTree(mainQueryTree.tree()).getTopNodesOfType(NestedNode.class);
 
             List<Node> postFilterNodes = new ArrayList<>();
             for (List<Node> multiSelected : multiSelectGroups) {
@@ -266,6 +278,43 @@ public class EsQueryTree {
         @Override
         public NestedOr newInstance(List<Node> children) {
             return new NestedOr(children, stem);
+        }
+
+        String stem() {
+            return stem;
+        }
+    }
+
+    private static final class MultiCondition extends Condition {
+        private final Or expanded;
+
+        MultiCondition(Condition origCondition, Or expanded) {
+            super(origCondition.selector(), origCondition.operator(), origCondition.value());
+            this.expanded = expanded;
+        }
+
+        @Override
+        public Map<String, Object> toEs(ESSettings esSettings) {
+            if (value() instanceof FreeText ft) {
+                Map<String, Object> esQuery = esFreeTextFilter(collectFields(expanded), ft, esSettings);
+                return expanded instanceof NestedOr nOr ? nestedWrap(nOr.stem(), esQuery) : esQuery;
+            }
+            return expanded.toEs(esSettings);
+        }
+
+        private Map<String, Object> esFreeTextFilter(List<String> fields, FreeText ft, ESSettings esSettings) {
+            var boostSettings = esSettings.boost().fieldBoost();
+            return ft.toEs(boostSettings.withFields(fields));
+        }
+
+        private static List<String> collectFields(Or or) {
+            return or.children().stream()
+                    .map(Condition.class::cast)
+                    .map(Condition::selector)
+                    .map(s -> s.isObjectProperty()
+                            ? String.format("%s.%s", s.esField(), JsonLd.SEARCH_KEY)
+                            : s.esField())
+                    .toList();
         }
     }
 }

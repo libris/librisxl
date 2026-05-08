@@ -101,6 +101,11 @@ public final class Path implements Selector {
     }
 
     @Override
+    public boolean isComposite() {
+        return false;
+    }
+
+    @Override
     public boolean isObjectProperty() {
         return last().isObjectProperty();
     }
