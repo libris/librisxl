@@ -15,22 +15,23 @@ import java.util.List;
 import java.util.Map;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static whelk.search2.Query.Connective.AND;
 import static whelk.search2.Query.Connective.OR;
 import static whelk.search2.QueryUtil.isQuoted;
 import static whelk.search2.QueryUtil.isSimple;
-import static whelk.search2.QueryUtil.matchAny;
 import static whelk.search2.QueryUtil.parenthesize;
 import static whelk.search2.QueryUtil.quote;
 import static whelk.search2.QueryUtil.shouldWrap;
 import static whelk.search2.Operator.EQUALS;
 
 public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.Connective connective) implements Node, Value {
+    private static final Pattern DIGITS = Pattern.compile("\\d+");
+
     public FreeText(Property.TextQuery textQuery, Token token) {
         this(textQuery, List.of(token), AND);
     }
@@ -119,6 +120,10 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
 
     public FreeText withTokens(List<Token> tokens) {
         return new FreeText(textQuery, tokens, connective);
+    }
+
+    public boolean isDigits() {
+        return tokens.size() == 1 && DIGITS.matcher(tokens.getFirst().formatted()).matches();
     }
 
     private String joinTokens() {
