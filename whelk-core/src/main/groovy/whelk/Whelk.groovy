@@ -395,7 +395,7 @@ class Whelk {
                 def reverseRelations = lenses.collect { jsonld.getInverseProperties(doc.data, it) }.flatten()
                 if (reverseRelations.contains(link.relation)) {
                     // we added a link to a document that includes us in its @reverse relations, reindex it
-                    elastic.index(doc, this)
+                    indexDocAndVirtual(doc)
                     // that document may in turn have documents that include it, and by extension us in their
                     // @reverse relations. Reindex them. (For example item -> instance -> work)
                     // TODO this should be calculated in a more general fashion. We depend on the fact that indexed
@@ -408,7 +408,9 @@ class Whelk {
             }
         }
 
-        if (storage.isCardChangedOrNonexistent(document.getShortId())) {
+        // FIXME don't hardcode Item...
+        // TODO isCardChangedOrNonexistent is no longer sufficient to know if other records are affected
+        if ("Item" == document.getThingType() || storage.isCardChangedOrNonexistent(document.getShortId())) {
             bulkIndex(elastic.getAffectedIds(document.getThingIdentifiers() + document.getRecordIdentifiers()))
         }
     }
@@ -424,7 +426,7 @@ class Whelk {
                         .collect { jsonld.getInverseProperties(doc.data, it) }
                         .flatten()
                 if (reverseRelations.contains(p)) {
-                    elastic.index(doc, this)
+                    indexDocAndVirtual(doc)
                 }
             }
         }
@@ -433,6 +435,13 @@ class Whelk {
     private void bulkIndex(Iterable<String> ids) {
         Iterables.partition(ids, 100).each {
             elastic.bulkIndexWithRetry(it, this)
+        }
+    }
+
+    void indexDocAndVirtual(Document document) {
+        elastic.index(document, this)
+        if (features.isEnabled(INDEX_BLANK_WORKS)) {
+            document.getVirtualRecordIds().each {elastic.index(document.getVirtualRecord(it), this) }
         }
     }
 
@@ -503,10 +512,7 @@ class Whelk {
         boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted, skipSparql, handleExceptions)
         if (success) {
             indexAsyncOrSync {
-                elastic.index(document, this)
-                if (features.isEnabled(INDEX_BLANK_WORKS)) {
-                    document.getVirtualRecordIds().each {elastic.index(document.getVirtualRecord(it), this) }
-                }
+                indexDocAndVirtual(document)
                 if (!skipIndexDependers) {
                     reindexAffected(document, new TreeSet<>(), document.getExternalRefs())
                 }
