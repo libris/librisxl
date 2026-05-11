@@ -102,7 +102,7 @@ public final class Path implements Selector {
 
     @Override
     public boolean isComposite() {
-        return false;
+        return last().isComposite();
     }
 
     @Override
