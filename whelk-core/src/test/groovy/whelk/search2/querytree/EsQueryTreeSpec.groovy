@@ -33,6 +33,7 @@ class EsQueryTreeSpec extends Specification {
                             ]
                     ],
                     "default_boost_factor": 5,
+                    "phrase_boost_divisor": 5,
                     "analyze_wildcard"    : true
             ]
     ]
@@ -223,6 +224,80 @@ class EsQueryTreeSpec extends Specification {
                                         "p15.p4.@id" : "https://id.kb.se/x"
                                 ]
                         ]
+                ]
+        ]
+    }
+
+    def "To ES query: nested (CONDITION, multi-token value, include_in_parent=true)"() {
+        given:
+        String q = 'p15.p4:(x y)'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ExpandedQueryTree eqt = qt.expand(jsonLd)
+        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings)
+
+        expect:
+        esQueryTree.getMainQuery() == [
+                "nested": [
+                        "path"           : "p15",
+                        "query"          : [
+                                "bool": [
+                                        "should": [[
+                                                           "simple_query_string": [
+                                                                   "default_operator"  : "AND",
+                                                                   "query"             : "x y",
+                                                                   "analyze_wildcard"  : true,
+                                                                   "quote_field_suffix": ".exact",
+                                                                   "fields"            : ["p15.p4._str^5.0"]
+                                                           ]
+                                                   ], [
+                                                           "query_string": [
+                                                                   "default_operator"  : "AND",
+                                                                   "query"             : "\"x y\"",
+                                                                   "analyze_wildcard"  : true,
+                                                                   "quote_field_suffix": ".exact",
+                                                                   "fields"            : ["p15.p4._str^1.0"]
+                                                           ]
+                                                   ]]
+                                ]
+                        ],
+                        "ignore_unmapped": true
+                ]
+        ]
+    }
+
+    def "To ES query: nested (CONDITION, multi-token value, composite property)"() {
+        given:
+        String q = 'p3.p16:(x y)'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ExpandedQueryTree eqt = qt.expand(jsonLd)
+        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings)
+
+        expect:
+        esQueryTree.getMainQuery() == [
+                "nested": [
+                        "query"          : [
+                                "bool": [
+                                        "should": [[
+                                                           "simple_query_string": [
+                                                                   "default_operator"  : "AND",
+                                                                   "query"             : "x y",
+                                                                   "analyze_wildcard"  : true,
+                                                                   "quote_field_suffix": ".exact",
+                                                                   "fields"            : ["p3.p18^5.0", "p3.p17^5.0"]
+                                                           ]
+                                                   ], [
+                                                           "query_string": [
+                                                                   "default_operator"  : "AND",
+                                                                   "query"             : "\"x y\"",
+                                                                   "analyze_wildcard"  : true,
+                                                                   "quote_field_suffix": ".exact",
+                                                                   "fields"            : ["p3.p18^1.0", "p3.p17^1.0"]
+                                                           ]
+                                                   ]]
+                                ]
+                        ],
+                        "path"           : "p3",
+                        "ignore_unmapped": true
                 ]
         ]
     }
@@ -1332,4 +1407,6 @@ class EsQueryTreeSpec extends Specification {
                 ]
         ]
     }
+
+
 }

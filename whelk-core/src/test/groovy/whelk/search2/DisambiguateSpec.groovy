@@ -5,7 +5,6 @@ import whelk.JsonLd
 import whelk.search.QueryDateTime
 import whelk.search2.querytree.Any
 import whelk.search2.querytree.DateTime
-import whelk.search2.querytree.FreeText
 import whelk.search2.querytree.InvalidValue
 import whelk.search2.querytree.Key
 import whelk.search2.querytree.Link
