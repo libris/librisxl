@@ -509,7 +509,7 @@ class Whelk {
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
         }
 
-        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted, skipSparql, handleExceptions)
+        boolean success = storage.createDocument(document, changedIn, changedBy, collection, deleted, handleExceptions, skipSparql)
         if (success) {
             indexAsyncOrSync {
                 indexDocAndVirtual(document)
