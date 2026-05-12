@@ -113,11 +113,17 @@ class Embellisher {
                 previousLevelDocs.each {
                     def inverseDocs = insertInverse(previousLens, it, lens, visited)
                     docs += inverseDocs
-                    links += getAllLinks(inverseDocs)
+                    def newLinks = getAllLinks(inverseDocs)
+                    links += newLinks
+
+                    def integralDocsViaInverse = fetchIntegral(lens, inverseDocs, integral(newLinks), visited)
+                    docs += integralDocsViaInverse
+                    links += getAllLinks(integralDocsViaInverse)
                 }
-                previousLevelDocs = docs
-                previousLens = lens
             }
+
+            previousLevelDocs = docs
+            previousLens = lens
 
             result += docs
         }
@@ -148,7 +154,7 @@ class Embellisher {
     private Set<Link> integral(Set<Link> links) {
         Set<Link> integral = new HashSet<>()
         for (Link l : links) { 
-            if (l.relation in integralRelations) { 
+            if (l.property() in integralRelations) {
                 integral.add(l) 
             } 
         }

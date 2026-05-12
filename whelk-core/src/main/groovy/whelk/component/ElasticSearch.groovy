@@ -612,7 +612,7 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
 
-        Map searchCard = JsonLd.frame(thingId, copy.data)
+        Map searchCard = JsonLd.frame(thingId, copy.data, 3)
 
         searchCard[LINKS] = links
         searchCard[OUTER_EMBELLISHMENTS] = copy.getEmbellishments() - links
@@ -820,7 +820,7 @@ class ElasticSearch {
         return JsonLd.getExternalReferences([(GRAPH_KEY): graph])
                 .findAll {
                     // FIXME
-                    if (jsonLd.isIntegral(it.relation)) {
+                    if (jsonLd.isIntegral(it.property())) {
                         return true
                     }
                     def path = it.propertyPath()
