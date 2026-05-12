@@ -2,14 +2,13 @@ package whelk.search2
 
 import spock.lang.Specification
 import whelk.JsonLd
-import whelk.Whelk
 import whelk.search.QueryDateTime
 import whelk.search2.querytree.Any
 import whelk.search2.querytree.DateTime
 import whelk.search2.querytree.InvalidValue
 import whelk.search2.querytree.Key
 import whelk.search2.querytree.Link
-import whelk.search2.querytree.Numeric
+
 import whelk.search2.querytree.Path
 import whelk.search2.querytree.Property
 import whelk.search2.querytree.TestData
@@ -63,7 +62,7 @@ class DisambiguateSpec extends Specification {
         'p1'       | 'https://id.kb.se/term/sao/H%C3%A4star' | null
         'p3'       | 'sao:H%C3%A4star'                       | new Link('https://id.kb.se/term/sao/H%C3%A4star')
         'p3'       | 'https://id.kb.se/term/sao/H%C3%A4star' | new Link('https://id.kb.se/term/sao/H%C3%A4star')
-        'p1'       | '1990'                                  | new Numeric(1990)
+        'p1'       | '1990'                                  | null
         'p1'       | '90-talet'                              | null
         'p1'       | '1990-2000'                             | new YearRange('1990', '2000', null)
         'p1'       | '1990-'                                 | new YearRange('1990', "", null)
