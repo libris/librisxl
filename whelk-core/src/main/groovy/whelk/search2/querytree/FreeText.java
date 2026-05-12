@@ -109,6 +109,11 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     @Override
+    public boolean isRangeOpCompatible() {
+        return isDigits();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof FreeText ft && ft.toString().equals(toString());
     }

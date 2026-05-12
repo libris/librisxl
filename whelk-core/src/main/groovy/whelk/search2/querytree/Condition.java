@@ -269,19 +269,17 @@ public non-sealed class Condition implements Node {
         // Known placeholder values (0000, 9999) are excluded from 4-digit fields to prevent them from being treated as valid years in sorting and aggregations.
         Predicate<String> isFourDigitsFieldValue = s -> s.length() == 4 && !s.equals("0000") && !s.equals("9999");
 
-        if (operator.isRange() && esMappings.hasFourDigitsShortField(field)) {
-            return esNumOrDateFilter(field + FOUR_DIGITS_SHORT_SUFFIX, digits);
-        }
-        if (!operator.isRange()) {
-            if (esMappings.hasFourDigitsKeywordField(field) && isFourDigitsFieldValue.test(digits)) {
-                return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, digits);
+        if (operator.isRange()) {
+            if (esMappings.hasFourDigitsShortField(field)) {
+                field += FOUR_DIGITS_SHORT_SUFFIX;
             }
-            if (esMappings.hasKeywordSubfield(field)) {
-                return esTermQueryFilter(String.format("%s.%s", field, KEYWORD), digits);
-            }
-        }
-        if (esMappings.isLongTypeField(field)) {
-            return esNumOrDateFilter(field, digits);
+            return esNumOrDateFilter(field, Long.parseLong(digits));
+        } else if (esMappings.hasFourDigitsKeywordField(field) && isFourDigitsFieldValue.test(digits)) {
+            return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, digits);
+        } else if (esMappings.hasKeywordSubfield(field)) {
+            return esTermQueryFilter(String.format("%s.%s", field, KEYWORD), digits);
+        } else if (esMappings.isLongTypeField(field)) {
+            return esNumOrDateFilter(field, Long.parseLong(digits));
         }
 
         return null;
