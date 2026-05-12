@@ -763,8 +763,8 @@ class ElasticSearch {
         Set ids = [] as Set
 
         records.each {
-            ids.add(lastPathSegment((String) it[ID_KEY]))
-            DocumentUtil.getAtPath(it, [JSONLD_ALT_ID_KEY, '*', ID_KEY], []).each { ids.add(lastPathSegment((String) it)) }
+            ids.add(stripHash(lastPathSegment((String) it[ID_KEY])))
+            DocumentUtil.getAtPath(it, [JSONLD_ALT_ID_KEY, '*', ID_KEY], []).each { ids.add(stripHash(lastPathSegment((String) it))) }
             ids.addAll(DocumentUtil.getAtPath(it, ['identifiedBy', '*', 'value'], []))
         }
 
