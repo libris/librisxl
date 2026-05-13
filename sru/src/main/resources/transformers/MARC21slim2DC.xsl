@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" 
         xmlns:marc="http://www.loc.gov/MARC21/slim"
-        xmlns="http://purl.org/dc/elements/1.1/"
+        xmlns:dc="http://purl.org/dc/elements/1.1/"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
         exclude-result-prefixes="marc">
 	<xsl:output method="xml" indent="yes"/>
@@ -10,12 +10,18 @@
 			<xsl:apply-templates/>
 	</xsl:template>
 
+	<xsl:template match="marc:collection"> <!-- For xsearch only? -->
+            <dc_collection xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <xsl:apply-templates select="marc:record"/>
+            </dc_collection>
+        </xsl:template>
+
 	<xsl:template match="marc:record">
 		<xsl:variable name="leader" select="marc:leader"/>
 		<xsl:variable name="leader6" select="substring($leader,7,1)"/>
 		<xsl:variable name="leader7" select="substring($leader,8,1)"/>
 		<xsl:variable name="controlField008" select="marc:controlfield[@tag=008]"/>
-                <dc>
+                <dc xmlns="http://purl.org/dc/elements/1.1/">
                         <xsl:for-each select="marc:datafield[@tag=245]">
 				<title>
 					<xsl:call-template name="subfieldSelect">
@@ -27,7 +33,7 @@
 	
 			<xsl:for-each select="marc:datafield[@tag=100]|marc:datafield[@tag=110]|marc:datafield[@tag=111]|marc:datafield[@tag=700]|marc:datafield[@tag=710]|marc:datafield[@tag=711]|marc:datafield[@tag=720]">
 				<creator>
-					<xsl:value-of select="."/>
+					<xsl:value-of select="./marc:subfield[@code='a']"/>
 				</creator>
 			</xsl:for-each>
 
@@ -55,7 +61,7 @@
 
 			<xsl:for-each select="marc:datafield[@tag=655]">
 				<type>
-					<xsl:value-of select="."/>
+					<xsl:value-of select="./marc:subfield[@code='a']"/>
 				</type>
 			</xsl:for-each>
 
@@ -192,6 +198,7 @@
 			</xsl:for-each>
 		</dc>
 	</xsl:template>
+
 	<xsl:template name="datafield">
 		<xsl:param name="tag"/>
 		<xsl:param name="ind1"><xsl:text> </xsl:text></xsl:param>
@@ -267,4 +274,10 @@
 			<xsl:otherwise><xsl:value-of select="$chopString"/></xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+
+	<xsl:template match="*|@*|text()">
+        	<xsl:copy>
+            		<xsl:apply-templates select="*|@*|text()"/>
+        	</xsl:copy>
+    	</xsl:template>
 </xsl:stylesheet>

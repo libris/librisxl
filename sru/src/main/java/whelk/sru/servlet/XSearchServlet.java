@@ -100,7 +100,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             "json", Format.JSON,
             "mods", Format.MODS,
             "ris", Format.UNSUPPORTED,
-            "dc", Format.UNSUPPORTED,
+            "dc", Format.DC,
             "rdfdc", Format.UNSUPPORTED,
             "bibtex", Format.UNSUPPORTED,
             "refworks", Format.UNSUPPORTED,
@@ -120,6 +120,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         MARC_XML,
         MODS,
         JSON,
+	DC,
         UNSUPPORTED,
     }
 
@@ -156,7 +157,8 @@ public class XSearchServlet extends WhelkHttpServlet {
 
         try {
             transformers = Map.of(
-                    Format.MODS, loadXslt("transformers/MARC21slim2MODS3.xsl")
+                    Format.MODS, loadXslt("transformers/MARC21slim2MODS3.xsl"),
+                    Format.DC, loadXslt("transformers/MARC21slim2DC.xsl")
             );
         } catch (IOException | TransformerConfigurationException e) {
             throw new IllegalStateException(e);
@@ -236,6 +238,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                 case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, include9xx);
                 case JSON -> sendJson(res, items, start, to, totalItems);
                 case MODS -> sendTransformedMarc(res, Format.MODS, items, start, to, totalItems, includeHoldings, include9xx);
+                case DC -> sendTransformedMarc(res, Format.DC, items, start, to, totalItems, false, false);
             }
 
         } catch (InvalidQueryException e) {
