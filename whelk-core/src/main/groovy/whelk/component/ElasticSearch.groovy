@@ -9,6 +9,7 @@ import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
+import whelk.Embellisher
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -585,9 +586,29 @@ class ElasticSearch {
 
         var integralIds = collectIntegralIds(shapedMainGraph, whelk.jsonld)
 
+        // FIXME
+        def embedFakeIntegralThings = { graph ->
+            def thing = DocumentUtil.getAtPath(graph, Document.thingPath, [:])
+            if (thing[TYPE_KEY] == 'Item') {
+                DocumentUtil.findKey(thing, Embellisher.FAKE_INTEGRAL_RELATIONS) { value, path ->
+                    asList(value).each { v ->
+                        if (v instanceof Map && JsonLd.isLink(v)) {
+                            embellishedGraph.find { DocumentUtil.getAtPath(it, Document.thingIdPath2) == v[ID_KEY] }
+                                    .with {
+                                        def fakeIntegralThing = (Map) DocumentUtil.getAtPath(it, Document.thingPath, [:])
+                                        ((Map) v).putAll(fakeIntegralThing)
+                                    }
+                        }
+                    }
+                    return new DocumentUtil.Nop()
+                }
+            }
+        }
+
         var shapedEmbellished = embellishedGraph
                 .drop(originalGraphSize)
                 .collect {
+                    embedFakeIntegralThings(it) // FIXME
                     getShapeForEmbellishment(whelk.fresnelUtil,
                             (Map) it,
                             integralIds,
@@ -612,7 +633,7 @@ class ElasticSearch {
         }
         String thingId = thingIds.get(0)
 
-        Map searchCard = JsonLd.frame(thingId, copy.data, 3)
+        Map searchCard = JsonLd.frame(thingId, copy.data)
 
         searchCard[LINKS] = links
         searchCard[OUTER_EMBELLISHMENTS] = copy.getEmbellishments() - links
