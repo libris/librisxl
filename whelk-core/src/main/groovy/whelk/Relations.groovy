@@ -1,7 +1,9 @@
 package whelk
 
+import groovy.transform.CompileStatic
 import whelk.component.PostgreSQLComponent
 
+@CompileStatic
 class Relations {
     public static final List<String> BROADER_RELATIONS = ['broader', 'broadMatch', 'exactMatch', 'locatedIn']
 

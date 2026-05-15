@@ -1575,6 +1575,7 @@ class JsonLd {
 
 
 @Immutable
+@CompileStatic
 class Link {
     String iri
     String relation
