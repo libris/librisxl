@@ -36,23 +36,18 @@ selectByIds(ids) { physicalDoc ->
     def physicalId = physicalInstance["@id"]
     def physicalSameAs = physicalInstance.sameAs[0]['@id'].tokenize('/').last()
 
-    println "\nPhysical before"
-    println physicalInstance
-
     // Get id:s of digital reproductions of this resource from the ID map
         selectByIds(idMap[physicalShortId]) { digitalDoc -> 
 
-            // Double check that local/old IDs match? maybe not necessary.
-
             def digitalInstance = digitalDoc.graph[1]
+            def digitalId = digitalInstance["@id"]
             def digitalSameAs = digitalInstance.sameAs[0]['@id'].tokenize('/').last()
 
-                println "\nDigital before"
-                println digitalInstance
+            println "\nLinking ${digitalId} to $physicalId"
+            // Double check that local/old IDs match? maybe not necessary.
 
             if (digitalInstance.reproductionOf) {
-                def digitalId = digitalInstance["@id"]
-                report.println("$digitalId\talready has reproductionOf. Skipping.")
+                report.println("$digitalId\tSKIPPED\talready has reproductionOf")
             }
 
             else {
@@ -62,27 +57,42 @@ selectByIds(ids) { physicalDoc ->
                     "@id": physicalId
                 ]
 
-                // In the digital instance
-                // TODO Remove the property otherPhysicalFormat or a certain blank node?
-                digitalInstance.otherPhysicalFormat.removeAll { localEntity -> 
-                    localEntity.describedBy?.any { recordDescribed ->
-                    recordDescribed.controlNumber == physicalSameAs
-                    }
-                } 
-                
-                // In the physical instance
-                // TODO Remove the property otherPhysicalFormat or a certain blank node?
-                physicalInstance.otherPhysicalFormat.removeAll { localEntity -> 
-                    localEntity.describedBy?.any { recordDescribed ->
-                    recordDescribed.controlNumber == digitalSameAs
-                    }
-                }
-                println "\nDigital after"
-                println digitalInstance
-            }
+                incrementStats("Links added to reproductionOf", "-")
 
-            println "\nPhysical after"
-            println physicalInstance 
+                // Clean up the digital instance
+                removeOtherPhysicalFormat(digitalInstance, physicalSameAs)
+                
+                // Clean up the physical instance
+                removeOtherPhysicalFormat(physicalInstance, digitalSameAs)
+            }
+    }
+
+}
+
+/**
+ * Removes local entities from otherPhysicalFormat whose describedBy.controlNumber
+ * match the supplied pairedSameAs value.
+ * Removes otherPhysicalFormat if it is an empty list.
+ */
+void removeOtherPhysicalFormat(Map instance, String pareidSameAsId) {
+    def matches = instance.otherPhysicalFormat.findAll {
+        localEntity -> localEntity.describedBy?.any {
+            recordDescribed -> recordDescribed.controlNumber == pareidSameAsId
+        }
+    }
+
+    if (matches.size() > 1) {
+        report.println("${instance["@id"]}\tINFO\nFound ${matches.size()} matches for controlNumber=${pareidSameAsId}")
+    }
+
+    instance.otherPhysicalFormat.removeAll(matches)
+
+    incrementStats("Local entities removed", "-")
+
+    if (!instance.otherPhysicalFormat) {
+        instance.remove("otherPhysicalFormat")
+
+        incrementStats("Empty otherPhysicalFormat removed", "-")
 
     }
 
