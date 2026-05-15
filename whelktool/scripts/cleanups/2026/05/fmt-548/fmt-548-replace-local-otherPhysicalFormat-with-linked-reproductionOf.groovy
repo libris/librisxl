@@ -7,7 +7,7 @@
 def report = getReportWriter("report.tsv")
 
 // Read IDs
-var input = new File(scriptDir, 'mutual_matches_ids.tsv').readLines()
+var input = new File(scriptDir, 'ids.tsv').readLines()
 
 List ids = []
 Map idMap = [:]
@@ -28,23 +28,31 @@ input.drop(1).each { line ->
     idMap.get(physicalIds, []) << digitalIds
 }
 
-// Fetch the phyiscal instance cfrom Libris
+// Fetch the phyiscal instance from Libris
 selectByIds(ids) { physicalDoc ->
 
     def physicalInstance = physicalDoc.graph[1]
     def physicalShortId = physicalDoc.doc.shortId
     def physicalId = physicalInstance["@id"]
-    
+    def physicalSameAs = physicalInstance.sameAs[0]['@id'].tokenize('/').last()
+
+    println "\nPhysical before"
+    println physicalInstance
+
     // Get id:s of digital reproductions of this resource from the ID map
         selectByIds(idMap[physicalShortId]) { digitalDoc -> 
 
             // Double check that local/old IDs match? maybe not necessary.
 
             def digitalInstance = digitalDoc.graph[1]
+            def digitalSameAs = digitalInstance.sameAs[0]['@id'].tokenize('/').last()
+
+                println "\nDigital before"
+                println digitalInstance
 
             if (digitalInstance.reproductionOf) {
                 def digitalId = digitalInstance["@id"]
-                report.println("$digitalId\talready has digitalReproduction. Skipping.")
+                report.println("$digitalId\talready has reproductionOf. Skipping.")
             }
 
             else {
@@ -56,12 +64,25 @@ selectByIds(ids) { physicalDoc ->
 
                 // In the digital instance
                 // TODO Remove the property otherPhysicalFormat or a certain blank node?
-                digitalInstance.remove("otherPhysicalFormat")
+                digitalInstance.otherPhysicalFormat.removeAll { localEntity -> 
+                    localEntity.describedBy?.any { recordDescribed ->
+                    recordDescribed.controlNumber == physicalSameAs
+                    }
+                } 
                 
                 // In the physical instance
                 // TODO Remove the property otherPhysicalFormat or a certain blank node?
-                physicalInstance.remove("otherPhysicalFormat")
+                physicalInstance.otherPhysicalFormat.removeAll { localEntity -> 
+                    localEntity.describedBy?.any { recordDescribed ->
+                    recordDescribed.controlNumber == digitalSameAs
+                    }
+                }
+                println "\nDigital after"
+                println digitalInstance
             }
+
+            println "\nPhysical after"
+            println physicalInstance 
 
     }
 
