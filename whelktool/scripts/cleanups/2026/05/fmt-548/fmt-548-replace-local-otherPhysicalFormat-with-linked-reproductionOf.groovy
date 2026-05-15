@@ -7,7 +7,7 @@
 def report = getReportWriter("report.tsv")
 
 // Read IDs
-var input = new File(scriptDir, 'ids.tsv').readLines()
+var input = new File(scriptDir, 'mutual_matches_ids.tsv').readLines()
 
 List ids = []
 Map idMap = [:]
@@ -31,19 +31,20 @@ input.drop(1).each { line ->
 // Fetch the phyiscal instance from Libris
 selectByIds(ids) { physicalDoc ->
 
-    def physicalInstance = physicalDoc.graph[1]
-    def physicalShortId = physicalDoc.doc.shortId
-    def physicalId = physicalInstance["@id"]
-    def physicalSameAs = physicalInstance.sameAs[0]['@id'].tokenize('/').last()
+    Map physicalInstance = physicalDoc.graph[1]
+    String physicalShortId = physicalDoc.doc.shortId
+    String physicalId = physicalInstance["@id"]
+    String physicalControlNumber = physicalDoc.graph[0].controlNumber
 
     // Get id:s of digital reproductions of this resource from the ID map
         selectByIds(idMap[physicalShortId]) { digitalDoc -> 
 
-            def digitalInstance = digitalDoc.graph[1]
-            def digitalId = digitalInstance["@id"]
-            def digitalSameAs = digitalInstance.sameAs[0]['@id'].tokenize('/').last()
+            Map digitalInstance = digitalDoc.graph[1]
+            String digitalControlNumber = digitalDoc.graph[0].controlNumber
+            String digitalId = digitalInstance["@id"]
 
-            println "\nLinking ${digitalId} to $physicalId"
+
+            //println "\nLinking ${digitalId} to $physicalId"
             // Double check that local/old IDs match? maybe not necessary.
 
             if (digitalInstance.reproductionOf) {
@@ -60,35 +61,39 @@ selectByIds(ids) { physicalDoc ->
                 incrementStats("Links added to reproductionOf", "-")
 
                 // Clean up the digital instance
-                removeOtherPhysicalFormat(digitalInstance, physicalSameAs)
+                removeOtherPhysicalFormat(digitalInstance, physicalControlNumber, report)
                 
                 // Clean up the physical instance
-                removeOtherPhysicalFormat(physicalInstance, digitalSameAs)
+                removeOtherPhysicalFormat(physicalInstance, digitalControlNumber, report)
             }
     }
 
 }
 
-/**
- * Removes local entities from otherPhysicalFormat whose describedBy.controlNumber
- * match the supplied pairedSameAs value.
- * Removes otherPhysicalFormat if it is an empty list.
- */
-void removeOtherPhysicalFormat(Map instance, String pareidSameAsId) {
+
+void removeOtherPhysicalFormat(Map instance, String pairedControlNumber, report) {
+    // Find local entities in otherPhysicalFormat whose controlNumber match the sameAs of the paired instance
     def matches = instance.otherPhysicalFormat.findAll {
         localEntity -> localEntity.describedBy?.any {
-            recordDescribed -> recordDescribed.controlNumber == pareidSameAsId
+            recordDescribed -> recordDescribed.controlNumber == pairedControlNumber
         }
     }
 
+    // If there is more than one match, report this
     if (matches.size() > 1) {
-        report.println("${instance["@id"]}\tINFO\nFound ${matches.size()} matches for controlNumber=${pareidSameAsId}")
+        report.println("${instance["@id"]}\tINFO\tFound ${matches.size()} matches for local controlNumber==${pairedControlNumber}")
+    }
+    else if (matches.size() < 1) {
+        report.println("${instance["@id"]}\tSCRIPT ERROR\tFound ${matches.size()} matches for local controlNumber==${pairedControlNumber}")
+
     }
 
+    // Remove the matching local entities
     instance.otherPhysicalFormat.removeAll(matches)
 
     incrementStats("Local entities removed", "-")
 
+    // If otherPhysicalFormat is an empty list, remove it
     if (!instance.otherPhysicalFormat) {
         instance.remove("otherPhysicalFormat")
 
