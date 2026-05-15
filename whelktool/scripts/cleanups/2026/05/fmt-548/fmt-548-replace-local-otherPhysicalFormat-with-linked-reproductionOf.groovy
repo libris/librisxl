@@ -43,29 +43,39 @@ selectByIds(ids) { physicalDoc ->
             String digitalControlNumber = digitalDoc.graph[0].controlNumber
             String digitalId = digitalInstance["@id"]
 
-
-            //println "\nLinking ${digitalId} to $physicalId"
-            // Double check that local/old IDs match? maybe not necessary.
-
-            if (digitalInstance.reproductionOf) {
-                report.println("$digitalId\tSKIPPED\talready has reproductionOf")
+            if (digitalInstance.reproductionOf instanceof List) {
+                report.println("$digitalId\tSKIPPED\treproductionOf is a list\t$digitalInstance.reproductionOf")
+                return
             }
 
-            else {
+            String reproductionId =  digitalInstance.reproductionOf?.get("@id")
 
+            if (reproductionId && reproductionId != physicalId) {
+                // Already linked to another physical instance - leave this digital instance unchanged and report
+                report.println("$digitalId\tSKIPPED\tHas reproductionOf with other ID\t$digitalInstance.reproductionOf")
+                return
+            }
+
+            else if (reproductionId == physicalId) {
+                // Already linked to expected physical instance - report
+                report.println("$digitalId\tINFO\tAalready has reproductionOf with this ID\t$digitalInstance.reproductionOf")
+                incrementStats("reproductionOf - already linked", "-")
+            }
+            
+            else {
                 // Add "reproductionOf" with a link to the physical instance
                 digitalInstance.reproductionOf =  [
                     "@id": physicalId
                 ]
-
-                incrementStats("Links added to reproductionOf", "-")
-
-                // Clean up the digital instance
-                removeOtherPhysicalFormat(digitalInstance, physicalControlNumber, report)
-                
-                // Clean up the physical instance
-                removeOtherPhysicalFormat(physicalInstance, digitalControlNumber, report)
+                incrementStats("reproductionOf - new link added", "-")
             }
+
+            // Clean up the digital instance
+            removeOtherPhysicalFormat(digitalInstance, physicalControlNumber, report)
+                
+            // Clean up the physical instance
+            removeOtherPhysicalFormat(physicalInstance, digitalControlNumber, report)
+
     }
 
 }
@@ -91,13 +101,13 @@ void removeOtherPhysicalFormat(Map instance, String pairedControlNumber, report)
     // Remove the matching local entities
     instance.otherPhysicalFormat.removeAll(matches)
 
-    incrementStats("Local entities removed", "-")
+    incrementStats("otherPhysicalFormat - linked local entity removed", "-")
 
     // If otherPhysicalFormat is an empty list, remove it
     if (!instance.otherPhysicalFormat) {
         instance.remove("otherPhysicalFormat")
 
-        incrementStats("Empty otherPhysicalFormat removed", "-")
+        incrementStats("otherPhysicalFormat - empty property removed", "-")
 
     }
 
