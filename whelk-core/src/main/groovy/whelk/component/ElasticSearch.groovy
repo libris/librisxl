@@ -9,6 +9,7 @@ import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
+import whelk.Embellisher
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -20,7 +21,6 @@ import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
-import static whelk.Embellisher.FAKE_INTEGRAL_RELATIONS
 import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
 import static whelk.FeatureFlags.Flag.EXPERIMENTAL_INDEX_HOLDING_ORGS
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
@@ -590,7 +590,7 @@ class ElasticSearch {
         def embedFakeIntegralThings = { graph ->
             def thing = DocumentUtil.getAtPath(graph, Document.thingPath, [:])
             if (thing[TYPE_KEY] == 'Item') {
-                DocumentUtil.findKey(thing, FAKE_INTEGRAL_RELATIONS) { value, path ->
+                DocumentUtil.findKey(thing, Embellisher.FAKE_INTEGRAL_RELATIONS) { value, path ->
                     asList(value).each { v ->
                         if (v instanceof Map && JsonLd.isLink(v)) {
                             embellishedGraph.find { DocumentUtil.getAtPath(it, Document.thingIdPath2) == v[ID_KEY] }
