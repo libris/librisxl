@@ -30,10 +30,8 @@ import static whelk.JsonLd.JSONLD_ALT_ID_KEY
 import static whelk.JsonLd.Platform.CATEGORY_BY_COLLECTION
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.REVERSE_KEY
-import static whelk.JsonLd.SEARCH_KEY
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
-import static whelk.JsonLd.WORK_KEY
 import static whelk.JsonLd.asList
 import static whelk.component.ElasticSearch.SystemFields.CARD_STR
 import static whelk.component.ElasticSearch.SystemFields.CHIP_STR
