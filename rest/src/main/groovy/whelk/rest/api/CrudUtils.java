@@ -27,6 +27,7 @@ class CrudUtils {
     static final MediaType TRIG = MediaType.parse(MimeTypes.TRIG);
     static final MediaType RDFXML = MediaType.parse(MimeTypes.RDF);
     static final MediaType N3 = MediaType.parse(MimeTypes.N3);
+    static final MediaType ATOM = MediaType.parse(MimeTypes.ATOM);
 
     static final Map<String, List<MediaType>> ALLOWED_MEDIA_TYPES_BY_EXT = new LinkedHashMap<>();
     static {
@@ -38,6 +39,7 @@ class CrudUtils {
         ALLOWED_MEDIA_TYPES_BY_EXT.put("xml", List.of(RDFXML));
         ALLOWED_MEDIA_TYPES_BY_EXT.put("rdf", List.of(RDFXML));
         ALLOWED_MEDIA_TYPES_BY_EXT.put("n3", List.of(N3));
+        ALLOWED_MEDIA_TYPES_BY_EXT.put("atom", List.of(ATOM));
     }
 
     protected static Map<String, String> EXTENSION_BY_MEDIA_TYPE = new HashMap<>();
@@ -53,7 +55,7 @@ class CrudUtils {
         }
     }
 
-    static final List<MediaType> ALLOWED_MEDIA_TYPES = List.of(JSON, JSONLD, TRIG, TURTLE, RDFXML, N3);
+    static final List<MediaType> ALLOWED_MEDIA_TYPES = List.of(JSON, JSONLD, TRIG, TURTLE, RDFXML, N3, ATOM);
 
     static String getBestContentType(String acceptHeader, String resourcePath) {
         List<MediaType> desired = parseAcceptHeader(acceptHeader);

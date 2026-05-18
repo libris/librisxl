@@ -45,8 +45,8 @@ class ESQuery {
     public static final String AND_PREFIX = 'and-'
     public static final String AND_MATCHES_PREFIX = 'and-matches-'
     public static final String OR_PREFIX = 'or-'
-    private static final String NOT_PREFIX = 'not-'
-    private static final String EXISTS_PREFIX = 'exists-'
+    public static final String NOT_PREFIX = 'not-'
+    public static final String EXISTS_PREFIX = 'exists-'
 
     private static final List<String> QUERY_RANGE_PREFIXES = [AND_MATCHES_PREFIX] + RangeParameterPrefix.values().collect { it.prefix }
     // Prefixes are matched in this order so AND_MATCHES_PREFIX must be before AND_PREFIX.
@@ -925,7 +925,7 @@ class ESQuery {
         return field
     }
 
-    private static boolean parseBoolean(String parameterName, String value) {
+    public static boolean parseBoolean(String parameterName, String value) {
         if (value.toLowerCase() == 'true') {
             true
         } else if (value.toLowerCase() == 'false') {

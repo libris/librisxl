@@ -61,6 +61,7 @@ public class Crud extends WhelkHttpServlet {
     private ConverterUtils converterUtils;
 
     private SiteSearch siteSearch;
+    private SearchFeed searchFeed;
 
     private final Map<String, Tuple2<Document, String>> cachedFetches = new HashMap<>();
 
@@ -99,6 +100,7 @@ public class Crud extends WhelkHttpServlet {
             }
         }
 
+        searchFeed = new SearchFeed(whelk.getJsonld(), whelk.getLocales());
         cacheLocalDevResources();
     }
 
@@ -321,12 +323,24 @@ public class Crud extends WhelkHttpServlet {
             }
         }
 
-        if (!List.of(MimeTypes.JSON, MimeTypes.JSONLD).contains(request.getContentType())) {
+        if (request.getContentType() == MimeTypes.ATOM) {
+            data.put(JsonLd.CONTEXT_KEY, contextData);
+            var feedId = getFeedId(data, uri);
+            return searchFeed.represent(feedId, data);
+        } else if (!List.of(MimeTypes.JSON, MimeTypes.JSONLD).contains(request.getContentType())) {
             data.put(JsonLd.CONTEXT_KEY, contextData);
             return converterUtils.convert(data, uri, request.getContentType());
         } else {
             return data;
         }
+    }
+
+    private String getFeedId(Object data, String uri) {
+        var searchPath = uri;
+        if (data instanceof Map dataMap) {
+          searchPath = (String) dataMap.get(JsonLd.ID_KEY);
+        }
+        return whelk.getApplicationId() + searchPath.substring(1);
     }
 
     private static Map<String, Object> frameRecord(Document document) {
