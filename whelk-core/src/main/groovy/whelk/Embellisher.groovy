@@ -11,8 +11,6 @@ import groovy.util.logging.Log4j2 as Log
 class Embellisher {
     static final List<String> DEFAULT_EMBELLISH_LEVELS = ['cards', 'chips']
     static final List<String> DEFAULT_INTEGRAL_RELATIONS = ['instanceOf', 'translationOf']
-    // FIXME
-    static final List<String> FAKE_INTEGRAL_RELATIONS = ['shelfMark', 'availability']
 
     static final int MAX_REVERSE_LINKS = 1024
 
@@ -115,20 +113,11 @@ class Embellisher {
                 previousLevelDocs.each {
                     def inverseDocs = insertInverse(previousLens, it, lens, visited)
                     docs += inverseDocs
-                    def newLinks = getAllLinks(inverseDocs)
-                    links += newLinks
-                    if (lens == 'full') {
-                        // FIXME
-                        def fakeIntegralLinks = newLinks.findAll { FAKE_INTEGRAL_RELATIONS.contains(it.property()) }
-                        def fakeIntegralDocsViaInverse = fetchIntegral(lens, inverseDocs, fakeIntegralLinks, visited)
-                        docs += fakeIntegralDocsViaInverse
-                        links += getAllLinks(fakeIntegralDocsViaInverse)
-                    }
+                    links += getAllLinks(inverseDocs)
                 }
+                previousLevelDocs = docs
+                previousLens = lens
             }
-
-            previousLevelDocs = docs
-            previousLens = lens
 
             result += docs
         }
@@ -159,7 +148,7 @@ class Embellisher {
     private Set<Link> integral(Set<Link> links) {
         Set<Link> integral = new HashSet<>()
         for (Link l : links) { 
-            if (l.property() in integralRelations) {
+            if (l.relation in integralRelations) { 
                 integral.add(l) 
             } 
         }
