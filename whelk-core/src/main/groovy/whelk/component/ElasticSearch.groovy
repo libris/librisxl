@@ -550,6 +550,10 @@ class ElasticSearch {
             log.debug("Framing ${document.getShortId()}")
         }
 
+        if (copy.isVirtual()) {
+            copy.centerOnVirtualMainEntity()
+        }
+
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri } as Set<String>
 
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
@@ -598,10 +602,6 @@ class ElasticSearch {
         copy.data[GRAPH_KEY] = shapedMainGraph + shapedEmbellished
 
         setIdentifiers(copy)
-        boolean isVirtualWork = copy.isVirtual()
-        if (isVirtualWork) {
-            copy.centerOnVirtualMainEntity()
-        }
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = copy.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -672,7 +672,7 @@ class ElasticSearch {
                     log.warn("Couldn't create search key for node with type {} in document {}", value.get(TYPE_KEY), document.shortId);
                 }
 
-                lensedMainGraph.restoreLinks(value, isVirtualWork)
+                lensedMainGraph.restoreLinks(value)
 
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
                 // -->
