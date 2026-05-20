@@ -556,8 +556,9 @@ class ElasticSearch {
 
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri } as Set<String>
 
+        var originalGraph = ((List) document.data[GRAPH_KEY])
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
-        var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
+        var originalGraphSize = originalGraph.size()
 
         Set<String> categoryLinks = [] as Set
         if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
@@ -647,7 +648,7 @@ class ElasticSearch {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard[IDS] = collectIds(embellishedGraph, integralIds)
+        searchCard[IDS] = collectRecordIds(originalGraph, embellishedGraph, integralIds)
 
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
@@ -754,8 +755,8 @@ class ElasticSearch {
         return FLATTENED_LANG_MAP_PREFIX + key
     }
 
-    private static Set<String> collectIds(List embellishedGraph, Collection<String> integralIds) {
-        var records = embellishedGraph.take(1) + embellishedGraph.findAll { ((String) DocumentUtil.getAtPath(it, Document.thingIdPath2)) in integralIds }
+    private static Set<String> collectRecordIds(List originalGraph, List embellishedGraph, Collection<String> integralIds) {
+        var records = originalGraph.take(1) + embellishedGraph.findAll { ((String) DocumentUtil.getAtPath(it, Document.thingIdPath2)) in integralIds }
                 .collect { DocumentUtil.getAtPath(it, Document.recordPath) }
 
         Set ids = [] as Set
