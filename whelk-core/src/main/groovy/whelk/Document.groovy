@@ -924,8 +924,8 @@ class Document {
 
     // All these "virtual record" methods are hardcoded for blank Works
     Set<String> getVirtualRecordIds() {
-        def work = get(["@graph", 1, "instanceOf"]) as Map
-        return (!work || work !instanceof Map || JsonLd.isLink(work) || isSuppressedRecord())
+        var work = get(["@graph", 1, "instanceOf"])
+        return (!work || work !instanceof Map || JsonLd.isLink(work as Map) || isSuppressedRecord())
             ? [] as Set<String>
             : [ "${getShortId()}#work-record".toString() ] as Set<String>
     }
