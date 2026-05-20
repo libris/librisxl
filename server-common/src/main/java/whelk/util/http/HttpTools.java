@@ -1,6 +1,5 @@
 package whelk.util.http;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.groovy.runtime.StackTraceUtils;
@@ -14,12 +13,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 import static org.eclipse.jetty.http.HttpStatus.getMessage;
 import static whelk.util.Jackson.mapper;
@@ -97,30 +94,23 @@ public class HttpTools {
         Map<String, Object> extra = e instanceof BadRequestException ? ((BadRequestException)e).getExtraInfo() : Collections.emptyMap();
 
         Map<String, Object> json = new HashMap<>();
-        json.put("message", msg);
         json.put("status_code", statusCode);
         json.put("status", getMessage(statusCode));
-        json.putAll(extra);
 
-        if (statusCode >= 500 && e != null) {
-            e = (Exception) StackTraceUtils.sanitize(e);
-            log.error("Internal server error: " + e.getMessage(), e);
-
-            // Don't include servlet container stack frames
-            String[] stackFrames = ExceptionUtils.getStackFrames(e);
-            List<String> framesList = Arrays.asList(stackFrames);
-            int lastRelevantIndex = -1;
-            for (int i = framesList.size() - 1; i >= 0; i--) {
-                if (framesList.get(i).contains(HttpTools.class.getPackage().getName())) {
-                    lastRelevantIndex = i;
-                    break;
-                }
+        if (statusCode >= 500) {
+            // Don't leak internals to clients
+            String errorId = UUID.randomUUID().toString();
+            json.put("message", "Internal server error. Please report the errorId if the problem persists.");
+            json.put("errorId", errorId);
+            if (e != null) {
+                e = (Exception) StackTraceUtils.sanitize(e);
+                log.error("Internal server error [errorId={}]: {}", errorId, msg, e);
+            } else {
+                log.error("Internal server error [errorId={}]: {}", errorId, msg);
             }
-            List<String> relevantFrames = framesList.subList(0, Math.min(framesList.size(), lastRelevantIndex + 2));
-            List<String> cleanedFrames = relevantFrames.stream()
-                .map(frame -> frame.replace("\t", "    "))
-                .collect(Collectors.toList());
-            json.put("stackTrace", cleanedFrames);
+        } else {
+            json.put("message", msg);
+            json.putAll(extra);
         }
 
         sendResponse(response, json, "application/json", statusCode);
