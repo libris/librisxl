@@ -219,6 +219,10 @@ public non-sealed class Property extends PathElement {
         return RDF_TYPE.equals(name);
     }
 
+    public boolean isMeta() {
+        return false;
+    }
+
     public boolean isVocabTerm() {
         return isVocabTerm;
     }
@@ -493,6 +497,11 @@ public non-sealed class Property extends PathElement {
         public Meta(JsonLd jsonLd, Key.RecognizedKey key) {
             super(RECORD_KEY, jsonLd, key);
         }
+
+        @Override
+        public boolean isMeta() {
+            return true;
+        }
     }
 
     public static final class CoercingSubProperty extends Property {
@@ -580,6 +589,11 @@ public non-sealed class Property extends PathElement {
                     :value ) .
             */
             return Property.buildObjectRestrictions(definition, jsonLd, true);
+        }
+
+        @Override
+        public boolean isMeta() {
+            return superProperty instanceof Meta;
         }
 
         @Override
