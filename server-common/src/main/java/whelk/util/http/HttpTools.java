@@ -100,8 +100,8 @@ public class HttpTools {
         if (statusCode >= 500) {
             // Don't leak internals to clients
             String errorId = UUID.randomUUID().toString();
-            json.put("message", "Internal server error. Please report the errorId if the problem persists.");
-            json.put("errorId", errorId);
+            json.put("message", "Internal server error. Please report the error_id if the problem persists.");
+            json.put("error_id", errorId);
             if (e != null) {
                 e = (Exception) StackTraceUtils.sanitize(e);
                 log.error("Internal server error [errorId={}]: {}", errorId, msg, e);
