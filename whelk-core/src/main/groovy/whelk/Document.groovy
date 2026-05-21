@@ -978,11 +978,10 @@ class Document {
         Map record = get(recordPath) as Map
         Map instance = get(thingPath) as Map
 
-        def workId = (instance[ID_KEY] as String).replace(HASH_IT, '') + "#work"
+        def instanceId = instance[ID_KEY] as String
+        def workId = instanceId.replace(HASH_IT, '') + "#work"
         def workRecordId = record[ID_KEY] as String
         def instanceRecordId = workRecordId.replace('#work-record', '')
-
-        instance[RECORD_KEY] = record + [(ID_KEY): instanceRecordId]
 
         Map workRecord = [
                 (ID_KEY)   : workRecordId,
@@ -994,19 +993,23 @@ class Document {
                 (TYPE_KEY) : JsonLd.VIRTUAL_RECORD_TYPE,
                 (THING_KEY): [(ID_KEY): workId]
         ]
-        
+
         def work = instance.remove(WORK_KEY) as Map
         work[ID_KEY] = workId
-        work[REVERSE_KEY] = [(WORK_KEY): [instance]]
-
+        work[REVERSE_KEY] = [(WORK_KEY): [[(ID_KEY): instanceId]]]
         // TODO...
         if (!work['hasTitle']) {
             work['hasTitle'] = JsonLd.asList(instance['hasTitle']).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
         }
 
+        Map instanceRecord = record + [(ID_KEY): instanceRecordId]
+        instance = instance + [(WORK_KEY): [(ID_KEY): workId]]
+        Map instanceGraph = [(GRAPH_KEY): [instanceRecord, instance]]
+
         def graph = data[GRAPH_KEY] as List
         graph[0] = workRecord
         graph[1] = work
+        graph.add(2, instanceGraph)
     }
 
     private boolean isSuppressedRecord() {

@@ -409,6 +409,101 @@ class DocumentSpec extends Specification {
         set1.getChecksum(jsonld) != set2.getChecksum(jsonld)
     }
 
+    def "flip work/instance in embellished virtual work graph"() {
+        given:
+        def virtualWorkRecord = new Document([
+                "@graph": [[
+                                   "@id"       : "/id#work-record",
+                                   "@type"     : "Record",
+                                   "mainEntity": [
+                                           "@id": "/id#it"
+                                   ],
+                                   "prop1"     : "x"
+                           ], [
+                                   "@id"       : "/id#it",
+                                   "@type"     : "Instance",
+                                   "hasTitle"  : [[
+                                                          "@type"    : "Title",
+                                                          "mainTitle": "title"
+                                                  ]],
+                                   "instanceOf": [
+                                           "@type": "Work"
+                                   ],
+                                   "prop2"     : ["@id": '/link']
+                           ],
+                           [
+                                   "@graph": [
+                                           [
+                                                   '@id'       : '/id2',
+                                                   '@type'     : 'Record',
+                                                   'mainEntity': ['@id': '/link']
+                                           ],
+                                           [
+                                                   '@id'  : '/link',
+                                                   '@type': 'Resource'
+                                           ]
+                                   ]
+                           ]]
+        ])
+        virtualWorkRecord.centerOnVirtualMainEntity()
+
+        expect:
+        virtualWorkRecord.data == [
+                "@graph": [[
+                                   "@id"       : "/id#work-record",
+                                   "@type"     : "VirtualRecord",
+                                   "mainEntity": [
+                                           "@id": "/id#work"
+                                   ]
+                           ], [
+                                   "@type"   : "Work",
+                                   "@id"     : "/id#work",
+                                   "@reverse": [
+                                           "instanceOf": [[
+                                                                  "@id": "/id#it"
+                                                          ]]
+                                   ],
+                                   "hasTitle": [[
+                                                        "@type"    : "Title",
+                                                        "mainTitle": "title"
+                                                ]]
+                           ], [
+                                   "@graph": [[
+                                                      "@id"       : "/id",
+                                                      "@type"     : "Record",
+                                                      "mainEntity": [
+                                                              "@id": "/id#it"
+                                                      ],
+                                                      "prop1"     : "x"
+                                              ], [
+                                                      "@id"       : "/id#it",
+                                                      "@type"     : "Instance",
+                                                      "hasTitle"  : [[
+                                                                             "@type"    : "Title",
+                                                                             "mainTitle": "title"
+                                                                     ]],
+                                                      "prop2"     : [
+                                                              "@id": "/link"
+                                                      ],
+                                                      "instanceOf": [
+                                                              "@id": "/id#work"
+                                                      ]
+                                              ]]
+                           ], [
+                                   "@graph": [[
+                                                      "@id"       : "/id2",
+                                                      "@type"     : "Record",
+                                                      "mainEntity": [
+                                                              "@id": "/link"
+                                                      ]
+                                              ], [
+                                                      "@id"  : "/link",
+                                                      "@type": "Resource"
+                                              ]]
+                           ]]
+        ]
+    }
+
     static String readFile(String filename) {
         return DocumentSpec.class.getClassLoader()
                 .getResourceAsStream(filename).getText("UTF-8")
