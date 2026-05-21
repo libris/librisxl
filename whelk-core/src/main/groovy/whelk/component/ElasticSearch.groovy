@@ -839,7 +839,7 @@ class ElasticSearch {
         return JsonLd.getExternalReferences([(GRAPH_KEY): graph])
                 .findAll {
                     // FIXME
-                    if (jsonLd.isIntegral(it.property())) {
+                    if (jsonLd.isIntegral(it.relation)) {
                         return true
                     }
                     def path = it.propertyPath()

@@ -12,7 +12,7 @@ class Embellisher {
     static final List<String> DEFAULT_EMBELLISH_LEVELS = ['cards', 'chips']
     static final List<String> DEFAULT_INTEGRAL_RELATIONS = ['instanceOf', 'translationOf']
     // FIXME
-    static final List<String> FAKE_INTEGRAL_RELATIONS = ['shelfMark', 'availability']
+    static final List<String> FAKE_INTEGRAL_RELATIONS = ['shelfMark', 'hasComponent.shelfMark', 'availability', 'hasComponent.availability']
 
     static final int MAX_REVERSE_LINKS = 1024
 
@@ -119,7 +119,7 @@ class Embellisher {
                     links += newLinks
                     if (lens == 'full') {
                         // FIXME
-                        def fakeIntegralLinks = newLinks.findAll { FAKE_INTEGRAL_RELATIONS.contains(it.property()) }
+                        def fakeIntegralLinks = newLinks.findAll { FAKE_INTEGRAL_RELATIONS.contains(it.relation) }
                         def fakeIntegralDocsViaInverse = fetchIntegral(lens, inverseDocs, fakeIntegralLinks, visited)
                         docs += fakeIntegralDocsViaInverse
                         links += getAllLinks(fakeIntegralDocsViaInverse)
@@ -159,7 +159,7 @@ class Embellisher {
     private Set<Link> integral(Set<Link> links) {
         Set<Link> integral = new HashSet<>()
         for (Link l : links) { 
-            if (l.property() in integralRelations) {
+            if (l.relation in integralRelations) {
                 integral.add(l) 
             } 
         }
