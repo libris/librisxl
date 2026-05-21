@@ -15,7 +15,13 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Predicate
 
+import static whelk.JsonLd.GRAPH_KEY
+import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.RECORD_KEY
+import static whelk.JsonLd.REVERSE_KEY
+import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.WORK_KEY
 import static whelk.JsonLd.asList
 import static whelk.util.Jackson.mapper
 
@@ -969,30 +975,38 @@ class Document {
             throw new IllegalStateException()
         }
 
-        Map record = get(["@graph", 0]) as Map
-        Map work = get(["@graph", 1, "instanceOf"]) as Map
-        Map instance = get(["@graph", 1]) as Map
-        def workId = (instance["@id"] as String).replace('#it', '') + "#work"
+        Map record = get(recordPath) as Map
+        Map instance = get(thingPath) as Map
+
+        def workId = (instance[ID_KEY] as String).replace(HASH_IT, '') + "#work"
+        def workRecordId = record[ID_KEY] as String
+        def instanceRecordId = workRecordId.replace('#work-record', '')
+
+        instance[RECORD_KEY] = record + [(ID_KEY): instanceRecordId]
+
+        Map workRecord = [
+                (ID_KEY)   : workRecordId,
+                // TODO
+                // For now these will not be found by the search API since it has a boost on RECORD_TYPE and CACHE_RECORD_TYPE
+                // This is what we want since VirtualRecords should not be visible in the cataloguing interface.
+                // When we have unified the new "query language" search API with the current search API we need a different mechanism
+                // for separating them
+                (TYPE_KEY) : JsonLd.VIRTUAL_RECORD_TYPE,
+                (THING_KEY): [(ID_KEY): workId]
+        ]
         
-        record["mainEntity"]["@id"] = workId
-        // TODO
-        // For now these will not be found by the search API since it has a boost on RECORD_TYPE and CACHE_RECORD_TYPE
-        // This is what we want since VirtualRecords should not be visible in the cataloguing interface.
-        // When we have unified the new "query language" search API with the current search API we need a different mechanism
-        // for separating them
-        record["@type"] = JsonLd.VIRTUAL_RECORD_TYPE
-        
-        instance.remove('instanceOf')
-        
-        work["@id"] = workId
-        work["@reverse"] = ["instanceOf": [instance]]
+        def work = instance.remove(WORK_KEY) as Map
+        work[ID_KEY] = workId
+        work[REVERSE_KEY] = [(WORK_KEY): [instance]]
 
         // TODO...
         if (!work['hasTitle']) {
             work['hasTitle'] = JsonLd.asList(instance['hasTitle']).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
         }
 
-        set(["@graph", 1], work)
+        def graph = data[GRAPH_KEY] as List
+        graph[0] = workRecord
+        graph[1] = work
     }
 
     private boolean isSuppressedRecord() {

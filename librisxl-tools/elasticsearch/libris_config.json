@@ -185,10 +185,6 @@
             },
             "meta": {
                 "properties": {
-                    "encodingLevel": {
-                      "type": "keyword",
-                      "copy_to": "_all"
-                    },
                     "recordStatus": {
                       "type": "keyword",
                       "copy_to": "_all"
@@ -350,6 +346,15 @@
             {
                 "issuanceType_template": {
                     "match": ["issuanceType"],
+                    "mapping": {
+                        "type": "keyword",
+                        "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "encodingLevel_template": {
+                    "match": ["encodingLevel"],
                     "mapping": {
                         "type": "keyword",
                         "copy_to": "_all"

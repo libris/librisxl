@@ -68,8 +68,11 @@ public final class Path implements Selector {
     public Selector withPrependedMetaProperty(JsonLd jsonLd) {
         List<PathElement> newPath = new ArrayList<>();
         for (PathElement pe : path()) {
-            if (pe.appearsOnlyOnRecord(jsonLd) && (newPath.isEmpty() || !(newPath.getLast() instanceof Property.Meta))) {
-                newPath.add(new Property.Meta(jsonLd));
+            if (pe.appearsOnlyOnRecord(jsonLd)) {
+                boolean isPrecededByMeta = !newPath.isEmpty() && newPath.getLast() instanceof Property p && p.isMeta();
+                if (!isPrecededByMeta) {
+                    newPath.add(new Property.Meta(jsonLd));
+                }
             }
             newPath.add(pe);
         }

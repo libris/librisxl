@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.JSONLD_ALT_ID_KEY;
+import static whelk.JsonLd.RECORD_TYPE;
 import static whelk.JsonLd.REVERSE_KEY;
 import static whelk.JsonLd.THING_KEY;
 import static whelk.JsonLd.TYPE_KEY;
@@ -266,20 +267,9 @@ public class FresnelUtil {
             return lensedThings;
         }
 
-        public void restoreLinks(Map<String, Object> thing, boolean isVirtualRecord) {
-            var id = (String) thing.get(ID_KEY);
-            if (id != null && !JsonLd.isLink(thing)) {
-                if (id.endsWith("#work") && isVirtualRecord) {
-                    // FIXME
-                    preservedLinksMap.getOrDefault(id.replace("#work", "#it"), List.of())
-                            .stream()
-                            .map(lr -> !lr.path().isEmpty() && WORK_KEY.equals(lr.path().getFirst())
-                                    ? new LinkRestoration(lr.path().subList(1, lr.path().size()), lr.key(), lr.links())
-                                    : lr)
-                            .forEach(lr -> lr.restoreTo(thing));
-                } else {
-                    preservedLinksMap.getOrDefault(id, List.of()).forEach(lr -> lr.restoreTo(thing));
-                }
+        public void restoreLinks(Map<String, Object> thing) {
+            if (thing.get(ID_KEY) instanceof String id && !JsonLd.isLink(thing)) {
+                preservedLinksMap.getOrDefault(id, List.of()).forEach(lr -> lr.restoreTo(thing));
             }
         }
     }
