@@ -29,10 +29,8 @@ import static whelk.JsonLd.JSONLD_ALT_ID_KEY
 import static whelk.JsonLd.Platform.CATEGORY_BY_COLLECTION
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.REVERSE_KEY
-import static whelk.JsonLd.SEARCH_KEY
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
-import static whelk.JsonLd.WORK_KEY
 import static whelk.JsonLd.asList
 import static whelk.component.ElasticSearch.SystemFields.CARD_STR
 import static whelk.component.ElasticSearch.SystemFields.CHIP_STR
@@ -763,8 +761,8 @@ class ElasticSearch {
         Set ids = [] as Set
 
         records.each {
-            ids.add(lastPathSegment((String) it[ID_KEY]))
-            DocumentUtil.getAtPath(it, [JSONLD_ALT_ID_KEY, '*', ID_KEY], []).each { ids.add(lastPathSegment((String) it)) }
+            ids.add(stripHash(lastPathSegment((String) it[ID_KEY])))
+            DocumentUtil.getAtPath(it, [JSONLD_ALT_ID_KEY, '*', ID_KEY], []).each { ids.add(stripHash(lastPathSegment((String) it))) }
             ids.addAll(DocumentUtil.getAtPath(it, ['identifiedBy', '*', 'value'], []))
         }
 

@@ -25,6 +25,7 @@ import static whelk.util.Jackson.mapper
  * This class serves as a wrapper around such a map, with access methods for specific parts of the data.
  */
 @Log
+@CompileStatic
 class Document {
 
     // If we _statically_ call loadProperties("secret"), without a try/catch it means that no code with a dependency on
@@ -139,8 +140,8 @@ class Document {
 
         // Add to list, if not there already
         Map idObject = ["@id" : dataset]
-        if (!datasetList.contains(idObject))
-            datasetList.add( idObject )
+        if (!((List) datasetList).contains(idObject))
+            ((List) datasetList).add( idObject )
     }
 
     List getInDataset() {
@@ -171,8 +172,8 @@ class Document {
 
         // Add to list, if not there already
         Map idObject = ["@id" : imageUri]
-        if (!imageList.contains(idObject))
-            imageList.add( idObject )
+        if (!((List) imageList).contains(idObject))
+            ((List) imageList).add( idObject )
     }
 
     List getImages() {
@@ -284,7 +285,7 @@ class Document {
     }
     
     static boolean isIsni(Map identifier) { 
-         identifier['@type'] == 'ISNI' || identifier.typeNote?.with{ String n -> n.toLowerCase() } == 'isni'
+         identifier['@type'] == 'ISNI' || identifier.typeNote?.with{ (it as String).toLowerCase() } == 'isni'
     }
 
     List<String> getOrcidValues() {
@@ -292,7 +293,7 @@ class Document {
     }
 
     static boolean isOrcid(Map identifier) {
-        identifier['@type'] == 'ORCID' || identifier.typeNote?.with{ String n -> n.toLowerCase() } == 'orcid'
+        identifier['@type'] == 'ORCID' || identifier.typeNote?.with{ (it as String).toLowerCase() } == 'orcid'
     }
     
     private List<String> getTypedIDValues(String typeKey, List<String> idListPath, String valueKey) {
@@ -301,7 +302,7 @@ class Document {
         
     private List<String> getTypedIDValues(Predicate<Map> condition, List<String> idListPath, String valueKey) {
         List<String> values = new ArrayList<>()
-        List typedIDs = get(idListPath)
+        List typedIDs = get(idListPath) as List
         for (Object element : typedIDs) {
             if (!(element instanceof Map))
                 continue
@@ -324,7 +325,7 @@ class Document {
     }
 
     List<Map> getCarrierTypes() {
-        return get(thingCarrierTypesPath)
+        return get(thingCarrierTypesPath) as List<Map>
     }
 
     void setCreated(Date created) {
@@ -410,13 +411,13 @@ class Document {
      */
     List<Tuple> getTypedThingIdentifiers() {
         List<Tuple> results = []
-        List typedIDs = get(thingTypedIDsPath)
+        List typedIDs = get(thingTypedIDsPath) as List<Map>
 
         for (Map typedID : typedIDs) {
             String type = typedID["@type"]
             String value = null
             if (typedID["value"] instanceof List)
-                value = typedID["value"][0]
+                value = (typedID["value"] as List)[0]
             else
                 value = typedID["value"]
 
@@ -432,13 +433,13 @@ class Document {
      */
     List<Tuple> getTypedRecordIdentifiers() {
         List<Tuple> results = []
-        List typedIDs = get(recordTypedIDsPath)
+        List typedIDs = get(recordTypedIDsPath) as List<Map>
 
         for (Map typedID : typedIDs) {
             String type = typedID["@type"]
-            String value = null
+            String value
             if (typedID["value"] instanceof List)
-                value = typedID["value"][0]
+                value = (typedID["value"] as List)[0]
             else
                 value = typedID["value"]
 
@@ -459,9 +460,9 @@ class Document {
         if (thingId)
             ret.add(thingId)
 
-        List sameAsObjects = get(thingSameAsPath)
+        List sameAsObjects = get(thingSameAsPath) as List<Map>
         for (Map object : sameAsObjects) {
-            ret.add(object.get("@id"))
+            ret.add(object.get("@id") as String)
         }
 
         return ret
@@ -479,14 +480,14 @@ class Document {
         }
 
         if (preparePath(thingSameAsPath)) {
-            List sameAsList = get(thingSameAsPath)
+            var sameAsList = get(thingSameAsPath)
             if (sameAsList == null || !(sameAsList instanceof List)) {
                 set(thingSameAsPath, [])
                 sameAsList = get(thingSameAsPath)
             }
             def idObject = ["@id": identifier]
-            if (!sameAsList.contains(idObject))
-                sameAsList.add(idObject)
+            if (!(sameAsList as List).contains(idObject))
+                (sameAsList as List).add(idObject)
         }
     }
 
@@ -500,10 +501,10 @@ class Document {
         if (mainId != null)
         ret.add(mainId)
 
-        List sameAsObjects = get(recordSameAsPath)
+        List<Map> sameAsObjects = get(recordSameAsPath) as List<Map>
         for (Map object : sameAsObjects) {
             if (object.get("@id") != null)
-                ret.add(object.get("@id"))
+                ret.add(object.get("@id") as String)
         }
 
         return ret
@@ -530,7 +531,7 @@ class Document {
             }
             def idObject = ["@id": identifier]
             if (sameAsList.every { it -> it != idObject })
-                sameAsList.add(idObject)
+                (sameAsList as List).add(idObject)
         }
     }
 
@@ -559,7 +560,7 @@ class Document {
 
             def idObject = ["value": identifier, "@type": type]
             if (typedIDList.every { it -> it != idObject })
-                typedIDList.add(idObject)
+                (typedIDList as List).add(idObject)
         }
     }
 
@@ -584,9 +585,9 @@ class Document {
     Map getEmbedded(String id) {
         int ix = 0;
         for (var entry : JsonLd.asList(data[JsonLd.GRAPH_KEY])) {
-            if (ix++ > 1 && entry[JsonLd.GRAPH_KEY] && entry[JsonLd.GRAPH_KEY][1]) {
-                if (id == entry[JsonLd.GRAPH_KEY][1][JsonLd.ID_KEY]) {
-                    return (Map) entry[JsonLd.GRAPH_KEY][1]
+            if (ix++ > 1 && entry[JsonLd.GRAPH_KEY] && (entry[JsonLd.GRAPH_KEY] as List)[1]) {
+                if (id == (entry[JsonLd.GRAPH_KEY] as List)[1][JsonLd.ID_KEY]) {
+                    return (Map) (entry[JsonLd.GRAPH_KEY] as List)[1]
                 }
             }
         }
@@ -598,7 +599,7 @@ class Document {
         Set<String> result = new HashSet<>()
         data[JsonLd.GRAPH_KEY].eachWithIndex{ def entry, int i ->
             if (i > 1 && entry[JsonLd.GRAPH_KEY]) {
-                result.add(_get(thingIdPath2, entry))
+                result.add(_get(thingIdPath2, entry) as String)
             }
         }
         return result
@@ -775,8 +776,8 @@ class Document {
 
     // This assumes that orig is a JSON-compatible thing. It should always be fine for our use,
     // since the stuff passed to it was initially deserialized by Jackson anyway.
-    static Object deepCopy(Object orig) {
-        return mapper.readValue(mapper.writeValueAsBytes(orig), Object)
+    static <T> T deepCopy(T orig) {
+        return mapper.readValue(mapper.writeValueAsBytes(orig), Object) as T
     }
 
     /**
@@ -806,7 +807,7 @@ class Document {
             }
             String nodeId = node["@id"]
             if (nodeId != null && nodeId.startsWith(oldId)) {
-                node["@id"] = newId + node["@id"].substring(oldId.length())
+                node["@id"] = newId + (node["@id"] as String).substring(oldId.length())
             }
         }
     }
@@ -863,7 +864,7 @@ class Document {
     }
 
     void applyInverses(JsonLd jsonld) {
-        Map thing = get(thingPath)
+        Map thing = get(thingPath) as Map
         jsonld.applyInverses(thing)
         thing.remove(JsonLd.REVERSE_KEY)
     }
@@ -923,10 +924,10 @@ class Document {
 
     // All these "virtual record" methods are hardcoded for blank Works
     Set<String> getVirtualRecordIds() {
-        def work = get(["@graph", 1, "instanceOf"])
-        return (!work || work !instanceof Map || JsonLd.isLink(work) || isSuppressedRecord())
-            ? []
-            : [ "${getShortId()}#work-record".toString() ]
+        var work = get(["@graph", 1, "instanceOf"])
+        return (!work || work !instanceof Map || JsonLd.isLink(work as Map) || isSuppressedRecord())
+            ? [] as Set<String>
+            : [ "${getShortId()}#work-record".toString() ] as Set<String>
     }
 
     // All these "virtual record" methods are hardcoded for blank Works
@@ -936,7 +937,7 @@ class Document {
         }
 
         Document doc = clone()
-        doc.set(recordIdPath, get(recordIdPath) + "#work-record")
+        doc.set(recordIdPath, get(recordIdPath) as String + "#work-record")
 
         return doc
     }
@@ -968,10 +969,10 @@ class Document {
             throw new IllegalStateException()
         }
 
-        Map record = get(["@graph", 0])
-        Map work = get(["@graph", 1, "instanceOf"])
-        Map instance = get(["@graph", 1])
-        def workId = instance["@id"].replace('#it', '') + "#work"
+        Map record = get(["@graph", 0]) as Map
+        Map work = get(["@graph", 1, "instanceOf"]) as Map
+        Map instance = get(["@graph", 1]) as Map
+        def workId = (instance["@id"] as String).replace('#it', '') + "#work"
         
         record["mainEntity"]["@id"] = workId
         // TODO

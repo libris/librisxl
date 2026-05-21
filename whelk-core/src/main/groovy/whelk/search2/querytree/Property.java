@@ -159,6 +159,11 @@ public non-sealed class Property extends PathElement {
     }
 
     @Override
+    public boolean isComposite() {
+        return false;
+    }
+
+    @Override
     public boolean isObjectProperty() {
         return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(OBJECT_PROPERTY::equals);
     }
@@ -596,6 +601,11 @@ public non-sealed class Property extends PathElement {
             return getComponents(jsonLd).stream()
                     .flatMap(s -> s.getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible).stream())
                     .toList();
+        }
+
+        @Override
+        public boolean isComposite() {
+            return true;
         }
 
         private List<Selector> getComponents(JsonLd jsonLd) {

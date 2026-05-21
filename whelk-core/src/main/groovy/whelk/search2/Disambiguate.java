@@ -217,18 +217,6 @@ public class Disambiguate {
                 }
             }
         }
-        /*
-        TODO?
-        Optimally we would also check here that the given property is a DatatypeProperty and not an ObjectProperty
-        since only the former may have a numeric values, however there are fields such as reverseLinks.totalItemsByRelation.p
-        where p is not a DatatypeProperty but still the field has numeric values, so a query like
-        reverseLinks.totalItemsByRelation.instanceOf>1 wouldn't work due to the value 1 not being typed as Numeric
-        and by extension the query wouldn't pass as a valid range query.
-        */
-        var numeric = Numeric.parse(value, token);
-        if (numeric != null) {
-            return Optional.of(numeric);
-        }
         if (property.isDatatypeProperty()) {
             var yearRange = YearRange.parse(value, token);
             if (yearRange != null) {

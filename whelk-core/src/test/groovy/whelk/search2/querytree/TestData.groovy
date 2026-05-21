@@ -30,6 +30,7 @@ class TestData {
                 'p13'             : ['p13'] as Set,
                 'p14'             : ['p14'] as Set,
                 'p15'             : ['p15'] as Set,
+                'p16'             : ['p16'] as Set,
                 'ctx.p'           : ['ctxProp'] as Set,
                 'type'            : ['rdf:type'] as Set,
                 'rdf:type'        : ['rdf:type'] as Set,
@@ -183,6 +184,21 @@ class TestData {
                         'range': ['@id': 'T5']
                 ],
                 [
+                        '@id'        : 'p16',
+                        '@type'      : 'DatatypeProperty',
+                        'category'   : ['@id': "https://id.kb.se/ns/librissearch/composite"]
+                ],
+                [
+                        '@id'        : 'p17',
+                        '@type'      : 'DatatypeProperty',
+                        'subPropertyOf': [['@id': 'p16']]
+                ],
+                [
+                        '@id'        : 'p18',
+                        '@type'      : 'DatatypeProperty',
+                        'subPropertyOf': [['@id': 'p16']]
+                ],
+                [
                         '@id'  : 'ctxProp',
                         '@type': 'DatatypeProperty',
                         'domain': ['@id': 'T4']
@@ -272,7 +288,9 @@ class TestData {
                 '@context': [
                         '@vocab': 'https://id.kb.se/vocab/',
                         'p2'    : ['@type': '@vocab'],
-                        'p4'    : ['@container': '@set']
+                        'p4'    : ['@container': '@set'],
+                        'p17'   : ['@container': '@set'],
+                        'p18'   : ['@container': '@set']
                 ]
         ]
         return new JsonLd(ctx, [:], vocab)

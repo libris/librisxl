@@ -93,18 +93,5 @@ public non-sealed class Or extends Group {
         }
         return Optional.empty();
     }
-
-    public static final class AltSelectors extends Or {
-        private final Selector origSelector;
-
-        public AltSelectors(List<? extends Node> children, Selector origSelector) {
-            super(children);
-            this.origSelector = origSelector;
-        }
-
-        public Selector origSelector() {
-            return origSelector;
-        }
-    }
 }
 

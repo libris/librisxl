@@ -20,6 +20,7 @@ public sealed interface Selector permits Path, PathElement {
 
     boolean isValid();
     boolean isType();
+    boolean isComposite();
 
     boolean isObjectProperty();
     boolean isLdSetContainer();

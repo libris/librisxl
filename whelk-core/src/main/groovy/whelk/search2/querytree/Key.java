@@ -46,6 +46,11 @@ public sealed abstract class Key extends PathElement permits Key.AmbiguousKey, K
     }
 
     @Override
+    public boolean isComposite() {
+        return false;
+    }
+
+    @Override
     public boolean isObjectProperty() {
         return false;
     }

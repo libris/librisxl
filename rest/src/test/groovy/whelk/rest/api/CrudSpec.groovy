@@ -13,7 +13,6 @@ import whelk.component.PostgreSQLComponent
 import whelk.exception.ModelValidationException
 import whelk.history.DocumentVersion
 import whelk.rest.security.AccessControl
-import whelk.util.LegacyIntegrationTools
 
 import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
@@ -26,9 +25,9 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND
 import static javax.servlet.http.HttpServletResponse.SC_NOT_MODIFIED
 import static javax.servlet.http.HttpServletResponse.SC_OK
+import static whelk.util.Jackson.mapper
 import static whelk.util.http.MimeTypes.JSON
 import static whelk.util.http.MimeTypes.JSONLD
-import static whelk.util.Jackson.mapper
 
 /**
  * Created by markus on 2015-10-16.
@@ -91,6 +90,7 @@ class CrudSpec extends Specification {
         ]
 
         whelk.contextData = ['@context': [
+                "@vocab": "https://example.com/vocab",
                 'examplevocab': 'http://example.com',
                 'some_term': 'http://some-term.somewhere']]
         whelk.displayData = ['lensGroups': [
@@ -109,16 +109,12 @@ class CrudSpec extends Specification {
             ["@id": "code"],
             ["@id": "mainEntity"],
             ["@id": "Record"],
-            ["@id": "Item"],
-            ["@id": "Work"],
+            ["@id": "Item", "category": [["@id": "https://id.kb.se/marc/hold"]]],
+            ["@id": "Work", "category": [["@id": "https://id.kb.se/marc/bib"]]], // not true in real vocab but what tests expect
+            ["@id": "Instance", "category": [["@id": "https://id.kb.se/marc/bib"]]],
         ]]
         whelk.setJsonld(new JsonLd(whelk.contextData, whelk.displayData, whelk.vocabData))
         whelk.setResourceCache(new ResourceCache(whelk.getJsonld()))
-
-        // NB!! Mocking of static methods e.g. LegacyIntegrationTools.determineLegacyCollection
-        // does not work if they are called directly from Crud class
-        // TODO?: replace mocking with properly initiated vocab in tests so that regular determineLegacyCollection works?
-        GroovySpy(LegacyIntegrationTools.class, global: true)
 
         crud = new Crud(whelk)
         crud.init()
@@ -912,9 +908,6 @@ class CrudSpec extends Specification {
         request.getMethod() >> {
             "POST"
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
-        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -996,9 +989,6 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1118,9 +1108,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
-        }
         when:
         crud.doPost(request, response)
         then:
@@ -1149,9 +1136,6 @@ class CrudSpec extends Specification {
             "POST"
         }
 
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -1196,9 +1180,6 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1253,9 +1234,6 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1338,9 +1316,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doPost(request, response)
         then:
@@ -1388,9 +1363,6 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         when:
         crud.doPost(request, response)
@@ -1445,9 +1417,6 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
         }
         when:
         crud.doPost(request, response)
@@ -1505,9 +1474,6 @@ class CrudSpec extends Specification {
         accessControl.checkDocumentToPost(_, _) >> {
             throw new ModelValidationException("Could not validate model.")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doPost(request, response)
         then:
@@ -1534,9 +1500,6 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1619,9 +1582,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
-        }
         when:
         crud.doPost(request, response)
         then:
@@ -1648,9 +1608,6 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1705,9 +1662,6 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1764,9 +1718,6 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "POST"
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1850,9 +1801,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             return null
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doPost(request, response)
         then:
@@ -1916,11 +1864,17 @@ class CrudSpec extends Specification {
         def id = BASE_URI.resolve("/1234").toString()
         def oldContent = ["@graph": [["@id": id,
                                       "@type": "Record",
+                                      "contains": "some data"],
+                                     ["@id": id+"#it",
+                                      "@type": "Instance",
                                       "contains": "some data"]]]
         def newContent = ["@graph": [["@id": id,
                                       "@type": "Record",
                                       "created": createdDate,
-                                      "contains": "some updated data"]]]
+                                      "contains": "some updated data"],
+                                     ["@id": id+"#it",
+                                      "@type": "Instance",
+                                      "contains": "some data"]]]
         request.getInputStream() >> {
             new ServletInputStreamMock(mapper.writeValueAsBytes(newContent))
         }
@@ -1932,12 +1886,6 @@ class CrudSpec extends Specification {
         }
         request.getHeader("If-Match") >> {
             CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
-        }
-        whelk.storage.getCollectionBySystemID(_) >> {
-            return "bib"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -1954,6 +1902,9 @@ class CrudSpec extends Specification {
             Document doc = new Document(oldContent)
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "bib"
         }
         storage.createDocument(_,_, _, _, _, _, _) >> {
             Document doc = new Document(newContent)
@@ -2216,9 +2167,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
-        }
         whelk.storage.getCollectionBySystemID(_) >> {
             return "auth"
         }
@@ -2287,9 +2235,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doPut(request, response)
         then:
@@ -2353,9 +2298,6 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         when:
         crud.doPut(request, response)
@@ -2421,9 +2363,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
-        }
         when:
         crud.doPut(request, response)
         then:
@@ -2486,9 +2425,6 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
         }
         when:
         crud.doPut(request, response)
@@ -2554,9 +2490,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doPut(request, response)
         then:
@@ -2619,9 +2552,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doPut(request, response)
         then:
@@ -2661,9 +2591,6 @@ class CrudSpec extends Specification {
         }
         request.getHeader("If-Match") >> {
             CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         whelk.storage.getCollectionBySystemID(_) >> {
             return "hold"
@@ -2730,9 +2657,6 @@ class CrudSpec extends Specification {
         }
         request.getHeader("If-Match") >> {
             CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         whelk.storage.getCollectionBySystemID(_) >> {
             return "hold"
@@ -2822,9 +2746,6 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         when:
         crud.doPut(request, response)
@@ -2928,9 +2849,6 @@ class CrudSpec extends Specification {
         request.getHeader("If-Match") >> {
             CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         whelk.storage.getCollectionBySystemID(_) >> {
             return "hold"
         }
@@ -3021,14 +2939,11 @@ class CrudSpec extends Specification {
             doc.setCreated(Date.parse(dateFormat, createdDate))
             return doc
         }
-        storage.createDocument(_,_, _, _, _, _, _) >> {
-            throw new Exception("This shouldn't happen")
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
-        }
         whelk.storage.getCollectionBySystemID(_) >> {
             return "bib"
+        }
+        storage.createDocument(_,_, _, _, _, _, _) >> {
+            throw new Exception("This shouldn't happen")
         }
         when:
         crud.doPut(request, response)
@@ -3097,9 +3012,6 @@ class CrudSpec extends Specification {
         accessControl.checkDocumentToPut(_, _, _, _) >> {
             throw new ModelValidationException("Could not validate model.")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
 
         when:
         crud.doPut(request, response)
@@ -3159,9 +3071,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doPut(request, response)
         then:
@@ -3205,12 +3114,6 @@ class CrudSpec extends Specification {
         request.getHeader("If-Match") >> {
             CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
-        whelk.storage.getCollectionBySystemID(_) >> {
-            return "hold"
-        }
         request.getContentType() >> {
             "application/ld+json"
         }
@@ -3230,6 +3133,9 @@ class CrudSpec extends Specification {
         }
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
+        }
+        whelk.storage.getCollectionBySystemID(_) >> {
+            return "bib"
         }
         when:
         crud.doPut(request, response)
@@ -3290,9 +3196,6 @@ class CrudSpec extends Specification {
         storage.createDocument(_,_, _, _, _, _, _) >> {
             throw new Exception("This shouldn't happen")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doPut(request, response)
         then:
@@ -3336,9 +3239,6 @@ class CrudSpec extends Specification {
         }
         request.getHeader("If-Match") >> {
             CrudUtils.ETag.plain(new Document(oldContent).getChecksum(whelk.jsonld)).toString()
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         whelk.storage.getCollectionBySystemID(_) >> {
             return "hold"
@@ -3407,9 +3307,6 @@ class CrudSpec extends Specification {
         }
         request.getMethod() >> {
             "PUT"
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         request.getContentType() >> {
             "application/ld+json"
@@ -3563,9 +3460,6 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doDelete(request, response)
         then:
@@ -3605,9 +3499,6 @@ class CrudSpec extends Specification {
         }
         storage.remove(_, _) >> {
             return true
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
         }
         when:
         crud.doDelete(request, response)
@@ -3679,9 +3570,6 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doDelete(request, response)
         then:
@@ -3723,9 +3611,6 @@ class CrudSpec extends Specification {
         }
         storage.followDependers(_, _) >> {
             []
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         when:
         crud.doDelete(request, response)
@@ -3769,9 +3654,6 @@ class CrudSpec extends Specification {
         storage.followDependers(_, _) >> {
             []
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doDelete(request, response)
         then:
@@ -3813,9 +3695,6 @@ class CrudSpec extends Specification {
         }
         storage.followDependers(_, _) >> {
             []
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
         }
         when:
         crud.doDelete(request, response)
@@ -3904,9 +3783,6 @@ class CrudSpec extends Specification {
         accessControl.checkDocumentToDelete(_, _, _) >> {
             throw new ModelValidationException("Could not validate model.")
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
-        }
         when:
         crud.doDelete(request, response)
         then:
@@ -3945,9 +3821,6 @@ class CrudSpec extends Specification {
         }
         storage.remove(_, _) >> {
             return true
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
         }
         storage.followDependers(_, _) >> {
             []
@@ -3991,9 +3864,6 @@ class CrudSpec extends Specification {
         storage.remove(_, _) >> {
             return true
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "bib"
-        }
         when:
         crud.doDelete(request, response)
         then:
@@ -4033,9 +3903,6 @@ class CrudSpec extends Specification {
         storage.followDependers(_, _) >> {
             []
         }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
-        }
         when:
         crud.doDelete(request, response)
         then:
@@ -4074,9 +3941,6 @@ class CrudSpec extends Specification {
         }
         storage.remove(_, _) >> {
             return true
-        }
-        LegacyIntegrationTools.determineLegacyCollection(_, _) >> {
-            return "hold"
         }
         when:
         crud.doDelete(request, response)

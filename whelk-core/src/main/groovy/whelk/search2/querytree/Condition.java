@@ -149,7 +149,7 @@ public non-sealed class Condition implements Node {
                 .map(this::withSelector)
                 .map(s -> s._expand(jsonLd))
                 .toList();
-        Node expanded = withAltSelectors.size() > 1 ? new Or.AltSelectors(withAltSelectors, selector) : withAltSelectors.getFirst();
+        Node expanded = withAltSelectors.size() > 1 ? new Or(withAltSelectors) : withAltSelectors.getFirst();
         return new ExpandedNode(expanded, Map.of(this, expanded));
     }
 
@@ -227,19 +227,31 @@ public non-sealed class Condition implements Node {
         }
         return switch (v) {
             case DateTime dateTime -> esDateFilter(f, dateTime, esSettings);
-            case FreeText ft -> esSettings.mappings().isKeywordTypeField(f)
-                    ? esTermQueryFilter(f, ft.toString())
-                    : esFreeTextFilter(selector.isObjectProperty() ? f + "." + SEARCH_KEY : f, ft, esSettings);
+            case FreeText ft -> freeTextFilter(f, ft, selector, esSettings);
             case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
-            case Numeric numeric -> esNumFilter(f, numeric, esSettings);
             case Link link -> operator == LIKE
-                ? esLikeResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link, esSettings)
-                : esResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link);
+                    ? esLikeResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link, esSettings)
+                    : esResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link);
             case VocabTerm vocabTerm -> esResourceFilter(f, vocabTerm);
             case Term term -> esTermFilter(f, term);
             case YearRange yearRange -> esYearRangeFilter(f, yearRange, esSettings);
             case Any ignored -> existsFilter(f);
         };
+    }
+
+    private Map<String, Object> freeTextFilter(String field, FreeText ft, Selector selector, ESSettings esSettings) {
+        if (ft.isDigits()) {
+            var digitsFilter = esDigitsFilter(field, ft.toString(), esSettings);
+            if (digitsFilter != null) {
+                return digitsFilter;
+            }
+        }
+
+        if (esSettings.mappings().isKeywordTypeField(field)) {
+            return esTermQueryFilter(field, ft.toString());
+        }
+
+        return esFreeTextFilter(selector.isObjectProperty() ? field + "." + SEARCH_KEY : field, ft, esSettings);
     }
 
     private Map<String, Object> esDateFilter(String field, DateTime d, ESSettings esSettings) {
@@ -251,29 +263,26 @@ public non-sealed class Condition implements Node {
         return buildEsQuery(field, new FreeText(d.toString()), esSettings);
     }
 
-    private Map<String, Object> esNumFilter(String field, Numeric n, ESSettings esSettings) {
+    private Map<String, Object> esDigitsFilter(String field, String digits, ESSettings esSettings) {
         EsMappings esMappings = esSettings.mappings();
 
         // Known placeholder values (0000, 9999) are excluded from 4-digit fields to prevent them from being treated as valid years in sorting and aggregations.
         Predicate<String> isFourDigitsFieldValue = s -> s.length() == 4 && !s.equals("0000") && !s.equals("9999");
 
-        if (operator.isRange() && esMappings.hasFourDigitsShortField(field)) {
-            return esNumOrDateFilter(field + FOUR_DIGITS_SHORT_SUFFIX, n.value());
-        }
-        if (!operator.isRange()) {
-            if (esMappings.hasFourDigitsKeywordField(field) && isFourDigitsFieldValue.test(n.toString())) {
-                return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, n.toString());
+        if (operator.isRange()) {
+            if (esMappings.hasFourDigitsShortField(field)) {
+                field += FOUR_DIGITS_SHORT_SUFFIX;
             }
-            if (esMappings.hasKeywordSubfield(field)) {
-                return esTermQueryFilter(String.format("%s.%s", field, KEYWORD), n.toString());
-            }
-        }
-        if (esMappings.isLongTypeField(field)) {
-            return esNumOrDateFilter(field, n.value());
+            return esNumOrDateFilter(field, Long.parseLong(digits));
+        } else if (esMappings.hasFourDigitsKeywordField(field) && isFourDigitsFieldValue.test(digits)) {
+            return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, digits);
+        } else if (esMappings.hasKeywordSubfield(field)) {
+            return esTermQueryFilter(String.format("%s.%s", field, KEYWORD), digits);
+        } else if (esMappings.isLongTypeField(field)) {
+            return esNumOrDateFilter(field, Long.parseLong(digits));
         }
 
-        // Treat as free text
-        return buildEsQuery(field, new FreeText(n.toString()), esSettings);
+        return null;
     }
 
     private Map<String, Object> esYearRangeFilter(String field, YearRange yearRange, ESSettings esSettings) {

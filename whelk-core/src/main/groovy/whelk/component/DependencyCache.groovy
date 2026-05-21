@@ -6,6 +6,7 @@ import com.google.common.cache.LoadingCache
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListenableFutureTask
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import groovy.transform.CompileStatic
 import groovy.util.logging.Log4j2 as Log
 import whelk.Document
 import whelk.Link
@@ -22,6 +23,7 @@ import java.util.function.Supplier
 import static whelk.component.PostgreSQLComponent.NotificationType.DEPENDENCY_CACHE_INVALIDATE
 
 @Log
+@CompileStatic
 class DependencyCache {
     private static final int CACHE_SIZE = 50_000
     private static final int REFRESH_INTERVAL_MINUTES = 5
@@ -59,7 +61,7 @@ class DependencyCache {
     }
 
     void invalidate(Document createdDoc) {
-        def i = []
+        List<Tuple2<String, Link>> i = []
         createdDoc.getThingIdentifiers().each { fromIri ->
             createdDoc.getExternalRefs().each { link ->
                 i << new Tuple2(fromIri, link)
@@ -74,11 +76,11 @@ class DependencyCache {
         thingIris.addAll(postUpdateDoc.getThingIdentifiers())
 
         Set<Link> before = preUpdateDoc.getExternalRefs()
-        Set<Link> after = postUpdateDoc.deleted ? Collections.emptySet() : postUpdateDoc.getExternalRefs()
-        Set<Link> added = (after - before)
+        Set<Link> after = postUpdateDoc.deleted ? Collections.EMPTY_SET : postUpdateDoc.getExternalRefs()
+        Set<Link> added = (after - before) as Set<Link>
         Set<Link> removed = (before - after)
 
-        def i = []
+        List<Tuple2<String, Link>> i = []
         (added + removed).each { Link link ->
             thingIris.each { fromIri ->
                 i << new Tuple2(fromIri, link)
@@ -93,7 +95,7 @@ class DependencyCache {
         }
         
         def notification = fromTo.collect{ String fromIri, Link link ->
-            "$fromIri ${link.relation} ${link.iri}"
+            "$fromIri ${link.relation} ${link.iri}".toString()
         }
         log.debug("Sending {}", notification)
         storage.sendNotification(DEPENDENCY_CACHE_INVALIDATE, notification)
