@@ -409,6 +409,67 @@ class DocumentSpec extends Specification {
         set1.getChecksum(jsonld) != set2.getChecksum(jsonld)
     }
 
+    def "flip work/instance in virtual work graph"() {
+        given:
+        def virtualWorkRecord = new Document([
+                "@graph": [[
+                                   "@id"       : "/id#work-record",
+                                   "@type"     : "Record",
+                                   "mainEntity": [
+                                           "@id": "/id#it"
+                                   ],
+                                   "prop": "x"
+                           ], [
+                                   "@id"       : "/id#it",
+                                   "@type"     : "Instance",
+                                   "hasTitle"     : [[
+                                                             "@type": "Title",
+                                                             "mainTitle": "title"
+                                                     ]],
+                                   "instanceOf": [
+                                           "@type": "Work"
+                                   ]
+                           ]]
+        ])
+        virtualWorkRecord.centerOnVirtualMainEntity()
+
+        expect:
+        virtualWorkRecord.data == [
+                "@graph": [[
+                                   "@id"       : "/id#work-record",
+                                   "@type"     : "VirtualRecord",
+                                   "mainEntity": [
+                                           "@id": "/id#work"
+                                   ]
+                           ], [
+                                   "@type"   : "Work",
+                                   "@id"     : "/id#work",
+                                   "@reverse": [
+                                           "instanceOf": [[
+                                                                  "@id"     : "/id#it",
+                                                                  "@type"   : "Instance",
+                                                                  "hasTitle": [[
+                                                                                       "@type"    : "Title",
+                                                                                       "mainTitle": "title"
+                                                                               ]],
+                                                                  "meta"    : [
+                                                                          "@id"       : "/id",
+                                                                          "@type"     : "Record",
+                                                                          "mainEntity": [
+                                                                                  "@id": "/id#it"
+                                                                          ],
+                                                                          "prop"      : "x"
+                                                                  ]
+                                                          ]]
+                                   ],
+                                   "hasTitle": [[
+                                                        "@type"    : "Title",
+                                                        "mainTitle": "title"
+                                                ]]
+                           ]]
+        ]
+    }
+
     static String readFile(String filename) {
         return DocumentSpec.class.getClassLoader()
                 .getResourceAsStream(filename).getText("UTF-8")
