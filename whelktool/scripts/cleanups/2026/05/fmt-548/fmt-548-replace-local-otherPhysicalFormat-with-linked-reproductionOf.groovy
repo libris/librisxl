@@ -4,19 +4,20 @@
 //
 
 // Set up logging
-def report = getReportWriter("report.tsv")
+def report = getReportWriter("INFO.tsv")
 
 // Read IDs
-var input = new File(scriptDir, 'mutual_matches_ids.tsv').readLines()
+var input = new File(scriptDir, 'test_ids.tsv').readLines()
 
 List ids = []
 Map idMap = [:]
 
-// get header indexes
+// Get header indexes
 def header = input[0].split("\t").toList()
 def physicalIndex = header.indexOf("instance_physical")
 def digitalIndex = header.indexOf("instance_digital")
 
+// Read IDs
 input.drop(1).each { line ->
     def cols = line.split("\t")
 
@@ -76,8 +77,9 @@ selectByIds(ids) { physicalDoc ->
             // Clean up the physical instance
             removeOtherPhysicalFormat(physicalInstance, digitalControlNumber, report)
 
+            digitalDoc.scheduleSave()
+            physicalDoc.scheduleSave()
     }
-
 }
 
 
@@ -101,7 +103,7 @@ void removeOtherPhysicalFormat(Map instance, String pairedControlNumber, report)
     // Remove the matching local entities
     instance.otherPhysicalFormat.removeAll(matches)
 
-    incrementStats("otherPhysicalFormat - linked local entity removed", "-")
+    incrementStats("otherPhysicalFormat - local entity removed", "-")
 
     // If otherPhysicalFormat is an empty list, remove it
     if (!instance.otherPhysicalFormat) {
