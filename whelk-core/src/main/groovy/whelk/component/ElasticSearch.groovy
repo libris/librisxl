@@ -737,7 +737,6 @@ class ElasticSearch {
                         yield '_sab'
                     }
                 }
-                case "ClassificationDdc" -> '_ddc'
                 case "ClassificationUdc" -> '_udc'
                 case "ClassificationLcc" -> '_lcc'
                 case "ClassificationNlm" -> '_nlm'
