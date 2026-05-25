@@ -999,7 +999,6 @@ class Document {
                 (CREATED_KEY) : record[CREATED_KEY],
                 (MODIFIED_KEY): record[MODIFIED_KEY]
         ]
-        workRecord.putAll((Map) record.subMap([CREATED_KEY, MODIFIED_KEY]))
         
         def work = instance.remove(WORK_KEY) as Map
         work[ID_KEY] = workId
