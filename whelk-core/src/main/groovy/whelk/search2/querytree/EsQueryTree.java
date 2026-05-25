@@ -82,7 +82,9 @@ public class EsQueryTree {
                     var newOr = nestedOr.isPresent()
                             ? nestedOr.get()
                             : (Or) or.mapAndReinstantiate(n -> restructureForEs(n, nodeMap, esMappings));
-                    yield nodeMap.get(or) instanceof Condition c && c.selector().isComposite()
+                    yield nodeMap.get(or) instanceof Condition c
+                            && c.selector().isComposite()
+                            && or.children().stream().allMatch(Condition.class::isInstance)
                             ? new MultiCondition(c, newOr)
                             : newOr;
                 }
