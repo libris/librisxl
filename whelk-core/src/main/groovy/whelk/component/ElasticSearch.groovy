@@ -592,7 +592,7 @@ class ElasticSearch {
                     asList(value).each { v ->
                         if (v instanceof Map && JsonLd.isLink(v)) {
                             embellishedGraph.find { DocumentUtil.getAtPath(it, Document.thingIdPath2) == v[ID_KEY] }
-                                    .with {
+                                    ?.with {
                                         def fakeIntegralThing = (Map) DocumentUtil.getAtPath(it, Document.thingPath, [:])
                                         ((Map) v).putAll(fakeIntegralThing)
                                     }
