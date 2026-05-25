@@ -409,6 +409,73 @@ class DocumentSpec extends Specification {
         set1.getChecksum(jsonld) != set2.getChecksum(jsonld)
     }
 
+    def "flip work/instance in virtual work graph"() {
+        given:
+        def virtualWorkRecord = new Document([
+                "@graph": [[
+                                   "@id"       : "/id#work-record",
+                                   "@type"     : "Record",
+                                   "mainEntity": [
+                                           "@id": "/id#it"
+                                   ],
+                                   "prop": "x",
+                                   "created": "2026-05-25T10:59:03.035+02:00",
+                                   "modified": "2026-05-25T10:59:03.035+02:00",
+                           ], [
+                                   "@id"       : "/id#it",
+                                   "@type"     : "Instance",
+                                   "hasTitle"     : [[
+                                                             "@type": "Title",
+                                                             "mainTitle": "title"
+                                                     ]],
+                                   "instanceOf": [
+                                           "@type": "Work"
+                                   ]
+                           ]]
+        ])
+        virtualWorkRecord.centerOnVirtualMainEntity()
+
+        expect:
+        virtualWorkRecord.data == [
+                "@graph": [[
+                                   "@id"       : "/id#work-record",
+                                   "@type"     : "VirtualRecord",
+                                   "mainEntity": [
+                                           "@id": "/id#work"
+                                   ],
+                                   "created": "2026-05-25T10:59:03.035+02:00",
+                                   "modified": "2026-05-25T10:59:03.035+02:00",
+                           ], [
+                                   "@type"   : "Work",
+                                   "@id"     : "/id#work",
+                                   "@reverse": [
+                                           "instanceOf": [[
+                                                                  "@id"     : "/id#it",
+                                                                  "@type"   : "Instance",
+                                                                  "hasTitle": [[
+                                                                                       "@type"    : "Title",
+                                                                                       "mainTitle": "title"
+                                                                               ]],
+                                                                  "meta"    : [
+                                                                          "@id"       : "/id",
+                                                                          "@type"     : "Record",
+                                                                          "mainEntity": [
+                                                                                  "@id": "/id#it"
+                                                                          ],
+                                                                          "prop"      : "x",
+                                                                          "created": "2026-05-25T10:59:03.035+02:00",
+                                                                          "modified": "2026-05-25T10:59:03.035+02:00",
+                                                                  ]
+                                                          ]]
+                                   ],
+                                   "hasTitle": [[
+                                                        "@type"    : "Title",
+                                                        "mainTitle": "title"
+                                                ]]
+                           ]]
+        ]
+    }
+
     static String readFile(String filename) {
         return DocumentSpec.class.getClassLoader()
                 .getResourceAsStream(filename).getText("UTF-8")

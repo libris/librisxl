@@ -107,6 +107,9 @@ class ConditionSpec extends Specification {
         "bibliography:x"    | ["T1"]       | "instanceOf.meta.bibliography:x OR meta.bibliography:x"
         "bibliography:x"    | ["T2"]       | "hasInstance.meta.bibliography:x OR meta.bibliography:x"
         "bibliography:x"    | ["T3"]       | "meta.bibliography:x"
+        "t1MetaP1:x"        | ["T1"]       | "meta.p1:x"
+        "t1MetaP1:x"        | ["T2"]       | "hasInstance.meta.p1:x"
+        "t1MetaP1:x"        | ["T3"]       | "meta.p1:x"
     }
 
     def "To ES exists query"() {

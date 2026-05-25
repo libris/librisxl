@@ -1317,7 +1317,7 @@ class FresnelUtilSpec extends Specification {
         var fresnel = new FresnelUtil(ld)
         var searchCardBatch = fresnel.mapBatchThroughLens([thing], FresnelUtil.Lenses.SEARCH_CARD, [FresnelUtil.Options.TAKE_ALL_ALTERNATE], ['https://id.kb.se/x'])
         var searchCard = searchCardBatch.lensedThings().first()
-        searchCardBatch.restoreLinks(searchCard, false)
+        searchCardBatch.restoreLinks(searchCard)
 
         expect:
         searchCard == [

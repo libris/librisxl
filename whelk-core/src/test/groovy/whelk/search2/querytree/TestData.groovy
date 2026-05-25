@@ -46,7 +46,8 @@ class TestData {
                 'nonecategory'    : ['librissearch:noneCategory'] as Set,
                 'p3p1'            : ['p3p1'] as Set,
                 'bibliography'    : ['bibliography'] as Set,
-                'meta'            : ['meta'] as Set
+                'meta'            : ['meta'] as Set,
+                't1metap1'        : ['t1MetaP1'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -283,6 +284,19 @@ class TestData {
                         ]]]
                 ],
                 ['@id': 'bibliography', '@type': 'ObjectProperty', 'domain': ['@id': 'https://id.kb.se/vocab/AdminMetadata']],
+                [
+                        '@id'               : 't1MetaP1',
+                        '@type'             : 'DatatypeProperty',
+                        'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
+                        'domain'            : ['@id': 'T1'],
+                        'propertyChainAxiom': [['@list': [
+                                [
+                                        'domain'       : [['@id': 'T1']],
+                                        'subPropertyOf': [['@id': 'meta']]
+                                ],
+                                ['@id': 'p1']
+                        ]]]
+                ]
         ]]
         def ctx = [
                 '@context': [
