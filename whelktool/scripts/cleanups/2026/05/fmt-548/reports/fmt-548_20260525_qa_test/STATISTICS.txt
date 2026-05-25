@@ -1,0 +1,18 @@
+STATISTICS
+========================
+otherPhysicalFormat - empty property removed (21)
+-------------------------------------------------
+21 - [5phlsvsh3rmm859, 5phlsvsh3rmm859, 4ngxzl1g26p365q]
+
+otherPhysicalFormat - local entity removed (28)
+-----------------------------------------------
+28 - [5phlsvsh3rmm859, 5phlsvsh3rmm859, 4ngxzl1g26p365q]
+
+reproductionOf - already linked (1)
+-----------------------------------
+1 - [6qjsfh7j257h21n]
+
+reproductionOf - new link added (13)
+------------------------------------
+13 - [5phlsvsh3rmm859, 4ngxzl1g26p365q, 0jbdcq4b48bx7hf]
+
