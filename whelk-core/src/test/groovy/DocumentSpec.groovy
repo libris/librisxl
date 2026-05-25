@@ -418,7 +418,9 @@ class DocumentSpec extends Specification {
                                    "mainEntity": [
                                            "@id": "/id#it"
                                    ],
-                                   "prop": "x"
+                                   "prop": "x",
+                                   "created": "2026-05-25T10:59:03.035+02:00",
+                                   "modified": "2026-05-25T10:59:03.035+02:00",
                            ], [
                                    "@id"       : "/id#it",
                                    "@type"     : "Instance",
@@ -440,7 +442,9 @@ class DocumentSpec extends Specification {
                                    "@type"     : "VirtualRecord",
                                    "mainEntity": [
                                            "@id": "/id#work"
-                                   ]
+                                   ],
+                                   "created": "2026-05-25T10:59:03.035+02:00",
+                                   "modified": "2026-05-25T10:59:03.035+02:00",
                            ], [
                                    "@type"   : "Work",
                                    "@id"     : "/id#work",
@@ -458,7 +462,9 @@ class DocumentSpec extends Specification {
                                                                           "mainEntity": [
                                                                                   "@id": "/id#it"
                                                                           ],
-                                                                          "prop"      : "x"
+                                                                          "prop"      : "x",
+                                                                          "created": "2026-05-25T10:59:03.035+02:00",
+                                                                          "modified": "2026-05-25T10:59:03.035+02:00",
                                                                   ]
                                                           ]]
                                    ],
