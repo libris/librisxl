@@ -15,8 +15,10 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.function.Predicate
 
+import static whelk.JsonLd.CREATED_KEY
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
+import static whelk.JsonLd.MODIFIED_KEY
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.REVERSE_KEY
 import static whelk.JsonLd.THING_KEY
@@ -985,15 +987,19 @@ class Document {
         instance[RECORD_KEY] = record + [(ID_KEY): instanceRecordId]
 
         Map workRecord = [
-                (ID_KEY)   : workRecordId,
+                (ID_KEY)      : workRecordId,
                 // TODO
                 // For now these will not be found by the search API since it has a boost on RECORD_TYPE and CACHE_RECORD_TYPE
                 // This is what we want since VirtualRecords should not be visible in the cataloguing interface.
                 // When we have unified the new "query language" search API with the current search API we need a different mechanism
                 // for separating them
-                (TYPE_KEY) : JsonLd.VIRTUAL_RECORD_TYPE,
-                (THING_KEY): [(ID_KEY): workId]
+                (TYPE_KEY)    : JsonLd.VIRTUAL_RECORD_TYPE,
+                (THING_KEY)   : [(ID_KEY): workId],
+                // Keep original timestamps for consistent sorting behavior
+                (CREATED_KEY) : record[CREATED_KEY],
+                (MODIFIED_KEY): record[MODIFIED_KEY]
         ]
+        workRecord.putAll((Map) record.subMap([CREATED_KEY, MODIFIED_KEY]))
         
         def work = instance.remove(WORK_KEY) as Map
         work[ID_KEY] = workId
