@@ -24,13 +24,10 @@ import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.Owl.DATATYPE_PROPERTY;
-import static whelk.JsonLd.Owl.EQUIVALENT_CLASS;
-import static whelk.JsonLd.Owl.EQUIVALENT_PROPERTY;
 import static whelk.JsonLd.Owl.OBJECT_PROPERTY;
 import static whelk.JsonLd.Rdfs.RDF_TYPE;
 import static whelk.JsonLd.VOCAB_KEY;
 import static whelk.JsonLd.asList;
-import static whelk.search2.QueryUtil.loadThing;
 import static whelk.util.DocumentUtil.getAtPath;
 
 public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings externalMappings) {
@@ -106,14 +103,14 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
             vocab.forEach((termKey, termDefinition) -> {
                 String ns = getNs(termKey, systemVocabNs);
                 if (isProperty(termDefinition)) {
-                    addAllMappings(termKey, ns, properties, whelk);
+                    addAllMappings(termKey, ns, properties, jsonLd);
                     if (jsonLd.getCategoryMembers("librissearch:coercing").contains(termKey)) {
                         coercingProperties.add(termKey);
                     }
                 } else if (isClass(termDefinition, jsonLd)) {
-                    addAllMappings(termKey, ns, classes, whelk);
+                    addAllMappings(termKey, ns, classes, jsonLd);
                 } else if (isEnum(termDefinition, jsonLd)) {
-                    addAllMappings(termKey, ns, enums, whelk);
+                    addAllMappings(termKey, ns, enums, jsonLd);
                 }
             });
 
@@ -128,10 +125,9 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
                     : (termKey.contains(":") ? termKey.substring(0, termKey.indexOf(":")) : systemVocabNs);
         }
 
-        private static void addAllMappings(String termKey, String ns, Map<String, Map<String, Set<String>>> mappings, Whelk whelk) {
+        private static void addAllMappings(String termKey, String ns, Map<String, Map<String, Set<String>>> mappings, JsonLd jsonLd) {
             addMapping(termKey, termKey, ns, mappings);
-            addMappings(termKey, ns, mappings, whelk.getJsonld());
-            addEquivTermMappings(termKey, ns, mappings, whelk);
+            addMappings(termKey, ns, mappings, jsonLd);
         }
 
         private static void addMapping(String from, String to, String ns, Map<String, Map<String, Set<String>>> mappings) {
@@ -169,29 +165,6 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
 
         private static String dropNs(String termIri) {
             return termIri.substring(termIri.lastIndexOf("/") + 1);
-        }
-
-        private static void addEquivTermMappings(String termKey, String ns, Map<String, Map<String, Set<String>>> mappings, Whelk whelk) {
-            var jsonLd = whelk.getJsonld();
-            var vocab = jsonLd.vocabIndex;
-
-            String mappingProperty = isProperty(vocab.get(termKey)) ? EQUIVALENT_PROPERTY : EQUIVALENT_CLASS;
-
-            getAsList(vocab, List.of(termKey, mappingProperty)).forEach(term -> {
-                String equivPropIri = get(term, List.of(ID_KEY), "");
-                if (!equivPropIri.isEmpty()) {
-                    String equivPropKey = jsonLd.toTermKey(equivPropIri);
-                    if (!vocab.containsKey(equivPropKey)) {
-                        var thing = loadThing(equivPropIri, whelk);
-                        if (!thing.isEmpty()) {
-                            addMappings(termKey, ns, mappings, jsonLd, thing);
-                        } else {
-                            addMapping(equivPropIri, termKey, ns, mappings);
-                            addMapping(toPrefixed(equivPropIri), termKey, ns, mappings);
-                        }
-                    }
-                }
-            });
         }
 
         private static boolean isClass(Map<String, Object> termDefinition, JsonLd jsonLd) {
