@@ -191,9 +191,13 @@ public class ProfileExport
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
-            for (String bibId : getAffectedBibIdsForAuth(id, profile))
-            {
-                exportDocument(m_whelk.loadEmbellished(bibId), profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
+            List<String> affectedBibIds = getAffectedBibIdsForAuth(id, profile);
+            if (affectedBibIds.size() < 400) {
+                for (String bibId : affectedBibIds) {
+                    exportDocument(m_whelk.loadEmbellished(bibId), profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
+                }
+            } else {
+                logger.info("Not exporting changes caused by update to " + id + " as there are too many: " + affectedBibIds.size() + " instances affected.");
             }
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
