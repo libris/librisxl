@@ -64,21 +64,6 @@ public final class Path implements Selector {
         return altSelectors;
     }
 
-    @Override
-    public Selector withPrependedMetaProperty(JsonLd jsonLd) {
-        List<PathElement> newPath = new ArrayList<>();
-        for (PathElement pe : path()) {
-            if (pe.appearsOnlyOnRecord(jsonLd)) {
-                boolean isPrecededByMeta = !newPath.isEmpty() && newPath.getLast() instanceof Property p && p.isMeta();
-                if (!isPrecededByMeta) {
-                    newPath.add(new Property.Meta(jsonLd));
-                }
-            }
-            newPath.add(pe);
-        }
-        return new Path(newPath);
-    }
-
     private List<List<PathElement>> getAltPaths(List<? extends PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
         if (tail.isEmpty()) {
             return List.of(List.of());
@@ -131,11 +116,6 @@ public final class Path implements Selector {
     @Override
     public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
         return first().indirectlyAppearsOnType(type, jsonLd);
-    }
-
-    @Override
-    public boolean appearsOnlyOnRecord(JsonLd jsonLd) {
-        return first().appearsOnlyOnRecord(jsonLd);
     }
 
     @Override

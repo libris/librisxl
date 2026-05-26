@@ -24,7 +24,6 @@ import static whelk.JsonLd.Owl.OBJECT_PROPERTY;
 import static whelk.JsonLd.Owl.ON_PROPERTY;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
 import static whelk.JsonLd.Owl.RESTRICTION;
-import static whelk.JsonLd.RECORD_KEY;
 import static whelk.JsonLd.Rdfs.DOMAIN;
 import static whelk.JsonLd.Rdfs.RANGE;
 import static whelk.JsonLd.Rdfs.RDF_TYPE;
@@ -108,9 +107,6 @@ public non-sealed class Property extends PathElement {
         if (RDF_TYPE.equals(propertyKey)) {
             return new RdfType(jsonLd, queryKey);
         }
-        if (RECORD_KEY.equals(propertyKey)) {
-            return new Meta(jsonLd, queryKey);
-        }
         if ("textQuery".equals(propertyKey)) {
             return new TextQuery(jsonLd, queryKey);
         }
@@ -139,13 +135,6 @@ public non-sealed class Property extends PathElement {
     @Override
     public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
         return _getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
-    }
-
-    @Override
-    public Selector withPrependedMetaProperty(JsonLd jsonLd) {
-        return hasDomainAdminMetadata(jsonLd)
-                ? new Path(List.of(new Meta(jsonLd), this))
-                : this;
     }
 
     @Override
@@ -189,11 +178,6 @@ public non-sealed class Property extends PathElement {
     public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
         return QueryUtil.getIntegralRelationsForType(type, jsonLd).stream()
                 .anyMatch(relation -> relation.range().stream().anyMatch(t -> appearsOnType(t, jsonLd)));
-    }
-
-    @Override
-    public boolean appearsOnlyOnRecord(JsonLd jsonLd) {
-        return hasDomainAdminMetadata(jsonLd);
     }
 
     @Override
@@ -351,17 +335,15 @@ public non-sealed class Property extends PathElement {
                 .flatMap(List::stream)
                 .collect(Collectors.toSet());
 
-        boolean isRecordProperty = this.hasDomainAdminMetadata(jsonLd);
-
         Predicate<Property> followIntegralRelation = integralProp ->
-                isRecordProperty || integralProp.range().stream().anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
+                integralProp.range().stream().anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
 
         List<List<Property>> altPaths = integralRelations.stream()
                 .filter(followIntegralRelation)
                 .map(ir -> Stream.concat(Stream.of(ir), path().stream()).toList())
                 .collect(Collectors.toList());
 
-        if (isRecordProperty || rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
+        if (rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
             altPaths.add(List.of(this));
         }
 
@@ -373,12 +355,6 @@ public non-sealed class Property extends PathElement {
                 .filter(Predicate.not(List::isEmpty))
                 .map(altPath -> altPath.size() > 1 ? new Path(altPath) : altPath.getFirst())
                 .toList();
-    }
-
-    private boolean hasDomainAdminMetadata(JsonLd jsonLd) {
-        return !domain.isEmpty() && domain.stream()
-                .filter(d -> jsonLd.isSubClassOf(d, "AdminMetadata"))
-                .count() == domain.size();
     }
 
     private List<String> getDomain(JsonLd jsonLd) {
@@ -489,21 +465,6 @@ public non-sealed class Property extends PathElement {
         }
     }
 
-    public static final class Meta extends Property {
-        public Meta(JsonLd jsonLd) {
-            super(RECORD_KEY, jsonLd);
-        }
-
-        public Meta(JsonLd jsonLd, Key.RecognizedKey key) {
-            super(RECORD_KEY, jsonLd, key);
-        }
-
-        @Override
-        public boolean isMeta() {
-            return true;
-        }
-    }
-
     public static final class CoercingSubProperty extends Property {
         public CoercingSubProperty(Property superProperty, String subPropertyKey, JsonLd jsonLd) {
             super(subPropertyKey, jsonLd);
@@ -589,11 +550,6 @@ public non-sealed class Property extends PathElement {
                     :value ) .
             */
             return Property.buildObjectRestrictions(definition, jsonLd, true);
-        }
-
-        @Override
-        public boolean isMeta() {
-            return superProperty instanceof Meta;
         }
 
         @Override
