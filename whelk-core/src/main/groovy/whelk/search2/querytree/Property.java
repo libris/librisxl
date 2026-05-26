@@ -566,6 +566,16 @@ public non-sealed class Property extends PathElement {
             }
             return definition.toString();
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof AnonymousProperty p && definition.equals(p.definition());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(definition);
+        }
     }
 
     private static class CompositeProperty extends Property {
@@ -577,6 +587,7 @@ public non-sealed class Property extends PathElement {
         public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
             return getComponents(jsonLd).stream()
                     .flatMap(s -> s.getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible).stream())
+                    .distinct()
                     .toList();
         }
 
