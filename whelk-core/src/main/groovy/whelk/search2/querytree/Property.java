@@ -83,14 +83,18 @@ public non-sealed class Property extends PathElement {
     }
 
     public static Property getProperty(String propertyKey, JsonLd jsonLd) {
-        return buildProperty(propertyKey, jsonLd, null);
+        return getProperty(propertyKey, jsonLd, null);
     }
 
-    public static Property buildProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+    public static Property getProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
         if (jsonLd.vocabIndex.containsKey(LIBRIS_SEARCH_NS + propertyKey)) {
             // FIXME: This is only temporary to avoid having to include the prefix for terms in the libris search namespace
             return buildProperty(LIBRIS_SEARCH_NS + propertyKey, jsonLd, new Key.RecognizedKey(new Token.Raw(propertyKey)));
         }
+        return buildProperty(propertyKey, jsonLd, queryKey);
+    }
+
+    protected static Property buildProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
         var propDef = jsonLd.vocabIndex.get(propertyKey);
         if (propDef == null) {
             throw new IllegalArgumentException("No such property: " + propertyKey);
@@ -646,9 +650,14 @@ public non-sealed class Property extends PathElement {
 
             return c.stream()
                     .map(QueryUtil::castToStringObjectMap)
-                    .map(prop -> isLink(prop)
-                            ? getProperty(jsonLd.toTermKey((String) prop.get(ID_KEY)), jsonLd)
-                            : new AnonymousProperty(prop, jsonLd))
+                    .map(prop -> {
+                        if (isLink(prop)) {
+                            var pKey = jsonLd.toTermKey((String) prop.get(ID_KEY));
+                            return buildProperty(pKey, jsonLd, new Key.RecognizedKey(new Token.Raw(pKey)));
+                        } else {
+                            return new AnonymousProperty(prop, jsonLd);
+                        }
+                    })
                     .toList();
         }
     }
