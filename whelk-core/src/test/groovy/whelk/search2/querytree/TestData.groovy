@@ -45,9 +45,7 @@ class TestData {
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
                 'nonecategory'    : ['librissearch:noneCategory'] as Set,
                 'p3p1'            : ['p3p1'] as Set,
-                'bibliography'    : ['bibliography'] as Set,
-                'meta'            : ['meta'] as Set,
-                't1metap1'        : ['t1MetaP1'] as Set
+                't1p3p1'          : ['t1p3p1'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -93,7 +91,7 @@ class TestData {
                 ['@id': 'p2', '@type': 'ObjectProperty', 'librisQueryCode': 'P2'],
                 ['@id': 'p3', '@type': 'ObjectProperty'],
                 ['@id': 'p4', '@type': 'ObjectProperty'],
-                ['@id': 'p5', '@type': 'ObjectProperty', 'domain': ['@id': 'https://id.kb.se/vocab/AdminMetadata']],
+                ['@id': 'p5', '@type': 'ObjectProperty'],
                 [
                         '@id'               : 'p6',
                         '@type'             : 'ObjectProperty',
@@ -262,7 +260,6 @@ class TestData {
                 ],
                 ['@id': 'textQuery', '@type': 'DatatypeProperty'],
                 ['@id': 'rdf:type', '@type': 'ObjectProperty'],
-                ['@id': 'meta', '@type': 'ObjectProperty'],
                 ['@id': 'T1', '@type': 'Class'],
                 ['@id': 'T2', '@type': 'Class'],
                 ['@id': 'T3', '@type': 'Class'],
@@ -283,16 +280,15 @@ class TestData {
                                 ['@id': 'p1']
                         ]]]
                 ],
-                ['@id': 'bibliography', '@type': 'ObjectProperty', 'domain': ['@id': 'https://id.kb.se/vocab/AdminMetadata']],
                 [
-                        '@id'               : 't1MetaP1',
+                        '@id'               : 't1p3p1',
                         '@type'             : 'DatatypeProperty',
                         'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
                         'domain'            : ['@id': 'T1'],
                         'propertyChainAxiom': [['@list': [
                                 [
                                         'domain'       : [['@id': 'T1']],
-                                        'subPropertyOf': [['@id': 'meta']]
+                                        'subPropertyOf': [['@id': 'p3']]
                                 ],
                                 ['@id': 'p1']
                         ]]]
