@@ -558,10 +558,13 @@ public non-sealed class Property extends PathElement {
 
         @Override
         public String toString() {
-            if (superProperty != null) {
-                return superProperty.toString();
+            if (superProperty != null && !objectRestrictions.isEmpty()) {
+                var restrictionsStr = objectRestrictions.stream()
+                        .map(r -> String.format("%s=%s", r.onProperty().toString(), r.value().toString()))
+                        .collect(Collectors.joining(", "));
+                return String.format("%s[%s]", superProperty.toString(),  restrictionsStr);
             }
-            return "AnonymousProperty";
+            return definition.toString();
         }
     }
 
