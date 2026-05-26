@@ -317,6 +317,8 @@ public class QueryTreeBuilder {
                          "eresource",
                          "eresources" -> DIGITAL;
 
+                    case "free" -> "freeOnline";
+
                     // TODO? very little use: ebook, barn, skol, bokannat
                     // seen in queries but gives no result: art, kon, kap, sam, foto, dok
 
@@ -331,6 +333,7 @@ public class QueryTreeBuilder {
                     default -> value;
                 };
 
+                // misunderstanding from the old docs? MAT is the code? MTAG is just placeholder in the docs?
                 case MTAG -> switch (value) {
                     case "free" -> "freeOnline"; // the only one seen in logs
                     default -> value;

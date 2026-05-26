@@ -9,6 +9,7 @@ import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
+import whelk.Embellisher
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -550,10 +551,15 @@ class ElasticSearch {
             log.debug("Framing ${document.getShortId()}")
         }
 
+        if (copy.isVirtual()) {
+            copy.centerOnVirtualMainEntity()
+        }
+
         Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri } as Set<String>
 
+        var originalGraph = ((List) document.data[GRAPH_KEY])
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
-        var originalGraphSize = ((List) document.data[GRAPH_KEY]).size()
+        var originalGraphSize = originalGraph.size()
 
         Set<String> categoryLinks = [] as Set
         if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
@@ -583,9 +589,29 @@ class ElasticSearch {
 
         var integralIds = collectIntegralIds(shapedMainGraph, whelk.jsonld)
 
+        // FIXME
+        def embedFakeIntegralThings = { graph ->
+            def thing = DocumentUtil.getAtPath(graph, Document.thingPath, [:])
+            if (thing[TYPE_KEY] == 'Item') {
+                DocumentUtil.findKey(thing, Embellisher.FAKE_INTEGRAL_RELATIONS) { value, path ->
+                    asList(value).each { v ->
+                        if (v instanceof Map && JsonLd.isLink(v)) {
+                            embellishedGraph.find { DocumentUtil.getAtPath(it, Document.thingIdPath2) == v[ID_KEY] }
+                                    ?.with {
+                                        def fakeIntegralThing = (Map) DocumentUtil.getAtPath(it, Document.thingPath, [:])
+                                        ((Map) v).putAll(fakeIntegralThing)
+                                    }
+                        }
+                    }
+                    return new DocumentUtil.Nop()
+                }
+            }
+        }
+
         var shapedEmbellished = embellishedGraph
                 .drop(originalGraphSize)
                 .collect {
+                    embedFakeIntegralThings(it) // FIXME
                     getShapeForEmbellishment(whelk.fresnelUtil,
                             (Map) it,
                             integralIds,
@@ -598,10 +624,6 @@ class ElasticSearch {
         copy.data[GRAPH_KEY] = shapedMainGraph + shapedEmbellished
 
         setIdentifiers(copy)
-        boolean isVirtualWork = copy.isVirtual()
-        if (isVirtualWork) {
-            copy.centerOnVirtualMainEntity()
-        }
         copy.setThingMeta(document.getCompleteId())
         List<String> thingIds = copy.getThingIdentifiers()
         if (thingIds.isEmpty()) {
@@ -647,7 +669,7 @@ class ElasticSearch {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard[IDS] = collectIds(embellishedGraph, integralIds)
+        searchCard[IDS] = collectRecordIds(originalGraph, embellishedGraph, integralIds)
 
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
@@ -672,7 +694,7 @@ class ElasticSearch {
                     log.warn("Couldn't create search key for node with type {} in document {}", value.get(TYPE_KEY), document.shortId);
                 }
 
-                lensedMainGraph.restoreLinks(value, isVirtualWork)
+                lensedMainGraph.restoreLinks(value)
 
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
                 // -->
@@ -737,7 +759,6 @@ class ElasticSearch {
                         yield '_sab'
                     }
                 }
-                case "ClassificationDdc" -> '_ddc'
                 case "ClassificationUdc" -> '_udc'
                 case "ClassificationLcc" -> '_lcc'
                 case "ClassificationNlm" -> '_nlm'
@@ -754,8 +775,8 @@ class ElasticSearch {
         return FLATTENED_LANG_MAP_PREFIX + key
     }
 
-    private static Set<String> collectIds(List embellishedGraph, Collection<String> integralIds) {
-        var records = embellishedGraph.take(1) + embellishedGraph.findAll { ((String) DocumentUtil.getAtPath(it, Document.thingIdPath2)) in integralIds }
+    private static Set<String> collectRecordIds(List originalGraph, List embellishedGraph, Collection<String> integralIds) {
+        var records = originalGraph.take(1) + embellishedGraph.findAll { ((String) DocumentUtil.getAtPath(it, Document.thingIdPath2)) in integralIds }
                 .collect { DocumentUtil.getAtPath(it, Document.recordPath) }
 
         Set ids = [] as Set
