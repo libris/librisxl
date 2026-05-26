@@ -261,7 +261,7 @@ public class ProfileExport
             usingCollectionRules = "bib";
         }
         
-        if (usingCollectionRules.equals("auth") && !hasChipChanged(id, from, until)) {
+        if (usingCollectionRules.equals("auth") && !hasCardChanged(id, from, until)) {
             return false;
         }
 
@@ -315,7 +315,7 @@ public class ProfileExport
         return true;
     }
 
-    private boolean hasChipChanged(String id, Timestamp from, Timestamp until) {
+    private boolean hasCardChanged(String id, Timestamp from, Timestamp until) {
         Document currentVersion = m_whelk.getStorage().loadAsOf(id, until);
         Document previousVersion = m_whelk.getStorage().loadAsOf(id, from);
         if (previousVersion == null) {
@@ -323,9 +323,9 @@ public class ProfileExport
         }
 
         var jsonLd = m_whelk.getJsonld();
-        var oldChip = jsonLd.toChip(previousVersion.data);
-        var newChip = jsonLd.toChip(currentVersion.data);
-        return !oldChip.equals(newChip);
+        var oldCard = jsonLd.toCard(previousVersion.data);
+        var newCard = jsonLd.toCard(currentVersion.data);
+        return !oldCard.equals(newCard);
     }
 
     private List<String> getAffectedBibIdsForAuth(String authId, ExportProfile profile) {
