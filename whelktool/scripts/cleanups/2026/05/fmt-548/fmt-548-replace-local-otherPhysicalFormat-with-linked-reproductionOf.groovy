@@ -7,7 +7,7 @@
 def report = getReportWriter("INFO.tsv")
 
 // Read IDs
-var input = new File(scriptDir, 'test_ids.tsv').readLines()
+var input = new File(scriptDir, 'mutual_matches_ids.tsv').readLines()
 
 List ids = []
 Map idMap = [:]
@@ -33,8 +33,8 @@ input.drop(1).each { line ->
 selectByIds(ids) { physicalDoc ->
 
     Map physicalInstance = physicalDoc.graph[1]
-    String physicalShortId = physicalDoc.doc.shortId
     String physicalId = physicalInstance["@id"]
+    String physicalShortId = physicalDoc.doc.shortId
     String physicalControlNumber = physicalDoc.graph[0].controlNumber
 
     // Get id:s of digital reproductions of this resource from the ID map
@@ -44,12 +44,13 @@ selectByIds(ids) { physicalDoc ->
             String digitalControlNumber = digitalDoc.graph[0].controlNumber
             String digitalId = digitalInstance["@id"]
 
+            // If reproduction of is a list, leave unchanged and report
             if (digitalInstance.reproductionOf instanceof List) {
                 report.println("$digitalId\tSKIPPED\treproductionOf is a list\t$digitalInstance.reproductionOf")
                 return
             }
 
-            String reproductionId =  digitalInstance.reproductionOf?.get("@id")
+            String reproductionId = digitalInstance.reproductionOf?.get("@id")
 
             if (reproductionId && reproductionId != physicalId) {
                 // Already linked to another physical instance - leave this digital instance unchanged and report
@@ -59,7 +60,7 @@ selectByIds(ids) { physicalDoc ->
 
             else if (reproductionId == physicalId) {
                 // Already linked to expected physical instance - report
-                report.println("$digitalId\tINFO\tAalready has reproductionOf with this ID\t$digitalInstance.reproductionOf")
+                report.println("$digitalId\tINFO\tAlready has reproductionOf with this ID\t$digitalInstance.reproductionOf")
                 incrementStats("reproductionOf - already linked", "-")
             }
             
@@ -84,20 +85,16 @@ selectByIds(ids) { physicalDoc ->
 
 
 void removeOtherPhysicalFormat(Map instance, String pairedControlNumber, report) {
-    // Find local entities in otherPhysicalFormat whose controlNumber match the sameAs of the paired instance
+    // Find local entities in otherPhysicalFormat whose controlNumber match the controlNumber of the paired instance
     def matches = instance.otherPhysicalFormat.findAll {
         localEntity -> localEntity.describedBy?.any {
             recordDescribed -> recordDescribed.controlNumber == pairedControlNumber
         }
     }
 
-    // If there is more than one match, report this
-    if (matches.size() > 1) {
-        report.println("${instance["@id"]}\tINFO\tFound ${matches.size()} matches for local controlNumber==${pairedControlNumber}")
-    }
-    else if (matches.size() < 1) {
-        report.println("${instance["@id"]}\tSCRIPT ERROR\tFound ${matches.size()} matches for local controlNumber==${pairedControlNumber}")
-
+    // If there is more or less than one match, report this
+    if (matches.size() != 1) {
+        report.println("${instance["@id"]}\tINFO\tFound ${matches.size()} local entities in otherPhysicalFormat with this controlNumber\t${pairedControlNumber}")
     }
 
     // Remove the matching local entities
