@@ -462,7 +462,7 @@ public class Query {
             return;
         }
 
-        if (property.isRestrictedSubProperty() && !property.hasIndexKey()) {
+        if (property instanceof Property.RestrictedSubProperty && !property.hasIndexKey()) {
             // TODO: E.g. author (combining contribution.role and contribution.agent)
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }

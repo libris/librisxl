@@ -45,7 +45,9 @@ class TestData {
                 'identifycategory': ['librissearch:identifyCategory'] as Set,
                 'nonecategory'    : ['librissearch:noneCategory'] as Set,
                 'p3p1'            : ['p3p1'] as Set,
-                't1p3p1'          : ['t1p3p1'] as Set
+                't1p3p1'          : ['t1p3p1'] as Set,
+                'restrictedp_p1'  : ['restrictedP_p1'] as Set,
+                'restrictedp_p1_2': ['restrictedP_p1_2'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -290,6 +292,54 @@ class TestData {
                                         'domain'       : [['@id': 'T1']],
                                         'subPropertyOf': [['@id': 'p3']]
                                 ],
+                                ['@id': 'p1']
+                        ]]]
+                ],
+                [
+                        '@id'               : 'restrictedP',
+                        'subPropertyOf'     : [['@id': 'p3']],
+                        "range"             : [
+                                [
+                                        "subClassOf": [
+                                                [
+                                                        "@type"     : "Restriction",
+                                                        "onProperty": ["@id": "p4"],
+                                                        "hasValue"  : ["@id": "https://id.kb.se/x"],
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ],
+                [
+                        '@id'               : 'restrictedP_p1',
+                        '@type'             : 'DatatypeProperty',
+                        'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
+                        'propertyChainAxiom': [['@list': [
+                                ['@id': 'restrictedP'],
+                                ['@id': 'p1']
+                        ]]]
+                ],
+                [
+                        '@id'               : '_:restrictedP',
+                        'subPropertyOf'     : [['@id': 'p3']],
+                        "range"             : [
+                                [
+                                        "subClassOf": [
+                                                [
+                                                        "@type"     : "Restriction",
+                                                        "onProperty": ["@id": "p4"],
+                                                        "hasValue"  : ["@id": "https://id.kb.se/x"],
+                                                ]
+                                        ]
+                                ]
+                        ]
+                ],
+                [
+                        '@id'               : 'restrictedP_p1_2',
+                        '@type'             : 'DatatypeProperty',
+                        'category'          : ['@id': "https://id.kb.se/vocab/shorthand"],
+                        'propertyChainAxiom': [['@list': [
+                                ['@id': '_:restrictedP'],
                                 ['@id': 'p1']
                         ]]]
                 ]
