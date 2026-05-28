@@ -28,12 +28,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -191,13 +186,8 @@ public class ProfileExport
         }
         else if (collection.equals("auth") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
         {
-            List<String> affectedBibIds = getAffectedBibIdsForAuth(id, profile);
-            if (affectedBibIds.size() < 400) {
-                for (String bibId : affectedBibIds) {
-                    exportDocument(m_whelk.loadEmbellished(bibId), profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
-                }
-            } else {
-                logger.info("Not exporting changes caused by update to " + id + " as there are too many: " + affectedBibIds.size() + " instances affected.");
+            for (String bibId : getAffectedBibIdsForAuth(id, profile)) {
+                exportDocument(m_whelk.loadEmbellished(bibId), profile, output, exportedIDs, deleteMode, doVirtualDeletions, deletedNotifications);
             }
         }
         else if (collection.equals("hold") && updateShouldBeExported(id, collection, mainEntityType, profile, from, until, created, deleted, connection))
@@ -337,8 +327,9 @@ public class ProfileExport
                 .followDependers(authId, JsonLd.NON_DEPENDANT_RELATIONS)
                 .stream().map(Tuple2::getFirst).toList();
 
-        if (allIds.size() > 50000) {
-            logger.warn("Unusually large amount of affected IDs ({}) caused by {}", allIds.size(), authId);
+        if (allIds.size() > 100000) {
+            logger.info("Not exporting changes caused by update to " + authId + " as there are too many: " + allIds.size() + " instances affected.");
+            return new ArrayList<>();
         }
 
         if (profile.shouldExportAllLocations()) {
