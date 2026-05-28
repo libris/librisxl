@@ -115,6 +115,9 @@ public non-sealed class Property extends PathElement {
         if (isCoercing(definition)) {
             return new CoercingSubProperty(definition, jsonLd, propertyKey, queryKey);
         }
+        if (jsonLd.isIntegral(propertyKey)) {
+            return new IntegralProperty(definition, jsonLd, propertyKey, queryKey);
+        }
         if (RDF_TYPE.equals(propertyKey)) {
             return new RdfType(jsonLd, queryKey);
         }
@@ -502,6 +505,12 @@ public non-sealed class Property extends PathElement {
         public RdfType(JsonLd jsonLd, Key.RecognizedKey key) {
             super(RDF_TYPE, jsonLd, key);
             this.indexKey = TYPE_KEY;
+        }
+    }
+
+    public static final class IntegralProperty extends Property {
+        IntegralProperty(Map<String, Object> definition, JsonLd jsonLd, String name, Key.RecognizedKey queryKey) {
+            super(definition, jsonLd, name, queryKey);
         }
     }
 

@@ -61,7 +61,7 @@ public final class Path implements Selector {
                 altSelectors.add(new Path(l));
             }
         });
-        return altSelectors;
+        return excludeInverseIntegralRoundTrips(altSelectors);
     }
 
     private List<List<PathElement>> getAltPaths(List<? extends PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
@@ -76,6 +76,22 @@ public final class Path implements Selector {
                         .map(altPath -> Stream.concat(s.path().stream(), altPath.stream())))
                 .map(Stream::toList)
                 .toList();
+    }
+
+    private List<Selector> excludeInverseIntegralRoundTrips(List<Selector> altSelectors) {
+        List<Selector> res = new ArrayList<>();
+        for (Selector s : altSelectors) {
+            List<Property.IntegralProperty> integralsInPath = s.path().stream()
+                    .filter(Property.IntegralProperty.class::isInstance)
+                    .map(Property.IntegralProperty.class::cast)
+                    .toList();
+            boolean hasInversePair = integralsInPath.stream()
+                    .anyMatch(integral -> integralsInPath.stream().anyMatch(integral::isInverseOf));
+            if (!hasInversePair) {
+                res.add(s);
+            }
+        }
+        return res;
     }
 
     @Override
