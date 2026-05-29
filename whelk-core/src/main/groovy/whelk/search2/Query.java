@@ -142,7 +142,7 @@ public class Query {
         if (!queryParams.stats.on) {
             EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings);
             var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
-            return new EsQuery(esQueryDsl, Collections.emptyList());
+            return new EsQuery(esQueryDsl, indexNames);
         }
 
         EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings, getSelectedFacets());
