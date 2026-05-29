@@ -34,6 +34,7 @@ selectByIds(ids) { physicalDoc ->
 
     Map physicalInstance = physicalDoc.graph[1]
     String physicalId = physicalInstance["@id"]
+
     String physicalShortId = physicalDoc.doc.shortId
     String physicalControlNumber = physicalDoc.graph[0].controlNumber
 
@@ -43,6 +44,11 @@ selectByIds(ids) { physicalDoc ->
             Map digitalInstance = digitalDoc.graph[1]
             String digitalControlNumber = digitalDoc.graph[0].controlNumber
             String digitalId = digitalInstance["@id"]
+
+            if (!digitalInstance.containsKey('otherPhysicalFormat') || !physicalInstance.containsKey('otherPhysicalFormat')) {
+                report.println ("$physicalId <-> $digitalId\tSKIPPED\totherPhysicalFormat already removed during previous srcipt run")
+                return
+            }
 
             // If reproduction of is a list, leave unchanged and report
             if (digitalInstance.reproductionOf instanceof List) {
