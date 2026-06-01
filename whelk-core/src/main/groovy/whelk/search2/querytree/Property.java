@@ -63,7 +63,7 @@ public non-sealed class Property extends PathElement {
         this.queryKey = queryKey;
         if (name != null) {
             this.name = name;
-            this.langAlias =(String) jsonLd.langContainerAlias.get(name);
+            this.langAlias = (String) jsonLd.langContainerAlias.get(name);
             this.isVocabTerm = jsonLd.isVocabTerm(name);
             this.isLdSetContainer = jsonLd.isSetContainer(name);
         }
