@@ -718,6 +718,17 @@ class ElasticSearch {
                 addFlattenedClassificationFields(asList(value))
             }
 
+            if (path && path.last() == RECORD_KEY) {
+                var record = (Map) value
+                if (record.containsKey('controlNumber')) {
+                    var controlNumber = value['controlNumber']
+                    var recordShortId = lastPathSegment((String) record[ID_KEY])
+                    record['_controlNumber'] = controlNumber == recordShortId
+                            ? controlNumber
+                            : [controlNumber, recordShortId]
+                }
+            }
+
             if ('Item' != searchCard[TYPE_KEY]
                     && path
                     && "heldBy" == path.last()
