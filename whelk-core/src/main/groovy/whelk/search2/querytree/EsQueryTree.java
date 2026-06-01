@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
+import whelk.search2.Operator;
 import whelk.search2.SelectedFacets;
 
 import java.util.ArrayList;
@@ -92,7 +93,9 @@ public class EsQueryTree {
                         ? restructureForEs(g.getInverse(), nodeMap, esMappings)
                         : new Not(restructureForEs(node, nodeMap, esMappings));
                 case Condition c -> c.selector().getEsNestedStem(esMappings)
-                        .filter(stem -> esMappings.isNestedNotInParentField(stem) || c.value().isMultiToken())
+                        .filter(stem -> esMappings.isNestedNotInParentField(stem)
+                                || c.value().isMultiToken()
+                                || c.operator() == Operator.LIKE)
                         .map(stem -> (Condition) new NestedCondition(c, stem))
                         .orElse(c);
                 default -> tree;
