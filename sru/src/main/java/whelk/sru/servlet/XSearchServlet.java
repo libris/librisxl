@@ -1,5 +1,6 @@
 package whelk.sru.servlet;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import groovy.lang.Tuple2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,6 +61,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,6 +78,7 @@ import static whelk.JsonLd.WORK_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG;
 import static whelk.util.DocumentUtil.getAtPath;
+import static whelk.util.Jackson.mapper;
 
 /**
  * Implementation of Libris legacy xsearch API on XL
@@ -131,11 +134,19 @@ public class XSearchServlet extends WhelkHttpServlet {
         public static final String START = "start";
         public static final String N = "n";
         public static final String ORDER = "order";
+        public static final String CALLBACK = "callback"; // JSONP callback (format=json only)
         // TODO
         public static final String FORMAT_LEVEL = "format_level";
         public static final String HOLDINGS = "holdings";
         public static final String DATABASE = "database";
     }
+
+    // JSONP callbacks shouldn't be used at all but is still used. Let's at least
+    // sanitize callback names to prevent XSS. Max length is arbitrary and plenty enough
+    // for the seemingly one and only site still using it with XSearch.
+    // TODO: remove callback support once SMDB doesn't need it anymore
+    private static final Pattern SAFE_CALLBACK = Pattern.compile("[a-zA-Z0-9_.]+");
+    private static final int MAX_CALLBACK_LENGTH = 64;
 
     // match old behaviour
     public static class Errors {
@@ -209,6 +220,14 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map(ORDER::get)
                 .orElse(null);
 
+        String callback = format == Format.JSON
+                ? getOptionalSingleNonEmpty(Params.CALLBACK, parameters).orElse(null)
+                : null;
+        if (callback != null
+                && (callback.length() > MAX_CALLBACK_LENGTH || !SAFE_CALLBACK.matcher(callback).matches())) {
+            throw new InvalidQueryException(Errors.PARSE);
+        }
+
         try {
             // TODO handle onr (record ID) here or in search2?
 
@@ -236,7 +255,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 
             switch (format) {
                 case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, include9xx);
-                case JSON -> sendJson(res, items, start, to, totalItems);
+                case JSON -> sendJson(res, items, start, to, totalItems, callback);
                 case MODS -> sendTransformedMarc(res, Format.MODS, items, start, to, totalItems, includeHoldings, include9xx);
             }
 
@@ -432,7 +451,8 @@ public class XSearchServlet extends WhelkHttpServlet {
                           List<Map<?,?>> items,
                           int from,
                           int to,
-                          int totalItems) {
+                          int totalItems,
+                          String callback) {
 
         var result = new LinkedHashMap<String, Object>();
         result.put("from", from);
@@ -442,7 +462,21 @@ public class XSearchServlet extends WhelkHttpServlet {
 
         var response = Map.of("xsearch", result);
 
-        HttpTools.sendResponse(res, response, "application/json;charset=UTF-8");
+        if (callback == null) {
+            HttpTools.sendResponse(res, response, "application/json;charset=UTF-8");
+            return;
+        }
+
+        String json;
+        try {
+            json = mapper.writeValueAsString(response);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        // Normally also set by our nginx but let's be cautious
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        // Legacy XSearch didn't append a ';' at the end so let's not do it here either
+        HttpTools.sendResponse(res, callback + "(" + json + ")", "application/javascript;charset=UTF-8");
     }
 
     private Map<?, ?> toXsearchJson(Map<?, ?> item) {
