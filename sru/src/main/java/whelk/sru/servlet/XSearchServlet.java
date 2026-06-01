@@ -126,6 +126,7 @@ public class XSearchServlet extends WhelkHttpServlet {
     // https://libris.kb.se/help/xsearch_swe.jsp?open=tech
     private static class Params {
         public static final String QUERY = "query";
+        public static final String QUERY_ALIAS = "q"; // synonym for "query"
         public static final String FORMAT = "format";
         public static final String START = "start";
         public static final String N = "n";
@@ -175,6 +176,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         Map<String, String[]> parameters = req.getParameterMap();
 
         var query = getOptionalSingleNonEmpty(Params.QUERY, parameters)
+                .or(() -> getOptionalSingleNonEmpty(Params.QUERY_ALIAS, parameters))
                 .orElseThrow(() -> new InvalidQueryException(Errors.EMPTY_QUERY));
 
         int start = getOptionalSingleNonEmpty(Params.START, parameters)
