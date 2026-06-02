@@ -250,10 +250,22 @@ public class QueryTreeBuilder {
             MTAG,
 
             /** "Kod för trunkerad sökning på Deweyklassifikation" */
-            DDCT
-        }
+            DDCT;
 
-        static final List<String> CODES = Arrays.stream(LegacyCode.values()).map(LegacyCode::toString).toList();
+            static final List<String> CODES = Arrays.stream(LegacyCode.values()).map(LegacyCode::toString).toList();
+
+            static LegacyCode fromString(String s) {
+                if ("z3950.1021".equals(s)) {
+                    return BIBN;
+                }
+
+                if (CODES.contains(s.toUpperCase())) {
+                    return valueOf(s.toUpperCase());
+                }
+
+                return null;
+            }
+        }
 
         static final String BOOK = "workType:Monograph instanceCategory:\"https://id.kb.se/term/rda/Volume\"";
         static final String NOTATED_MUSIC = "workCategory:\"https://id.kb.se/term/rda/NotatedMusic\"";
@@ -268,11 +280,11 @@ public class QueryTreeBuilder {
                 return false;
             }
 
-            return CODES.contains(selector.queryKey().toUpperCase());
+            return LegacyCode.fromString(selector.queryKey()) != null;
         }
 
         static Node build(Ast.Code c, Disambiguate disambiguate, Selector selector) throws InvalidQueryException {
-            var code = LegacyCode.valueOf(selector.queryKey().toUpperCase());
+            var code = LegacyCode.fromString(selector.queryKey());
 
             return switch (c.operand()) {
                 // webbsök treats mat:(barn skol) as barn OR skol
@@ -288,14 +300,14 @@ public class QueryTreeBuilder {
             };
         }
 
-        static Node build(LegacyCode code, Ast.Node n, Disambiguate disambiguate) throws InvalidQueryException {
+        private static Node build(LegacyCode code, Ast.Node n, Disambiguate disambiguate) throws InvalidQueryException {
             if (n instanceof Ast.Leaf leaf) {
                 return build(code, leaf, disambiguate);
             }
             throw new RuntimeException("Could not handle: " + code + ": " + n);
         }
 
-        static Node build(LegacyCode code, Ast.Leaf leaf, Disambiguate disambiguate) throws InvalidQueryException {
+        private static Node build(LegacyCode code, Ast.Leaf leaf, Disambiguate disambiguate) throws InvalidQueryException {
             var value = leaf.value().value();
 
             var mappedQuery = switch(code) {

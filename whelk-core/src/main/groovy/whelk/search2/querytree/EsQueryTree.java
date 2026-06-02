@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
+import whelk.search2.Operator;
 import whelk.search2.SelectedFacets;
 
 import java.util.ArrayList;
@@ -79,20 +80,22 @@ public class EsQueryTree {
                     var nestedOr = findUnambiguousNestedStem(or, esMappings)
                             .filter(esMappings::isNestedNotInParentField)
                             .map(stem -> new NestedOr(or.children(), stem));
-                    var newOr = nestedOr.isPresent()
+                    var restructuredOr = nestedOr.isPresent()
                             ? nestedOr.get()
                             : (Or) or.mapAndReinstantiate(n -> restructureForEs(n, nodeMap, esMappings));
                     yield nodeMap.get(or) instanceof Condition c
                             && c.selector().isComposite()
-                            && or.children().stream().allMatch(Condition.class::isInstance)
-                            ? new MultiCondition(c, newOr)
-                            : newOr;
+                            && restructuredOr.children().stream().map(Object::getClass).allMatch(Condition.class::equals)
+                            ? new MultiCondition(c, restructuredOr)
+                            : restructuredOr;
                 }
                 case Not(Node node) -> node instanceof Group g
                         ? restructureForEs(g.getInverse(), nodeMap, esMappings)
                         : new Not(restructureForEs(node, nodeMap, esMappings));
                 case Condition c -> c.selector().getEsNestedStem(esMappings)
-                        .filter(stem -> esMappings.isNestedNotInParentField(stem) || c.value().isMultiToken())
+                        .filter(stem -> esMappings.isNestedNotInParentField(stem)
+                                || c.value().isMultiToken()
+                                || c.operator() == Operator.LIKE)
                         .map(stem -> (Condition) new NestedCondition(c, stem))
                         .orElse(c);
                 default -> tree;

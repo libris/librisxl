@@ -530,7 +530,9 @@ public class SerializerState {
       if (datatype != null) {
         parts.add("^^" + this.toValidTerm(((String) this.termFor(datatype))));
       } else if (lang instanceof String) {
-        parts.add("@" + lang);
+        if (((String) lang).length() > 0) {
+          parts.add("@" + lang);
+        }
       }
       return String.join("", parts);
     } else if (v instanceof Boolean) {

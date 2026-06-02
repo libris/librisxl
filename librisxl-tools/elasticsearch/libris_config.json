@@ -394,7 +394,15 @@
             },
             {
                 "contribution_template": {
-                    "path_match": ["contribution", "instanceOf.contribution", "@reverse.instanceOf.contribution"],
+                    "path_match": [
+                        "contribution",
+                        "instanceOf.contribution",
+                        "@reverse.instanceOf.contribution",
+                        "hasPart.contribution",
+                        "instanceOf.hasPart.contribution",
+                        "relationship.entity.contribution",
+                        "instanceOf.relationship.entity.contribution"
+                    ],
                     "mapping": {
                         "type": "nested",
                         "include_in_parent": true
