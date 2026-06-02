@@ -80,14 +80,14 @@ public class EsQueryTree {
                     var nestedOr = findUnambiguousNestedStem(or, esMappings)
                             .filter(esMappings::isNestedNotInParentField)
                             .map(stem -> new NestedOr(or.children(), stem));
-                    var newOr = nestedOr.isPresent()
+                    var restructuredOr = nestedOr.isPresent()
                             ? nestedOr.get()
                             : (Or) or.mapAndReinstantiate(n -> restructureForEs(n, nodeMap, esMappings));
                     yield nodeMap.get(or) instanceof Condition c
                             && c.selector().isComposite()
-                            && or.children().stream().allMatch(Condition.class::isInstance)
-                            ? new MultiCondition(c, newOr)
-                            : newOr;
+                            && restructuredOr.children().stream().map(Object::getClass).allMatch(Condition.class::equals)
+                            ? new MultiCondition(c, restructuredOr)
+                            : restructuredOr;
                 }
                 case Not(Node node) -> node instanceof Group g
                         ? restructureForEs(g.getInverse(), nodeMap, esMappings)
