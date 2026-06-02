@@ -12,16 +12,22 @@ import whelk.exception.InvalidQueryException;
 import whelk.search2.*;
 import whelk.sru.cql.Translation;
 import whelk.util.http.WhelkHttpServlet;
-
+//import javax.xml.transform.stax.StAXResult;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.Transformer;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.io.InputStreamReader;
 import java.util.*;
 
 // Test locally like so:
@@ -34,12 +40,14 @@ public class SruServlet extends WhelkHttpServlet {
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     ResourceLookup resourceLookup;
     ESSettings esSettings;
+    private Formats formats = null;
 
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
+	formats = new Formats();
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -63,8 +71,11 @@ public class SruServlet extends WhelkHttpServlet {
         }
 
         Map<String, Object> results;
+        String format;  
+
         try {
             String CqlQueryString = parameters.get("query")[0];
+            format = parameters.get("recordSchema")[0];
             String XlQueryString = Translation.translateCqlToXlQuery(CqlQueryString);
 
             // This part is a little weird
@@ -81,6 +92,22 @@ public class SruServlet extends WhelkHttpServlet {
             res.sendError(400);
             return;
         }
+
+	Transformer transformer = null;
+
+	try {
+	switch (Formats.FORMATS.getOrDefault(format, Formats.Format.MARC_XML)) {
+		case MARC_XML -> transformer = null;
+                case MODS -> transformer = formats.transformers.get(Formats.Format.MODS).newTransformer();
+                case DC -> transformer = formats.transformers.get(Formats.Format.DC).newTransformer();
+		case UNSUPPORTED -> transformer = null;
+        }
+	}
+	catch (TransformerException e){
+            logger.info(e.getMessage());
+            res.sendError(400);
+            return;
+	}
 
         // Like the pre-existing implementation, supply only up to 10 hits per query.
         List items = (List) results.get("items");
@@ -105,6 +132,7 @@ public class SruServlet extends WhelkHttpServlet {
             writer.writeEndElement(); // numberOfRecords
 
             writer.writeStartElement("records");
+	    //writer.flush();
 
             for (Object o : items) {
                 Map m = (Map) o;
@@ -124,20 +152,41 @@ public class SruServlet extends WhelkHttpServlet {
                 writer.writeEndElement(); // recordPacking
 
                 writer.writeStartElement("recordSchema");
+		// change to format schema
                 writer.writeCharacters("info:srw/schema/1/marcxml-v1.1");
                 writer.writeEndElement(); // recordSchema
 
-                writer.writeStartElement("recordData");
-                StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
-                writer.writeEndElement(); // recordData
+                //writer.writeStartElement("recordData");
+	    	writer.flush();
+
+		out.write("<recordData>".getBytes("UTF-8"));
+
+		if ( transformer == null ) {
+                	StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
+		} else {
+			try {
+        			transformer.transform(new StreamSource(new StringReader(convertedText)), new StreamResult(out));
+			}
+			catch (TransformerException e) {
+            			logger.info(e.getMessage());
+            			res.sendError(400);
+            			return;
+			}
+		}
+		out.write("</recordData>".getBytes("UTF-8"));
+                out.flush();
+
+                //writer.writeEndElement(); // recordData
 
                 writer.writeEndElement(); // record
+	    	writer.flush();
             }
 
             writer.writeEndElement(); // records
             writer.writeEndElement(); // searchRetrieveResponse
             writer.writeEndDocument();
 
+	    writer.flush();
             writer.close();
             out.flush();
             out.close();

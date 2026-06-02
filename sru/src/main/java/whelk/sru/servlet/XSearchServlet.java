@@ -34,11 +34,11 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import javax.xml.transform.Templates;
+//import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
+//import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+//import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayInputStream;
@@ -89,12 +89,14 @@ import static whelk.util.DocumentUtil.getAtPath;
 public class XSearchServlet extends WhelkHttpServlet {
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
-    private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    //private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    private Formats formats = null;
 
     private static final int DEFAULT_N = 10;
     private static final int MAX_N = 200;
     private static final int DEFAULT_START = 1;
 
+/*
     private static final Map<String, Format> FORMATS = Map.of(
             "marcxml", Format.MARC_XML,
             "json", Format.JSON,
@@ -107,6 +109,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             "harvard", Format.UNSUPPORTED,
             "oxford", Format.UNSUPPORTED
     );
+*/
 
     private static final Map<String, String> ORDER = Map.of(
             // "rank" is default
@@ -116,6 +119,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             "-chronological", "publication.year"
     );
 
+/*
     private enum Format {
         MARC_XML,
         MODS,
@@ -123,6 +127,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 	DC,
         UNSUPPORTED,
     }
+*/
 
     // https://libris.kb.se/help/xsearch_swe.jsp?open=tech
     private static class Params {
@@ -147,14 +152,16 @@ public class XSearchServlet extends WhelkHttpServlet {
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     ResourceLookup resourceLookup;
     ESSettings esSettings;
-    Map<Format, Templates> transformers;
+    //Map<Format, Templates> transformers;
 
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
+	formats = new Formats();
 
+/*
         try {
             transformers = Map.of(
                     Format.MODS, loadXslt("transformers/MARC21slim2MODS3.xsl"),
@@ -163,6 +170,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         } catch (IOException | TransformerConfigurationException e) {
             throw new IllegalStateException(e);
         }
+*/
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -191,17 +199,17 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .orElse(DEFAULT_N);
 
         var format = getOptionalSingleNonEmpty(Params.FORMAT, parameters)
-                .map(f -> FORMATS.getOrDefault(f, Format.MARC_XML))
-                .orElse(Format.MARC_XML);
+                .map(f -> Formats.FORMATS.getOrDefault(f, Formats.Format.MARC_XML))
+                .orElse(Formats.Format.MARC_XML);
 
         var includeHoldings = getOptionalSingleNonEmpty(Params.HOLDINGS, parameters)
                 .map("true"::equals).orElse(false)
-                && (format == Format.MARC_XML || format == Format.MODS);
+                && (format == Formats.Format.MARC_XML || format == Formats.Format.MODS);
 
         var include9xx = getOptionalSingleNonEmpty(Params.FORMAT_LEVEL, parameters)
                 .map("full"::equals).orElse(false);
 
-        if (format == Format.UNSUPPORTED) {
+        if (format == Formats.Format.UNSUPPORTED) {
             throw new InvalidQueryException("format unsupported"); // TODO
         }
 
@@ -237,8 +245,8 @@ public class XSearchServlet extends WhelkHttpServlet {
             switch (format) {
                 case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, include9xx);
                 case JSON -> sendJson(res, items, start, to, totalItems);
-                case MODS -> sendTransformedMarc(res, Format.MODS, items, start, to, totalItems, includeHoldings, include9xx);
-                case DC -> sendTransformedMarc(res, Format.DC, items, start, to, totalItems, false, false);
+                case MODS -> sendTransformedMarc(res, Formats.Format.MODS, items, start, to, totalItems, includeHoldings, include9xx);
+                case DC -> sendTransformedMarc(res, Formats.Format.DC, items, start, to, totalItems, false, false);
             }
 
         } catch (InvalidQueryException e) {
@@ -356,7 +364,7 @@ public class XSearchServlet extends WhelkHttpServlet {
     }
 
     private void sendTransformedMarc(HttpServletResponse res,
-                             Format format,
+                             Formats.Format format,
                              List<Map<?,?>> items,
                              int from,
                              int to,
@@ -371,7 +379,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         writeMarcXml(o, items, from, to, totalItems, includeHoldings, include9xx);
         ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
 
-        Transformer transformer = transformers.get(format).newTransformer();
+        Transformer transformer = formats.transformers.get(format).newTransformer();
 
         OutputStream out = res.getOutputStream();
         transformer.transform(new StreamSource(i), new StreamResult(res.getOutputStream()));
@@ -379,12 +387,14 @@ public class XSearchServlet extends WhelkHttpServlet {
         out.close();
     }
 
+/*
     private Templates loadXslt(String name) throws IOException, TransformerConfigurationException {
         var url = Thread.currentThread().getContextClassLoader().getResource(name);
         assert url != null;
         var xsltSource = new StreamSource(url.openStream(), url.toExternalForm());
         return transformerFactory.newTemplates(xsltSource);
     }
+*/
 
     private String expandRecord(String bibXml, Document bib, boolean includeHoldings, boolean include9xx) {
         if (!includeHoldings && !include9xx) {
