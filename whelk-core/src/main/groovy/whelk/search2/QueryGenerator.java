@@ -103,6 +103,13 @@ public class QueryGenerator {
                                         }).toList());
                             }
                         }
+                        else if (type.equals("Title") && path.contains("inSeries") && node.containsKey("mainTitle")) {
+                            var title = String.valueOf(node.get("mainTitle"));
+                            insert(
+                                    new Condition(toKey("seriesMembership"), Operator.EQUALS, scopedFreeText(title)),
+                                    node
+                            );
+                        }
                     }
                 }
             }
