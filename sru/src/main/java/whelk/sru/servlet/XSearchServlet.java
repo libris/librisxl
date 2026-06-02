@@ -520,6 +520,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .or(() -> contribution.stream().findFirst())
                 .filter(c -> c.containsKey("agent"))
                 .map(c -> c.get("agent"))
+                .map(agent -> agent instanceof List<?> l ? (l.isEmpty() ? null : l.getFirst()) : agent)
                 .map(format)
                 .ifPresent(t -> result.put("creator", t));
 
