@@ -15,7 +15,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
         rec['bibliography'] = [{'@id': it['@id']} for it in rec['bibliography']]
 
     del rec['marc:catalogingSource']  # "Annan verksamhet"
-    del rec['marc:typeOfControl']
+    #del rec['marc:typeOfControl']
 
     if rest:
         work = rest[0]
