@@ -88,13 +88,16 @@ public class QueryGenerator {
                         }
                         else if (type.equals("SeriesMembership")) {
                             if (node.containsKey("seriesStatement")) {
-                                @SuppressWarnings("unchecked")
-                                List<String> statements = asList(node.get("seriesStatement"));
+                                List<?> statements = asList(node.get("seriesStatement"));
                                 node.put("seriesStatement", statements.stream()
-                                        .map(s -> {
+                                        .map(statement -> {
+                                            if (!(statement instanceof String s)) {
+                                                return statement;
+                                            }
+                                            
                                             var v  = new HashMap<String, Object>();
                                             v.put(JsonLd.TYPE_KEY, "_Value");
-                                            v.put("label", String.valueOf(s));
+                                            v.put("label", s);
                                             insert(
                                                     new Condition(toKey("seriesMembership"), Operator.EQUALS, scopedFreeText(s)),
                                                     QueryUtil.castToStringObjectMap(v)
