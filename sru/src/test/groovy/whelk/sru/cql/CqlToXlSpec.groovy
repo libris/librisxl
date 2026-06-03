@@ -105,6 +105,16 @@ class CqlToXlSpec extends Specification {
         translatedXlQuery == '(dinosaur) AND type=Instance'
     }
 
+    def ": instead of = for field-selection"() { // THIS IS OFF SPEC. SHOULD NOT BE ALLOWED, BUT IS USED BY REAL CLIENTS.
+        given:
+        String cqlQuery = 'anywhere all "software tools" and (mat:dok OR mat:lic)'
+
+        String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
+
+        expect:
+        translatedXlQuery == '("anywhere"=(software AND tools) AND ("mat"=dok OR "mat"=lic)) AND type=Instance'
+    }
+
     def "tutorial example"() {
         given:
         String cqlQuery = '(>x="http://www.loc.gov/srw/index-sets/dc" x.title=dinosaur) and (>aVerySillyLongPrefix="http://www.loc.gov/srw/index-sets/dc" aVerySillyLongPrefix.author=farlow)'

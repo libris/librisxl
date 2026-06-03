@@ -102,6 +102,7 @@ comparitor
 
 comparitorSymbol
     : '='
+    | ':' // This is OFF SPEC, but clients are calling us this way!
     | '>'
     | '<'
     | '>='
