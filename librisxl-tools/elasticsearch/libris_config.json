@@ -321,7 +321,7 @@
                         "index": true,
                         "type": "keyword"
                     },
-                    "match": "controlNumber",
+                    "match": ["controlNumber", "librissearch:controlNumbers"],
                     "match_mapping_type": "string"
                 }
             },
