@@ -18,6 +18,8 @@ public class Phase2 {
                 String str = s;
                 if (str.startsWith("\"") && str.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
                     str = str.substring(1, str.length()-1);
+                // Turns for example "OCH" into "och" (the latter is not a xlql keyword). Case on search is irrelevant in xlql anyway.
+                str = str.toLowerCase();
 
                 return str;
             }
@@ -58,6 +60,9 @@ public class Phase2 {
         if (searchTerm.startsWith("\"") && searchTerm.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
             searchTerm = searchTerm.substring(1, searchTerm.length()-1);
 
+        // Turns for example "OCH" into "och" (the latter is not a xlql keyword). Case on search is irrelevant in xlql anyway.
+        searchTerm = searchTerm.toLowerCase();
+
         if (searchClause.relation() == null) { // no relation also implies no index. It's just searchTerm alone.
             return " " + searchTerm;
         }
@@ -77,6 +82,11 @@ public class Phase2 {
         }
 
         String index = searchClause.index();
+
+        // A crowd-pleaser, lets interpret these codes (missing the .cpl-prefix) in a neighbourly way.
+        if (index.equals("anywhere") || index.equals("allIndexes") || index.equals("anyIndexes") || index.equals("serverChoice"))
+            index = "cql.anywhere";
+
         boolean indexNeedsQuoting = ! ( index.startsWith("\"") && index.endsWith("\"") );
         if (indexNeedsQuoting)
             index = "\"" + index + "\"";
