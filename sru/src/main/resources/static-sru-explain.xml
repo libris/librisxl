@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<zs:explainResponse xmlns:zs="http://www.loc.gov/zing/srw/">
+    <zs:version>1.1</zs:version>
+    <zs:record>
+        <zs:recordSchema>http://explain.z3950.org/dtd/2.0/</zs:recordSchema>
+        <zs:recordPacking>xml</zs:recordPacking>
+        <zs:recordData>
+            <explain xmlns="http://explain.z3950.org/dtd/2.0/">
+                <serverInfo>
+                    <host>libris.kb.se</host>
+                    <port>80</port>
+                    <database>sru</database>
+                </serverInfo>
+                <databaseInfo>
+                    <title>LIBRIS</title>
+                    <description lang="en" primary="true">LIBRIS - Swedish Union Catalogue</description>
+                </databaseInfo>
+                <indexInfo>
+                    <set identifier="info:srw/cql-context-set/1/cql-v1.1" name="cql-11"/>
+                    <set identifier="info:srw/cql-context-set/1/cql-v1.2" name="cql"/>
+                    <set identifier="info:srw/cql-context-set/1/dc-v1.1" name="dc"/>
+                    <set identifier="http://zing.z3950.org/cql/bath/2.0/" name="bath"/>
+
+                    <index id="1">
+                        <title>Personal Name</title>
+                        <map><name set="bath">personalName</name></map>
+                    </index>
+                    <index id="2">
+                        <title>Corporate Name</title>
+                        <map><name set="bath">corporateName</name></map>
+                    </index>
+                    <index id="3">
+                        <title>Conference Name</title>
+                        <map><name set="bath">conferenceName</name></map>
+                    </index>
+                    <index id="4">
+                        <title>Title</title>
+                        <map><name set="bath">title</name></map>
+                    </index>
+                    <index id="5">
+                        <title>Title series</title>
+                        <map><name set="bath">titleSeries</name></map>
+                    </index>
+                    <index id="6">
+                        <title>Uniform Title</title>
+                        <map><name set="bath">uniformTitle</name></map>
+                    </index>
+                    <index id="7">
+                        <title>ISBN</title>
+                        <map><name set="bath">isbn</name></map>
+                    </index>
+                    <index id="8">
+                        <title>ISSN</title>
+                        <map><name set="bath">issn</name></map>
+                    </index>
+                    <index id="13">
+                        <title>Dewey Classification</title>
+                        <map><name set="bath">dcc</name></map>
+                    </index>
+                    <index id="16">
+                        <title>LC Call Number</title>
+                        <map><name set="bath">lccn</name></map>
+                    </index>
+                    <index id="21">
+                        <title>Subject Heading</title>
+                        <map><name set="bath">subject</name></map>
+                    </index>
+                    <index id="33">
+                        <title>Key Title</title>
+                        <map><name set="bath">keyTitle</name></map>
+                    </index>
+                    <index id="54">
+                        <title>Language</title>
+                        <map><name set="dc">Language</name></map>
+                    </index>
+                    <index id="58">
+                        <title>Geographic Name</title>
+                        <map><name set="bath">geographicName</name></map>
+                    </index>
+                    <index id="1002">
+                        <title>Name</title>
+                        <map><name set="bath">name</name></map>
+                    </index>
+                    <index id="1018">
+                        <title>Publisher</title>
+                        <map><name set="dc">publisher</name></map>
+                    </index>
+                    <index id="1031">
+                        <title>Material Type</title>
+                        <map><name set="dc">type</name></map>
+                    </index>
+                    <index id="1044">
+                        <title>Possessing Institution</title>
+                        <map><name set="bath">possessingInstitution</name></map>
+                    </index>
+                    <index id="1075">
+                        <title>Genre/Form Subject</title>
+                        <map><name set="bath">genreForm</name></map>
+                    </index>
+                    <index id="1079">
+                        <title>Topical Subject</title>
+                        <map><name set="bath">topicalSubject</name></map>
+                    </index>
+                    <index id="1097">
+                        <title>DC Title</title>
+                        <map><name set="dc">title</name></map>
+                    </index>
+                    <index id="1098">
+                        <title>DC Creator</title>
+                        <map><name set="dc">creator</name></map>
+                    </index>
+                    <index id="1099">
+                        <title>DC Subject</title>
+                        <map><name set="dc">subject</name></map>
+                    </index>
+                    <index id="1102">
+                        <title>DC Date</title>
+                        <map><name set="dc">date</name></map>
+                    </index>
+                    <index id="1104">
+                        <title>DC Identifier</title>
+                        <map><name set="dc">identifier</name></map>
+                    </index>
+                    <index id="5000">
+                        <title>Record ID</title>
+                        <map><name set="rec">recordIdentifier</name></map>
+                    </index>
+                    <index>
+                        <title>DC Contributor</title>
+                        <map><name set="dc">contributor</name></map>
+                    </index>
+                    <index>
+                        <title>DC Format</title>
+                        <map><name set="dc">format</name></map>
+                    </index>
+                    <index>
+                        <title>DC Description</title>
+                        <map><name set="dc">description</name></map>
+                    </index>
+                    <!--index>
+                        <title>DC Relation</title>
+                        <map><name set="dc">title</name></map>
+                    </index-->
+                    <index>
+                        <title>DC Rights</title>
+                        <map><name set="dc">rights</name></map>
+                    </index>
+                </indexInfo>
+                <schemaInfo>
+                    <schema identifier="info:srw/schema/1/marcxml-v1.1" sort="false" name="marcxml">
+                        <title>MARCXML</title>
+                    </schema>
+                    <schema identifier="info:srw/schema/1/dc-v1.1" sort="false" name="dc">
+                        <title>Dublin Core</title>
+                    </schema>
+                    <schema identifier="info:srw/schema/1/mods-v3.0" sort="false" name="mods">
+                        <title>MODS v3</title>
+                    </schema>
+                </schemaInfo>
+                <configInfo>
+                    <default type="numberOfRecords">10</default>
+                </configInfo>
+            </explain>
+        </zs:recordData>
+    </zs:record>
+</zs:explainResponse>

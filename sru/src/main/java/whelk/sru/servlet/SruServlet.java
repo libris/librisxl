@@ -1,6 +1,7 @@
 package whelk.sru.servlet;
 
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.apache.commons.io.IOUtils;
 import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,7 +10,11 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.*;
+import whelk.search2.AppParams;
+import whelk.search2.ESSettings;
+import whelk.search2.Query;
+import whelk.search2.QueryParams;
+import whelk.search2.ResourceLookup;
 import whelk.sru.cql.Translation;
 import whelk.util.http.WhelkHttpServlet;
 
@@ -19,10 +24,16 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.StringReader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 // Test locally like so:
 // curl "http://localhost:8187/?operation=searchRetrieve&query=isbn=9789130008650"
@@ -35,6 +46,8 @@ public class SruServlet extends WhelkHttpServlet {
     ResourceLookup resourceLookup;
     ESSettings esSettings;
 
+    String explain = loadClassPathResource("static-sru-explain.xml");
+
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
@@ -43,12 +56,19 @@ public class SruServlet extends WhelkHttpServlet {
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
-
         // Same as the old version
         res.setCharacterEncoding("utf-8");
         res.setContentType("text/xml");
 
         Map<String, String[]> parameters = req.getParameterMap();
+        if (parameters.isEmpty()) {
+            res.setStatus(200);
+            var writer = new PrintWriter(new BufferedOutputStream(res.getOutputStream()));
+            writer.print(explain);
+            writer.flush();
+            writer.close();
+            return;
+        }
 
         if ( !parameters.containsKey("operation") || !parameters.containsKey("query") ) {
             logger.debug("Bad SRU query: " + parameters);
@@ -146,4 +166,12 @@ public class SruServlet extends WhelkHttpServlet {
         }
     }
 
+    private static String loadClassPathResource(String name) {
+        try (InputStream scriptStream = SruServlet.class.getClassLoader().getResourceAsStream(name)) {
+            assert scriptStream != null;
+            return IOUtils.toString(new InputStreamReader(scriptStream));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
