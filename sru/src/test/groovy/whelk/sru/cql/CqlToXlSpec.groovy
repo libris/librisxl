@@ -105,6 +105,16 @@ class CqlToXlSpec extends Specification {
         translatedXlQuery == '(dinosaur) AND type=Instance'
     }
 
+    def "hyphens"() {
+        given:
+        String cqlQuery = '978-1-0732-3504-9'
+
+        String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
+
+        expect:
+        translatedXlQuery == '(978-1-0732-3504-9) AND type=Instance'
+    }
+
     def ": instead of = for field-selection"() { // THIS IS OFF SPEC. SHOULD NOT BE ALLOWED, BUT IS USED BY REAL CLIENTS.
         given:
         String cqlQuery = 'anywhere all "software tools" and (mat:dok OR mat:lic)'
