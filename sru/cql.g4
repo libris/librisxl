@@ -183,7 +183,7 @@ SORTBY
     ;
 
 CHARSTRING1
-    : [0-9A-ZÅÄÖ.*?^\-]+
+    : [0-9A-ZÅÄÖ.*?^\-+]+
     ;
 
 CHARSTRING2
