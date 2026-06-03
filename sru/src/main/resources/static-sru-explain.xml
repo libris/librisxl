@@ -12,8 +12,8 @@
                     <database>sru</database>
                 </serverInfo>
                 <databaseInfo>
-                    <title>LIBRIS</title>
-                    <description lang="en" primary="true">LIBRIS - Swedish Union Catalogue</description>
+                    <title>Libris</title>
+                    <description lang="en" primary="true">Libris - Swedish Union Catalogue</description>
                 </databaseInfo>
                 <indexInfo>
                     <set identifier="info:srw/cql-context-set/1/cql-v1.1" name="cql-11"/>
@@ -137,10 +137,6 @@
                         <title>DC Description</title>
                         <map><name set="dc">description</name></map>
                     </index>
-                    <!--index>
-                        <title>DC Relation</title>
-                        <map><name set="dc">title</name></map>
-                    </index-->
                     <index>
                         <title>DC Rights</title>
                         <map><name set="dc">rights</name></map>

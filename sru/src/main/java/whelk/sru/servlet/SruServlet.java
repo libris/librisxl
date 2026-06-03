@@ -61,7 +61,9 @@ public class SruServlet extends WhelkHttpServlet {
         res.setContentType("text/xml");
 
         Map<String, String[]> parameters = req.getParameterMap();
-        if (parameters.isEmpty()) {
+        var operation = getParameter(parameters, "operation");
+
+        if (parameters.isEmpty() || "explain".equals(operation)) {
             res.setStatus(200);
             var writer = new PrintWriter(new BufferedOutputStream(res.getOutputStream()));
             writer.print(explain);
@@ -70,21 +72,21 @@ public class SruServlet extends WhelkHttpServlet {
             return;
         }
 
-        if ( !parameters.containsKey("operation") || !parameters.containsKey("query") ) {
-            logger.debug("Bad SRU query: " + parameters);
+        if ( operation == null || !parameters.containsKey("query") ) {
+            logger.debug("Bad SRU query: {}", parameters);
             res.sendError(400);
             return;
         }
 
-        if ( parameters.get("operation").length != 1 || !parameters.get("operation")[0].equals("searchRetrieve") ) {
-            logger.debug("Bad SRU query (operation/searchRetrieve expected): " + parameters);
+        if ( !"searchRetrieve".equals(operation)) {
+            logger.debug("Bad SRU query (operation/searchRetrieve expected): {}", parameters);
             res.sendError(400);
             return;
         }
 
         Map<String, Object> results;
         try {
-            String CqlQueryString = parameters.get("query")[0];
+            String CqlQueryString = getParameter(parameters, "query");
             String XlQueryString = Translation.translateCqlToXlQuery(CqlQueryString);
 
             // This part is a little weird
@@ -164,6 +166,17 @@ public class SruServlet extends WhelkHttpServlet {
         } catch (XMLStreamException e) {
             logger.error("Couldn't build SRU response.", e);
         }
+    }
+
+    private static String getParameter(Map<String, String[]> parameters, String name) {
+        if (!parameters.containsKey(name)) {
+            return null;
+        }
+        var parameter = parameters.get(name);
+        if (parameter.length != 1) {
+            return null;
+        }
+        return parameter[0];
     }
 
     private static String loadClassPathResource(String name) {
