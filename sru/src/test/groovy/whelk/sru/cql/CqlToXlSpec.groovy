@@ -112,7 +112,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("anywhere"=(software AND tools) AND ("mat"=dok OR "mat"=lic)) AND type=Instance'
+        translatedXlQuery == '("cql.anywhere"=(software AND tools) AND ("mat"=dok OR "mat"=lic)) AND type=Instance'
     }
 
     def "tutorial example"() {

@@ -77,6 +77,11 @@ public class Phase2 {
         }
 
         String index = searchClause.index();
+
+        // A crowd-pleaser, lets interpret these codes (missing the .cpl-prefix) in a neighbourly way.
+        if (index.equals("anywhere") || index.equals("allIndexes") || index.equals("anyIndexes") || index.equals("serverChoice"))
+            index = "cql.anywhere";
+
         boolean indexNeedsQuoting = ! ( index.startsWith("\"") && index.endsWith("\"") );
         if (indexNeedsQuoting)
             index = "\"" + index + "\"";
