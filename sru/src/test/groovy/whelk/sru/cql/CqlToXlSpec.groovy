@@ -12,7 +12,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(AAA) AND type=Instance'
+        translatedXlQuery == '(aaa) AND type=Instance'
     }
 
     def "CQL has left-to-right precedence"() {
@@ -22,7 +22,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '((A OR B) AND C) AND type=Instance'
+        translatedXlQuery == '((a OR b) AND c) AND type=Instance'
     }
 
     def "CQL has left-to-right precedence2"() {
@@ -32,7 +32,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '((A AND B) OR C) AND type=Instance'
+        translatedXlQuery == '((a AND b) OR c) AND type=Instance'
     }
 
     def "Group bonanza"() {
@@ -42,7 +42,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '((A AND (B OR C)) AND D) AND type=Instance'
+        translatedXlQuery == '((a AND (b OR c)) AND d) AND type=Instance'
     }
 
     def "any & all"() {
@@ -113,6 +113,16 @@ class CqlToXlSpec extends Specification {
 
         expect:
         translatedXlQuery == '(978-1-0732-3504-9) AND type=Instance'
+    }
+
+    def "xlql keywords"() {
+        given:
+        String cqlQuery = '"A ELLER B OCH C"'
+
+        String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
+
+        expect:
+        translatedXlQuery == '(a eller b och c) AND type=Instance'
     }
 
     def ": instead of = for field-selection"() { // THIS IS OFF SPEC. SHOULD NOT BE ALLOWED, BUT IS USED BY REAL CLIENTS.
