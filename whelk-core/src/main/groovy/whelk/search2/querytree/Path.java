@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -61,7 +62,7 @@ public final class Path implements Selector {
                 altSelectors.add(new Path(l));
             }
         });
-        return excludeInverseIntegralRoundTrips(altSelectors);
+        return altSelectors;
     }
 
     private List<List<PathElement>> getAltPaths(List<? extends PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
@@ -71,27 +72,24 @@ public final class Path implements Selector {
         var next = tail.getFirst();
         var newTail = tail.subList(1, tail.size());
         var nextAltSelectors = next.getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
+
+        var shouldRecurse = (!newTail.isEmpty() && newTail.getFirst().isComposite())
+                || (next instanceof Property p && "hasItem".equals(p.name()));
+
+        if (shouldRecurse) {
+            return nextAltSelectors.stream()
+                    .flatMap(s -> getAltPaths(newTail, jsonLd, next.range(), allowIncompatible).stream()
+                            .map(altPath -> concat(s.path(), altPath)))
+                    .toList();
+        }
+
         return nextAltSelectors.stream()
-                .flatMap(s -> getAltPaths(newTail, jsonLd, next.range(), allowIncompatible).stream()
-                        .map(altPath -> Stream.concat(s.path().stream(), altPath.stream())))
-                .map(Stream::toList)
+                .map(s -> concat(s.path(), newTail))
                 .toList();
     }
 
-    private List<Selector> excludeInverseIntegralRoundTrips(List<Selector> altSelectors) {
-        List<Selector> res = new ArrayList<>();
-        for (Selector s : altSelectors) {
-            List<Property.IntegralProperty> integralsInPath = s.path().stream()
-                    .filter(Property.IntegralProperty.class::isInstance)
-                    .map(Property.IntegralProperty.class::cast)
-                    .toList();
-            boolean hasInversePair = integralsInPath.stream()
-                    .anyMatch(integral -> integralsInPath.stream().anyMatch(integral::isInverseOf));
-            if (!hasInversePair) {
-                res.add(s);
-            }
-        }
-        return res;
+    private List<PathElement> concat(List<? extends PathElement> left, List<? extends PathElement> right) {
+        return Stream.concat(left.stream(), right.stream()).toList();
     }
 
     @Override

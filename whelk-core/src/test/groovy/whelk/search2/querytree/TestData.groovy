@@ -36,6 +36,7 @@ class TestData {
                 'rdf:type'        : ['rdf:type'] as Set,
                 'instanceof'      : ['instanceOf'] as Set,
                 'hasinstance'     : ['hasInstance'] as Set,
+                'hasitem'         : ['hasItem'] as Set,
                 'p'               : ['p', 'p1'] as Set,
                 'plabel'          : ['p2', 'p3'] as Set,
                 'pp'              : ['p3', 'p4'] as Set,
@@ -226,6 +227,12 @@ class TestData {
                         'category': ['@id': 'integral'],
                         'domain'  : ['@id': 'T4'],
                         'range'   : ['@id': 'T4']
+                ],
+                [
+                        '@id'   : 'hasItem',
+                        '@type' : 'DatatypeProperty',
+                        'domain': [['@id': 'T1']],
+                        'range' : [['@id': 'T4']]
                 ],
                 [
                         '@id'        : 'librissearch:workCategory',
