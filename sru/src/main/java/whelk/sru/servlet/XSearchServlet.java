@@ -741,7 +741,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 
     @SuppressWarnings("unchecked")
     private static List<Map<?,?>> get(Object o, List<String> path) {
-       return ((List<Map<?,?>>) getAtPath(o, path, Collections.emptyList()));
+       return (List<Map<?,?>>) (List<?>) asList(getAtPath(o, path, Collections.emptyList()));
     }
 
     @SuppressWarnings("unchecked")
