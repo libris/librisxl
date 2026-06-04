@@ -117,6 +117,7 @@ public class SruServlet extends WhelkHttpServlet {
 
             writer.writeStartDocument("UTF-8", "1.0");
             writer.writeStartElement("searchRetrieveResponse");
+            writer.writeAttribute("xmlns", "http://www.loc.gov/zing/srw/");
 
             writer.writeStartElement("version");
             writer.writeCharacters("1.2");
