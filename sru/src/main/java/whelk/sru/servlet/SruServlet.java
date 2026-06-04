@@ -103,6 +103,18 @@ public class SruServlet extends WhelkHttpServlet {
             return;
         }
 
+        int startRecord = 1;
+        if ( parameters.containsKey("startRecord") ) {
+
+            startRecord = 1 + Integer.parseInt(getParameter(parameters, "startRecord"));
+        }
+
+        int maximumRecords = 10;
+        if ( parameters.containsKey("maximumRecords") ) {
+
+            maximumRecords = Integer.parseInt(getParameter(parameters, "maximumRecords"));
+        }
+
         Map<String, Object> results;
         try {
             String CqlQueryString = getParameter(parameters, "query");
@@ -112,8 +124,10 @@ public class SruServlet extends WhelkHttpServlet {
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
             String[] q = new String[]{XlQueryString};
             paramsAsIfSearch.put("_q", q);
-            paramsAsIfSearch.put("_limit", new String[] { "10" });
             paramsAsIfSearch.put("_stats", new String[] { "false" }); // don't need facets
+            paramsAsIfSearch.put("_offset", new String[] {"" + (startRecord-1)});
+            paramsAsIfSearch.put("_limit", new String[] {"" + maximumRecords});
+
             QueryParams qp = new QueryParams(paramsAsIfSearch);
             AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
             Query query = new Query(qp, ap, resourceLookup, esSettings, whelk);
