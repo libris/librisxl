@@ -1191,7 +1191,7 @@ class JsonLd {
                     m[k] = v
                 }
             }
-            if (!m.isEmpty() && o[TYPE_KEY]) {
+            if (!m.isEmpty()) {
                 m[TYPE_KEY] = o[TYPE_KEY]
             }
             return m
