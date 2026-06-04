@@ -260,7 +260,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             }
 
         } catch (InvalidQueryException e) {
-            logger.error("Bad query.", e);
+            logger.error("Bad query: " + query);
             throw new InvalidQueryException(Errors.PARSE);
         } catch (XMLStreamException | TransformerException e) {
             logger.error("Couldn't build xsearch response.", e);
