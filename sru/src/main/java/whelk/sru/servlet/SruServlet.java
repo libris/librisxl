@@ -198,6 +198,7 @@ public class SruServlet extends WhelkHttpServlet {
     private static void sendXml(HttpServletResponse res, int status, String xml, String version) throws IOException {
         if (!"1.2".equals(version)) {
             xml = xml.replace("<version>1.2</version>", "<version>" + version + "</version>");
+            xml = xml.replace("<zs:version>1.2</zs:version>", "<zs:version>" + version + "</zs:version>");
         }
 
         res.setStatus(status);
