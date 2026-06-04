@@ -94,13 +94,14 @@ public class SruServlet extends WhelkHttpServlet {
         }
 
 	Transformer transformer = null;
+	String recordsschema = "";
 
 	try {
 	switch (Formats.FORMATS.getOrDefault(format, Formats.Format.MARC_XML)) {
-		case MARC_XML -> transformer = null;
-                case MODS -> transformer = formats.transformers.get(Formats.Format.MODS).newTransformer();
-                case DC -> transformer = formats.transformers.get(Formats.Format.DC).newTransformer();
-		case UNSUPPORTED -> transformer = null;
+		case MARC_XML -> { transformer = null; recordsschema = "marcxml-v1.1"; }
+                case MODS -> { transformer = formats.transformers.get(Formats.Format.MODS).newTransformer(); recordsschema = "mods-v3.0"; }
+                case DC -> { transformer = formats.transformers.get(Formats.Format.DC).newTransformer(); recordsschema = "dc-v1.1"; }
+		case UNSUPPORTED -> { transformer = null; recordsschema = "marcxml-v1.1"; }
         }
 	}
 	catch (TransformerException e){
@@ -152,8 +153,7 @@ public class SruServlet extends WhelkHttpServlet {
                 writer.writeEndElement(); // recordPacking
 
                 writer.writeStartElement("recordSchema");
-		// change to format schema
-                writer.writeCharacters("info:srw/schema/1/marcxml-v1.1");
+                writer.writeCharacters("info:srw/schema/1/"+recordsschema);
                 writer.writeEndElement(); // recordSchema
 
                 //writer.writeStartElement("recordData");
@@ -194,5 +194,4 @@ public class SruServlet extends WhelkHttpServlet {
             logger.error("Couldn't build SRU response.", e);
         }
     }
-
 }
