@@ -5,8 +5,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import se.kb.libris.export.ExportProfile;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
-import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.InvalidQueryException;
@@ -16,6 +18,7 @@ import whelk.search2.Query;
 import whelk.search2.QueryParams;
 import whelk.search2.ResourceLookup;
 import whelk.sru.cql.Translation;
+import whelk.util.MarcExport;
 import whelk.util.http.WhelkHttpServlet;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,16 +27,8 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 // Test locally like so:
 // curl "http://localhost:8187/?operation=searchRetrieve&query=isbn=9789130008650"
@@ -41,18 +36,30 @@ import java.util.Map;
 public class SruServlet extends WhelkHttpServlet {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
+    private static final List<String> SUPPORTED_VERSIONS = List.of("1.0", "1.1", "1.2");
+
     JsonLD2MarcXMLConverter converter;
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     ResourceLookup resourceLookup;
     ESSettings esSettings;
 
-    String explain = loadClassPathResource("static-sru-explain.xml");
+    String explain = loadResource("explain.xml");
+    ExportProfile marcExportProfile;
 
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
+
+        Properties marcProperties = new Properties();
+        marcExportProfile = new ExportProfile(marcProperties);
+
+        try {
+            marcProperties.load(new StringReader(loadResource("websok.properties")));
+        } catch (IOException e) {
+            logger.error("Could not read MARC profile from jar resources.", e);
+        }
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -61,26 +68,38 @@ public class SruServlet extends WhelkHttpServlet {
         res.setContentType("text/xml");
 
         Map<String, String[]> parameters = req.getParameterMap();
-        var operation = getParameter(parameters, "operation");
 
-        if (parameters.isEmpty() || "explain".equals(operation)) {
+        var version = getParameter(parameters, "version");
+        if (version == null) {
+            version = "1.2";
+        }
+
+        if (!SUPPORTED_VERSIONS.contains(version)) {
+            String unsupported = loadResource("unsupported-version.xml");
             res.setStatus(200);
             var writer = new PrintWriter(new BufferedOutputStream(res.getOutputStream()));
-            writer.print(explain);
+            writer.print(unsupported);
             writer.flush();
             writer.close();
             return;
         }
 
-        if ( operation == null || !parameters.containsKey("query") ) {
-            logger.debug("Bad SRU query: {}", parameters);
-            res.sendError(400);
+        var operation = getParameter(parameters, "operation");
+
+        if (operation == null || "explain".equals(operation)) {
+            sendXml(res, 200, explain, version);
             return;
         }
 
         if ( !"searchRetrieve".equals(operation)) {
             logger.debug("Bad SRU query (operation/searchRetrieve expected): {}", parameters);
-            res.sendError(400);
+            sendXml(res, 400, loadResource("unsupported-operation.xml"), version);
+            return;
+        }
+
+        if ( !parameters.containsKey("query") ) {
+            logger.debug("Bad SRU query: {}", parameters);
+            sendXml(res, 400, loadResource("missing-query.xml"), version);
             return;
         }
 
@@ -93,6 +112,7 @@ public class SruServlet extends WhelkHttpServlet {
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
             String[] q = new String[]{XlQueryString};
             paramsAsIfSearch.put("_q", q);
+            paramsAsIfSearch.put("_limit", new String[] { "10" });
             paramsAsIfSearch.put("_stats", new String[] { "false" }); // don't need facets
             QueryParams qp = new QueryParams(paramsAsIfSearch);
             AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
@@ -100,7 +120,7 @@ public class SruServlet extends WhelkHttpServlet {
             results = query.collectResults();
         } catch (InvalidQueryException | ParseCancellationException e) {
             logger.info("Bad query: \"" + parameters.get("query")[0] + "\" -> " + e.getMessage());
-            res.sendError(400);
+            sendXml(res, 400, loadResource("syntax-error.xml"), version);
             return;
         }
 
@@ -120,7 +140,7 @@ public class SruServlet extends WhelkHttpServlet {
             writer.writeAttribute("xmlns", "http://www.loc.gov/zing/srw/");
 
             writer.writeStartElement("version");
-            writer.writeCharacters("1.2");
+            writer.writeCharacters(version);
             writer.writeEndElement(); // version
 
             writer.writeStartElement("numberOfRecords");
@@ -134,7 +154,6 @@ public class SruServlet extends WhelkHttpServlet {
 
                 String systemID = whelk.getStorage().getSystemIdByIri( (String) m.get("@id"));
                 Document embellished = whelk.loadEmbellished(systemID);
-                String convertedText = (String) converter.convert(embellished.data, embellished.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
 
                 writer.writeStartElement("record");
 
@@ -151,7 +170,14 @@ public class SruServlet extends WhelkHttpServlet {
                 writer.writeEndElement(); // recordSchema
 
                 writer.writeStartElement("recordData");
-                StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
+                Vector<MarcRecord> marcRecords = MarcExport.compileVirtualMarcRecord(marcExportProfile, embellished, whelk, converter);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                MarcXmlRecordWriter stringOutput = new MarcXmlRecordWriter(baos, "UTF-8", false);
+                for (MarcRecord mr : marcRecords) {
+                    stringOutput.writeRecord(mr);
+                }
+                stringOutput.close();
+                StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(baos.toString())), writer);
                 writer.writeEndElement(); // recordData
 
                 writer.writeEndElement(); // record
@@ -169,6 +195,19 @@ public class SruServlet extends WhelkHttpServlet {
         }
     }
 
+    private static void sendXml(HttpServletResponse res, int status, String xml, String version) throws IOException {
+        if (!"1.2".equals(version)) {
+            xml = xml.replace("<version>1.2</version>", "<version>" + version + "</version>");
+            xml = xml.replace("<zs:version>1.2</zs:version>", "<zs:version>" + version + "</zs:version>");
+        }
+
+        res.setStatus(status);
+        var writer = new PrintWriter(new BufferedOutputStream(res.getOutputStream()));
+        writer.print(xml);
+        writer.flush();
+        writer.close();
+    }
+
     private static String getParameter(Map<String, String[]> parameters, String name) {
         if (!parameters.containsKey(name)) {
             return null;
@@ -180,8 +219,9 @@ public class SruServlet extends WhelkHttpServlet {
         return parameter[0];
     }
 
-    private static String loadClassPathResource(String name) {
-        try (InputStream scriptStream = SruServlet.class.getClassLoader().getResourceAsStream(name)) {
+    private static String loadResource(String name) {
+        var path = "sru/" + name;
+        try (InputStream scriptStream = SruServlet.class.getClassLoader().getResourceAsStream(path)) {
             assert scriptStream != null;
             return IOUtils.toString(new InputStreamReader(scriptStream));
         } catch (IOException e) {
