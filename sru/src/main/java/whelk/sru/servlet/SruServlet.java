@@ -36,12 +36,14 @@ import java.util.*;
 public class SruServlet extends WhelkHttpServlet {
     private final Logger logger = LogManager.getLogger(this.getClass());
 
+    private static final List<String> SUPPORTED_VERSIONS = List.of("1.0", "1.1", "1.2");
+
     JsonLD2MarcXMLConverter converter;
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     ResourceLookup resourceLookup;
     ESSettings esSettings;
 
-    String explain = loadClassPathResource("static-sru-explain.xml");
+    String explain = loadResource("explain.xml");
     ExportProfile marcExportProfile;
 
     @Override
@@ -54,7 +56,7 @@ public class SruServlet extends WhelkHttpServlet {
         marcExportProfile = new ExportProfile(marcProperties);
 
         try {
-            marcProperties.load(new StringReader(loadClassPathResource("websok.properties")));
+            marcProperties.load(new StringReader(loadResource("websok.properties")));
         } catch (IOException e) {
             logger.error("Could not read MARC profile from jar resources.", e);
         }
@@ -66,26 +68,38 @@ public class SruServlet extends WhelkHttpServlet {
         res.setContentType("text/xml");
 
         Map<String, String[]> parameters = req.getParameterMap();
-        var operation = getParameter(parameters, "operation");
 
-        if (parameters.isEmpty() || "explain".equals(operation)) {
+        var version = getParameter(parameters, "version");
+        if (version == null) {
+            version = "1.2";
+        }
+
+        if (!SUPPORTED_VERSIONS.contains(version)) {
+            String unsupported = loadResource("unsupported-version.xml");
             res.setStatus(200);
             var writer = new PrintWriter(new BufferedOutputStream(res.getOutputStream()));
-            writer.print(explain);
+            writer.print(unsupported);
             writer.flush();
             writer.close();
             return;
         }
 
-        if ( operation == null || !parameters.containsKey("query") ) {
-            logger.debug("Bad SRU query: {}", parameters);
-            res.sendError(400);
+        var operation = getParameter(parameters, "operation");
+
+        if (operation == null || "explain".equals(operation)) {
+            sendXml(res, 200, explain, version);
             return;
         }
 
         if ( !"searchRetrieve".equals(operation)) {
             logger.debug("Bad SRU query (operation/searchRetrieve expected): {}", parameters);
-            res.sendError(400);
+            sendXml(res, 400, loadResource("unsupported-operation.xml"), version);
+            return;
+        }
+
+        if ( !parameters.containsKey("query") ) {
+            logger.debug("Bad SRU query: {}", parameters);
+            sendXml(res, 400, loadResource("missing-query.xml"), version);
             return;
         }
 
@@ -98,6 +112,7 @@ public class SruServlet extends WhelkHttpServlet {
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
             String[] q = new String[]{XlQueryString};
             paramsAsIfSearch.put("_q", q);
+            paramsAsIfSearch.put("_limit", new String[] { "10" });
             paramsAsIfSearch.put("_stats", new String[] { "false" }); // don't need facets
             QueryParams qp = new QueryParams(paramsAsIfSearch);
             AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
@@ -105,7 +120,7 @@ public class SruServlet extends WhelkHttpServlet {
             results = query.collectResults();
         } catch (InvalidQueryException | ParseCancellationException e) {
             logger.info("Bad query: \"" + parameters.get("query")[0] + "\" -> " + e.getMessage());
-            res.sendError(400);
+            sendXml(res, 400, loadResource("syntax-error.xml"), version);
             return;
         }
 
@@ -125,7 +140,7 @@ public class SruServlet extends WhelkHttpServlet {
             writer.writeAttribute("xmlns", "http://www.loc.gov/zing/srw/");
 
             writer.writeStartElement("version");
-            writer.writeCharacters("1.2");
+            writer.writeCharacters(version);
             writer.writeEndElement(); // version
 
             writer.writeStartElement("numberOfRecords");
@@ -180,6 +195,18 @@ public class SruServlet extends WhelkHttpServlet {
         }
     }
 
+    private static void sendXml(HttpServletResponse res, int status, String xml, String version) throws IOException {
+        if (!"1.2".equals(version)) {
+            xml = xml.replace("<version>1.2</version>", "<version>" + version + "</version>");
+        }
+
+        res.setStatus(status);
+        var writer = new PrintWriter(new BufferedOutputStream(res.getOutputStream()));
+        writer.print(xml);
+        writer.flush();
+        writer.close();
+    }
+
     private static String getParameter(Map<String, String[]> parameters, String name) {
         if (!parameters.containsKey(name)) {
             return null;
@@ -191,8 +218,9 @@ public class SruServlet extends WhelkHttpServlet {
         return parameter[0];
     }
 
-    private static String loadClassPathResource(String name) {
-        try (InputStream scriptStream = SruServlet.class.getClassLoader().getResourceAsStream(name)) {
+    private static String loadResource(String name) {
+        var path = "sru/" + name;
+        try (InputStream scriptStream = SruServlet.class.getClassLoader().getResourceAsStream(path)) {
             assert scriptStream != null;
             return IOUtils.toString(new InputStreamReader(scriptStream));
         } catch (IOException e) {
