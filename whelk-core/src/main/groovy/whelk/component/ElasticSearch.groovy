@@ -561,11 +561,31 @@ class ElasticSearch {
         var embellishedGraph = ((List) copy.data[GRAPH_KEY])
         var originalGraphSize = originalGraph.size()
 
+        Set<String> categoryLinks = [] as Set
+        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            categoryLinks.addAll(collectCategoryLinks(embellishedGraph))
+            links.addAll(categoryLinks)
+        }
+
         FresnelUtil.LensMappingBatch lensedMainGraph = batchToSearchCard(whelk.fresnelUtil,
                 embellishedGraph.take(originalGraphSize) as List<Map<String, Object>>,
-                links)
+                links - categoryLinks) // Skip preserving category links since these will be restored in a separate step
+
+        def restoreCategoryByCollection = { shapedGraph, beforeGraph ->
+            // FIXME
+            [[1], [1, JsonLd.WORK_KEY]].each { List path -> {
+                Map thing = (Map) DocumentUtil.getAtPath(beforeGraph, path, [:])
+                if (thing.containsKey(CATEGORY_BY_COLLECTION)) {
+                    DocumentUtil.getAtPath(shapedGraph, path, [:])[CATEGORY_BY_COLLECTION] = thing[CATEGORY_BY_COLLECTION]
+                }
+            }}
+        }
 
         var shapedMainGraph = lensedMainGraph.lensedThings()
+
+        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
+            restoreCategoryByCollection(shapedMainGraph, embellishedGraph)
+        }
 
         var integralIds = collectIntegralIds(shapedMainGraph, whelk.jsonld)
 
@@ -594,7 +614,10 @@ class ElasticSearch {
                     embedFakeIntegralThings(it) // FIXME
                     getShapeForEmbellishment(whelk.fresnelUtil,
                             (Map) it,
-                            integralIds)
+                            integralIds,
+                            whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)
+                                    ? restoreCategoryByCollection
+                                    : null)
                 }
 
 
@@ -673,10 +696,6 @@ class ElasticSearch {
 
                 lensedMainGraph.restoreLinks(value)
 
-                if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION) && value.containsKey(CATEGORY_BY_COLLECTION)) {
-                    embedCategoryByCollection((Map) value[CATEGORY_BY_COLLECTION], shapedEmbellished)
-                }
-
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" } }
                 // -->
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
@@ -737,20 +756,6 @@ class ElasticSearch {
         }
 
         return mapper.writeValueAsString(searchCard)
-    }
-
-    private static void embedCategoryByCollection(Map categoryByCollection, List<Map> embellishedGraph) {
-        Map categoryLinksById = categoryByCollection.values().flatten().collectEntries { [it[ID_KEY], it] }
-        embellishedGraph.each {
-            var thing = (Map) DocumentUtil.getAtPath(it, Document.thingPath, [:])
-            var thingId = (String) thing[ID_KEY]
-            if (thingId) {
-                var categoryLink = (Map) categoryLinksById[thingId]
-                if (categoryLink) {
-                    categoryLink.putAll(thing)
-                }
-            }
-        }
     }
 
     private static void addFlattenedClassificationFields(List<Map> classification) {
@@ -856,7 +861,7 @@ class ElasticSearch {
     }
 
     @CompileStatic
-    private static Map getShapeForEmbellishment(FresnelUtil fresnelUtil, Map embellishData, Set<String> integralIds) {
+    private static Map getShapeForEmbellishment(FresnelUtil fresnelUtil, Map embellishData, Set<String> integralIds, Closure restoreCategoryByCollection) {
         List graph = ((List) embellishData[GRAPH_KEY])
         if (graph) {
             Map record = (Map) graph[0]
@@ -867,6 +872,9 @@ class ElasticSearch {
                     : toSearchChip(fresnelUtil, thing)
             Map shapedRecord = minimalRecord(record) + ((Map) shapedThing.remove(RECORD_KEY) ?: [:])
             List shapedGraph = [shapedRecord, shapedThing]
+            if (integralIds.contains(thing[ID_KEY]) && restoreCategoryByCollection) {
+                restoreCategoryByCollection(shapedGraph, graph)
+            }
             embellishData[GRAPH_KEY] = shapedGraph
 
         }
@@ -896,6 +904,18 @@ class ElasticSearch {
     @CompileStatic
     private static Map minimalRecord(Map record) {
         return record.subMap([ID_KEY, TYPE_KEY, THING_KEY])
+    }
+
+    private static Set<String> collectCategoryLinks(List graph) {
+        return [[1], [1, JsonLd.WORK_KEY]].collect { path ->
+                    ["find", "identify", "@none"].collect {collection ->
+                        DocumentUtil.getAtPath(DocumentUtil.getAtPath(graph, path, [:]),
+                                [CATEGORY_BY_COLLECTION, collection, '*', JsonLd.ID_KEY],
+                                [])
+                    }
+                }
+                .flatten()
+                .toSet()
     }
 
     private static setIdentifiers(Document doc) {
