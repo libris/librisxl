@@ -5,8 +5,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.cxf.staxutils.StaxUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import se.kb.libris.export.ExportProfile;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import whelk.Document;
-import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.InvalidQueryException;
@@ -16,6 +18,7 @@ import whelk.search2.Query;
 import whelk.search2.QueryParams;
 import whelk.search2.ResourceLookup;
 import whelk.sru.cql.Translation;
+import whelk.util.MarcExport;
 import whelk.util.http.WhelkHttpServlet;
 
 import javax.servlet.http.HttpServletRequest;
@@ -24,16 +27,8 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 // Test locally like so:
 // curl "http://localhost:8187/?operation=searchRetrieve&query=isbn=9789130008650"
@@ -47,12 +42,22 @@ public class SruServlet extends WhelkHttpServlet {
     ESSettings esSettings;
 
     String explain = loadClassPathResource("static-sru-explain.xml");
+    ExportProfile marcExportProfile;
 
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
+
+        Properties marcProperties = new Properties();
+        marcExportProfile = new ExportProfile(marcProperties);
+
+        try {
+            marcProperties.load(new StringReader(loadClassPathResource("websok.properties")));
+        } catch (IOException e) {
+            logger.error("Could not read MARC profile from jar resources.", e);
+        }
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -134,7 +139,6 @@ public class SruServlet extends WhelkHttpServlet {
 
                 String systemID = whelk.getStorage().getSystemIdByIri( (String) m.get("@id"));
                 Document embellished = whelk.loadEmbellished(systemID);
-                String convertedText = (String) converter.convert(embellished.data, embellished.getShortId()).get(JsonLd.NON_JSON_CONTENT_KEY);
 
                 writer.writeStartElement("record");
 
@@ -151,7 +155,14 @@ public class SruServlet extends WhelkHttpServlet {
                 writer.writeEndElement(); // recordSchema
 
                 writer.writeStartElement("recordData");
-                StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
+                Vector<MarcRecord> marcRecords = MarcExport.compileVirtualMarcRecord(marcExportProfile, embellished, whelk, converter);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                MarcXmlRecordWriter stringOutput = new MarcXmlRecordWriter(baos, "UTF-8", false);
+                for (MarcRecord mr : marcRecords) {
+                    stringOutput.writeRecord(mr);
+                }
+                stringOutput.close();
+                StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(baos.toString())), writer);
                 writer.writeEndElement(); // recordData
 
                 writer.writeEndElement(); // record
