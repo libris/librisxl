@@ -326,6 +326,16 @@
                 }
             },
             {
+                "librissearch_instance_identifier_template": {
+                    "mapping": {
+                        "index": true,
+                        "type": "keyword"
+                    },
+                    "match": "librissearch:instanceIdentifier",
+                    "match_mapping_type": "string"
+                }
+            },
+            {
                 "date_template": {
                     "match": ["created", "modified", "generationDate"],
                     "mapping": {
