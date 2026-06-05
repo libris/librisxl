@@ -105,13 +105,11 @@ public class SruServlet extends WhelkHttpServlet {
 
         int startRecord = 1;
         if ( parameters.containsKey("startRecord") ) {
-
-            startRecord = 1 + Integer.parseInt(getParameter(parameters, "startRecord"));
+            startRecord = Integer.parseInt(getParameter(parameters, "startRecord"));
         }
 
         int maximumRecords = 10;
         if ( parameters.containsKey("maximumRecords") ) {
-
             maximumRecords = Integer.parseInt(getParameter(parameters, "maximumRecords"));
         }
 
