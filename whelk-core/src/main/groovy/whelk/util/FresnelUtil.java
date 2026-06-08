@@ -269,7 +269,29 @@ public class FresnelUtil {
 
         public void restoreLinks(Map<String, Object> thing) {
             if (thing.get(ID_KEY) instanceof String id && !JsonLd.isLink(thing)) {
-                preservedLinksMap.getOrDefault(id, List.of()).forEach(lr -> lr.restoreTo(thing));
+                var linkRestorations = preservedLinksMap.remove(id);
+                if (linkRestorations != null) {
+                    linkRestorations.forEach(lr -> lr.restoreTo(thing));
+                }
+            }
+        }
+
+        public void restoreLinksByKey(Map<String, Object> thing, String key) {
+            if (thing.get(ID_KEY) instanceof String id && !JsonLd.isLink(thing)) {
+                var linkRestorations = preservedLinksMap.remove(id);
+                if (linkRestorations != null) {
+                    List<LinkRestoration> remaining = new ArrayList<>();
+                    linkRestorations.forEach(lr -> {
+                        if (key.equals(lr.key())) {
+                            lr.restoreTo(thing);
+                        } else {
+                            remaining.add(lr);
+                        }
+                    });
+                    if (!remaining.isEmpty()) {
+                        preservedLinksMap.put(id, remaining);
+                    }
+                }
             }
         }
     }

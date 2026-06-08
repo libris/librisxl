@@ -21,7 +21,6 @@ import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
-import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
 import static whelk.FeatureFlags.Flag.EXPERIMENTAL_INDEX_HOLDING_ORGS
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.GRAPH_KEY
@@ -555,73 +554,27 @@ class ElasticSearch {
             copy.centerOnVirtualMainEntity()
         }
 
-        Set<String> links = whelk.jsonld.expandLinks(document.getExternalRefs()).collect{ it.iri } as Set<String>
-
         var originalGraph = ((List) document.data[GRAPH_KEY])
-        var embellishedGraph = ((List) copy.data[GRAPH_KEY])
-        var originalGraphSize = originalGraph.size()
+        var fullEmbellishedGraph = ((List) copy.data[GRAPH_KEY])
+        var mainGraph = fullEmbellishedGraph.take(originalGraph.size()) as List<Map<String, Object>>
 
-        Set<String> categoryLinks = [] as Set
-        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
-            categoryLinks.addAll(collectCategoryLinks(embellishedGraph))
-            links.addAll(categoryLinks)
-        }
 
-        FresnelUtil.LensMappingBatch lensedMainGraph = batchToSearchCard(whelk.fresnelUtil,
-                embellishedGraph.take(originalGraphSize) as List<Map<String, Object>>,
-                links - categoryLinks) // Skip preserving category links since these will be restored in a separate step
+        Set<String> links = whelk.jsonld.expandLinks(JsonLd.getExternalReferences([(GRAPH_KEY): mainGraph]))
+                .collect{ it.iri } as Set<String>
 
-        def restoreCategoryByCollection = { shapedGraph, beforeGraph ->
-            // FIXME
-            [[1], [1, JsonLd.WORK_KEY]].each { List path -> {
-                Map thing = (Map) DocumentUtil.getAtPath(beforeGraph, path, [:])
-                if (thing.containsKey(CATEGORY_BY_COLLECTION)) {
-                    DocumentUtil.getAtPath(shapedGraph, path, [:])[CATEGORY_BY_COLLECTION] = thing[CATEGORY_BY_COLLECTION]
-                }
-            }}
-        }
-
+        FresnelUtil.LensMappingBatch lensedMainGraph = batchToSearchCard(whelk.fresnelUtil, mainGraph, links)
         var shapedMainGraph = lensedMainGraph.lensedThings()
-
-        if (whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)) {
-            restoreCategoryByCollection(shapedMainGraph, embellishedGraph)
-        }
+        shapedMainGraph.forEach { lensedMainGraph.restoreLinksByKey(it, CATEGORY_BY_COLLECTION) }
 
         var integralIds = collectIntegralIds(shapedMainGraph, whelk.jsonld)
+        var embellishedIntegralGraphs = fullEmbellishedGraph.drop(mainGraph.size())
+                .findAll { integralIds.contains(DocumentUtil.getAtPath(it, Document.thingIdPath2)) }
+        var shapedEmbellishedIntegralGraphs = shapeIntegralThings(whelk.fresnelUtil, embellishedIntegralGraphs)
 
-        // FIXME
-        def embedFakeIntegralThings = { graph ->
-            def thing = DocumentUtil.getAtPath(graph, Document.thingPath, [:])
-            if (thing[TYPE_KEY] == 'Item') {
-                DocumentUtil.findKey(thing, Embellisher.FAKE_INTEGRAL_RELATIONS) { value, path ->
-                    asList(value).each { v ->
-                        if (v instanceof Map && JsonLd.isLink(v)) {
-                            embellishedGraph.find { DocumentUtil.getAtPath(it, Document.thingIdPath2) == v[ID_KEY] }
-                                    ?.with {
-                                        def fakeIntegralThing = (Map) DocumentUtil.getAtPath(it, Document.thingPath, [:])
-                                        ((Map) v).putAll(fakeIntegralThing)
-                                    }
-                        }
-                    }
-                    return new DocumentUtil.Nop()
-                }
-            }
-        }
+        var embellishedNonIntegralGraphs = fullEmbellishedGraph.drop(mainGraph.size() + embellishedIntegralGraphs.size())
+        var shapedEmbellishedNonIntegralGraphs = shapeNonIntegralThings(whelk.fresnelUtil, embellishedNonIntegralGraphs)
 
-        var shapedEmbellished = embellishedGraph
-                .drop(originalGraphSize)
-                .collect {
-                    embedFakeIntegralThings(it) // FIXME
-                    getShapeForEmbellishment(whelk.fresnelUtil,
-                            (Map) it,
-                            integralIds,
-                            whelk.features.isEnabled(EXPERIMENTAL_CATEGORY_COLLECTION)
-                                    ? restoreCategoryByCollection
-                                    : null)
-                }
-
-
-        copy.data[GRAPH_KEY] = shapedMainGraph + shapedEmbellished
+        copy.data[GRAPH_KEY] = shapedMainGraph + shapedEmbellishedIntegralGraphs + shapedEmbellishedNonIntegralGraphs
 
         setIdentifiers(copy)
         copy.setThingMeta(document.getCompleteId())
@@ -669,7 +622,7 @@ class ElasticSearch {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard[IDS] = collectRecordIds(originalGraph, embellishedGraph, integralIds)
+        searchCard[IDS] = collectRecordIds(originalGraph, embellishedIntegralGraphs)
 
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
@@ -786,9 +739,8 @@ class ElasticSearch {
         return FLATTENED_LANG_MAP_PREFIX + key
     }
 
-    private static Set<String> collectRecordIds(List originalGraph, List embellishedGraph, Collection<String> integralIds) {
-        var records = originalGraph.take(1) + embellishedGraph.findAll { ((String) DocumentUtil.getAtPath(it, Document.thingIdPath2)) in integralIds }
-                .collect { DocumentUtil.getAtPath(it, Document.recordPath) }
+    private static Set<String> collectRecordIds(List originalGraph, List embellishedIntegralGraphs) {
+        var records = originalGraph.take(1) + embellishedIntegralGraphs.collect { DocumentUtil.getAtPath(it, Document.recordPath) }
 
         Set ids = [] as Set
 
@@ -860,62 +812,92 @@ class ElasticSearch {
                 .toSet()
     }
 
-    @CompileStatic
-    private static Map getShapeForEmbellishment(FresnelUtil fresnelUtil, Map embellishData, Set<String> integralIds, Closure restoreCategoryByCollection) {
-        List graph = ((List) embellishData[GRAPH_KEY])
-        if (graph) {
-            Map record = (Map) graph[0]
-            Map thing = (Map) graph[1]
+
+    private static List shapeIntegralThings(FresnelUtil fresnelUtil, List graphs) {
+        var lensedBatch = batchToSearchCard(fresnelUtil, toLensReadyForm(graphs), collectCategoryLinks(graphs))
+        var shapedThings = lensedBatch.lensedThings()
+        shapedThings.each(lensedBatch::restoreLinks)
+        return restoreGraphForm(shapedThings, graphs)
+    }
+
+    private static List shapeNonIntegralThings(FresnelUtil fresnelUtil, List graphs) {
+        graphs = embedFakeIntegralThings(graphs) //FIXME
+        var lensedBatch = batchToSearchChip(fresnelUtil, toLensReadyForm(graphs), [])
+        return restoreGraphForm(lensedBatch.lensedThings(), graphs)
+    }
+
+    private static List toLensReadyForm(List graphs) {
+        return graphs.collect {
+            Map record = (Map) DocumentUtil.getAtPath(it, Document.recordPath)
+            Map thing = (Map) DocumentUtil.getAtPath(it, Document.thingPath)
             thing[RECORD_KEY] = record
-            Map<String, Object> shapedThing = integralIds.contains(thing[ID_KEY])
-                    ? toSearchCard(fresnelUtil, thing) // Do we really want the full search card here?
-                    : toSearchChip(fresnelUtil, thing)
-            Map shapedRecord = minimalRecord(record) + ((Map) shapedThing.remove(RECORD_KEY) ?: [:])
-            List shapedGraph = [shapedRecord, shapedThing]
-            if (integralIds.contains(thing[ID_KEY]) && restoreCategoryByCollection) {
-                restoreCategoryByCollection(shapedGraph, graph)
-            }
-            embellishData[GRAPH_KEY] = shapedGraph
-
+            thing
         }
-        return embellishData
+    }
+
+    private static List restoreGraphForm(List shapedThings, List graphs) {
+        assert shapedThings.size() == graphs.size()
+        for (i in 0..<graphs.size()) {
+            var origGraph = graphs[i]
+            var origRecord = (Map) DocumentUtil.getAtPath(origGraph, Document.recordPath)
+            var shapedThing = (Map) shapedThings[i]
+            var shapedRecord = minimalRecord(origRecord) + ((Map) shapedThing.remove(RECORD_KEY) ?: [:])
+            List shapedGraph = [shapedRecord, shapedThing]
+            origGraph[GRAPH_KEY] = shapedGraph
+        }
+        return graphs
+    }
+
+    private static Set<String> collectCategoryLinks(List graphs) {
+        Set<String> categoryLinks = [] as Set
+        graphs.each {
+            var categoryByCollection = (Map) DocumentUtil.getAtPath(it, [GRAPH_KEY, 1, CATEGORY_BY_COLLECTION], [:])
+            categoryByCollection.values().flatten().each {category ->
+                var id = category[ID_KEY]
+                if (id) {
+                    categoryLinks.add(id)
+                }
+            }
+        }
+        return categoryLinks
+    }
+
+    //FIXME
+    private static List embedFakeIntegralThings(List graphs) {
+        graphs.each { graph ->
+            def thing = DocumentUtil.getAtPath(graph, Document.thingPath, [:])
+            if (thing[TYPE_KEY] == 'Item') {
+                DocumentUtil.findKey(thing, Embellisher.FAKE_INTEGRAL_RELATIONS) { value, path ->
+                    asList(value).each { v ->
+                        if (v instanceof Map && JsonLd.isLink(v)) {
+                            graphs.find { DocumentUtil.getAtPath(it, Document.thingIdPath2) == v[ID_KEY] }
+                                    ?.with {
+                                        def fakeIntegralThing = (Map) DocumentUtil.getAtPath(it, Document.thingPath, [:])
+                                        ((Map) v).putAll(fakeIntegralThing)
+                                    }
+                        }
+                    }
+                    return new DocumentUtil.Nop()
+                }
+            }
+        }
+        return graphs
     }
 
     @CompileStatic
-    private static Map<String, Object> toSearchChip(FresnelUtil fresnelUtil, Map thing) {
-        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CHIP)
+    private static FresnelUtil.LensMappingBatch batchToSearchChip(FresnelUtil fresnelUtil, List<Map<String, Object>> things, Collection<String> preserveLinks) {
+        return fresnelUtil.mapBatchThroughLens(things, FresnelUtil.Lenses.SEARCH_CHIP, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks)
     }
 
-    @CompileStatic
-    private static Map<String, Object> toSearchCard(FresnelUtil fresnelUtil, Map thing) {
-        return mapThroughLensForIndex(fresnelUtil, thing, FresnelUtil.Lenses.SEARCH_CARD)
-    }
 
     @CompileStatic
-    private static Map<String, Object> mapThroughLensForIndex(FresnelUtil fresnelUtil, Map thing, Lens lens) {
-        return fresnelUtil.mapThroughLens(thing, lens, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], [])
-    }
-
-    @CompileStatic
-    private static FresnelUtil.LensMappingBatch batchToSearchCard(FresnelUtil fresnelUtil, List<Map<String, Object>> thing, Collection<String> preserveLinks) {
-        return fresnelUtil.mapBatchThroughLens(thing, FresnelUtil.Lenses.SEARCH_CARD, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks)
+    private static FresnelUtil.LensMappingBatch batchToSearchCard(FresnelUtil fresnelUtil, List<Map<String, Object>> things, Collection<String> preserveLinks) {
+        return fresnelUtil.mapBatchThroughLens(things, FresnelUtil.Lenses.SEARCH_CARD, [TAKE_ALL_ALTERNATE, SKIP_MAP_VOCAB_TERMS], preserveLinks)
     }
 
     @CompileStatic
     private static Map minimalRecord(Map record) {
         return record.subMap([ID_KEY, TYPE_KEY, THING_KEY])
-    }
-
-    private static Set<String> collectCategoryLinks(List graph) {
-        return [[1], [1, JsonLd.WORK_KEY]].collect { path ->
-                    ["find", "identify", "@none"].collect {collection ->
-                        DocumentUtil.getAtPath(DocumentUtil.getAtPath(graph, path, [:]),
-                                [CATEGORY_BY_COLLECTION, collection, '*', JsonLd.ID_KEY],
-                                [])
-                    }
-                }
-                .flatten()
-                .toSet()
     }
 
     private static setIdentifiers(Document doc) {
