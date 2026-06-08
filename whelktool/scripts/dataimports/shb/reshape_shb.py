@@ -3,14 +3,17 @@ import json
 import re
 import sys
 from pathlib import Path
+from collections import Counter
 
-USE_ANNOT = True
+USE_ANNOT = False
 
+property_counts = Counter()
+subject_counts = Counter()
 
 def convert(data, biblios: dict, subject_mappings) -> dict | None:
     graph = data['@graph']
     rec, thing, *rest = graph
-
+    
     if 'bibliography' in rec:
         rec['bibliography'] = [{'@id': it['@id']} for it in rec['bibliography']]
 
@@ -137,7 +140,8 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
                 if USE_ANNOT:
                     issue["@annotation"] = {"comment": prest}
                 else:
-                    raise NotImplementedError  # TODO
+                    print(prest)
+                    #raise NotImplementedError  # TODO
 
             thing['partOf'] = issue
 
@@ -149,12 +153,17 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
         if rownummap := subject_mappings.get(years_key):
             if subjectrefs := rownummap.get(partnum):  # TODO: opt + 'a' ...
                 work_subjects = work.setdefault('subject', [])
+
                 work_subjects += [{'@id': s} for s in subjectrefs]
+                subject_counts.update(subjectrefs)
+
                 if USE_ANNOT and iri:
                     for s in work_subjects:
                         s['@annotation'] = {"source": source}
             # else:
             #    print(f"{partnum} not in {list(rownummap)} for {years_key}", file=sys.stderr)
+
+    property_counts.update(walk_keys(thing))
 
     return {'@id': graph[0]['@id'], '@graph': data}
 
@@ -347,6 +356,13 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
                     rownummap[f"{startnum}+"] = subjects
 
 
+def walk_keys(obj, prefix=""):
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            path = f"{prefix}.{key}" if prefix else key
+            yield path
+            yield from walk_keys(value, path)
+
 if __name__ == '__main__':
     import argparse
 
@@ -354,7 +370,8 @@ if __name__ == '__main__':
     argp.add_argument('-t', '--test', action='store_true', default=False)
     argp.add_argument('--sample-pretty-with')
     argp.add_argument('infile')
-    argp.add_argument('subject_mapping_sheets', nargs='*')
+    argp.add_argument('subject_mapping_sheets')
+    argp.add_argument('reportfile')
     args = argp.parse_args()
 
     if args.test:
@@ -363,7 +380,12 @@ if __name__ == '__main__':
         doctest.testmod()
         sys.exit(0)
 
-    subject_mappings = make_subject_mappings(args.subject_mapping_sheets)
+    subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
+
+    if not subject_files:
+        raise FileNotFoundError("No CSV files found")
+    
+    subject_mappings = make_subject_mappings(subject_files)
 
     biblios: dict = {}
 
@@ -374,3 +396,20 @@ if __name__ == '__main__':
         for l in f:
             if data := convert(json.loads(l), biblios, subject_mappings):
                 print(json.dumps(data, ensure_ascii=False))
+    
+    with open(args.reportfile, "w", encoding="utf-8") as f:
+        f.write("# Egenskaper\n\n")
+        f.write("| Egenskap | Antal |\n")
+        f.write("|----------|-------:|\n")
+
+        for prop, count in property_counts.most_common():
+            f.write(f"| {prop} | {count} |\n")
+
+        f.write("\n\n")
+
+        f.write("# Ämnesord\n\n")
+        f.write("| Ämne | Antal |\n")
+        f.write("|----------|-------:|\n")
+
+        for subject, count in subject_counts.most_common():
+            f.write(f"| {subject} | {count} |\n")
