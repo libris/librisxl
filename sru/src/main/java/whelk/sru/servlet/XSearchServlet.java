@@ -244,8 +244,20 @@ public class XSearchServlet extends WhelkHttpServlet {
                 paramsAsIfSearch.put("_sort", new String[]{ sort });
             }
 
+            // FIXME: Get from configuration
+            String freeOnlineFilter = """
+                instanceType:DigitalResource AND (usageAndAccessPolicy.label:gratis
+                OR "associatedMedia.marc:publicNote":"fritt tillgänglig"
+                OR usageAndAccessPolicy:("https://id.kb.se/policy/freely-available"
+                OR "https://id.kb.se/policy/oa/gratis"))
+                """;
+            var filterAliases = List.of(
+                    Map.of("alias", "freeOnline",
+                            "filter", freeOnlineFilter)
+            );
+
             QueryParams qp = new QueryParams(paramsAsIfSearch);
-            AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
+            AppParams ap = new AppParams(Map.of("filterAliases", filterAliases), whelk.getJsonld());
             var results = new Query(qp, ap, resourceLookup, esSettings, whelk).collectResults();
 
             @SuppressWarnings("unchecked")
