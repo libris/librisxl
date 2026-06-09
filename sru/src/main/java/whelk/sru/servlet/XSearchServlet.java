@@ -94,6 +94,8 @@ public class XSearchServlet extends WhelkHttpServlet {
     private final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
+    private static final String appId = "https://libris.kb.se/xsearch";
+
     private static final int DEFAULT_N = 10;
     private static final int MAX_N = 200;
     private static final int DEFAULT_START = 1;
@@ -158,6 +160,7 @@ public class XSearchServlet extends WhelkHttpServlet {
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     ResourceLookup resourceLookup;
     ESSettings esSettings;
+    AppParams appParams;
     Map<Format, Templates> transformers;
 
     @Override
@@ -165,6 +168,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
+        appParams = new AppParams(appId, whelk);
 
         try {
             transformers = Map.of(
@@ -231,11 +235,9 @@ public class XSearchServlet extends WhelkHttpServlet {
         try {
             // TODO handle onr (record ID) here or in search2?
 
-            String instanceOnlyQueryString = "(" + query + ") AND type=Instance";
-
             // This part is a little weird
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
-            String[] q = new String[]{ instanceOnlyQueryString };
+            String[] q = new String[]{ query };
             paramsAsIfSearch.put("_q", q);
             paramsAsIfSearch.put("_stats", new String[]{"false"}); // don't need facets
             paramsAsIfSearch.put("_offset", new String[]{"" + (start - 1)});
@@ -244,21 +246,8 @@ public class XSearchServlet extends WhelkHttpServlet {
                 paramsAsIfSearch.put("_sort", new String[]{ sort });
             }
 
-            // FIXME: Get from configuration
-            String freeOnlineFilter = """
-                instanceType:DigitalResource AND (usageAndAccessPolicy.label:gratis
-                OR "associatedMedia.marc:publicNote":"fritt tillgänglig"
-                OR usageAndAccessPolicy:("https://id.kb.se/policy/freely-available"
-                OR "https://id.kb.se/policy/oa/gratis"))
-                """;
-            var filterAliases = List.of(
-                    Map.of("alias", "freeOnline",
-                            "filter", freeOnlineFilter)
-            );
-
             QueryParams qp = new QueryParams(paramsAsIfSearch);
-            AppParams ap = new AppParams(Map.of("filterAliases", filterAliases), whelk.getJsonld());
-            var results = new Query(qp, ap, resourceLookup, esSettings, whelk).collectResults();
+            var results = new Query(qp, appParams, resourceLookup, esSettings, whelk).collectResults();
 
             @SuppressWarnings("unchecked")
             List<Map<?,?>> items = (List<Map<?,?>>) results.get("items");
