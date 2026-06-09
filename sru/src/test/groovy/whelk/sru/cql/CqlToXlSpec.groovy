@@ -62,7 +62,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("dc.title"=fish OR ("dc.creator"=sanderson AND "dc.identifier"=id:1234567)) AND type=Instance'
+        translatedXlQuery == '("dc.title"=fish OR ("dc.creator"=sanderson AND "dc.identifier"=id\\:1234567)) AND type=Instance'
     }
 
     def "example query 2, ignore prefix assignments"() {
@@ -122,7 +122,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(nånting:) AND type=Instance'
+        translatedXlQuery == '(nånting\\:) AND type=Instance'
     }
 
     def "+"() {
@@ -152,8 +152,20 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(title:subtitle) AND type=Instance'
+        translatedXlQuery == '(title\\:subtitle) AND type=Instance'
     }
+
+    def "':' in qutoed string"() {
+        given:
+        String cqlQuery = '((z3950.1003 = "Lidbeck, Lasse") and (z3950.7 = "9129652634*")) and (z3950.4 = "Kungar och drottningar i Sverige :") sortBy libris.rank'
+
+        String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
+
+        expect:
+        translatedXlQuery == '(("z3950.1003"=lidbeck, lasse AND "z3950.7"=9129652634*) AND "z3950.4"=kungar och drottningar i sverige \\:) AND type=Instance'
+    }
+
+    //
 
     def "tutorial example"() {
         given:

@@ -21,6 +21,8 @@ public class Phase2 {
                 // Turns for example "OCH" into "och" (the latter is not a xlql keyword). Case on search is irrelevant in xlql anyway.
                 str = str.toLowerCase();
 
+                str = str.replaceAll(":", "\\\\:");
+
                 return str;
             }
             default -> {
@@ -62,6 +64,8 @@ public class Phase2 {
 
         // Turns for example "OCH" into "och" (the latter is not a xlql keyword). Case on search is irrelevant in xlql anyway.
         searchTerm = searchTerm.toLowerCase();
+
+        searchTerm = searchTerm.replaceAll(":", "\\\\:");
 
         if (searchClause.relation() == null) { // no relation also implies no index. It's just searchTerm alone.
             return " " + searchTerm;
