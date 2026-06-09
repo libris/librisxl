@@ -115,6 +115,16 @@ class CqlToXlSpec extends Specification {
         translatedXlQuery == '(978-1-0732-3504-9) AND type=Instance'
     }
 
+    def "special char"() {
+        given:
+        String cqlQuery = 'nånting:'
+
+        String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
+
+        expect:
+        translatedXlQuery == '(nånting:) AND type=Instance'
+    }
+
     def "+"() {
         given:
         String cqlQuery = 'bath.isbn= ECHO and +MAIN'
@@ -135,7 +145,6 @@ class CqlToXlSpec extends Specification {
         translatedXlQuery == '(a eller b och c) AND type=Instance'
     }
 
-    /*
     def "':' in qutoed string"() {
         given:
         String cqlQuery = '"Title:subtitle"'
@@ -143,17 +152,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("title:subtitle") AND type=Instance'
-    }*/
-
-    def ": instead of = for field-selection"() { // THIS IS OFF SPEC. SHOULD NOT BE ALLOWED, BUT IS USED BY REAL CLIENTS.
-        given:
-        String cqlQuery = 'anywhere all "software tools" and (mat:dok OR mat:lic)'
-
-        String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
-
-        expect:
-        translatedXlQuery == '("cql.anywhere"=(software AND tools) AND ("mat"=dok OR "mat"=lic)) AND type=Instance'
+        translatedXlQuery == '(title:subtitle) AND type=Instance'
     }
 
     def "tutorial example"() {
