@@ -12,7 +12,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(aaa) AND type=Instance'
+        translatedXlQuery == 'aaa'
     }
 
     def "CQL has left-to-right precedence"() {
@@ -22,7 +22,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '((a OR b) AND c) AND type=Instance'
+        translatedXlQuery == '((a OR b) AND c)'
     }
 
     def "CQL has left-to-right precedence2"() {
@@ -32,7 +32,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '((a AND b) OR c) AND type=Instance'
+        translatedXlQuery == '((a AND b) OR c)'
     }
 
     def "Group bonanza"() {
@@ -42,7 +42,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '((a AND (b OR c)) AND d) AND type=Instance'
+        translatedXlQuery == '((a AND (b OR c)) AND d)'
     }
 
     def "any & all"() {
@@ -52,7 +52,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("field1"=(a OR b OR c) OR "field2"=(c AND d AND e)) AND type=Instance'
+        translatedXlQuery == '("field1"=(a OR b OR c) OR "field2"=(c AND d AND e))'
     }
 
     def "example query 1"() {
@@ -62,7 +62,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("dc.title"=fish OR ("dc.creator"=sanderson AND "dc.identifier"=id\\:1234567)) AND type=Instance'
+        translatedXlQuery == '("dc.title"=fish OR ("dc.creator"=sanderson AND "dc.identifier"=id\\:1234567))'
     }
 
     def "example query 2, ignore prefix assignments"() {
@@ -72,7 +72,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("dc.title"=fish) AND type=Instance'
+        translatedXlQuery == '"dc.title"=fish'
     }
 
     def "example query 3, ignore relation modifiers"() {
@@ -82,7 +82,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("dc.title"=fish) AND type=Instance'
+        translatedXlQuery == '"dc.title"=fish'
     }
 
     def "example query 4, prox is and"() {
@@ -92,7 +92,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("dc.title"=fish AND "dc.title"=squirrel) AND type=Instance'
+        translatedXlQuery == '("dc.title"=fish AND "dc.title"=squirrel)'
     }
 
     def "example query 5, ignore sort"() {
@@ -102,7 +102,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(dinosaur) AND type=Instance'
+        translatedXlQuery == 'dinosaur'
     }
 
     def "hyphens"() {
@@ -112,7 +112,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(978-1-0732-3504-9) AND type=Instance'
+        translatedXlQuery == '978-1-0732-3504-9'
     }
 
     def "special char"() {
@@ -122,7 +122,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(nånting\\:) AND type=Instance'
+        translatedXlQuery == 'nånting\\:'
     }
 
     def "+"() {
@@ -132,7 +132,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("bath.isbn"=echo AND +main) AND type=Instance'
+        translatedXlQuery == '("bath.isbn"=echo AND +main)'
     }
 
     def "xlql keywords"() {
@@ -142,7 +142,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(a eller b och c) AND type=Instance'
+        translatedXlQuery == 'a eller b och c'
     }
 
     def "':' in qutoed string"() {
@@ -152,7 +152,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(title\\:subtitle) AND type=Instance'
+        translatedXlQuery == 'title\\:subtitle'
     }
 
     def "':' in qutoed string"() {
@@ -162,7 +162,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '(("z3950.1003"=lidbeck, lasse AND "z3950.7"=9129652634*) AND "z3950.4"=kungar och drottningar i sverige \\:) AND type=Instance'
+        translatedXlQuery == '(("z3950.1003"=lidbeck, lasse AND "z3950.7"=9129652634*) AND "z3950.4"=kungar och drottningar i sverige \\:)'
     }
 
     //
@@ -174,7 +174,7 @@ class CqlToXlSpec extends Specification {
         String translatedXlQuery = Translation.translateCqlToXlQuery(cqlQuery)
 
         expect:
-        translatedXlQuery == '("x.title"=dinosaur AND "aVerySillyLongPrefix.author"=farlow) AND type=Instance'
+        translatedXlQuery == '("x.title"=dinosaur AND "aVerySillyLongPrefix.author"=farlow)'
     }
 
     def "failed parse"() {
