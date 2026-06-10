@@ -14,21 +14,21 @@ public class Phase2 {
                 return flatten(bg);
             }
             case String s -> {
-
-                String str = s;
-                if (str.startsWith("\"") && str.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
-                    str = str.substring(1, str.length()-1);
-                // Turns for example "OCH" into "och" (the latter is not a xlql keyword). Case on search is irrelevant in xlql anyway.
-                str = str.toLowerCase();
-
-                str = str.replaceAll(":", "\\\\:");
-
-                return str;
+                return scrubXlQlString(s);
             }
             default -> {
                 return null;
             }
         }
+    }
+
+    /**
+     All 'strings' passed along as part of an XLQL query must be quoted and stripped of internal '\' and '"' chars (so there can be no escape from the quote).
+     */
+    private static String scrubXlQlString(String str) {
+        str = str.replace('\\', ' ');
+        str = str.replace('"', ' ');
+        return "\"" + str.toLowerCase().trim() + "\"";
     }
 
     private static String flatten(Phase1.AstScopedClause scopedClause) {
@@ -58,17 +58,10 @@ public class Phase2 {
     private static String flatten(Phase1.AstSearchClause searchClause) {
         // index, term, relation
 
-        String searchTerm = searchClause.term();
-        if (searchTerm.startsWith("\"") && searchTerm.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
-            searchTerm = searchTerm.substring(1, searchTerm.length()-1);
-
-        // Turns for example "OCH" into "och" (the latter is not a xlql keyword). Case on search is irrelevant in xlql anyway.
-        searchTerm = searchTerm.toLowerCase();
-
-        searchTerm = searchTerm.replaceAll(":", "\\\\:");
+        String searchTerm = scrubXlQlString(searchClause.term());
 
         if (searchClause.relation() == null) { // no relation also implies no index. It's just searchTerm alone.
-            return " " + searchTerm;
+            return " \"" + searchTerm + "\n";
         }
 
         Phase1.AstRelation relation = searchClause.relation();
@@ -77,12 +70,12 @@ public class Phase2 {
             // "any" means we're searching for any of the words in the searchTerm. So 'any "a b"' means (a or b)
             String[] parts = searchTerm.split("\\s+");
             if (parts.length > 1)
-                searchTerm = "(" + String.join(" OR ", parts) + ")";
+                searchTerm = "(" + String.join("\" OR \"", parts) + ")";
         } else if (relation.comparitor().equals("all")) {
             // "all" means we're searching for all of the words in the searchTerm. So 'all "a b"' means (a and b)
             String[] parts = searchTerm.split("\\s+");
             if (parts.length > 1)
-                searchTerm = "(" + String.join(" AND ", parts) + ")";
+                searchTerm = "(" + String.join("\" AND \"", parts) + ")";
         }
 
         String index = searchClause.index();
