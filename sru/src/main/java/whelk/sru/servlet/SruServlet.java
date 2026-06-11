@@ -38,10 +38,13 @@ public class SruServlet extends WhelkHttpServlet {
 
     private static final List<String> SUPPORTED_VERSIONS = List.of("1.0", "1.1", "1.2");
 
+    private static final String appId = "https://libris.kb.se/sru/libris";
+
     JsonLD2MarcXMLConverter converter;
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     ResourceLookup resourceLookup;
     ESSettings esSettings;
+    AppParams appParams;
 
     String explain = loadResource("explain.xml");
     ExportProfile marcExportProfile;
@@ -51,6 +54,7 @@ public class SruServlet extends WhelkHttpServlet {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
+        appParams = new AppParams(appId, whelk);
 
         Properties marcProperties = new Properties();
         marcExportProfile = new ExportProfile(marcProperties);
@@ -127,8 +131,7 @@ public class SruServlet extends WhelkHttpServlet {
             paramsAsIfSearch.put("_limit", new String[] {"" + maximumRecords});
 
             QueryParams qp = new QueryParams(paramsAsIfSearch);
-            AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
-            Query query = new Query(qp, ap, resourceLookup, esSettings, whelk);
+            Query query = new Query(qp, appParams, resourceLookup, esSettings, whelk);
             results = query.collectResults();
         } catch (InvalidQueryException | ParseCancellationException e) {
             logger.info("Bad query: \"" + parameters.get("query")[0] + "\" -> " + e.getMessage());
