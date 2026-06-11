@@ -11,6 +11,11 @@ property_counts = Counter()
 subject_counts = Counter()
 
 def convert(data, biblios: dict, subject_mappings) -> dict | None:
+
+    # Set start_year and publ_year to None
+    start_year: str | None = None
+    publ_year: str | None = None
+
     graph = data['@graph']
     rec, thing, *rest = graph
     
@@ -20,6 +25,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     del rec['marc:catalogingSource']  # "Annan verksamhet"
     #del rec['marc:typeOfControl']
 
+    # Extract work data from the graph and place in instanceOf
     if rest:
         work = rest[0]
         assert work['@id'].endswith('#work')
@@ -30,12 +36,9 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
 
     thing['instanceOf'] = work
 
-    startyear: str | None = None
-    publ_year: str | None = None
-
     if 'marc:primaryProvisionActivity' in thing and 'publication' in thing:
         publ = thing['publication'][0]
-        startyear = publ.get('startYear')
+        start_year = publ.get('startYear')
         publ_year = publ.get('endYear') or publ.get('year')
         if publ_year == thing['marc:primaryProvisionActivity']['year']:
             del thing['marc:primaryProvisionActivity']
@@ -44,6 +47,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     iri: str | None = None
     source: dict | None = None
 
+    # Try to link local entities
     if hosts := thing.pop('isPartOf'):
         assert len(hosts) == 1
         host = hosts[0]
@@ -102,6 +106,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
                         rec.setdefault('_statementBy', {})['bibliography'] = annot
                     break
 
+    # Extract name, title, and subtitle from note
     if 'hasNote' in thing:
         assert len(thing['hasNote']) == 1
         note = thing.pop('hasNote')[0]['label']
@@ -111,24 +116,27 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
         if note == 'TABORT':
             return None
 
-        PARTOFMARK = ' - I:'
-        if PARTOFMARK in note:
-            note, partofnote = note.split(PARTOFMARK, 1)
+        PARTOF_MARK = ' - I:'
+        if PARTOF_MARK in note:
+            note, partof_note = note.split(PARTOF_MARK, 1)
         else:
-            partofnote = None
+            partof_note = None
 
-        name, title, subtitle, rest = parse_note(note)
-
+        name, title, subtitle, note_rest = parse_note(note)
+                
         thing['hasTitle'] = {"@type": "Title", "mainTitle": title}
+        
         if subtitle:
             thing['hasTitle']['subtitle'] = subtitle
 
-        thing['responsibilityStatement'] = name
-        if rest:
-            thing['hasNote'] = [{"@type": "Note", "label": rest}]
+        if name:
+            thing['responsibilityStatement'] = name
+        
+        if note_rest:
+            thing['hasNote'] = [{"@type": "Note", "label": note_rest}]
 
-        if partofnote:
-            pname, ptitle, subtitle, prest = parse_note(partofnote, dotnote=False)
+        if partof_note:
+            pname, ptitle, subtitle, prest = parse_note(partof_note, dotnote=False)
             # assert not subtitle
             issue = {
                 "@type": "Issue",
@@ -140,7 +148,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
                 if USE_ANNOT:
                     issue["@annotation"] = {"comment": prest}
                 else:
-                    print(prest)
+                    pass
                     #raise NotImplementedError  # TODO
 
             thing['partOf'] = issue
@@ -148,8 +156,10 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
         # TODO: remove 'ComponentPart', only re-add for obviously paginated,
         # partOf:s and/or "newspaper reference"?
 
+    # Add subjects
+    # TODO Add SAB as well?
     if partnum and publ_year:
-        years_key = f'{startyear}-{publ_year}' if startyear else publ_year
+        years_key = f'{start_year}-{publ_year}' if start_year else publ_year
         if rownummap := subject_mappings.get(years_key):
             if subjectrefs := rownummap.get(partnum):  # TODO: opt + 'a' ...
                 work_subjects = work.setdefault('subject', [])
@@ -381,7 +391,6 @@ if __name__ == '__main__':
         sys.exit(0)
 
     subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
-
     if not subject_files:
         raise FileNotFoundError("No CSV files found")
     
