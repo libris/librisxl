@@ -131,8 +131,8 @@ public class QueryTreeBuilder {
         selector = disambiguate.mapQueryKey(getToken(c.code()));
         return selector.isValid()
                 ? buildTree(c.operand(), disambiguate, selector, c.operator(), q)
-                : LegacyCodes.isQueryCode(c, selector)
-                    ? LegacyCodes.build(c, disambiguate, selector)
+                : LegacyCodes.isQueryCode(c)
+                    ? LegacyCodes.build(c, disambiguate)
                     : asFreeText(c, q, disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
     }
 
@@ -275,16 +275,16 @@ public class QueryTreeBuilder {
         static final String INTEGRATING = "workType:Integrating";
         static final String DIGITAL = "instanceType:DigitalResource";
 
-        static boolean isQueryCode(Ast.Code c, Selector selector) {
+        static boolean isQueryCode(Ast.Code c) {
             if (c.operator() != Operator.EQUALS) {
                 return false;
             }
 
-            return LegacyCode.fromString(selector.queryKey()) != null;
+            return LegacyCode.fromString(c.code().value()) != null;
         }
 
-        static Node build(Ast.Code c, Disambiguate disambiguate, Selector selector) throws InvalidQueryException {
-            var code = LegacyCode.fromString(selector.queryKey());
+        static Node build(Ast.Code c, Disambiguate disambiguate) throws InvalidQueryException {
+            var code = LegacyCode.fromString(c.code().value());
 
             return switch (c.operand()) {
                 // webbsök treats mat:(barn skol) as barn OR skol
