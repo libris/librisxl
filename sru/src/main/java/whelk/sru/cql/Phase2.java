@@ -1,5 +1,7 @@
 package whelk.sru.cql;
 
+import static whelk.search2.parse.Lex.reservedCharsInString;
+
 public class Phase2 {
     public static String flatten(Object ast) {
         switch (ast) {
@@ -22,13 +24,15 @@ public class Phase2 {
         }
     }
 
-    /**
-     All 'strings' passed along as part of an XLQL query must be quoted and stripped of internal '\' and '"' chars (so there can be no escape from the quote).
-     */
     private static String scrubXlQlString(String str) {
+        if (str.startsWith("\"") && str.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
+            str = str.substring(1, str.length()-1);
+
         str = str.replace('\\', ' ');
-        str = str.replace('"', ' ');
-        return "\"" + str.toLowerCase().trim() + "\"";
+        for (Character c : whelk.search2.parse.Lex.reservedCharsInString) {
+            str = str.replace(c, ' ');
+        }
+        return "(" + str.toLowerCase().trim() + ")";
     }
 
     private static String flatten(Phase1.AstScopedClause scopedClause) {
@@ -61,7 +65,7 @@ public class Phase2 {
         String searchTerm = scrubXlQlString(searchClause.term());
 
         if (searchClause.relation() == null) { // no relation also implies no index. It's just searchTerm alone.
-            return " \"" + searchTerm + "\n";
+            return " (" + searchTerm + ")";
         }
 
         Phase1.AstRelation relation = searchClause.relation();
@@ -70,12 +74,12 @@ public class Phase2 {
             // "any" means we're searching for any of the words in the searchTerm. So 'any "a b"' means (a or b)
             String[] parts = searchTerm.split("\\s+");
             if (parts.length > 1)
-                searchTerm = "(" + String.join("\" OR \"", parts) + ")";
+                searchTerm = "(" + String.join(") OR (", parts) + ")";
         } else if (relation.comparitor().equals("all")) {
             // "all" means we're searching for all of the words in the searchTerm. So 'all "a b"' means (a and b)
             String[] parts = searchTerm.split("\\s+");
             if (parts.length > 1)
-                searchTerm = "(" + String.join("\" AND \"", parts) + ")";
+                searchTerm = "(" + String.join(") AND (", parts) + ")";
         }
 
         String index = searchClause.index();
