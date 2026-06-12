@@ -90,6 +90,7 @@ import groovy.transform.Memoized
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import static whelk.JsonLd.TYPE_KEY as TYPE
 
 noMarcGf = getReportWriter("no-marc-gf.txt")
 otherMarcGf = getReportWriter("other-marc-gf.txt")
@@ -104,7 +105,7 @@ println("Using lastRunTimestamp: ${lastRunTimestamp ?: '<NO>'}")
 def where = """
     collection = 'bib'
     AND deleted = 'false'
-    AND data#>>'{@graph,1,@type}' = 'Electronic'
+    AND data#>>'{@graph,1,@type}' = 'DigitalResource'
     AND (
         (data#>>'{@graph,1,supplementTo}' IS NOT NULL OR data#>>'{@graph,1,isPartOf}' IS NOT NULL)
         OR (data#>>'{@graph,1,editionStatement}' IS NOT NULL AND data#>>'{@graph,1,isIssueOfEdition}' IS NULL)
@@ -223,12 +224,10 @@ List tidningSerialThings(String controlNumber) {
 static boolean isTidningSerial(Map thing) {
     def tidningGf = [
             'https://id.kb.se/term/saogf/Dagstidningar',
-            'https://id.kb.se/term/saogf/Periodika',
-            'https://id.kb.se/marc/Newspaper',
-            'https://id.kb.se/marc/Periodical'
+            'https://id.kb.se/term/saogf/Periodika'
     ]
     
-    thing.issuanceType == 'Serial' && getAtPath(thing, ['instanceOf', 'genreForm', '*', '@id'], [])
+    thing.instanceOf.TYPE == 'Serial' && getAtPath(thing, ['instanceOf', 'category', '*', '@id'], [])
             .any { String gf -> gf in tidningGf }
 }
 
@@ -240,11 +239,11 @@ static def controlNumberToId(String controlNumber) {
 }
 
 static boolean isMarcGfIssue(Map thing) {
-    getAtPath(thing, ['instanceOf', 'genreForm', '*', 'prefLabel'], []).any{ it == 'issue'}
+    getAtPath(thing, ['instanceOf', 'category', '*', 'prefLabel'], []).any{ it == 'issue'}
 }
 
 static List<String> marcGf(Map thing) {
-    getAtPath(thing, ['instanceOf', 'genreForm', '*'], []).findAll {
+    getAtPath(thing, ['instanceOf', 'category', '*'], []).findAll {
         getAtPath(it, ['inScheme', '@id']) == 'https://id.kb.se/term/marcgt'
     }.collect{ it.prefLabel }
 }
