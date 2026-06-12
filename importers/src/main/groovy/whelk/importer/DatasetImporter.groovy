@@ -100,7 +100,7 @@ class DatasetImporter {
                 if (ID in sourceRef) {
                     sourceUrl = sourceRef[ID]
                 } else {
-                    String sourcePath = asList(sourceRef['uri'])[0]
+                    String sourcePath = asList(sourceRef['kbv:uri'])[0]
                     sourceUrl = new File(new File(sourceBaseDir), sourcePath).toString()
                 }
                 assert sourceUrl
