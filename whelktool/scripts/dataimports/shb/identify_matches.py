@@ -68,6 +68,8 @@ argp.add_argument("libris_file")
 argp.add_argument("shbd_file")
 args = argp.parse_args()
 
+good_matches = []
+
 # Create a simple dictionary of minimal match records from Libris
 with open(args.libris_file) as lf:
     libris_prepepd_list: list = []
@@ -76,11 +78,25 @@ with open(args.libris_file) as lf:
         libris_prepepd_list.append(prepare(libris_instance))
 
 with open(args.shbd_file) as sf:
-    for line in sf:
+    for idx, line in enumerate(sf):
+        matches = {}
+
+        if idx % 500 == 0:
+            print(f"Processing row {idx}")
+
         shbd_instance = json.loads(line)
         shbd_prepepd = prepare(shbd_instance)
 
         for libris_prepped in libris_prepepd_list:
             score = compare(libris_prepped, shbd_prepepd)
-            if score == 1:
-                print(f"{shbd_instance['@id']} <-> {libris_prepped['@id']}   {score}")
+            if score > 0.9:
+                matches[shbd_instance['@id']] = libris_prepped['@id']
+        
+        if len(matches) == 1:
+            good_matches.append(good_matches)
+        elif len(matches) > 1:
+            print(f"Too many matches for {shbd_instance['@id']}: {matches}")
+        else:
+            print(f"No matches for {shbd_instance['@id']}: {matches}")
+
+    print(good_matches)
