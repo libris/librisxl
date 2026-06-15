@@ -34,8 +34,8 @@ class SparqlReindex {
                         .setMaxConnPerRoute(poolSize)
                         .setDefaultConnectionConfig(
                                 ConnectionConfig.custom()
-                                        .setConnectTimeout(Timeout.ofMilliseconds(5000))
-                                        .setSocketTimeout(Timeout.ofMilliseconds(5000))
+                                        .setConnectTimeout(Timeout.ofMilliseconds(20 * 1000))
+                                        .setSocketTimeout(Timeout.ofMilliseconds(10 * 1000))
                                         .setTimeToLive(TimeValue.ofMinutes(10))
                                         .build()
                         )
@@ -55,15 +55,17 @@ class SparqlReindex {
         var config = PropertyLoader.loadProperties("secret", "sparql");
         var sparqlCrud = newSparqlCrud(whelk, config);
 
+        int[] counter = { 0 };
         for (var arg : args) {
             var fpath = Paths.get(arg);
             System.out.println("Reading IDs from: " + arg);
             try (var linestream = Files.lines(fpath)) {
+                counter[0]++;
                 linestream.forEachOrdered(line -> {
                     var id = line.replaceAll("^<.*?([^/]+)>$", "$1");
                     var doc = whelk.getDocument(id);
                     if (doc != null) {
-                        System.out.println("Insert named graph from <" + id + ">...");
+                        System.out.println("[" + counter[0] + "] Insert named graph from <" + id + ">...");
                         sparqlCrud.insertNamedGraph(doc);
                     }
                 });
