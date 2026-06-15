@@ -6,6 +6,9 @@ SYSTEM PARAMETERS:
     If given, a timestamp of this run is saved in this file, and used to only
     select new records on the next run.
 
+    Example:
+    2026-01-12T17:28:59.17107+02:00
+
 ****************************************************************************************
 
 PURPOSE: Clean up newspaper (dagstidningar + tidskrifter) shapes.
