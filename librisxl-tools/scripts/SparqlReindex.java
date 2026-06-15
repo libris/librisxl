@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
@@ -55,17 +56,16 @@ class SparqlReindex {
         var config = PropertyLoader.loadProperties("secret", "sparql");
         var sparqlCrud = newSparqlCrud(whelk, config);
 
-        int[] counter = { 0 };
+        var counter = new AtomicInteger(1);
         for (var arg : args) {
             var fpath = Paths.get(arg);
             System.out.println("Reading IDs from: " + arg);
             try (var linestream = Files.lines(fpath)) {
-                counter[0]++;
                 linestream.forEachOrdered(line -> {
                     var id = line.replaceAll("^<.*?([^/]+)>$", "$1");
                     var doc = whelk.getDocument(id);
                     if (doc != null) {
-                        System.out.println("[" + counter[0] + "] Insert named graph from <" + id + ">...");
+                        System.out.println("[" + counter.getAndIncrement() + "] Insert named graph from <" + id + ">...");
                         sparqlCrud.insertNamedGraph(doc);
                     }
                 });
