@@ -134,13 +134,17 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
         
         if note_rest:
             thing['hasNote'] = [{"@type": "Note", "label": note_rest}]
+            issn = extract_issn(note_rest)
+            if issn:
+                thing['issn'] = issn
 
         if partof_note:
             pname, ptitle, subtitle, prest = parse_note(partof_note, dotnote=False)
             # assert not subtitle
+            # TODO Deceide whether the thing in partOf is issue or series
             issue = {
-                "@type": "Issue",
-                "label": ptitle,
+                "@type": "Instance",
+                "label": ptitle
             }
             if pname:
                 issue["responsibilityStatement"] = pname
@@ -150,6 +154,13 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
                 else:
                     pass
                     #raise NotImplementedError  # TODO
+            if ptitle:
+                part_issn = extract_issn(ptitle)
+                if part_issn:
+                    issue["identifiedBy"] = {
+                    "@type": "ISSN",
+                    "value": part_issn
+                }
 
             thing['partOf'] = issue
 
@@ -365,6 +376,33 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
                 else:
                     rownummap[f"{startnum}+"] = subjects
 
+def extract_issn(value):
+    ISSN_PATTERN = re.compile(r'\d{4}-\d{3}[\dX]')
+
+    issn = re.findall(ISSN_PATTERN, value)
+
+    if len(issn) == 1 and valid_issn(issn[0]):
+        return issn[0]
+
+def valid_issn(issn):
+    digits = issn.replace("-", "")
+
+    total = sum(
+        int(digits[i]) * (8 - i)
+        for i in range(7)
+    )
+
+    remainder = total % 11
+    check = 11 - remainder
+
+    if check == 10:
+        expected = "X"
+    elif check == 11:
+        expected = "0"
+    else:
+        expected = str(check)
+
+    return digits[-1] == expected
 
 def walk_keys(obj, prefix=""):
     if isinstance(obj, dict):
