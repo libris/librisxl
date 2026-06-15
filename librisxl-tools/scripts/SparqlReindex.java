@@ -19,11 +19,11 @@ import whelk.util.PropertyLoader;
  * `<rb7qd7m8p21dc3vt>`) are supported. Note that the base IRI for full IDs is
  * stripped, so ID dumps can be reused across different environments.
  *
- * The tool requires the regular Java system variable `xl.secret.properties`
- * set to the appropriate XL environment; additionally containing values for
- * `sparqlCrudUrl`, `sparqlUser`, and `sparqlPass`, plus a recommended
- * `sparqlEnabled = false` to prevent the instantiated whelk from starting a
- * SparqlUpdater.
+ * The tool requires two properties files to be referenced (may be the same
+ * file) using the Java system property names `xl.secret.properties` and
+ * `xl.sparql.properties`. The properties `sparqlCrudUrl`, `sparqlUser`, and
+ * `sparqlPass` must be defined, and using a separate file for the latter
+ * prevents the SparqlUpdater from starting when the whelk is initialized.
  */
 class SparqlReindex {
 
@@ -52,7 +52,7 @@ class SparqlReindex {
 
     public static void main(String[] args) throws IOException {
         var whelk = Whelk.createLoadedCoreWhelk();
-        var config = PropertyLoader.loadProperties("secret");
+        var config = PropertyLoader.loadProperties("secret", "sparql");
         var sparqlCrud = newSparqlCrud(whelk, config);
 
         for (var arg : args) {
