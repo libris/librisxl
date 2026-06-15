@@ -230,7 +230,7 @@ static boolean isTidningSerial(Map thing) {
             'https://id.kb.se/term/saogf/Periodika'
     ]
     
-    thing.instanceOf.TYPE == 'Serial' && getAtPath(thing, ['instanceOf', 'category', '*', '@id'], [])
+    thing.instanceOf?[TYPE] == 'Serial' && getAtPath(thing, ['instanceOf', 'category', '*', '@id'], [])
             .any { String gf -> gf in tidningGf }
 }
 
