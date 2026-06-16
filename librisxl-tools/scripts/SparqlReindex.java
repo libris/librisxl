@@ -87,7 +87,16 @@ class SparqlReindex {
                     var doc = whelk.getDocument(id);
                     if (doc != null) {
                         System.out.println("[" + at + "] Insert named graph from <" + id + ">...");
-                        sparqlCrud.insertNamedGraph(doc);
+                        int attempts = 0;
+                        while (attempts < 3) {
+                            attempts++;
+                            try {
+                                sparqlCrud.insertNamedGraph(doc);
+                                break;
+                            } catch (Exception e) {
+                                System.out.println("... error:" + e + "; trying again...");
+                            }
+                        }
                     }
                 });
             }
