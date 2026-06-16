@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Properties;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -56,16 +58,35 @@ class SparqlReindex {
         var config = PropertyLoader.loadProperties("secret", "sparql");
         var sparqlCrud = newSparqlCrud(whelk, config);
 
-        var counter = new AtomicInteger(1);
-        for (var arg : args) {
-            var fpath = Paths.get(arg);
-            System.out.println("Reading IDs from: " + arg);
+        var argl = new LinkedList<String>(Arrays.asList(args));
+        var files = new LinkedList<String>();
+        var aFrom = 0;
+
+        while (argl.size() > 0) {
+            var arg = argl.removeFirst();
+            if (arg.equals("--from")) {
+                aFrom = Integer.parseInt(argl.removeFirst());
+            } else {
+                files.add(arg);
+            }
+        }
+
+        final int from = aFrom;
+
+        var counter = new AtomicInteger(0);
+        for (var file : files) {
+            var fpath = Paths.get(file);
+            System.out.println("Reading IDs from: " + file);
             try (var linestream = Files.lines(fpath)) {
                 linestream.forEachOrdered(line -> {
+                    int at = counter.incrementAndGet();
+                    if (at < from) {
+                        return;
+                    }
                     var id = line.replaceAll("^<.*?([^/]+)>$", "$1");
                     var doc = whelk.getDocument(id);
                     if (doc != null) {
-                        System.out.println("[" + counter.getAndIncrement() + "] Insert named graph from <" + id + ">...");
+                        System.out.println("[" + at + "] Insert named graph from <" + id + ">...");
                         sparqlCrud.insertNamedGraph(doc);
                     }
                 });
