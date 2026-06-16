@@ -676,7 +676,7 @@ class ElasticSearch {
                 if (record.containsKey('controlNumber')) {
                     var controlNumber = value['controlNumber']
                     var recordShortId = lastPathSegment((String) record[ID_KEY])
-                    record['_controlNumber'] = controlNumber == recordShortId
+                    record['librissearch:controlNumbers'] = controlNumber == recordShortId
                             ? controlNumber
                             : [controlNumber, recordShortId]
                 }
