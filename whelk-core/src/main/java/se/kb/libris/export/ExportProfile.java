@@ -606,6 +606,8 @@ public class ExportProfile {
         return bibRecord;
     }
 
+
+
     public void decompose(MarcRecord mr) {
         se.kb.libris.util.charcomposer.ComposeUtil.decompose(mr, false);
     }
