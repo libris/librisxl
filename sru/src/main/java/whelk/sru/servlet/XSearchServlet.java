@@ -252,7 +252,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             @SuppressWarnings("unchecked")
             List<Map<?,?>> items = (List<Map<?,?>>) results.get("items");
             int totalItems = (Integer) results.get("totalItems");
-            int to = Math.min(start + n, totalItems);
+            int to = Math.min((start-1) + n, totalItems);
 
             switch (format) {
                 case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, include9xx);
@@ -310,6 +310,8 @@ public class XSearchServlet extends WhelkHttpServlet {
         items.parallelStream()
                 .map(i -> {
                     String systemID = whelk.getStorage().getSystemIdByIri( (String) i.get("@id"));
+                    if (systemID == null)
+                        return null;
                     Document embellished = whelk.loadEmbellished(systemID);
                     var bibXml = (String) converter.convert(embellished.data, embellished.getShortId())
                             .get(JsonLd.NON_JSON_CONTENT_KEY);
@@ -318,10 +320,12 @@ public class XSearchServlet extends WhelkHttpServlet {
 
                     return bibXml;
                 }).forEachOrdered( convertedText -> {
-                    try {
-                        copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
-                    } catch (XMLStreamException e) {
-                        throw new RuntimeException(e);
+                    if (convertedText != null) {
+                        try {
+                            copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
+                        } catch (XMLStreamException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 });
 
