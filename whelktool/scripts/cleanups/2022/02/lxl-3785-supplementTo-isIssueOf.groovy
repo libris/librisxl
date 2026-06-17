@@ -93,7 +93,6 @@ import groovy.transform.Memoized
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import static whelk.JsonLd.TYPE_KEY as TYPE
 
 noMarcGf = getReportWriter("no-marc-gf.txt")
 otherMarcGf = getReportWriter("other-marc-gf.txt")
@@ -230,7 +229,7 @@ static boolean isTidningSerial(Map thing) {
             'https://id.kb.se/term/saogf/Periodika'
     ]
     
-    thing.instanceOf?[TYPE] == 'Serial' && getAtPath(thing, ['instanceOf', 'category', '*', '@id'], [])
+    thing.instanceOf?['@type'] == 'Serial' && getAtPath(thing, ['instanceOf', 'category', '*', '@id'], [])
             .any { String gf -> gf in tidningGf }
 }
 
