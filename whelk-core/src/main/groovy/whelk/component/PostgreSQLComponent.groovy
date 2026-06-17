@@ -205,15 +205,15 @@ class PostgreSQLComponent {
     private static final String LOAD_ALL_DOCUMENTS = """
             SELECT id, data, created, modified, deleted 
             FROM lddb 
-            WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) >= ? 
-              AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ?
+            WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) >= ?
+              AND GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) <= ?
             """.stripIndent()
 
     private static final String LOAD_ALL_DOCUMENTS_BY_COLLECTION = """
             SELECT id, data, created, modified, deleted
             FROM lddb 
-            WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) >= ? 
-              AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ? 
+            WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) >= ?
+              AND GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) <= ?
               AND collection = ? 
               AND deleted = false
             """.stripIndent()
@@ -434,8 +434,8 @@ class PostgreSQLComponent {
     private static final String LOAD_ALL_DOCUMENTS_BY_DATASET = """
             SELECT id, data, created, modified, deleted
             FROM lddb
-            WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) >= ?
-            AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ?
+            WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) >= ?
+            AND GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) <= ?
             AND data#>'{@graph,0,inDataset}' @> ?::jsonb
             AND deleted = false
             """.stripIndent()
