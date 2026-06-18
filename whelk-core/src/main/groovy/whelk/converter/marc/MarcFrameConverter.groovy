@@ -3179,7 +3179,7 @@ class MatchRule {
                     Closure check = null
                     if (comparator == '=~') {
                         def pattern = Pattern.compile(matchValue)
-                        check = codePatterns[code] = { pattern.matcher(it.toString()).matches() }
+                        check = codePatterns[code] = { it != null && pattern.matcher(it.toString()).matches() }
                     } else {
                         check = codePatterns[code] = { it == matchValue }
                     }
