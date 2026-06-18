@@ -162,6 +162,10 @@ class SearchFeed {
     }
 
     String getByLang(Map byLang) {
+        if (byLang == null) {
+            return null
+        }
+
         for (lang in locales) {
             if (lang in byLang) {
                 def o = byLang[lang]

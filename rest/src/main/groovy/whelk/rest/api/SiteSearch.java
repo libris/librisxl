@@ -137,13 +137,24 @@ class SiteSearch {
         } else if (queryParameters.containsKey("_q") || queryParameters.containsKey("_o") || queryParameters.containsKey("_r")) {
             String appId = activeSite.equals(getDefaultSite()) ? "https://beta.libris.kb.se/" : activeSite;
             Map appDesc = getAndIndexDescription(appId);
+            Map findDesc = null;
             if (appDesc != null) {
-                Map findDesc = getAndIndexDescription(appId + "find");
+                findDesc = getAndIndexDescription(appId + "find");
                 if (!queryParameters.containsKey(APP_CONFIG)) {
                     queryParameters.put(APP_CONFIG, new String[]{mapper.writeValueAsString(search2.buildAppConfig(findDesc))});
                 }
             }
-            return search2.doSearch(queryParameters);
+
+            var results = search2.doSearch(queryParameters);
+
+            if (findDesc != null) {
+                Object titleByLang = findDesc.get("titleByLang");
+                if (titleByLang != null) {
+                    results.put("titleByLang", titleByLang);
+                }
+            }
+
+            return results;
         } else {
             if (queryParameters.get("_statsrepr") == null && searchSettings.get("statsfind") != null) {
                 queryParameters.put("_statsrepr", new String[]{mapper.writeValueAsString(searchSettings.get("statsfind"))});
