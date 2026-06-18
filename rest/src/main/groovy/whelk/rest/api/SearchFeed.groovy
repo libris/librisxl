@@ -64,8 +64,8 @@ class SearchFeed {
     String buildTitle(Map searchResults) {
         var title = getByLang((Map) searchResults['titleByLang'])
         def params = searchResults.search?.mapping?.findResults {
-            if (it.value !instanceof Boolean) {
-              return toValueString(it.value ?: it.object, skipDetails)
+            if ((it.value && it.value !instanceof Boolean) || it.object || it.equals) {
+              return toValueString((it.value ?: it.object) ?: it.equals, skipDetails)
             }
         }
         if (params) {
