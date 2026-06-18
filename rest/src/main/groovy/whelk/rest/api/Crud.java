@@ -205,7 +205,13 @@ public class Crud extends WhelkHttpServlet {
             sendNotFound(request.getHttpServletRequest(), response);
         } else if (doc == null && loc != null) {
             if (request.getView() == CrudGetRequest.View.DATA) {
-                loc = getDataURI(loc, request);
+                loc = getDataURI(loc, request.getContentType(), null, null);
+            }
+            // Preserve representation parameters (embellished, framed, lens,
+            // computedLabel, _findBlank, ...) so they survive the redirect.
+            String queryString = request.getHttpServletRequest().getQueryString();
+            if (queryString != null && !queryString.isEmpty()) {
+                loc += "?" + queryString;
             }
             sendRedirect(request.getHttpServletRequest(), response, loc);
         } else if (doc != null && doc.getDeleted()) {
