@@ -346,7 +346,7 @@ class Document {
     }
 
     Instant getCreatedTimestamp() {
-        ZonedDateTime.parse(getCreated(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+        parseTimestamp(getCreated())
     }
 
     void setModified(Date modified) {
@@ -357,7 +357,7 @@ class Document {
     String getModified() { get(modifiedPath) }
 
     Instant getModifiedTimestamp() {
-        ZonedDateTime.parse(getModified(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+        parseTimestamp(getModified())
     }
 
     void setGenerationDate(Date generationDate) {
@@ -370,6 +370,10 @@ class Document {
     static String formatTimeStamp(Instant timestamp) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(timestamp, ZoneId.systemDefault())
         return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
+    }
+
+    static Instant parseTimestamp(String timestamp) {
+        ZonedDateTime.parse(timestamp, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
     }
 
     void setDeleted(boolean newValue) {

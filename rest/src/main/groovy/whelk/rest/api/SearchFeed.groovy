@@ -31,7 +31,10 @@ class SearchFeed {
 
     @CompileStatic(SKIP)
     String represent(String feedId, Object searchResults) {
-        var lastMod = searchResults.items?[0]?.meta?.modified ?: Document.formatTimeStamp(Instant.now())
+        var timestamps = searchResults.items
+                .findResults { it?.meta?.modified?.with { Document.parseTimestamp(String.valueOf(it))} }
+                .sort()
+        var lastMod = Document.formatTimeStamp(!timestamps.isEmpty() ? timestamps.last() : Instant.now())
         var feedTitle = buildTitle(searchResults)
         return new StreamingMarkupBuilder().bind { mb ->
             feed(xmlns: 'http://www.w3.org/2005/Atom') {
