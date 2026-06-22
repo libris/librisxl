@@ -3112,7 +3112,7 @@ class MatchRule {
 
     String matchDomain
 
-    boolean matchValue(String code, String value) {
+    boolean matchValue(String code, Object value) {
         Closure pattern = codePatterns[code]
         if (!pattern)
             return true
@@ -3179,7 +3179,7 @@ class MatchRule {
                     Closure check = null
                     if (comparator == '=~') {
                         def pattern = Pattern.compile(matchValue)
-                        check = codePatterns[code] = { pattern.matcher(it).matches() }
+                        check = codePatterns[code] = { it != null && pattern.matcher(it.toString()).matches() }
                     } else {
                         check = codePatterns[code] = { it == matchValue }
                     }
