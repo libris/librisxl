@@ -34,11 +34,19 @@ public class Helpers
         private final String mustBeHeldBy;
         private final String explicitSet;
         private final boolean includeDependenciesInTimeInterval;
+        private final int pageSize;
         private final Stack<Document> resultingDocuments = new Stack<>();
         private boolean firstAccess = true;
 
+        // For resumption tokens, to keep track of the last source row consumed. A source row is simply a
+        // row read from lddb. One source row might or might not emit a record (or several), depending on
+        // filtering and dependencies
+        private String lastSourceModified = null;
+        private String lastSourceId = null;
+        private int sourceRowsRead = 0;
+
         public ResultIterator(PreparedStatement statement, String requestedCollection, String mustBeHeldBy,
-                              boolean includeDependenciesInTimeInterval, String explicitSet)
+                              boolean includeDependenciesInTimeInterval, String explicitSet, int pageSize)
                 throws SQLException {
             this.statement = statement;
             this.resultSet = statement.executeQuery();
@@ -46,7 +54,14 @@ public class Helpers
             this.mustBeHeldBy = mustBeHeldBy;
             this.includeDependenciesInTimeInterval = includeDependenciesInTimeInterval;
             this.explicitSet = explicitSet;
+            this.pageSize = pageSize;
         }
+
+        public String getLastSourceModified() { return lastSourceModified; }
+
+        public String getLastSourceId() { return lastSourceId; }
+
+        public boolean isExhausted() { return sourceRowsRead < pageSize; }
 
         private boolean isHeld(Document doc, String bySigel)
         {
@@ -181,7 +196,15 @@ public class Helpers
                     firstAccess = false;
                     while (resultSet.next())
                     {
+                        sourceRowsRead++;
                         String data = resultSet.getString("data");
+
+                        lastSourceId = resultSet.getString("id");
+                        // effective_modified is the value the scan is ordered by (see getIntervalStatement):
+                        // plain 'modified', or GREATEST(modified, generationDate) in the silent-changes path.
+                        Timestamp modified = resultSet.getTimestamp("effective_modified");
+                        lastSourceModified = modified != null
+                                ? modified.toInstant().toString() : null;
 
                         Document updated = new Document(mapper.readValue(data, HashMap.class));
                         emitAffected(updated);
@@ -260,103 +283,85 @@ public class Helpers
         return preparedStatement;
     }
 
-    private static PreparedStatement getOpenIntervalStatement(Connection connection, ZonedDateTime fromDateTime,
-                                                                ZonedDateTime untilDateTime, boolean includeSilentChanges)
+    /**
+     * Builds a keyset-paginated interval scan over lddb.
+     */
+    private static PreparedStatement getIntervalStatement(Connection connection, ZonedDateTime fromDateTime,
+                                                          ZonedDateTime untilDateTime, boolean includeSilentChanges,
+                                                          Timestamp afterModified, String afterId,
+                                                          String explicitSet, int limit)
             throws SQLException
     {
-        PreparedStatement preparedStatement;
-        String sql = "SELECT data FROM lddb WHERE collection in ('bib', 'auth', 'hold')";
+        // By default we go by the modified date, but we support to option to include silent changes.
+        // NOTE/TODO?: No index on GREATEST(modified, totstz(...) so it'll be slow. Unsure if anyone's actually
+        // using this still. If someone is, we might want to add an index.
+        String effectiveModified = includeSilentChanges
+                ? "GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}'))"
+                : "modified";
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT id, " + effectiveModified + " AS effective_modified, data" +
+                " FROM lddb WHERE collection in ('bib', 'auth', 'hold')");
+
+        String explicitSetColumn = explicitSetColumn(explicitSet);
+        if (explicitSetColumn != null)
+            sql.append(" AND ").append(explicitSetColumn).append(" = ? ");
 
         if (fromDateTime != null)
-        {
-            if (includeSilentChanges)
-                sql += " AND ( modified >= ? OR totstz(data#>>'{@graph,0,generationDate}') >= ? ) ";
-            else
-                sql += " AND modified >= ? ";
-        }
+            sql.append(" AND ").append(effectiveModified).append(" >= ? ");
         if (untilDateTime != null)
-        {
-            if (includeSilentChanges)
-                sql += " AND ( modified <= ? OR totstz(data#>>'{@graph,0,generationDate}') <= ? ) ";
-            else
-                sql += " AND modified <= ? ";
-        }
+            sql.append(" AND ").append(effectiveModified).append(" <= ? ");
 
-        preparedStatement = connection.prepareStatement(sql);
+        if (afterModified != null)
+            sql.append(" AND (").append(effectiveModified).append(", id) > (?, ?) ");
+
+        sql.append(" ORDER BY ").append(effectiveModified).append(", id ");
+        sql.append(" LIMIT ").append(limit);
+
+        PreparedStatement preparedStatement = connection.prepareStatement(sql.toString());
         preparedStatement.setFetchSize(512);
+
         int parameterIndex = 1;
+        if (explicitSetColumn != null)
+            preparedStatement.setString(parameterIndex++, explicitSetValue(explicitSet));
         if (fromDateTime != null)
-        {
-            Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
-            preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
-            if (includeSilentChanges)
-                preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
-        }
+            preparedStatement.setTimestamp(parameterIndex++, new Timestamp(fromDateTime.toInstant().toEpochMilli()));
         if (untilDateTime != null)
+            preparedStatement.setTimestamp(parameterIndex++, new Timestamp(untilDateTime.toInstant().toEpochMilli()));
+        if (afterModified != null)
         {
-            Timestamp untilTimeStamp = new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L);
-            preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
-            if (includeSilentChanges)
-                preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
+            preparedStatement.setTimestamp(parameterIndex++, afterModified);
+            preparedStatement.setString(parameterIndex++, afterId);
         }
 
         return preparedStatement;
     }
 
-    private static PreparedStatement getClosedIntervalStatement(Connection connection, ZonedDateTime fromDateTime,
-                                                      ZonedDateTime untilDateTime, boolean includeSilentChanges)
-            throws SQLException
+    private static String explicitSetColumn(String explicitSet)
     {
-        PreparedStatement preparedStatement;
-        String sql = "SELECT data FROM lddb WHERE collection in ('bib', 'auth', 'hold')";
+        if ("nb".equals(explicitSet))
+            return "data#>>'{@graph,0,encodingLevel}'";
+        if ("sao".equals(explicitSet))
+            return "data#>>'{@graph,1,inScheme,@id}'";
+        return null;
+    }
 
-        if (includeSilentChanges)
-        {
-            sql += " AND ( modified BETWEEN ? AND ? OR totstz(data#>>'{@graph,0,generationDate}') BETWEEN ? AND ? ) ";
-        }
-        else
-        {
-            sql += " AND ( modified BETWEEN ? AND ? ) ";
-        }
-
-        preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setFetchSize(512);
-
-        Timestamp fromTimeStamp = new Timestamp(fromDateTime.toInstant().getEpochSecond() * 1000L);
-        Timestamp untilTimeStamp = new Timestamp(untilDateTime.toInstant().getEpochSecond() * 1000L);
-        int parameterIndex = 1;
-        preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
-        preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
-        if (includeSilentChanges)
-        {
-            preparedStatement.setTimestamp(parameterIndex++, fromTimeStamp);
-            preparedStatement.setTimestamp(parameterIndex++, untilTimeStamp);
-        }
-
-        return preparedStatement;
+    private static String explicitSetValue(String explicitSet)
+    {
+        if ("nb".equals(explicitSet))
+            return "marc:FullLevel";
+        if ("sao".equals(explicitSet))
+            return "https://id.kb.se/term/sao";
+        return null;
     }
 
     public static ResultIterator getMatchingDocuments(Connection connection, ZonedDateTime fromDateTime,
                                                       ZonedDateTime untilDateTime, SetSpec setSpec, String id,
                                                       boolean includeDependenciesInTimeInterval,
-                                                      boolean includeSilentChanges)
+                                                      boolean includeSilentChanges,
+                                                      Timestamp afterModified, String afterId, int limit)
             throws SQLException
     {
-        PreparedStatement preparedStatement;
-        if (id == null)
-        {
-            if (fromDateTime == null || untilDateTime == null)
-                preparedStatement = getOpenIntervalStatement(connection, fromDateTime, untilDateTime, includeSilentChanges);
-            else
-                preparedStatement = getClosedIntervalStatement(connection, fromDateTime, untilDateTime, includeSilentChanges);
-        }
-        else
-        {
-            String sql = "SELECT data FROM lddb WHERE id = ?";
-            preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setString(1, id);
-        }
-
         // Extract requested marc:collection and explicit set, if any, from setSpec
         String requestedCollection = null;
         String mustBeHeldBy = null;
@@ -382,7 +387,20 @@ public class Helpers
             }
         }
 
+        PreparedStatement preparedStatement;
+        if (id == null)
+        {
+            preparedStatement = getIntervalStatement(connection, fromDateTime, untilDateTime,
+                    includeSilentChanges, afterModified, afterId, explicitSet, limit);
+        }
+        else
+        {
+            String sql = "SELECT id, modified AS effective_modified, data FROM lddb WHERE id = ?";
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, id);
+        }
+
         return new ResultIterator(preparedStatement, requestedCollection, mustBeHeldBy,
-                includeDependenciesInTimeInterval, explicitSet);
+                includeDependenciesInTimeInterval, explicitSet, limit);
     }
 }
