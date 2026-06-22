@@ -337,9 +337,7 @@ class Document {
     }
 
     void setCreated(Date created) {
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(created.toInstant(), ZoneId.systemDefault())
-        String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(createdPath, formatedCreated)
+        set(createdPath, formatTimeStamp(created.toInstant()))
         updateRecordStatus()
     }
 
@@ -352,9 +350,7 @@ class Document {
     }
 
     void setModified(Date modified) {
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
-        String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(modifiedPath, formatedModified)
+        set(modifiedPath, formatTimeStamp(modified.toInstant()))
         updateRecordStatus()
     }
 
@@ -365,13 +361,16 @@ class Document {
     }
 
     void setGenerationDate(Date generationDate) {
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(generationDate.toInstant(), ZoneId.systemDefault())
-        String formatedGenerationDate = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(generationDatePath, formatedGenerationDate)
+        set(generationDatePath, formatTimeStamp(generationDate.toInstant()))
         updateRecordStatus()
     }
 
     String getGenerationDate() { get(generationDatePath) }
+
+    static String formatTimeStamp(Instant timestamp) {
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(timestamp, ZoneId.systemDefault())
+        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
+    }
 
     void setDeleted(boolean newValue) {
         if (newValue)

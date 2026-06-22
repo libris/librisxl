@@ -1,15 +1,16 @@
 package whelk.rest.api
 
 import groovy.transform.CompileStatic
-import static groovy.transform.TypeCheckingMode.SKIP
-
-import groovy.xml.MarkupBuilder
 import groovy.xml.StreamingMarkupBuilder
-
+import whelk.Document
 import whelk.JsonLd
+
+import java.time.Instant
+
+import static groovy.transform.TypeCheckingMode.SKIP
 import static whelk.JsonLd.ID_KEY
-import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.REVERSE_KEY
+import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
 
 @CompileStatic
@@ -30,7 +31,7 @@ class SearchFeed {
 
     @CompileStatic(SKIP)
     String represent(String feedId, Object searchResults) {
-        var lastMod = searchResults.items?[0]?.meta?.modified
+        var lastMod = searchResults.items?[0]?.meta?.modified ?: Document.formatTimeStamp(Instant.now())
         var feedTitle = buildTitle(searchResults)
         return new StreamingMarkupBuilder().bind { mb ->
             feed(xmlns: 'http://www.w3.org/2005/Atom') {
@@ -46,7 +47,7 @@ class SearchFeed {
                         link(rel: rel, href: ref[ID_KEY])
                     }
                 }
-                if (lastMod) updated(lastMod)
+                updated(lastMod)
                 for (item in searchResults.items) {
                     entry {
                         id(item[ID_KEY])
