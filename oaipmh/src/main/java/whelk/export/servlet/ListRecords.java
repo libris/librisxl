@@ -7,6 +7,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 
@@ -24,6 +25,10 @@ public class ListRecords
     private final static String DELETED_DATA_PARAM = "x-withDeletedData";
     private final static String INCLUDE_SILENT_PARAM = "x-withSilentUpdates";
 
+    // Number of source rows from lddb to scan per page. One page = one HTTP response,
+    // possibly with a resumptionToken for the next page.
+    private final static int PAGE_SIZE = 1000;
+
     private static final Counter failedRequests = Counter.build()
             .name("oaipmh_failed_listrecords_requests_total").help("Total failed ListRecords requests.")
             .labelNames("error").register();
@@ -40,36 +45,65 @@ public class ListRecords
                                                 boolean onlyIdentifiers)
             throws IOException, XMLStreamException, SQLException
     {
-        // Parse and verify the parameters allowed for this request
-        String from = request.getParameter(FROM_PARAM); // optional
-        String until = request.getParameter(UNTIL_PARAM); // optional
-        String set = request.getParameter(SET_PARAM); // optional
-        String resumptionToken = request.getParameter(RESUMPTION_PARAM); // exclusive, not supported/used
-        String metadataPrefix = request.getParameter(FORMAT_PARAM); // required
+        String resumptionTokenParam = request.getParameter(RESUMPTION_PARAM);
+        String from, until, set, metadataPrefix;
+        boolean withDeletedData, withSilentChanges;
+        Timestamp afterModified = null;
+        String afterId = null;
 
-        // optional and not technically legal OAI-PMH
-        boolean withDeletedData = Boolean.parseBoolean(request.getParameter(DELETED_DATA_PARAM));
-        boolean withSilentChanges = Boolean.parseBoolean(request.getParameter(INCLUDE_SILENT_PARAM));
-
-        if (ResponseCommon.errorOnExtraParameters(request, response,
-                FROM_PARAM, UNTIL_PARAM, SET_PARAM, RESUMPTION_PARAM, FORMAT_PARAM, DELETED_DATA_PARAM, INCLUDE_SILENT_PARAM))
-            return;
-
-        // We do not use resumption tokens.
-        if (resumptionToken != null)
+        if (resumptionTokenParam != null)
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN).inc();
-            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN,
-                    "No such resumption token was issued", request, response);
-            return;
+            if (ResponseCommon.errorOnExtraParameters(request, response, RESUMPTION_PARAM))
+                return;
+
+            ResumptionToken token = ResumptionToken.parse(resumptionTokenParam);
+            if (token == null)
+            {
+                failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN).inc();
+                ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN,
+                        "The resumptionToken is invalid or has expired.", request, response);
+                return;
+            }
+
+            from = token.from;
+            until = token.until;
+            set = token.set;
+            metadataPrefix = token.metadataPrefix;
+            withDeletedData = token.withDeletedData;
+            withSilentChanges = token.withSilentChanges;
+            if (token.afterModified != null)
+            {
+                afterModified = Timestamp.from(ZonedDateTime.parse(token.afterModified).toInstant());
+                afterId = token.afterId;
+            }
         }
-
-        if (metadataPrefix == null)
+        else
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
-            ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
-                    "metadataPrefix argument required.", request, response);
-            return;
+            from = request.getParameter(FROM_PARAM); // optional
+            until = request.getParameter(UNTIL_PARAM); // optional
+            set = request.getParameter(SET_PARAM); // optional
+            metadataPrefix = request.getParameter(FORMAT_PARAM); // required
+
+            // optional and not technically legal OAI-PMH
+            withDeletedData = Boolean.parseBoolean(request.getParameter(DELETED_DATA_PARAM));
+            withSilentChanges = Boolean.parseBoolean(request.getParameter(INCLUDE_SILENT_PARAM));
+
+            if (ResponseCommon.errorOnExtraParameters(request, response,
+                    FROM_PARAM, UNTIL_PARAM, SET_PARAM, FORMAT_PARAM, DELETED_DATA_PARAM, INCLUDE_SILENT_PARAM))
+                return;
+
+            if (metadataPrefix == null)
+            {
+                failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
+                ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
+                        "metadataPrefix argument required.", request, response);
+                return;
+            }
+
+            // If client doesn't supply an "until" parameter, make one and put it in the resumptionToken,
+            // so we can guarantee that the harvest terminates.
+            if (until == null)
+                until = ZonedDateTime.now(ZoneOffset.UTC).toString();
         }
 
         // Was the set selection valid?
@@ -112,11 +146,16 @@ public class ListRecords
             boolean includeDependencies = metadataPrefix.contains(OaiPmh.FORMAT_EXPANDED_POSTFIX) ||
                     metadataPrefix.contains("marcxml");
 
+            ResumptionToken baseToken = new ResumptionToken(from, until, set, metadataPrefix,
+                    withDeletedData, withSilentChanges, null, null);
+
             try (Helpers.ResultIterator resultIterator = Helpers.getMatchingDocuments(dbconn, fromDateTime,
-                    untilDateTime, setSpec, null, includeDependencies, withSilentChanges))
+                    untilDateTime, setSpec, null, includeDependencies, withSilentChanges,
+                    afterModified, afterId, PAGE_SIZE))
             {
                 respond(request, response, metadataPrefix, onlyIdentifiers,
-                        includeDependencies, withDeletedData, resultIterator);
+                        includeDependencies, withDeletedData, resultIterator, baseToken,
+                        resumptionTokenParam != null);
             } finally {
                 dbconn.commit();
             }
@@ -125,11 +164,11 @@ public class ListRecords
 
     private static void respond(HttpServletRequest request, HttpServletResponse response,
                                 String requestedFormat, boolean onlyIdentifiers, boolean embellish,
-                                boolean withDeletedData, Helpers.ResultIterator resultIterator)
+                                boolean withDeletedData, Helpers.ResultIterator resultIterator,
+                                ResumptionToken baseToken, boolean resuming)
             throws IOException, XMLStreamException, SQLException
     {
-        // Is the resultset empty?
-        if (!resultIterator.hasNext())
+        if (!resultIterator.hasNext() && !resuming && resultIterator.isExhausted())
         {
             failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
@@ -153,7 +192,32 @@ public class ListRecords
                     onlyIdentifiers, embellish, withDeletedData);
         }
 
+        writeResumptionToken(writer, resultIterator, baseToken, resuming);
+
         writer.writeEndElement(); // ListIdentifiers/ListRecords
         ResponseCommon.writeOaiPmhClose(writer, request);
+    }
+
+    private static void writeResumptionToken(XMLStreamWriter writer, Helpers.ResultIterator resultIterator,
+                                             ResumptionToken baseToken, boolean resuming)
+            throws XMLStreamException
+    {
+        // If we've previously emitted a non-empty resumptionToken and there are no more records,
+        // then per the spec we have to end with an empty resumptionToken.
+        if (resultIterator.isExhausted())
+        {
+            if (resuming)
+            {
+                writer.writeStartElement("resumptionToken");
+                writer.writeEndElement();
+            }
+            return;
+        }
+
+        ResumptionToken next = baseToken.withCursor(
+                resultIterator.getLastSourceModified(), resultIterator.getLastSourceId());
+        writer.writeStartElement("resumptionToken");
+        writer.writeCharacters(next.toToken());
+        writer.writeEndElement();
     }
 }
