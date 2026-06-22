@@ -36,6 +36,9 @@ class SearchFeed {
             feed(xmlns: 'http://www.w3.org/2005/Atom') {
                 title(feedTitle)
                 id(feedId)
+                author {
+                  name("Libris")
+                }
                 link(rel: 'self', href: searchResults[ID_KEY])
                 for (rel in ['next', 'prev', 'first', 'last']) {
                     def ref = searchResults[rel]
@@ -53,7 +56,7 @@ class SearchFeed {
                         summary(type: 'xhtml') {
                             toEntryCard(mb, item)
                         }
-                        content(href: item[ID_KEY])
+                        content(src: item[ID_KEY])
                     }
                 }
             }
