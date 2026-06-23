@@ -29,20 +29,20 @@ dependencies {
     implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
 
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
     // Tools
-    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    implementation "xml-apis:xml-apis:1.4.01"
     implementation 'org.apache.commons:commons-lang3:3.18.0'
 
     // Dependencies inherited from classic libris, due to profile handling
-    implementation group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
-    implementation(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
+    implementation "com.ibm.icu:icu4j:4.8.1.1"
+    implementation("org.dspace:xoai:3.2.10") {
         exclude group: 'org.mockito'
         exclude group: 'org.hamcrest'
         exclude group: 'junit'

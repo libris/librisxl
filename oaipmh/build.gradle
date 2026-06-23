@@ -5,7 +5,7 @@ def mainClassName = "whelk.OaiPmhServer"
 
 repositories {
     mavenCentral()
-	maven { url "https://jitpack.io/" }
+	maven { url = "https://jitpack.io/" }
 }
 
 // Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
@@ -26,11 +26,11 @@ dependencies {
     implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
 
     // Necessary for inlining XML into XMLStreamWriter
-    implementation group: 'org.apache.cxf', name: 'cxf-core', version: '3.0.2'
+    implementation "org.apache.cxf:cxf-core:3.0.2"
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
 
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"

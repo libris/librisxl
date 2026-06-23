@@ -46,13 +46,13 @@ test {
 }
 
 test.testLogging {
-    showStandardStreams true
-    exceptionFormat "full"
+    showStandardStreams = true
+    exceptionFormat = "full"
 }
 
 repositories {
     mavenCentral()
-    maven { url "https://jitpack.io/" }
+    maven { url = "https://jitpack.io/" }
 }
 
 // Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
@@ -77,8 +77,8 @@ dependencies {
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
 
     // profiling and test
     testImplementation "org.spockframework:spock-core:${spockVersion}"
@@ -123,7 +123,7 @@ task(doRun, dependsOn: "classes", type: JavaExec) {
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
-    description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
+    description = "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
     mainClass = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
@@ -133,7 +133,7 @@ task(groovy, dependsOn: "classes", type: JavaExec) {
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
-    description "Launch a Groovy Console"
+    description = "Launch a Groovy Console"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'groovy.ui.Console'
 }

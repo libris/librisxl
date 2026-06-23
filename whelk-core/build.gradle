@@ -50,7 +50,7 @@ jacocoTestReport {
 
 repositories {
     mavenCentral()
-    maven { url "https://jitpack.io/" }
+    maven { url = "https://jitpack.io/" }
 }
 
 configurations {
@@ -74,8 +74,8 @@ dependencies {
     implementation(project(':trld-java'))
 
     // Dependencies inherited from classic libris, due to profile handling
-    implementation group: 'com.ibm.icu', name: 'icu4j', version: '71.1'
-    implementation(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
+    implementation "com.ibm.icu:icu4j:71.1"
+    implementation("org.dspace:xoai:3.2.10") {
         exclude group: 'org.mockito'
         exclude group: 'org.hamcrest'
         exclude group: 'junit'
@@ -83,7 +83,7 @@ dependencies {
         // org.w3c.dom.UserDataHandler scanned from multiple locations: xml-apis, jaxen
         exclude group: 'jaxen', module: 'jaxen'
     }
-    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    implementation "xml-apis:xml-apis:1.4.01"
 
     // Common tools
     implementation "com.google.guava:guava:${guavaVersion}"
@@ -110,8 +110,8 @@ dependencies {
     implementation 'xerces:xercesImpl:2.11.0' //KP
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
 
     // Caching
     implementation 'org.apache.commons:commons-collections4:4.1'
@@ -152,27 +152,27 @@ task integTest(type: Test) {
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
-    description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
+    description = "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
     mainClass = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])
 }
 
 task(console, dependsOn: 'classes', type: JavaExec) {
-  description "Launch a Groovy Console"
+  description = "Launch a Groovy Console"
   classpath = sourceSets.main.runtimeClasspath
   mainClass = 'groovy.ui.Console'
 }
 
 task(convertIso2709ToJson, dependsOn: 'classes', type: JavaExec) {
-    description "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
+    description = "Convert an ISO2709 file to JSON (USAGE: -Dargs='<infile>')"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'whelk.converter.MarcJSONConverter'
     args(System.getProperty('args', "").split() as String[])
 }
 
 task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
-    description "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
+    description = "Convert a MarcJson file to JsonLD (USAGE: -Dargs='<source>')"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'whelk.converter.marc.MarcFrameCli'
     System.properties.each { k, v -> if (k.startsWith('xl.')) systemProperty(k, v) }
@@ -180,13 +180,13 @@ task runMarcFrame(dependsOn: 'classes', type: JavaExec) {
 }
 
 task vocabFromMarcFrame(dependsOn: 'classes', type: JavaExec) {
-    description "Extract a vocabulary from marcframe"
+    description = "Extract a vocabulary from marcframe"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'whelk.converter.marc.MarcFrameVocabExtractor'
 }
 
 task dataview(dependsOn: 'classes', type: JavaExec) {
-    description "View JSON-LD data (USAGE: -Dargs='<card|chip|embellish|index> <source>')"
+    description = "View JSON-LD data (USAGE: -Dargs='<card|chip|embellish|index> <source>')"
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'whelk.util.DataViewCli'
     System.properties.each { k, v -> if (k.startsWith('xl.')) systemProperty(k, v) }

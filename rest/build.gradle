@@ -43,7 +43,7 @@ jacocoTestReport {
 
 repositories {
     mavenCentral()
-    maven { url "https://jitpack.io/" }
+    maven { url = "https://jitpack.io/" }
 }
 
 // Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
@@ -87,8 +87,8 @@ dependencies {
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
 
     // profiling and test
     testImplementation "org.spockframework:spock-core:${spockVersion}"

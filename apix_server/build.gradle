@@ -5,7 +5,7 @@ def mainClassName = "whelk.ApixServer"
 
 repositories {
     mavenCentral()
-	maven { url "https://jitpack.io/" }
+	maven { url = "https://jitpack.io/" }
 }
 
 // Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
@@ -27,8 +27,8 @@ dependencies {
     implementation "org.eclipse.jetty.ee8:jetty-ee8-security:${jettyVersion}"
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
 
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"

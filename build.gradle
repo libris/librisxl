@@ -3,17 +3,17 @@ plugins {
     id "com.gradleup.shadow" version "9.2.1"
 }
 
+// Run manually with "./gradlew autoLintGradle"
+// Unused dependency warning cannot always be trusted, always verify ("this dependency is unused and can be removed")
+gradleLint.rules = ['all-dependency']
+gradleLint.alwaysRun = false
+
 allprojects {
     apply plugin: 'java'
     java {
         sourceCompatibility = JavaVersion.VERSION_25
         targetCompatibility = JavaVersion.VERSION_25
     }
-    // Run manually with "./gradlew autoLintGradle"
-    // Unused dependency warning cannot always be trusted, always verify ("this dependency is unused and can be removed")
-    gradleLint.rules = ['all-dependency']
-    gradleLint.alwaysRun = false
-
 
     configurations.all {
         // commons-logging and jcl-over-slf4j pulled in by different deps
