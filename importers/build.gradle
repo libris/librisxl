@@ -24,12 +24,9 @@ application {
 
 
 def getGitVersion() {
-	def stdout = new ByteArrayOutputStream()
-	exec {
+	return providers.exec {
 		commandLine 'git', 'describe', '--tags'
-		standardOutput = stdout
-	}
-	return stdout.toString().trim()
+	}.standardOutput.asText.get().trim()
 }
 
 def versionNumber = getGitVersion()
@@ -94,7 +91,7 @@ dependencies {
 }
 
 shadowJar {
-    archivesBaseName = "xlimporter"
+    archiveBaseName = "xlimporter"
     archiveClassifier = null // removes `-all` in the filename of the created .jar
 }
 

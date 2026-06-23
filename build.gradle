@@ -6,8 +6,8 @@ plugins {
 allprojects {
     apply plugin: 'java'
     java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
     // Run manually with "./gradlew autoLintGradle"
     // Unused dependency warning cannot always be trusted, always verify ("this dependency is unused and can be removed")

@@ -4,6 +4,10 @@ apply plugin: 'com.gradleup.shadow'
 
 def mainClassName = "whelk.datatool.WhelkTool"
 
+application {
+    mainClass = mainClassName
+}
+
 sourceSets {
     scripts {
         groovy { srcDir 'scripts' }
@@ -31,7 +35,6 @@ test {
 
 shadowJar {
     archiveClassifier = null // removes `-all` in the filename of the created .jar
-    project.setProperty("mainClassName", mainClassName)
 }
 
 jar {
