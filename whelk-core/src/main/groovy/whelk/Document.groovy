@@ -337,9 +337,7 @@ class Document {
     }
 
     void setCreated(Date created) {
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(created.toInstant(), ZoneId.systemDefault())
-        String formatedCreated = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(createdPath, formatedCreated)
+        set(createdPath, formatTimeStamp(created.toInstant()))
         updateRecordStatus()
     }
 
@@ -348,30 +346,35 @@ class Document {
     }
 
     Instant getCreatedTimestamp() {
-        ZonedDateTime.parse(getCreated(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+        parseTimestamp(getCreated())
     }
 
     void setModified(Date modified) {
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(modified.toInstant(), ZoneId.systemDefault())
-        String formatedModified = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(modifiedPath, formatedModified)
+        set(modifiedPath, formatTimeStamp(modified.toInstant()))
         updateRecordStatus()
     }
 
     String getModified() { get(modifiedPath) }
 
     Instant getModifiedTimestamp() {
-        ZonedDateTime.parse(getModified(), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+        parseTimestamp(getModified())
     }
 
     void setGenerationDate(Date generationDate) {
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(generationDate.toInstant(), ZoneId.systemDefault())
-        String formatedGenerationDate = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
-        set(generationDatePath, formatedGenerationDate)
+        set(generationDatePath, formatTimeStamp(generationDate.toInstant()))
         updateRecordStatus()
     }
 
     String getGenerationDate() { get(generationDatePath) }
+
+    static String formatTimeStamp(Instant timestamp) {
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(timestamp, ZoneId.systemDefault())
+        return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
+    }
+
+    static Instant parseTimestamp(String timestamp) {
+        ZonedDateTime.parse(timestamp, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant()
+    }
 
     void setDeleted(boolean newValue) {
         if (newValue)
