@@ -120,6 +120,10 @@ class SearchFeed {
         }
     }
 
+    String toChipString(Object item) {
+        fresnelUtil.asFormattedString(item, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, locales.first())
+    }
+
     String toValueString(Object item) {
         if (item instanceof Map) {
             if (item[TYPE_KEY]) {
@@ -132,11 +136,7 @@ class SearchFeed {
 
         return String.valueOf(item)
     }
-
-    String toChipString(Object item) {
-        fresnelUtil.asFormattedString(item, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, locales.first())
-    }
-
+    
     static String uriSlug(String s) {
         s.split('/').last()
     }
