@@ -25,13 +25,15 @@ allprojects {
         exclude group: "stax", module: "stax-api"
     }
 
-    apply plugin: 'codenarc'
-    codenarc {
-        configFile = new File("${project.projectDir}/../codenarc.config")
-        ignoreFailures = true
-        dependencies {
-            codenarc("org.codenarc:CodeNarc:${codeNarcVersion}")
-            codenarc("org.apache.groovy:groovy:${groovyVersion}")
+    plugins.withId('groovy') {
+        apply plugin: 'codenarc'
+        codenarc {
+            configFile = new File("${project.projectDir}/../codenarc.config")
+            ignoreFailures = true
+            dependencies {
+                codenarc("org.codenarc:CodeNarc:${codeNarcVersion}")
+                codenarc("org.apache.groovy:groovy:${groovyVersion}")
+            }
         }
     }
 }
