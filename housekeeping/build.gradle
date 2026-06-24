@@ -41,18 +41,18 @@ dependencies {
     implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
 
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
     // Email
-    implementation group: 'org.simplejavamail', name: 'simple-java-mail', version: '8.2.0'
+    implementation "org.simplejavamail:simple-java-mail:8.2.0"
 
     // Cron
-    implementation group: 'it.sauronsoftware.cron4j', name: 'cron4j', version: '2.2.5'
+    implementation "it.sauronsoftware.cron4j:cron4j:2.2.5"
 
     // Utils
     implementation "com.google.guava:guava:${guavaVersion}"

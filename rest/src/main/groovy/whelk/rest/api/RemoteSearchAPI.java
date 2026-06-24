@@ -458,7 +458,7 @@ public class RemoteSearchAPI extends WhelkHttpServlet {
         }
     }
 
-    class MetaproxySearchResult {
+    static class MetaproxySearchResult {
 
         List<Document> hits = new ArrayList<>();
         String database, error;

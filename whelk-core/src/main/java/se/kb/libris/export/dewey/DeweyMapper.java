@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.URI;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.HashSet;
@@ -63,7 +64,7 @@ public class DeweyMapper {
 
     private static synchronized boolean initFromUrl() {
         try {
-            URL url = new URL(getURL());
+            URL url = URI.create(getURL()).toURL();
             File cacheFile = new File(getCacheFile());
 
             if (!cacheFile.exists() || (System.currentTimeMillis() - cacheFile.lastModified() > MAX_CACHE_TIME)) {

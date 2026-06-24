@@ -71,7 +71,7 @@ class RemoteSearchAPISpec extends Specification {
     }
 
     def createResult(String database, int numberOfHits, error, docs) {
-        def result = new RemoteSearchAPI.MetaproxySearchResult(null, database, numberOfHits)
+        def result = new RemoteSearchAPI.MetaproxySearchResult(database, numberOfHits)
         result.error = error
         for (doc in docs) {
             result.addHit(doc)
