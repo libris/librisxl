@@ -210,7 +210,7 @@ class SearchFeed {
             return m.and.collect { searchMappingToString(it as Map) }.join(' AND ')
         }
         if (m.or) {
-            return m.and.collect { searchMappingToString(it as Map) }.join(' OR ')
+            return m.or.collect { searchMappingToString(it as Map) }.join(' OR ')
         }
         if (m.not) {
             return 'NOT ' + searchMappingToString(m.not as Map)
