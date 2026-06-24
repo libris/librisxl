@@ -491,13 +491,13 @@ public class RemoteSearchAPI extends WhelkHttpServlet {
                 }
             }
         } catch (Exception e) {
-            log.error("Error extracting XML record strings", e);
+            log.warn("Error extracting XML record strings", e);
         }
         return xmlRecs;
     }
 
     String createString(GPathResult root) {
-        if (root == null) {
+        if (root == null || root.size() == 0) {
             return "";
         }
         return XmlUtil.serialize(root);
