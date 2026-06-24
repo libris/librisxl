@@ -35,7 +35,11 @@ do
         profile_no_ext=$(echo $var | cut -d'.' -f 1)
         if [[ ${used_sigels[$profile_no_ext]} != used ]]; then
             used_sigels[$profile_no_ext]="used"
-            query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES ('https://libris.kb.se/library/$profile_no_ext', '$data');"
+            # This used to be the below line, but it is vulnerable to injection:
+	    # query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES ('https://libris.kb.se/library/$profile_no_ext', '$data');"
+	    IFS=""
+            query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES ('https://libris.kb.se/library/$profile_no_ext', convert_from(decode( '$(echo $data | base64)', 'base64'), 'UTF8'));"
+	    IFS=$(echo -en "\n\b")
         fi
     done
 
