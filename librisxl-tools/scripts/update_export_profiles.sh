@@ -39,7 +39,7 @@ do
 	    # query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES ('https://libris.kb.se/library/$profile_no_ext', '$data');"
 	    IFS=""
             query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES ('https://libris.kb.se/library/$profile_no_ext', convert_from(decode( '$(echo $data | base64)', 'base64'), 'UTF8'));"
-	    IFS=$(echo -en "\n\b")
+	    IFS=$'\n'
         fi
     done
 
