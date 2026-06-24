@@ -4,6 +4,9 @@ import groovy.transform.CompileStatic
 import groovy.xml.StreamingMarkupBuilder
 import whelk.Document
 import whelk.JsonLd
+import whelk.search2.AppParams
+import whelk.search2.Operator
+import whelk.util.FresnelUtil
 
 import java.time.Instant
 
@@ -12,20 +15,20 @@ import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.REVERSE_KEY
 import static whelk.JsonLd.TYPE_KEY
 import static whelk.JsonLd.asList
+import static whelk.JsonLd.looksLikeIri
 
 @CompileStatic
 class SearchFeed {
 
-    static final String BULLET_SEP = " • "
-
     JsonLd jsonld
+    FresnelUtil fresnelUtil
     List<String> locales
 
-    Set<String> skipKeys = [ID_KEY, REVERSE_KEY, 'meta', 'reverseLinks'] as Set<String>
-    Set<String> skipDetails = skipKeys + ([TYPE_KEY, 'commentByLang'] as Set<String>)
+    Set<String> skipKeys = [ID_KEY, REVERSE_KEY, 'meta', 'reverseLinks', '_categoryByCollection'] as Set<String>
 
-    SearchFeed(JsonLd jsonld, List<String> locales) {
+    SearchFeed(JsonLd jsonld, FresnelUtil fresnelUtil, List<String> locales) {
         this.jsonld = jsonld
+        this.fresnelUtil = fresnelUtil
         this.locales = locales
     }
 
@@ -71,12 +74,10 @@ class SearchFeed {
     String buildTitle(Map searchResults) {
         var title = getByLang((Map) searchResults['titleByLang'])
         def params = searchResults.search?.mapping?.findResults {
-            if ((it.value && it.value !instanceof Boolean) || it.object || it.equals) {
-              return toValueString((it.value ?: it.object) ?: it.equals, skipDetails)
-            }
+            searchMappingToString(it as Map)
         }
         if (params) {
-            return title + ': ' + params.join(' & ')
+            return title + ' | ' + params.join(' ')
         } else {
             return title
         }
@@ -88,18 +89,26 @@ class SearchFeed {
             asList(item.meta?.hasChangeNote).each { note ->
                 p { b(toChipString(note)) }
             }
-            for (kv in item) {
+            if(!item[TYPE_KEY]) {
+                return
+            }
+            var sorted = fresnelUtil.mapThroughLens(item, FresnelUtil.NestedLenses.CARD_TO_CHIP_TO_TOKEN, [], [])
+            for (kv in sorted) {
                 div {
                     if (kv.key !in skipKeys) {
                         var label = getLabelFor(kv.key)
-                        var values = getValues(kv.value, kv.key)
+                        var values = asList(kv.value).findResults { toValueString(it) ?: null }
                         if (label && values) {
-                            span(label + ": ")
+                            span(style: 'display: block; font-size: 0.75rem; margin-top: 0.5rem;') {
+                                span(label)
+                                span(style: 'display: none', ": ") // fallback when no CSS support
+                            }
                             span {
                                 values.eachWithIndex { v, i ->
-                                    if (i > 0) {
-                                        span(", " + v)
-                                    } else {
+                                    span(style: 'display: block') {
+                                        if (i > 0) {
+                                            span(style: 'display: none', ", ") // fallback when no CSS support
+                                        }
                                         span(v)
                                     }
                                 }
@@ -112,45 +121,24 @@ class SearchFeed {
     }
 
     String toChipString(Object item) {
+        fresnelUtil.asFormattedString(item, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, locales.first())
+    }
+
+    String toValueString(Object item) {
         if (item instanceof Map) {
-            def chip = jsonld.toChip(item)
-            return toValueString(chip)
-        } else if (item == null) {
-          return ""
-        } else {
-            return item.toString()
-        }
-    }
-
-    String toValueString( Object o, Set skipKeys=skipKeys) {
-        var sb = new StringBuilder()
-        buildValueString(sb, o, skipKeys)
-        return sb.toString()
-    }
-
-    void buildValueString(StringBuilder sb, Object o, Set skipKeys=skipKeys) {
-        if (o instanceof List) {
-          for (v in o) buildValueString(sb, v, skipKeys)
-        } else if (o instanceof Map) {
-          for (kv in o) {
-            if (kv.key !in skipKeys) {
-              buildValueString(sb, getValues(kv.value, (String) kv.key), skipKeys)
+            if (item[TYPE_KEY]) {
+                return toChipString(item)
             }
-          }
-        } else {
-          if (sb.size() > 0) sb.append(BULLET_SEP)
-          sb.append(o.toString())
+            if (item[ID_KEY]) {
+                return uriSlug(String.valueOf(item[ID_KEY]))
+            }
         }
+
+        return String.valueOf(item)
     }
 
-    List<String> getValues(Object o, String viaKey) {
-        if (viaKey == TYPE_KEY || jsonld.isVocabTerm(viaKey)) {
-            return asList(o).collect { getLabelFor((String) it) }
-        } else if (jsonld.isLangContainer(jsonld.context[viaKey])) {
-            return (List<String>) asList(o).findResults { getByLang((Map) it) }
-        } else {
-            return (List<String>) asList(o).findResults { toChipString(it) ?: null }
-        }
+    static String uriSlug(String s) {
+        s.split('/').last()
     }
 
     String getLabelFor(String key) {
@@ -186,6 +174,48 @@ class SearchFeed {
         for (value in byLang.values()) {
             return value
         }
+        return null
+    }
+
+    String searchMappingToString(Map m) {
+        if (m.variable == AppParams.DEFAULT_SITE_FILTERS) {
+            return null
+        }
+
+        if (m.object) {
+            if (m.predicate && m.predicate['label']) {
+                String l = m.predicate['label']
+                l = looksLikeIri(l) ? uriSlug(l) : l
+                return '& ' + l + '=' + toValueString(m.object)
+            }
+            return toValueString(m.object)
+        }
+
+        if ((m.value && m.value !instanceof Boolean)) {
+            return toValueString(m.value)
+        }
+
+        for (var o : Operator.values()) {
+            if (m[o.termKey]) {
+                if (m.property[ID_KEY] == 'https://id.kb.se/vocab/textQuery'
+                        || asList(m.property['category']).contains([(ID_KEY): 'https://id.kb.se/vocab/impliedByObject'])) {
+                    return toValueString(m[o.termKey])
+                }
+
+                return o.format(toValueString(m.property), toValueString(m[o.termKey]))
+            }
+        }
+
+        if (m.and) {
+            return m.and.collect { searchMappingToString(it as Map) }.join(' AND ').with { "($it)" }
+        }
+        if (m.or) {
+            return m.or.collect { searchMappingToString(it as Map) }.join(' OR ').with { "($it)" }
+        }
+        if (m.not) {
+            return 'NOT ' + searchMappingToString(m.not as Map)
+        }
+
         return null
     }
 }

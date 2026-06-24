@@ -100,7 +100,7 @@ public class Crud extends WhelkHttpServlet {
             }
         }
 
-        searchFeed = new SearchFeed(whelk.getJsonld(), whelk.getLocales());
+        searchFeed = new SearchFeed(whelk.getJsonld(), whelk.getFresnelUtil(), whelk.getLocales());
         cacheLocalDevResources();
     }
 
