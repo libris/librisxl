@@ -207,10 +207,10 @@ class SearchFeed {
         }
 
         if (m.and) {
-            return m.and.collect { searchMappingToString(it as Map) }.join(' AND ')
+            return m.and.collect { searchMappingToString(it as Map) }.join(' AND ').with { "($it)" }
         }
         if (m.or) {
-            return m.or.collect { searchMappingToString(it as Map) }.join(' OR ')
+            return m.or.collect { searchMappingToString(it as Map) }.join(' OR ').with { "($it)" }
         }
         if (m.not) {
             return 'NOT ' + searchMappingToString(m.not as Map)
