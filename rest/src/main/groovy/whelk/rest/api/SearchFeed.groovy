@@ -136,7 +136,7 @@ class SearchFeed {
 
         return String.valueOf(item)
     }
-    
+
     static String uriSlug(String s) {
         s.split('/').last()
     }
@@ -183,7 +183,7 @@ class SearchFeed {
         }
 
         if (m.object) {
-            if (m.predicate['label']) {
+            if (m.predicate && m.predicate['label']) {
                 String l = m.predicate['label']
                 l = looksLikeIri(l) ? uriSlug(l) : l
                 return '& ' + l + '=' + toValueString(m.object)
