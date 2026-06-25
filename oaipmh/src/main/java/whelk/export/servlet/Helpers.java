@@ -289,7 +289,7 @@ public class Helpers
     private static PreparedStatement getIntervalStatement(Connection connection, ZonedDateTime fromDateTime,
                                                           ZonedDateTime untilDateTime, boolean includeSilentChanges,
                                                           Timestamp afterModified, String afterId,
-                                                          String explicitSet, int limit)
+                                                          String explicitSet, String restrictToCollection, int limit)
             throws SQLException
     {
         // By default we go by the modified date, but we support to option to include silent changes.
@@ -302,6 +302,11 @@ public class Helpers
         StringBuilder sql = new StringBuilder(
                 "SELECT id, " + effectiveModified + " AS effective_modified, data" +
                 " FROM lddb WHERE collection in ('bib', 'auth', 'hold')");
+
+        // If a collection has been requested and dependency expansion is not needed, we only need to scan
+        // the requested collection
+        if (restrictToCollection != null)
+            sql.append(" AND collection = ? ");
 
         String explicitSetColumn = explicitSetColumn(explicitSet);
         if (explicitSetColumn != null)
@@ -322,6 +327,8 @@ public class Helpers
         preparedStatement.setFetchSize(512);
 
         int parameterIndex = 1;
+        if (restrictToCollection != null)
+            preparedStatement.setString(parameterIndex++, restrictToCollection);
         if (explicitSetColumn != null)
             preparedStatement.setString(parameterIndex++, explicitSetValue(explicitSet));
         if (fromDateTime != null)
@@ -387,11 +394,14 @@ public class Helpers
             }
         }
 
+        // This is to avoid paging through non-matching rows
+        String restrictToCollection = includeDependenciesInTimeInterval ? null : requestedCollection;
+
         PreparedStatement preparedStatement;
         if (id == null)
         {
             preparedStatement = getIntervalStatement(connection, fromDateTime, untilDateTime,
-                    includeSilentChanges, afterModified, afterId, explicitSet, limit);
+                    includeSilentChanges, afterModified, afterId, explicitSet, restrictToCollection, limit);
         }
         else
         {
