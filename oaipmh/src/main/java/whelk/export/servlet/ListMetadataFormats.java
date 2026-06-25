@@ -108,7 +108,7 @@ public class ListMetadataFormats
     private static PreparedStatement prepareMatchingDocumentStatement(Connection dbconn, String id)
             throws SQLException
     {
-        String selectSQL = "SELECT deleted FROM lddb WHERE id = ? AND manifest->>'collection' <> 'definitions'";
+        String selectSQL = "SELECT deleted FROM lddb WHERE id = ?";
         PreparedStatement preparedStatement = dbconn.prepareStatement(selectSQL);
         preparedStatement.setString(1, id);
 
