@@ -2,6 +2,8 @@ package whelk.search2.querytree
 
 import spock.lang.Specification
 import whelk.search2.ESSettings
+import whelk.search2.esquerytree.EsBoost
+import whelk.search2.esquerytree.EsQueryTreeBuilder
 
 class FreeTextSpec extends Specification {
     def "to ES query (basic boosting)"() {
@@ -18,10 +20,11 @@ class FreeTextSpec extends Specification {
                                         "boost": 20
                                 ]
                         ],
-                        "analyze_wildcard": true,
+                        "analyze_wildcard": true
                 ]
         ]
-        Map esQuery = new FreeText("something").toEs(new ESSettings.Boost(boostSettings).fieldBoost())
+        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new EsBoost(boostSettings))
+        Map esQuery = EsQueryTreeBuilder.buildFrom(new FreeText("something"), esSettings).dsl()
 
         expect:
         esQuery == [
@@ -73,7 +76,8 @@ class FreeTextSpec extends Specification {
                         "quote_field_suffix": ".exact"
                 ]
         ]
-        Map esQuery = new FreeText("something").toEs(new ESSettings.Boost(boostSettings).fieldBoost())
+        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new EsBoost(boostSettings))
+        Map esQuery = EsQueryTreeBuilder.buildFrom(new FreeText("something"), esSettings).dsl()
 
         expect:
         esQuery == [
@@ -149,7 +153,8 @@ class FreeTextSpec extends Specification {
                         "analyze_wildcard": true
                 ]
         ]
-        Map esQuery = new FreeText("something").toEs(new ESSettings.Boost(boostSettings).fieldBoost())
+        ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new EsBoost(boostSettings))
+        Map esQuery = EsQueryTreeBuilder.buildFrom(new FreeText("something"), esSettings).dsl()
 
         expect:
         esQuery == [

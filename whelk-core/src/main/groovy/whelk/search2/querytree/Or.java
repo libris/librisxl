@@ -70,11 +70,6 @@ public non-sealed class Or extends Group {
     }
 
     @Override
-    Map<String, Object> wrap(List<Map<String, Object>> esChildren) {
-        return shouldWrap(esChildren);
-    }
-
-    @Override
     public boolean equals(Object o) {
         return o instanceof Or other && new HashSet<>(other.children()).equals(new HashSet<>(children));
     }

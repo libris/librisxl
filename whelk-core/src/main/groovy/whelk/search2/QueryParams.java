@@ -2,6 +2,7 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.esquerytree.EsBoost;
 import whelk.search2.querytree.FilterAlias;
 
 import java.util.Arrays;
@@ -53,7 +54,7 @@ public class QueryParams {
     public final String computedLabelLocale;
     public final List<FilterAlias.QueryDefinedAlias> aliased;
     public final int cursor;
-    public final ESSettings.Boost boost;
+    public final EsBoost boost;
 
     public final String q;
     public final String r;

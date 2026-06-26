@@ -1,14 +1,10 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.ESSettings;
-import whelk.search2.EsMappings;
 import whelk.search2.Operator;
-import whelk.search2.QueryUtil;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,22 +13,12 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.hash;
-import static whelk.JsonLd.ID_KEY;
-import static whelk.JsonLd.SEARCH_KEY;
-import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
-import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
-import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.Operator.EQUALS;
 import static whelk.search2.Operator.LIKE;
-import static whelk.search2.QueryUtil.boolWrap;
-import static whelk.search2.QueryUtil.mustNotWrap;
-import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.QueryUtil.parenthesize;
-import static whelk.search2.QueryUtil.shouldWrap;
 
 public non-sealed class Condition implements Node {
     private final Selector selector;
@@ -59,14 +45,6 @@ public non-sealed class Condition implements Node {
 
     public Value value() {
         return value;
-    }
-
-    @Override
-    public Map<String, Object> toEs(ESSettings esSettings) {
-        if (selector instanceof Property.TextQuery && value instanceof FreeText ft) {
-            return ft.toEs(esSettings);
-        }
-        return buildEsQuery(selector.esField(), value, esSettings);
     }
 
     @Override
@@ -217,171 +195,5 @@ public non-sealed class Condition implements Node {
         m.put("_value", value.queryForm());
 
         return m;
-    }
-
-    private Map<String, Object> buildEsQuery(String f, Value v, ESSettings esSettings) {
-        if (operator.isRange() && !v.isRangeOpCompatible()) {
-            // FIXME
-            return nonsenseFilter();
-        }
-        return switch (v) {
-            case DateTime dateTime -> esDateFilter(f, dateTime, esSettings);
-            case FreeText ft -> freeTextFilter(f, ft, selector, esSettings);
-            case InvalidValue ignored -> nonsenseFilter(); // TODO: Treat whole expression as free text?
-            case Link link -> operator == LIKE
-                    ? esLikeResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link, esSettings)
-                    : esResourceFilter(selector.isObjectProperty() ? f + "." + ID_KEY : f, link);
-            case VocabTerm vocabTerm -> esResourceFilter(f, vocabTerm);
-            case Term term -> esTermFilter(f, term);
-            case YearRange yearRange -> esYearRangeFilter(f, yearRange, esSettings);
-            case Any ignored -> existsFilter(f);
-        };
-    }
-
-    private Map<String, Object> freeTextFilter(String field, FreeText ft, Selector selector, ESSettings esSettings) {
-        if (ft.isDigits()) {
-            var digitsFilter = esDigitsFilter(field, ft.toString(), esSettings);
-            if (digitsFilter != null) {
-                return digitsFilter;
-            }
-        }
-
-        if (esSettings.mappings().isKeywordTypeField(field)) {
-            return esTermQueryFilter(field, ft.toString());
-        }
-
-        return esFreeTextFilter(selector.isObjectProperty() ? field + "." + SEARCH_KEY : field, ft, esSettings);
-    }
-
-    private Map<String, Object> esDateFilter(String field, DateTime d, ESSettings esSettings) {
-        // TODO: What about e.g. :firstIssueDate/:lastIssueDate? These have range xsd:date however are not indexed as date type in ES.
-        if (esSettings.mappings().isDateTypeField(field)) {
-            return esNumOrDateFilter(field, d.dateTime().toElasticDateString());
-        }
-        // Treat as free text
-        return buildEsQuery(field, new FreeText(d.toString()), esSettings);
-    }
-
-    private Map<String, Object> esDigitsFilter(String field, String digits, ESSettings esSettings) {
-        EsMappings esMappings = esSettings.mappings();
-
-        // Known placeholder values (0000, 9999) are excluded from 4-digit fields to prevent them from being treated as valid years in sorting and aggregations.
-        Predicate<String> isFourDigitsFieldValue = s -> s.length() == 4 && !s.equals("0000") && !s.equals("9999");
-
-        if (operator.isRange()) {
-            if (esMappings.hasFourDigitsShortField(field)) {
-                field += FOUR_DIGITS_SHORT_SUFFIX;
-            }
-            return esNumOrDateFilter(field, Long.parseLong(digits));
-        } else if (esMappings.hasFourDigitsKeywordField(field) && isFourDigitsFieldValue.test(digits)) {
-            return esNumOrDateFilter(field + FOUR_DIGITS_KEYWORD_SUFFIX, digits);
-        } else if (esMappings.hasKeywordSubfield(field)) {
-            return esTermQueryFilter(String.format("%s.%s", field, KEYWORD), digits);
-        } else if (esMappings.isLongTypeField(field)) {
-            return esNumOrDateFilter(field, Long.parseLong(digits));
-        }
-
-        return null;
-    }
-
-    private Map<String, Object> esYearRangeFilter(String field, YearRange yearRange, ESSettings esSettings) {
-        EsMappings esMappings = esSettings.mappings();
-
-        if (esMappings.hasFourDigitsShortField(field)) {
-            return esRangeFilter(field + FOUR_DIGITS_SHORT_SUFFIX, yearRange.toEsIntRange());
-        }
-
-        if (esMappings.isDateTypeField(field)) {
-            return esRangeFilter(field, yearRange.toEsDateRange());
-        }
-
-        return buildEsQuery(field, new FreeText(yearRange.toString()), esSettings);
-    }
-
-    private Map<String, Object> esNumOrDateFilter(String f, Object v) {
-        return switch (operator) {
-            case EQUALS, LIKE -> esTermQueryFilter(f, v);
-            case GREATER_THAN_OR_EQUALS -> esRangeFilter(f, "gte", v);
-            case GREATER_THAN -> esRangeFilter(f, "gt", v);
-            case LESS_THAN_OR_EQUALS -> esRangeFilter(f, "lte", v);
-            case LESS_THAN -> esRangeFilter(f, "lt", v);
-        };
-    }
-
-    private Map<String, Object> esFreeTextFilter(String f, FreeText ft, ESSettings esSettings) {
-        var boostSettings = esSettings.boost().fieldBoost();
-        return ft.toEs(boostSettings.withField(f));
-    }
-
-    private Map<String, Object> esResourceFilter(String f, Resource r) {
-        return esTermQueryFilter(f, r.jsonForm());
-    }
-
-    private Map<String, Object> esLikeResourceFilter(String f, Link l, ESSettings esSettings) {
-        if ("".equals(l.getNeedle())) {
-            return esResourceFilter(f, l);
-        }
-
-        var needle = Arrays.stream(l.getNeedle().split("\\s"))
-                .map(QueryUtil::quote)
-                .collect(Collectors.joining(" "));
-        var freeTextFilter = Map.of("simple_query_string", Map.of(
-                        "query", needle,
-                        "fields", List.of(selector.esField() + "." + SEARCH_KEY),
-                        "default_operator", "AND",
-                        "quote_field_suffix", ESSettings.Boost.EXACT_SUFFIX));
-        var notLinked = selector.getEsNestedStem(esSettings.mappings()).isPresent()
-            ? mustNotWrap(existsFilter(f))
-            : mustNotWrap(esResourceFilter(f, l));
-        var blankFilter = mustWrap(List.of(freeTextFilter, notLinked));
-
-        var linkedBeforeBlank = 50_000f;
-        return shouldWrap(
-                List.of(
-                        esTermQueryFilter(f, l.jsonForm(), linkedBeforeBlank),
-                        blankFilter
-                )
-        );
-    }
-
-    private Map<String, Object> esTermFilter(String f, Term t) {
-        return esTermQueryFilter(f, t.term());
-    }
-
-    private static Map<String, Object> esRangeFilter(String field, String esRangeOp, Object value) {
-        return esRangeFilter(field, Map.of(esRangeOp, value));
-    }
-
-    private static Map<String, Object> esRangeFilter(String field, Map<String, Object> esRangeObj) {
-        return filterWrap(rangeWrap(Map.of(field, esRangeObj)));
-    }
-
-    private static Map<String, Object> existsFilter(String field) {
-        return Map.of("exists", Map.of("field", field));
-    }
-
-    private static Map<String, Object> filterWrap(Map<?, ?> m) {
-        return boolWrap(Map.of("filter", m));
-    }
-
-    private static Map<String, Object> filterWrap(Map<?, ?> m, float boost) {
-        return Map.of("constant_score", Map.of("filter", m, "boost", boost));
-    }
-
-    private static Map<String, Object> rangeWrap(Map<?, ?> m) {
-        return Map.of("range", m);
-    }
-
-    private static Map<String, Object> esTermQueryFilter(String field, Object value) {
-        return filterWrap(Map.of("term", Map.of(field, value)));
-    }
-
-    private static Map<String, Object> esTermQueryFilter(String field, Object value, float boost) {
-        return filterWrap(Map.of("term", Map.of(field, Map.of("value", value))), boost);
-    }
-
-    // FIXME: Handle queries that are syntactically correct but make no sense and are guaranteed to return no hits
-    private static Map<String, Object> nonsenseFilter() {
-        return existsFilter("nonsense.field");
     }
 }

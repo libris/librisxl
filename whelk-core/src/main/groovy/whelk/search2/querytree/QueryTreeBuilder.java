@@ -142,6 +142,9 @@ public class QueryTreeBuilder {
         if (value instanceof Resource r && disambiguate.isRestrictedByValue(selector)) {
             selector = disambiguate.restrictByValue(selector, r.jsonForm());
         }
+        if (operator.isRange() && !value.isRangeOpCompatible()) {
+            value = InvalidValue.forbidden(token);
+        }
         Condition condition = new Condition(selector, operator, value);
         return condition.isTypeNode() ? condition.asTypeNode() : condition;
     }

@@ -15,11 +15,6 @@ import static whelk.search2.QueryUtil.parenthesize;
 
 public record Not(Node node) implements Node {
     @Override
-    public Map<String, Object> toEs(ESSettings esSettings) {
-        return QueryUtil.mustNotWrap(node.toEs(esSettings));
-    }
-
-    @Override
     public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         if (node instanceof FilterAlias) {
             return ExpandedNode.newEmpty();

@@ -18,13 +18,6 @@ public sealed abstract class Group implements Node permits And, Or {
 
     abstract String key();
 
-    abstract Map<String, Object> wrap(List<Map<String, Object>> esChildren);
-
-    @Override
-    public Map<String, Object> toEs(ESSettings esSettings) {
-        return wrap(children().stream().map(n -> n.toEs(esSettings)).toList());
-    }
-
     @Override
     public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         Map<Node, Node> nodeMap = new HashMap<>();

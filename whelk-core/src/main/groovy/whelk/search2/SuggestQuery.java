@@ -2,6 +2,7 @@ package whelk.search2;
 
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.esquerytree.EsQueryTree2;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.EsQuery;
@@ -112,7 +113,7 @@ public class SuggestQuery extends Query {
     @Override
     protected EsQuery doGetEsQuery() {
         var queryTree = getFullQueryTree(suggestQueryTree).expand(whelk.getJsonld());
-        var esQueryTree = new EsQueryTree(queryTree, esSettings);
+        var esQueryTree = new EsQueryTree2(queryTree, esSettings);
         var queryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
         queryDsl.remove("sort");
         return new EsQuery(queryDsl, Collections.emptyList());

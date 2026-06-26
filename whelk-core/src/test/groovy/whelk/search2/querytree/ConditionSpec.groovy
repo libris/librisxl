@@ -5,6 +5,7 @@ import whelk.JsonLd
 import whelk.search2.Disambiguate
 import whelk.search2.ESSettings
 import whelk.search2.EsMappings
+import whelk.search2.esquerytree.EsBoost
 
 class ConditionSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
@@ -116,7 +117,7 @@ class ConditionSpec extends Specification {
     def "To ES exists query"() {
         given:
         var exists = QueryTreeBuilder.buildTree(q, disambiguate)
-        ESSettings esSettings = new ESSettings(esMappings, new ESSettings.Boost([:]))
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
 
         expect:
         exists.toEs(esSettings) == [ "exists" : [ "field" : "p" ] ]

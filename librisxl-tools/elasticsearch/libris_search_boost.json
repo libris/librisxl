@@ -30,8 +30,7 @@
     "default_boost_factor": 400,
     "phrase_boost_divisor": 8,
     "analyze_wildcard": true,
-    "multi_match_type": "most_fields",
-    "include_exact_fields": true
+    "quote_field_suffix": ".exact"
   },
   "function_score": {
     "functions": [

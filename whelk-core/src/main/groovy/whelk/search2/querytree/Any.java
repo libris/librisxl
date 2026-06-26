@@ -13,11 +13,6 @@ import static whelk.search2.QueryUtil.matchAny;
 
 public sealed abstract class Any implements Node, Value permits Any.EmptyGroup, Any.EmptyString, Any.Wildcard {
     @Override
-    public Map<String, Object> toEs(ESSettings esSettings) {
-        return matchAny();
-    }
-
-    @Override
     public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         return ExpandedNode.identity(this);
     }

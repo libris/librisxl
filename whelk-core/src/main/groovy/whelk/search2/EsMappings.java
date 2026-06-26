@@ -25,7 +25,7 @@ public class EsMappings {
     private final Set<String> nestedTypeFields;
     private final Set<String> longTypeFields;
 
-    private final Set<String> nestedNotInParentFields;
+    private final Set<String> nestedIncludeInParentFields;
 
     private final boolean spellFieldExists;
 
@@ -41,9 +41,9 @@ public class EsMappings {
         this.dateTypeFields = union(mappings, m -> getFieldsOfType("date", m));
         this.nestedTypeFields = union(mappings, m -> getFieldsOfType("nested", m));
         this.longTypeFields = union(mappings, m -> getFieldsOfType("long", m));
-        this.nestedNotInParentFields = new HashSet<>(nestedTypeFields);
+        this.nestedIncludeInParentFields = new HashSet<>(nestedTypeFields);
         var includeInParent = union(mappings, m -> getFieldsWithSetting("include_in_parent", true, m));
-        this.nestedNotInParentFields.removeAll(includeInParent);
+        this.nestedIncludeInParentFields.retainAll(includeInParent);
         this.spellFieldExists = mappings
                 .stream()
                 .anyMatch(m -> DocumentUtil.getAtPath(m, List.of(SPELL_CHECK_FIELD.split("\\.")), null) != null);
@@ -77,8 +77,8 @@ public class EsMappings {
         return keywordTypeFields.contains(fieldPath);
     }
 
-    public boolean isNestedNotInParentField(String fieldPath) {
-        return nestedNotInParentFields.contains(fieldPath);
+    public boolean isNestedIncludeInParentField(String fieldPath) {
+        return nestedIncludeInParentFields.contains(fieldPath);
     }
 
     public boolean isAggregatable(String fieldPath) {
@@ -90,6 +90,12 @@ public class EsMappings {
         return keywordTypeFields.contains(fieldPath)
                 || dateTypeFields.contains(fieldPath)
                 || longTypeFields.contains(fieldPath);
+    }
+
+    public boolean isRangeQueryCompatible(String fieldPath) {
+        return dateTypeFields.contains(fieldPath)
+                || longTypeFields.contains(fieldPath)
+                || hasFourDigitsShortField(fieldPath);
     }
 
     public Set<String> getNestedTypeFields() {

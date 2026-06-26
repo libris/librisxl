@@ -1,6 +1,7 @@
 package whelk.search2;
 
 import whelk.Whelk;
+import whelk.search2.esquerytree.EsBoost;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +31,7 @@ public class ESSettings {
     private static final String BOOST_SETTINGS_FILE = "libris_search_boost.json";
 
     private EsMappings mappings;
-    private final Boost boost;
+    private final EsBoost boost;
     private final List<String> sourceExcludes;
 
     private int maxItems;
@@ -45,15 +46,15 @@ public class ESSettings {
     }
 
     // For test only
-    public ESSettings(EsMappings mappings, Boost boost) {
+    public ESSettings(EsMappings mappings, EsBoost boost) {
        this(mappings, boost, 1);
     }
 
-    public ESSettings withBoostSettings(Boost boost) {
+    public ESSettings withBoostSettings(EsBoost boost) {
         return new ESSettings(mappings, boost, maxItems);
     }
 
-    private ESSettings(EsMappings mappings, Boost boost, int maxItems) {
+    private ESSettings(EsMappings mappings, EsBoost boost, int maxItems) {
         this.mappings = mappings;
         this.boost = boost;
         this.maxItems = maxItems;
@@ -68,7 +69,7 @@ public class ESSettings {
         return mappings;
     }
 
-    public Boost boost() {
+    public EsBoost boost() {
         return boost;
     }
 
@@ -80,9 +81,9 @@ public class ESSettings {
         return maxItems;
     }
 
-    public Boost loadBoostSettings() {
-        Map<?, ?> settings = toMap(Boost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
-        return new Boost(settings);
+    public EsBoost loadBoostSettings() {
+        Map<?, ?> settings = toMap(EsBoost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
+        return new EsBoost(settings);
     }
 
     private List<String> loadSourceExcludesSettings() {
@@ -102,185 +103,185 @@ public class ESSettings {
                 "*." + SEARCH_KEY
         );
 
-        Map<?, ?> settings = toMap(Boost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
+        Map<?, ?> settings = toMap(EsBoost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
         return Stream.concat(
                 systemSourceExcludes.stream(),
                 getAsStream(settings, "source_excludes").map(String.class::cast)
         ).toList();
     }
 
-    public static Boost loadBoostSettings(String json) {
-        return new Boost(toMap(json));
+    public static EsBoost loadBoostSettings(String json) {
+        return new EsBoost(toMap(json));
     }
 
-    public record Boost(FieldBoost fieldBoost, FunctionScore functionScore, ConstantScore constantScore) {
-        public static final String EXACT_SUFFIX = ".exact";
-
-        public Boost(Map<?, ?> settings) {
-            this(FieldBoost.load(settings), FunctionScore.load(settings), ConstantScore.load(settings));
-        }
-
-        public record FieldBoost(List<Field> fields,
-                          float defaultBoostFactor,
-                          int phraseBoostDivisor,
-                          String multiMatchType,
-                          boolean analyzeWildcard,
-                          boolean includeExactFields) {
-            public record Field(String name, float boost, ScriptScore scriptScore) {
-                Field(Map<?, ?> settings) {
-                    this((String) settings.get("name"), getAsFloat(settings, "boost"), new ScriptScore(getAsMap(settings, "script_score")));
-                }
-
-                public record ScriptScore(String name, String function, String applyIf) {
-                    ScriptScore(Map<?, ?> settings) {
-                        this((String) settings.get("name"), (String) settings.get("function"), (String) settings.get("apply_if"));
-                    }
-
-                    public boolean isEmpty() {
-                        return function == null;
-                    }
-
-                    public String source() {
-                        return applyIf == null ? function : applyIf + " ? " + function + " : _score";
-                    }
-                }
-            }
-
-            public FieldBoost withField(String name) {
-                return withFields(List.of(name));
-            }
-
-            public FieldBoost withFields(List<String> fieldNames) {
-                return withFields(fieldNames, defaultBoostFactor);
-            }
-
-            public FieldBoost withFields(List<String> fieldNames, float boost) {
-                List<Field> fields = fieldNames.stream()
-                        .map(f -> {
-                            var fieldSettings = new HashMap<>();
-                            fieldSettings.put("name", f);
-                            fieldSettings.put("boost", boost);
-                            return new Field(fieldSettings);
-                        })
-                        .toList();
-                return _withFields(fields);
-            }
-
-            public FieldBoost divideBoosts(int divisor) {
-                List<Field> newFields = fields().stream()
-                        .map(f -> new Field(f.name(), f.boost() / divisor, f.scriptScore()))
-                        .toList();
-                return _withFields(newFields);
-            }
-
-            private FieldBoost _withFields(List<Field> fields) {
-                return new FieldBoost(fields, defaultBoostFactor, phraseBoostDivisor, multiMatchType, analyzeWildcard, includeExactFields);
-            }
-
-            private static FieldBoost load(Map<?, ?> settings) {
-                Map<?, ?> fieldBoostSettings = getAsMap(settings, "field_boost");
-                List<Field> fields = getAsStream(fieldBoostSettings, "fields")
-                        .map(Map.class::cast)
-                        .map(Field::new)
-                        .toList();
-                return new FieldBoost(fields,
-                        fieldBoostSettings.containsKey("default_boost_factor") ? getAsFloat(fieldBoostSettings, "default_boost_factor") : 1,
-                        getOrDefault(fieldBoostSettings, "phrase_boost_divisor", 1),
-                        (String) fieldBoostSettings.get("multi_match_type"),
-                        getOrDefault(fieldBoostSettings, "analyze_wildcard", false),
-                        getOrDefault(fieldBoostSettings, "include_exact_fields", false)
-                );
-            }
-        }
-
-        record FunctionScore(List<ScoreFunction> functions, String scoreMode, String boostMode) {
-            sealed interface ScoreFunction permits ScoreFunction.FieldValueFactor {
-                record FieldValueFactor(Map<?, ?> params, float weight) implements ScoreFunction {
-                    @Override
-                    public Map<String, Object> toEs() {
-                        return Map.of(key(), params,
-                                "weight", weight);
-                    }
-
-                    public static String key() {
-                        return "field_value_factor";
-                    }
-                }
-
-                Map<String, Object> toEs();
-
-                static ScoreFunction load(Map<?, ?> settings) {
-                    return FieldValueFactor.key().equals(settings.get("type"))
-                            ? new FieldValueFactor(getAsMap(settings, "params"), getAsFloat(settings, "weight"))
-                            : null;
-                }
-            }
-
-            public Map<String, Object> toEs() {
-                if (functions.isEmpty()) {
-                    return Map.of();
-                }
-                return Map.of("function_score",
-                        Map.of("query", matchAny(),
-                                "functions", functions.stream().map(ScoreFunction::toEs).toList(),
-                                "score_mode", "sum",
-                                "boost_mode", "sum"));
-            }
-
-            private static FunctionScore load(Map<?, ?> settings) {
-                Map<?, ?> functionScoreSettings = getAsMap(settings, "function_score");
-                List<FunctionScore.ScoreFunction> scoreFunctions = getAsStream(functionScoreSettings, "functions")
-                        .map(Map.class::cast)
-                        .map(FunctionScore.ScoreFunction::load)
-                        .filter(Objects::nonNull)
-                        .toList();
-                return new FunctionScore(scoreFunctions,
-                        (String) functionScoreSettings.get("score_mode"),
-                        (String) functionScoreSettings.get("boost_mode"));
-            }
-        }
-
-        record ConstantScore(List<Constant> constants) {
-            record Constant(String field, String value, float score) {
-                Constant(Map<?, ?> settings) {
-                    this((String) settings.get("field"), (String) settings.get("value"), getAsFloat(settings, "score"));
-                }
-
-                Map<String, Object> toEs() {
-                    return Map.of(
-                            "constant_score", Map.of(
-                                    "filter", Map.of("term", Map.of(field, value)),
-                                    "boost", score)
-                    );
-                }
-            }
-
-            public Map<String, Object> toEs() {
-                var queries = constants.stream().map(Constant::toEs).collect(Collectors.toList());
-                // Since the constant clauses are only for scoring, and we don't actually require any of the filters to match,
-                // include a match_all clause to make sure that the overall query never fails due to all constant queries failing.
-                queries.add(matchAny());
-                return QueryUtil.shouldWrap(queries);
-            }
-
-            private static ConstantScore load(Map<?, ?> settings) {
-                List<ConstantScore.Constant> constants = getAsStream(settings, "constant_score")
-                        .map(Map.class::cast)
-                        .map(ConstantScore.Constant::new)
-                        .toList();
-                return new ConstantScore(constants);
-            }
-        }
-
-        private static Map<String, Object> getAsMap(Map<?, ?> m, String k) {
-            return getOrDefault(m, k, Map.of());
-        }
-
-        private static float getAsFloat(Map<?, ?> m, String k) {
-            return ((Number) m.get(k)).floatValue();
-        }
-    }
-
+//    public record Boost(FieldBoost fieldBoost, FunctionScore functionScore, ConstantScore constantScore) {
+//        public static final String EXACT_SUFFIX = ".exact";
+//
+//        public Boost(Map<?, ?> settings) {
+//            this(FieldBoost.load(settings), FunctionScore.load(settings), ConstantScore.load(settings));
+//        }
+//
+//        public record FieldBoost(List<Field> fields,
+//                          float defaultBoostFactor,
+//                          int phraseBoostDivisor,
+//                          String multiMatchType,
+//                          boolean analyzeWildcard,
+//                          boolean includeExactFields) {
+//            public record Field(String name, float boost, ScriptScore scriptScore) {
+//                Field(Map<?, ?> settings) {
+//                    this((String) settings.get("name"), getAsFloat(settings, "boost"), new ScriptScore(getAsMap(settings, "script_score")));
+//                }
+//
+//                public record ScriptScore(String name, String function, String applyIf) {
+//                    ScriptScore(Map<?, ?> settings) {
+//                        this((String) settings.get("name"), (String) settings.get("function"), (String) settings.get("apply_if"));
+//                    }
+//
+//                    public boolean isEmpty() {
+//                        return function == null;
+//                    }
+//
+//                    public String source() {
+//                        return applyIf == null ? function : applyIf + " ? " + function + " : _score";
+//                    }
+//                }
+//            }
+//
+//            public FieldBoost withField(String name) {
+//                return withFields(List.of(name));
+//            }
+//
+//            public FieldBoost withFields(List<String> fieldNames) {
+//                return withFields(fieldNames, defaultBoostFactor);
+//            }
+//
+//            public FieldBoost withFields(List<String> fieldNames, float boost) {
+//                List<Field> fields = fieldNames.stream()
+//                        .map(f -> {
+//                            var fieldSettings = new HashMap<>();
+//                            fieldSettings.put("name", f);
+//                            fieldSettings.put("boost", boost);
+//                            return new Field(fieldSettings);
+//                        })
+//                        .toList();
+//                return _withFields(fields);
+//            }
+//
+//            public FieldBoost divideBoosts(int divisor) {
+//                List<Field> newFields = fields().stream()
+//                        .map(f -> new Field(f.name(), f.boost() / divisor, f.scriptScore()))
+//                        .toList();
+//                return _withFields(newFields);
+//            }
+//
+//            private FieldBoost _withFields(List<Field> fields) {
+//                return new FieldBoost(fields, defaultBoostFactor, phraseBoostDivisor, multiMatchType, analyzeWildcard, includeExactFields);
+//            }
+//
+//            private static FieldBoost load(Map<?, ?> settings) {
+//                Map<?, ?> fieldBoostSettings = getAsMap(settings, "field_boost");
+//                List<Field> fields = getAsStream(fieldBoostSettings, "fields")
+//                        .map(Map.class::cast)
+//                        .map(Field::new)
+//                        .toList();
+//                return new FieldBoost(fields,
+//                        fieldBoostSettings.containsKey("default_boost_factor") ? getAsFloat(fieldBoostSettings, "default_boost_factor") : 1,
+//                        getOrDefault(fieldBoostSettings, "phrase_boost_divisor", 1),
+//                        (String) fieldBoostSettings.get("multi_match_type"),
+//                        getOrDefault(fieldBoostSettings, "analyze_wildcard", false),
+//                        getOrDefault(fieldBoostSettings, "include_exact_fields", false)
+//                );
+//            }
+//        }
+//
+//        record FunctionScore(List<ScoreFunction> functions, String scoreMode, String boostMode) {
+//            sealed interface ScoreFunction permits ScoreFunction.FieldValueFactor {
+//                record FieldValueFactor(Map<?, ?> params, float weight) implements ScoreFunction {
+//                    @Override
+//                    public Map<String, Object> toEs() {
+//                        return Map.of(key(), params,
+//                                "weight", weight);
+//                    }
+//
+//                    public static String key() {
+//                        return "field_value_factor";
+//                    }
+//                }
+//
+//                Map<String, Object> toEs();
+//
+//                static ScoreFunction load(Map<?, ?> settings) {
+//                    return FieldValueFactor.key().equals(settings.get("type"))
+//                            ? new FieldValueFactor(getAsMap(settings, "params"), getAsFloat(settings, "weight"))
+//                            : null;
+//                }
+//            }
+//
+//            public Map<String, Object> toEs() {
+//                if (functions.isEmpty()) {
+//                    return Map.of();
+//                }
+//                return Map.of("function_score",
+//                        Map.of("query", matchAny(),
+//                                "functions", functions.stream().map(ScoreFunction::toEs).toList(),
+//                                "score_mode", "sum",
+//                                "boost_mode", "sum"));
+//            }
+//
+//            private static FunctionScore load(Map<?, ?> settings) {
+//                Map<?, ?> functionScoreSettings = getAsMap(settings, "function_score");
+//                List<FunctionScore.ScoreFunction> scoreFunctions = getAsStream(functionScoreSettings, "functions")
+//                        .map(Map.class::cast)
+//                        .map(FunctionScore.ScoreFunction::load)
+//                        .filter(Objects::nonNull)
+//                        .toList();
+//                return new FunctionScore(scoreFunctions,
+//                        (String) functionScoreSettings.get("score_mode"),
+//                        (String) functionScoreSettings.get("boost_mode"));
+//            }
+//        }
+//
+//        record ConstantScore(List<Constant> constants) {
+//            record Constant(String field, String value, float score) {
+//                Constant(Map<?, ?> settings) {
+//                    this((String) settings.get("field"), (String) settings.get("value"), getAsFloat(settings, "score"));
+//                }
+//
+//                Map<String, Object> toEs() {
+//                    return Map.of(
+//                            "constant_score", Map.of(
+//                                    "filter", Map.of("term", Map.of(field, value)),
+//                                    "boost", score)
+//                    );
+//                }
+//            }
+//
+//            public Map<String, Object> toEs() {
+//                var queries = constants.stream().map(Constant::toEs).collect(Collectors.toList());
+//                // Since the constant clauses are only for scoring, and we don't actually require any of the filters to match,
+//                // include a match_all clause to make sure that the overall query never fails due to all constant queries failing.
+//                queries.add(matchAny());
+//                return QueryUtil.shouldWrap(queries);
+//            }
+//
+//            private static ConstantScore load(Map<?, ?> settings) {
+//                List<ConstantScore.Constant> constants = getAsStream(settings, "constant_score")
+//                        .map(Map.class::cast)
+//                        .map(ConstantScore.Constant::new)
+//                        .toList();
+//                return new ConstantScore(constants);
+//            }
+//        }
+//
+//        private static Map<String, Object> getAsMap(Map<?, ?> m, String k) {
+//            return getOrDefault(m, k, Map.of());
+//        }
+//
+//        private static float getAsFloat(Map<?, ?> m, String k) {
+//            return ((Number) m.get(k)).floatValue();
+//        }
+//    }
+//
     private static Stream<?> getAsStream(Map<?, ?> m, String k) {
         return getOrDefault(m, k, List.of()).stream();
     }

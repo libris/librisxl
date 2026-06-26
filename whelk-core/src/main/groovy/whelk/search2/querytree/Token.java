@@ -2,13 +2,18 @@ package whelk.search2.querytree;
 
 import whelk.search2.QueryUtil;
 
+import java.util.regex.Pattern;
+
 public sealed interface Token permits Token.Quoted, Token.Raw {
     String value();
     int offset();
     String formatted();
     boolean isQuoted();
+    boolean isDigits();
 
     record Raw(String value, int offset) implements Token {
+        private static final Pattern DIGITS = Pattern.compile("\\d+");
+
         public Raw(String value) {
             this(value, -1);
         }
@@ -26,6 +31,11 @@ public sealed interface Token permits Token.Quoted, Token.Raw {
         @Override
         public boolean isQuoted() {
             return false;
+        }
+
+        @Override
+        public boolean isDigits() {
+            return DIGITS.matcher(value).matches();
         }
 
         @Override
@@ -48,6 +58,11 @@ public sealed interface Token permits Token.Quoted, Token.Raw {
         @Override
         public boolean isQuoted() {
             return true;
+        }
+
+        @Override
+        public boolean isDigits() {
+            return false;
         }
 
         @Override

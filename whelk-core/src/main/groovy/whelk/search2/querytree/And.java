@@ -61,11 +61,6 @@ public non-sealed class And extends Group {
     }
 
     @Override
-    Map<String, Object> wrap(List<Map<String, Object>> esChildren) {
-        return mustWrap(esChildren);
-    }
-
-    @Override
     public RdfSubjectType rdfSubjectType() {
         return children().stream()
                 .map(Node::rdfSubjectType)

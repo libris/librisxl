@@ -29,11 +29,6 @@ public sealed class FilterAlias implements Node {
     }
 
     @Override
-    public Map<String, Object> toEs(ESSettings esSettings) {
-        return getParsed().toEs(esSettings);
-    }
-
-    @Override
     public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         ExpandedNode expanded = getParsed().expand(jsonLd, rdfSubjectTypes);
         Map<Node, Node> nodeMap = new HashMap<>();

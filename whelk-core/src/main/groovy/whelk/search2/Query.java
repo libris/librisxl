@@ -4,6 +4,7 @@ import com.google.common.base.Predicates;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.esquerytree.EsQueryTree2;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.EsQuery;
@@ -140,12 +141,12 @@ public class Query {
         ExpandedQueryTree expandedQueryTree = fullQueryTree.expand(ld);
         ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
         if (!queryParams.stats.on) {
-            EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings);
+            EsQueryTree2 esQueryTree = new EsQueryTree2(expandedQueryTree, currentEsSettings);
             var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
             return new EsQuery(esQueryDsl, indexNames);
         }
 
-        EsQueryTree esQueryTree = new EsQueryTree(expandedQueryTree, currentEsSettings, getSelectedFacets());
+        EsQueryTree2 esQueryTree = new EsQueryTree2(expandedQueryTree, currentEsSettings, getSelectedFacets());
         var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
         esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectTypesList()));
 
@@ -282,8 +283,8 @@ public class Query {
     }
 
     private Map<String, Object> getEsQuery(Map<String, Object> mainQuery) {
-        var functionScore = esSettings.boost().functionScore().toEs();
-        var constantScore = esSettings.boost().constantScore().toEs();
+        var functionScore = esSettings.boost().functionScore();
+        var constantScore = esSettings.boost().constantScore();
         return mustWrap(Stream.of(mainQuery, functionScore, constantScore).filter(Predicate.not(Map::isEmpty)).toList());
     }
 

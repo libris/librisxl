@@ -3,6 +3,7 @@ package whelk.search2;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
+import whelk.search2.esquerytree.EsQueryTree2;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.EsQuery;
@@ -78,7 +79,7 @@ public class ObjectQuery extends Query {
         }
 
         ExpandedQueryTree expanded = queryTree.expand(ld);
-        EsQueryTree esQueryTree = new EsQueryTree(expanded, esSettings);
+        EsQueryTree2 esQueryTree = new EsQueryTree2(expanded, esSettings);
         Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
 
         if (!queryParams.stats.on) {

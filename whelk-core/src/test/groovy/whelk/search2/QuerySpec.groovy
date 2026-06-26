@@ -2,13 +2,14 @@ package whelk.search2
 
 import spock.lang.Specification
 import whelk.JsonLd
+import whelk.search2.esquerytree.EsBoost
 import whelk.search2.querytree.QueryTree
 import whelk.search2.querytree.TestData
 
 class QuerySpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
-    ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
+    ESSettings esSettings = new ESSettings(TestData.getEsMappings(), new EsBoost([:]))
 
     def appConfig1 = [
             'statistics': [

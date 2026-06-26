@@ -2,13 +2,14 @@ package whelk.search2
 
 import spock.lang.Specification
 import whelk.JsonLd
+import whelk.search2.esquerytree.EsBoost
 import whelk.search2.querytree.Link
 import whelk.search2.querytree.Property
 import whelk.search2.querytree.TestData
 
 class ObjectQuerySpec extends Specification {
     JsonLd jsonLd = TestData.getJsonLd()
-    ESSettings esMappings = new ESSettings(TestData.getEsMappings(), new ESSettings.Boost([:]))
+    ESSettings esMappings = new ESSettings(TestData.getEsMappings(), new EsBoost([:]))
 
     def "build agg query with curated predicates"() {
         given:
