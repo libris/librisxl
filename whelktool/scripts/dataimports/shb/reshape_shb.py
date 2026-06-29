@@ -211,6 +211,10 @@ def parse_note(note, dotnote=True):
 
     >>> parse_note('The Swedish pioneer, ISSN0039-7326, 27, 1976:3, s. 215-221')
     (None, 'The Swedish pioneer, ISSN0039-7326, 27, 1976:3', None, 's. 215-221')
+
+    >>> parse_note('Jonsson, Inge, Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd / Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
+    ('Jonsson, Inge', 'Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd ', None, None)
+
     """
     ()
     personnameparts = []
@@ -237,8 +241,12 @@ def parse_note(note, dotnote=True):
 
     if ' : ' in rest:
         title, rest = rest.split(' : ', 1)
-        if ' : ' in rest:
-            subtitle, rest = rest.split(' : ', 1)
+        if ':' in rest:
+            parts =  re.split(r" ([./])", rest, maxsplit=1)
+            subtitle = parts[0]
+            if len(parts) > 1:
+                rest = parts[1]
+
     elif rest.endswith(')'):
         opencount = 0
         for i, c in enumerate(rest[::-1]):
