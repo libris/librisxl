@@ -10,68 +10,69 @@ USE_ANNOT = False
 property_counts = Counter()
 subject_counts = Counter()
 
+
 def convert(data, biblios: dict, subject_mappings) -> dict | None:
 
     # Set start_year and publ_year to None
     start_year: str | None = None
     publ_year: str | None = None
 
-    graph = data['@graph']
+    graph = data["@graph"]
     rec, thing, *rest = graph
-    
-    if 'bibliography' in rec:
-        rec['bibliography'] = [{'@id': it['@id']} for it in rec['bibliography']]
 
-    del rec['marc:catalogingSource']  # "Annan verksamhet"
-    #del rec['marc:typeOfControl']
+    if "bibliography" in rec:
+        rec["bibliography"] = [{"@id": it["@id"]} for it in rec["bibliography"]]
+
+    del rec["marc:catalogingSource"]  # "Annan verksamhet"
+    # del rec['marc:typeOfControl']
 
     # Extract work data from the graph and place in instanceOf
     if rest:
         work = rest[0]
-        assert work['@id'].endswith('#work')
-        del work['@id']
+        assert work["@id"].endswith("#work")
+        del work["@id"]
         del graph[2]
     else:
-        work = {'@type': 'Work'}
+        work = {"@type": "Work"}
 
-    thing['instanceOf'] = work
+    thing["instanceOf"] = work
 
-    if 'marc:primaryProvisionActivity' in thing and 'publication' in thing:
-        publ = thing['publication'][0]
-        start_year = publ.get('startYear')
-        publ_year = publ.get('endYear') or publ.get('year')
-        if publ_year == thing['marc:primaryProvisionActivity']['year']:
-            del thing['marc:primaryProvisionActivity']
+    if "marc:primaryProvisionActivity" in thing and "publication" in thing:
+        publ = thing["publication"][0]
+        start_year = publ.get("startYear")
+        publ_year = publ.get("endYear") or publ.get("year")
+        if publ_year == thing["marc:primaryProvisionActivity"]["year"]:
+            del thing["marc:primaryProvisionActivity"]
 
     partnum = thing.pop("part")[0]
     iri: str | None = None
     source: dict | None = None
 
     # Try to link local entities
-    if hosts := thing.pop('isPartOf'):
+    if hosts := thing.pop("isPartOf"):
         assert len(hosts) == 1
         host = hosts[0]
 
-        if 'associatedMedia' in thing:
-            host['associatedMedia'] = [
+        if "associatedMedia" in thing:
+            host["associatedMedia"] = [
                 {
-                    "@id": am['uri'][0].replace(
-                        'http://regina.kb.se/shb/', 'https://shb.kb.se/'
+                    "@id": am["uri"][0].replace(
+                        "http://regina.kb.se/shb/", "https://shb.kb.se/"
                     )
                 }
-                for am in thing.pop('associatedMedia')
+                for am in thing.pop("associatedMedia")
             ]
 
-        if 'publication' in thing:
-            host['hasTemporalCoverage'] = thing.pop('publication')[0]
-            host['hasTemporalCoverage']['@type'] = 'TemporalCoverage'
+        if "publication" in thing:
+            host["hasTemporalCoverage"] = thing.pop("publication")[0]
+            host["hasTemporalCoverage"]["@type"] = "TemporalCoverage"
 
-        hostrecs = host.pop('describedBy')
+        hostrecs = host.pop("describedBy")
         assert len(hostrecs) == 1
 
-        if ctrlnr := hostrecs[0].get('controlNumber'):
+        if ctrlnr := hostrecs[0].get("controlNumber"):
             iri = f"http://libris.kb.se/resource/bib/{ctrlnr}"
-            host['@id'] = iri
+            host["@id"] = iri
             if iri in biblios:
                 existing_host_desc = biblios[iri]
                 has_biblio_repr = json.dumps(existing_host_desc, sort_keys=True)
@@ -86,107 +87,106 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
 
             # Alternative to bibliography annotation:
             # thing['cataloguedIn'] = {'@id': iri, "@annotation": {"part": thing.pop("part")}} # in the work...
-            for biblioref in rec['bibliography']:
-                bibliography_shb = 'https://libris.kb.se/library/SHB'
-                if biblioref['@id'] == bibliography_shb:
+            for biblioref in rec["bibliography"]:
+                bibliography_shb = "https://libris.kb.se/library/SHB"
+                if biblioref["@id"] == bibliography_shb:
                     source_id = f"{rec['@id']}#{partnum}"
                     source = {
                         "@id": source_id,
                         "@type": "Source",
-                        "isPartOf": {'@id': iri},
+                        "isPartOf": {"@id": iri},
                         "item": partnum,
                     }
                     # biblios[source_id] = source
-                    rec['describes'] = source
+                    rec["describes"] = source
                     annot: dict = {"source": {"@id": source_id}}
                     if USE_ANNOT:
-                        biblioref['@annotation'] = annot
+                        biblioref["@annotation"] = annot
                     else:
-                        annot["_object"] = {'@id': bibliography_shb}
-                        rec.setdefault('_statementBy', {})['bibliography'] = annot
+                        annot["_object"] = {"@id": bibliography_shb}
+                        rec.setdefault("_statementBy", {})["bibliography"] = annot
                     break
 
     # Extract name, title, and subtitle from note
-    if 'hasNote' in thing:
-        assert len(thing['hasNote']) == 1
-        note = thing.pop('hasNote')[0]['label']
+    if "hasNote" in thing:
+        assert len(thing["hasNote"]) == 1
+        note = thing.pop("hasNote")[0]["label"]
 
-        note = note.replace('—', '-').replace(' ', ' ').replace('  ', ' ')
+        note = note.replace("—", "-").replace(" ", " ").replace("  ", " ")
 
-        if note == 'TABORT':
+        if note == "TABORT":
             return None
 
-        PARTOF_MARK = ' - I:'
+        PARTOF_MARK = " - I:"
         if PARTOF_MARK in note:
             note, partof_note = note.split(PARTOF_MARK, 1)
         else:
             partof_note = None
 
-        name, title, subtitle, note_rest = parse_note(note)
-                
-        thing['hasTitle'] = {"@type": "Title", "mainTitle": title}
-        
+        ### Parse the note ###
+        name, title, subtitle, extent, note_rest = parse_note(note)
+
+        thing["hasTitle"] = {"@type": "Title", "mainTitle": title}
+
+        ### Add information from the parsed note to the instance ###
+
         if subtitle:
-            thing['hasTitle']['subtitle'] = subtitle
+            thing["hasTitle"]["subtitle"] = subtitle
 
         if name:
-            thing['responsibilityStatement'] = name
-        
+            thing["responsibilityStatement"] = name
+
+        if extent:
+            thing["extent"] = [{"@type": "Extent", "label": extent}]
+
         if note_rest:
-            thing['hasNote'] = [{"@type": "Note", "label": note_rest}]
+            thing["hasNote"] = [{"@type": "Note", "label": note_rest}]
             issn = extract_issn(note_rest)
             if issn:
-                thing['issn'] = issn
+                thing["issn_from_note"] = issn
 
         if partof_note:
-            pname, ptitle, subtitle, prest = parse_note(partof_note, dotnote=False)
+            part_name, part_title, part_subtitle, part_extent, part_rest = parse_note(partof_note, dotnote=False)
             # assert not subtitle
             # TODO Deceide whether the thing in partOf is issue or series
-            issue = {
-                "@type": "Instance",
-                "label": ptitle
-            }
-            if pname:
-                issue["responsibilityStatement"] = pname
-            if prest:
+            issue = {"@type": "Instance", "label": part_title}
+            if part_name:
+                issue["responsibilityStatement"] = part_name
+            if part_title:
+                part_issn = extract_issn(part_title)
+                if part_issn:
+                    issue["identifiedBy"] = {"@type": "ISSN", "value": part_issn}
+            if part_rest:
                 if USE_ANNOT:
-                    issue["@annotation"] = {"comment": prest}
+                    issue["@annotation"] = {"comment": part_rest}
                 else:
                     pass
-                    #raise NotImplementedError  # TODO
-            if ptitle:
-                part_issn = extract_issn(ptitle)
-                if part_issn:
-                    issue["identifiedBy"] = {
-                    "@type": "ISSN",
-                    "value": part_issn
-                }
-
-            thing['partOf'] = issue
+                    # raise NotImplementedError  # TODO
+            thing["partOf"] = issue
 
         # TODO: remove 'ComponentPart', only re-add for obviously paginated,
         # partOf:s and/or "newspaper reference"?
 
-    # Add subjects
+    ### Add subject headings to the instance ###
     # TODO Add SAB as well?
     if partnum and publ_year:
-        years_key = f'{start_year}-{publ_year}' if start_year else publ_year
+        years_key = f"{start_year}-{publ_year}" if start_year else publ_year
         if rownummap := subject_mappings.get(years_key):
             if subjectrefs := rownummap.get(partnum):  # TODO: opt + 'a' ...
-                work_subjects = work.setdefault('subject', [])
+                work_subjects = work.setdefault("subject", [])
 
-                work_subjects += [{'@id': s} for s in subjectrefs]
+                work_subjects += [{"@id": s} for s in subjectrefs]
                 subject_counts.update(subjectrefs)
 
                 if USE_ANNOT and iri:
                     for s in work_subjects:
-                        s['@annotation'] = {"source": source}
+                        s["@annotation"] = {"source": source}
             # else:
             #    print(f"{partnum} not in {list(rownummap)} for {years_key}", file=sys.stderr)
 
     property_counts.update(walk_keys(thing))
 
-    return {'@id': graph[0]['@id'], '@graph': data}
+    return {"@id": graph[0]["@id"], "@graph": data}
 
 
 def parse_note(note, dotnote=True):
@@ -198,84 +198,114 @@ def parse_note(note, dotnote=True):
     (None, 'Anything', None, 'Surname, G.-N., Stuff.')
 
     >>> parse_note("Schuck, A., H. Schücks enka & Co. AB 150 år. [Stockholm.] Sthlm 1947, 28 s.")
-    ('Schuck, A.', 'H. Schücks enka & Co. AB 150 år', None, '[Stockholm.] Sthlm 1947, 28 s.')
+    ('Schuck, A.', 'H. Schücks enka & Co. AB 150 år', None,  '28 s.', '[Stockholm.] Sthlm 1947, 28 s.')
 
     >>> parse_note("Meyerson, Å., Ett besök vid Stora Kopparberget och Sala gruva år 1662. (BBV 23 (1938), s. 325-343.)")
-    ('Meyerson, Å.', 'Ett besök vid Stora Kopparberget och Sala gruva år 1662', None, 'BBV 23 (1938), s. 325-343.')
+    ('Meyerson, Å.', 'Ett besök vid Stora Kopparberget och Sala gruva år 1662', None, ,'s. 325-343.', 'BBV 23 (1938), s. 325-343.')
 
     >>> parse_note('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar...". Nyköping, 1976, s. 48-62')
-    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', None, 'Nyköping, 1976, s. 48-62')
+    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', None, , 's. 48-62', 'Nyköping, 1976, s. 48-62')
 
     >>> parse_note('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar..." : någotom Strängnäsgymnasiets musiksamling under 1600-talet. - I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62')
-    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', None, 'någotom Strängnäsgymnasiets musiksamling under 1600-talet. - I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62')
+    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', 'någotom Strängnäsgymnasiets musiksamling under 1600-talet.', '- I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62')
 
     >>> parse_note('The Swedish pioneer, ISSN0039-7326, 27, 1976:3, s. 215-221')
-    (None, 'The Swedish pioneer, ISSN0039-7326, 27, 1976:3', None, 's. 215-221')
+    (None, 'The Swedish pioneer, ISSN0039-7326, 27, 1976:3', None, 's. 215-221', 's. 215-221')
 
     >>> parse_note('Jonsson, Inge, Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd / Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
-    ('Jonsson, Inge', 'Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd ', None, None)
+    ('Jonsson, Inge', 'Swedenborg', 'sökaren i naturens och andens värld :hans verk och efterföljd', '187 s.', '/ Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
+
+    >>> parse_note('Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)')
+    ('Fries, Elias', 'Hembygdsperiodika', 'förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl.', '40 bl.', '- Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)')
+
+    >>> parse_note('Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed')
+    ('Edvardsson, Lars', 'Kyrka och judendom', 'svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975.', '194 s.' '-Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed')
 
     """
-    ()
     personnameparts = []
     initial = -1
-    commaseparated = note.split(',')
+    commaseparated = note.split(",")
     name = commaseparated.pop(0).strip()
-    rest = ''
+    rest = ""
 
-    if ' ' in name.strip():
+    if " " in name.strip():
         name = None
         rest = note
 
     elif commaseparated:
         first = commaseparated[0]
-        if looks_like_initial(first.strip()) or re.match(r'^(\w|\s)+$', first):
-            name += ', ' + commaseparated.pop(0).strip()
+        if looks_like_initial(first.strip()) or re.match(r"^(\w|\s)+$", first):
+            name += ", " + commaseparated.pop(0).strip()
         else:
             commaseparated.insert(0, name)
             name = None
 
-        rest = ','.join(commaseparated).strip()
+        rest = ",".join(commaseparated).strip()
 
+    # Extract title and subtitle
+    title, subtitle, rest = extract_title_and_subtitle(rest, dotnote)
+
+    # Extrct extent (pages, leaves)
+    extent = extract_extent(rest)
+
+    return (
+        name,
+        title.strip(),
+        subtitle.strip() or None,
+        extent or None,
+        rest.strip() or None,
+    )
+
+
+def extract_title_and_subtitle(rest, dotnote):
     subtitle = ""
 
-    if ' : ' in rest:
-        title, rest = rest.split(' : ', 1)
-        if ':' in rest:
-            parts =  re.split(r" ([./])", rest, maxsplit=1)
-            subtitle = parts[0]
-            if len(parts) > 1:
-                rest = parts[1]
+    if " : " in rest:
+        title, rest = rest.split(" : ", 1)
+        #        if ':' in rest:
+        parts = re.split(r" ([./-])", rest, maxsplit=1)
+        subtitle = parts[0]
+        if len(parts) > 1:
+            rest = "".join(parts[1:])
 
-    elif rest.endswith(')'):
+    # Another way to get the title
+    elif rest.endswith(")"):
         opencount = 0
         for i, c in enumerate(rest[::-1]):
-            if c == ')':
+            if c == ")":
                 opencount += 1
-            if c == '(':
+            if c == "(":
                 opencount -= 1
                 if opencount == 0:
                     break
         title, rest = rest[: -i - 1], rest[-i:-1]
-        title = title.strip().removesuffix('.')
+        title = title.strip().removesuffix(".")
+
+    # Another way to get the title
     else:
-        x = int(rest.count('. ') * 0.3) or 1
-        title, *rest = rest.rsplit('. ', x) if dotnote and '. ' in rest else (rest, "")
-        rest = '. '.join(rest)
-        restispages = all(s.strip().isdigit() for s in rest.split('-'))
+        x = int(rest.count(". ") * 0.3) or 1
+        title, *rest = rest.rsplit(". ", x) if dotnote and ". " in rest else (rest, "")
+        rest = ". ".join(rest)
+        restispages = all(s.strip().isdigit() for s in rest.split("-"))
         if len(title.strip()) == 1:
-            moretitle, rest = rest.split('.', 1) if '.' in rest else (rest, "")
-            title += '.' + moretitle
+            moretitle, rest = rest.split(".", 1) if "." in rest else (rest, "")
+            title += "." + moretitle
         elif restispages:
-            title, prerest = title.rsplit('. ', 1) if '. ' in title else (title, "")
+            title, prerest = title.rsplit(". ", 1) if ". " in title else (title, "")
             if not prerest:
-                title, posttitle = title.rsplit(' ', 1)
+                title, posttitle = title.rsplit(" ", 1)
                 prerest = posttitle.strip()
-                title = title.strip().removesuffix(',')
+                title = title.strip().removesuffix(",")
 
-            rest = prerest + '. ' + rest
+            rest = prerest + ". " + rest
 
-    return name, title.strip(), subtitle.strip() or None, rest.strip() or None
+    return title, subtitle, rest
+
+
+def extract_extent(note: str):
+    pages = re.search(r"(\d+)(?:-(\d+))?\s*(?:s|bl)\b.", note)
+    if pages:
+        return pages[0].strip()
 
 
 def looks_like_initial(s: str) -> bool:
@@ -293,7 +323,7 @@ def looks_like_initial(s: str) -> bool:
     """
     if not s:
         return False
-    return s[0].isupper() and s.endswith('.') and (len(s) == 2 or s[-2].isupper())
+    return s[0].isupper() and s.endswith(".") and (len(s) == 2 or s[-2].isupper())
 
 
 def pretty_print_sample(lines, biblios, subject_mappings, context_file):
@@ -316,7 +346,7 @@ def pretty_print_sample(lines, biblios, subject_mappings, context_file):
     results = list(biblios.values()) + results
 
     print(
-        json.dumps({'@context': ctx['@context'], '@graph': results}, ensure_ascii=False)
+        json.dumps({"@context": ctx["@context"], "@graph": results}, ensure_ascii=False)
     )
 
 
@@ -330,7 +360,7 @@ def make_subject_mappings(subject_mapping_sheets: list[str]) -> dict:
 
 
 def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
-    years_key = sheet_file.with_suffix('').name.split('-', 1)[-1]
+    years_key = sheet_file.with_suffix("").name.split("-", 1)[-1]
     assert years_key not in subject_mappings
     rownummap = subject_mappings[years_key] = {}
 
@@ -345,7 +375,7 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
                 if not subjects and not x:
                     continue
 
-                if x.startswith('https://id.kb.se/term/'):
+                if x.startswith("https://id.kb.se/term/"):
                     subjects.append(x)
                 elif endnum is None:
                     endnum = x
@@ -371,12 +401,12 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
                 assert startnum
 
                 startnum = startnum.strip()
-                if startnum.endswith('a'):
+                if startnum.endswith("a"):
                     startnum = startnum[:-1]
 
                 if endnum:
                     endnum = endnum.strip()
-                    if endnum.endswith('a'):
+                    if endnum.endswith("a"):
                         endnum = endnum[:-1]
 
                     for n in range(int(startnum), int(endnum) + 1):
@@ -384,21 +414,20 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
                 else:
                     rownummap[f"{startnum}+"] = subjects
 
+
 def extract_issn(value):
-    ISSN_PATTERN = re.compile(r'\d{4}-\d{3}[\dX]')
+    ISSN_PATTERN = re.compile(r"\d{4}-\d{3}[\dX]")
 
     issn = re.findall(ISSN_PATTERN, value)
 
     if len(issn) == 1 and valid_issn(issn[0]):
         return issn[0]
 
+
 def valid_issn(issn):
     digits = issn.replace("-", "")
 
-    total = sum(
-        int(digits[i]) * (8 - i)
-        for i in range(7)
-    )
+    total = sum(int(digits[i]) * (8 - i) for i in range(7))
 
     remainder = total % 11
     check = 11 - remainder
@@ -412,6 +441,7 @@ def valid_issn(issn):
 
     return digits[-1] == expected
 
+
 def walk_keys(obj, prefix=""):
     if isinstance(obj, dict):
         for key, value in obj.items():
@@ -419,15 +449,16 @@ def walk_keys(obj, prefix=""):
             yield path
             yield from walk_keys(value, path)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import argparse
 
     argp = argparse.ArgumentParser()
-    argp.add_argument('-t', '--test', action='store_true', default=False)
-    argp.add_argument('--sample-pretty-with')
-    argp.add_argument('infile')
-    argp.add_argument('subject_mapping_sheets')
-    argp.add_argument('reportfile')
+    argp.add_argument("-t", "--test", action="store_true", default=False)
+    argp.add_argument("--sample-pretty-with")
+    argp.add_argument("infile")
+    argp.add_argument("subject_mapping_sheets")
+    argp.add_argument("reportfile")
     args = argp.parse_args()
 
     if args.test:
@@ -439,7 +470,7 @@ if __name__ == '__main__':
     subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
     if not subject_files:
         raise FileNotFoundError("No CSV files found")
-    
+
     subject_mappings = make_subject_mappings(subject_files)
 
     biblios: dict = {}
@@ -451,7 +482,7 @@ if __name__ == '__main__':
         for l in f:
             if data := convert(json.loads(l), biblios, subject_mappings):
                 print(json.dumps(data, ensure_ascii=False))
-    
+
     with open(args.reportfile, "w", encoding="utf-8") as f:
         f.write("# Egenskaper\n\n")
         f.write("| Egenskap | Antal |\n")
