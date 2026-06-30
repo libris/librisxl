@@ -225,12 +225,21 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     // TODO: optimize by returning result *Map* (check only id in keys unless more is needed)
     Collection<Map<String, Object>> getCategoryOfType(List<Map<String, Object>> categories, String type, boolean keepImplied=false) {
         var result = new LinkedHashMap()
-        collectCategoryOfType(categories, type, keepImplied, result)
+        var seen = new HashSet<String>()
+        aggregateCategoryOfType(categories, seen, type, keepImplied, result)
         return result.values().toList()
     }
 
-    private void collectCategoryOfType(List<Map<String, Object>> categories, String type, boolean keepImplied, Map<String, Map<String, Object>> result) {
+    private void aggregateCategoryOfType(List<Map<String, Object>> categories, Set<String> seen, String type, boolean keepImplied, Map<String, Map<String, Object>> result) {
         for (Map<String, Object> ctg : categories) {
+            if (ID in ctg) {
+              var id = ctg[ID]
+              if (id in seen) {
+                continue
+              }
+              seen << id
+            }
+
             if (
                 asList(ctg[TYPE]).any { t -> isSubClassOf(t, type) }
                 || isComplexSubjectWithFirstTermOfType(ctg, type)
@@ -238,6 +247,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
                 def key = ctg[ID] ?: '_:b' + result.size().toString() // id or throwaway fake blank id
                 result[key] = ctg
             }
+
             for (rel in matchRelations) {
                 var implied = getDescriptions(ctg[rel], true)
                 if (!keepImplied) {
@@ -251,18 +261,20 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
                         }
                     }
                 }
-                collectCategoryOfType(implied, type, keepImplied, result)
+                aggregateCategoryOfType(implied, seen, type, keepImplied, result)
             }
         }
     }
 
     Set<String> collectImpliedTypesFromCategory(List<Map<String, Object>> categories) {
       var result = new HashSet<String>()
-      collectImpliedTypesFromCategory(categories, result)
+      var seen = new HashSet<String>()
+      aggregateImpliedTypesFromCategory(categories, seen, result)
       return result
     }
-    void collectImpliedTypesFromCategory(List<Map<String, Object>> categories, Set<String> result) {
-        // TODO: if multiple types, select one (e.g. prefer Text over StillImage?)
+
+    private void aggregateImpliedTypesFromCategory(List<Map<String, Object>> categories, Set<String> seen, Set<String> result) {
+        // TODO: break on preferred type? (e.g. prioritizedWorkLegacyTypes)
         for (ctg in categories) {
           var type = categoryTypeMap[ctg[ID]]
           if (type) {
@@ -273,7 +285,13 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         // (but less optimal for lots of categories)
         for (rel in matchRelations) {
             for (category in categories) {
-                collectImpliedTypesFromCategory(getDescriptions(category[rel]), result)
+                var id = category[ID]
+                var key = rel + ':' + id
+                if (key in seen) {
+                  continue
+                }
+                seen << key
+                aggregateImpliedTypesFromCategory(getDescriptions(category[rel]), seen, result)
             }
         }
     }
