@@ -15,14 +15,16 @@ def prepare(entity: dict, match_counts: dict) -> dict:
 
     instance = entity["@graph"]["@graph"][1]
     has_title = instance["hasTitle"]
+    full_title = f'{has_title.get("mainTitle", "")} {has_title.get("subtitle", "")}'
     responsibility_statement = instance.get("responsibilityStatement")
 
-    if has_title and responsibility_statement:
+    if (has_title and responsibility_statement):
         prepped = {
             "@id": instance["@id"],
-            "full_title": f"{has_title.get("mainTitle", "")} {has_title.get("subtitle", "")}",
+            "full_title": normalize(full_title),
             "responsibility_statement": responsibility_statement,
-            "part_issn": instance.get("partOf", {}).get("identifiedBy", {}).get("value", "")
+            "part_of_issn": instance.get("partOf", {}).get("identifiedBy", {}).get("value", ""),
+            "issn_from_note": instance.get("issn_from_note", "")
             }
         return prepped
     else: 
@@ -30,7 +32,7 @@ def prepare(entity: dict, match_counts: dict) -> dict:
             match_counts["insufficient"] += 1
         else:
             match_counts["insufficient"] = 1
-        report.write(f"{instance["@id"]}\tInsufficient data - matching requires at least title and contributor\n")
+        report.write(f"{instance["@id"]}\tTitle or contributor missing\t{json.dumps(instance)}\n")
 
 
 
@@ -53,9 +55,9 @@ def compare(shbd: dict, match_record: dict):
 
 def normalize(value: str):
     # Remove diacritics -- ??? too radical or useful with the OCR'd data?
-    "".join(
-        c for c in unicodedata.normalize("NFKD", value) if not unicodedata.combining(c)
-    )
+    #"".join(
+    #    c for c in unicodedata.normalize("NFKD", value) if not unicodedata.combining(c)
+    #)
 
     # Make lowercase
     value = value.lower()
@@ -79,7 +81,7 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
     headers = {"Accept": "application/ld+json"}
 
     # Match on full title and contributor
-    query_string = f"title:{shbd_prepepd['full_title']} contributor:{shbd_prepepd['responsibility_statement']}* {shbd_prepepd['part_issn']}"
+    query_string = f"title:{shbd_prepepd['full_title']} contributor:{shbd_prepepd['responsibility_statement']}* {shbd_prepepd['part_of_issn']} {shbd_prepepd['issn_from_note']}".replace(":","")
 
     params = {"_q": query_string,
           "_lens": "cards",
@@ -87,6 +89,7 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
 
     res = requests.get("http://libris-qa.kb.se/find?", params = params, headers=headers)
     res.raise_for_status()
+    time.sleep(0.001)
 
     matches = res.json()["items"]
 
@@ -125,12 +128,12 @@ match_counts = {}
 #        libris_prepepd_list.append(prepare(libris_instance))
 
 with open(args.shbd_file, "r") as sf, open(args.match_file, "w") as match_file, open(args.report, "w") as report:
-    match_file.write("number_of_matches\tquery_string\tid_map\n")
+    match_file.write("id\tnumber_of_matches\tquery_string\tid_map\n")
 
 
     for idx, line in enumerate(sf):
         
-        if idx % 100 == 0:
+        if idx % 500 == 0:
             match_file.flush()
             report.flush()
             elapsed = idx / (time.time() - start)
