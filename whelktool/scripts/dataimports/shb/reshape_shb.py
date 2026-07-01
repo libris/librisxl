@@ -9,6 +9,9 @@ USE_ANNOT = False
 
 property_counts = Counter()
 subject_counts = Counter()
+extent_counts = Counter()
+curiosity_counts = Counter()
+oddities = []
 
 
 def convert(data, biblios: dict, subject_mappings) -> dict | None:
@@ -17,8 +20,21 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     start_year: str | None = None
     publ_year: str | None = None
 
+    # Get the record and main entity
     graph = data["@graph"]
-    rec, thing, *rest = graph
+    rec, instance, *remainder = graph
+
+    # Extract information about the source SHB volume
+    if "marc:primaryProvisionActivity" in instance and "publication" in instance:
+        publ = instance["publication"][0]
+        start_year = publ.get("startYear")
+        publ_year = publ.get("endYear") or publ.get("year")
+        if publ_year == instance["marc:primaryProvisionActivity"]["year"]:
+            del instance["marc:primaryProvisionActivity"]
+
+    shb_part_num = instance.pop("part")[0]
+    iri: str | None = None
+    source: dict | None = None
 
     if "bibliography" in rec:
         rec["bibliography"] = [{"@id": it["@id"]} for it in rec["bibliography"]]
@@ -27,28 +43,131 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     # del rec['marc:typeOfControl']
 
     # Extract work data from the graph and place in instanceOf
-    if rest:
-        work = rest[0]
+    if remainder:
+        work = remainder[0]
         assert work["@id"].endswith("#work")
         del work["@id"]
         del graph[2]
     else:
         work = {"@type": "Work"}
 
-    thing["instanceOf"] = work
+    instance["instanceOf"] = work
 
-    if "marc:primaryProvisionActivity" in thing and "publication" in thing:
-        publ = thing["publication"][0]
-        start_year = publ.get("startYear")
-        publ_year = publ.get("endYear") or publ.get("year")
-        if publ_year == thing["marc:primaryProvisionActivity"]["year"]:
-            del thing["marc:primaryProvisionActivity"]
+    ### Try to link local entities
+    link_local_entities(instance, rec, shb_part_num)
 
-    partnum = thing.pop("part")[0]
-    iri: str | None = None
-    source: dict | None = None
+    #### Parse notes
+    if "hasNote" in instance:
+        assert len(instance["hasNote"]) == 1
+        original_note = instance.pop("hasNote")[0]["label"]
+        note = original_note.replace("—", "-").replace(" ", " ").replace("  ", " ")
 
-    # Try to link local entities
+        if note == "TABORT":
+            return None
+
+        # Separate information concerning the thing itself
+        # from information concerning a publication/series it is part of
+        PARTOF_MARK = " - I:"
+        if PARTOF_MARK in note:
+            note, partof_note = note.split(PARTOF_MARK, 1)
+        else:
+            partof_note = None
+
+        # Parse the "main" note
+        name, title, subtitle, extent, note_remainder = parse_note(note)
+
+        instance["hasTitle"] = {"@type": "Title", "mainTitle": title}
+
+        ### Add information from the parsed note to the instance ###
+
+        if subtitle:
+            instance["hasTitle"]["subtitle"] = subtitle
+
+        if name:
+            instance["responsibilityStatement"] = name
+
+        if extent:
+            instance["extent"] = [{"@type": "Extent", "label": extent}]
+
+            if "-" in extent:
+                extent_counts.update(["Part extent (e.g. 's. 23-31')"])
+            else:
+                extent_counts.update(["Monographic extent (e.g. 47)"])
+                # Remove category "componentPart"
+                del instance["category"]
+
+        if note_remainder:
+            issn = extract_issn(note_remainder)
+            if issn:
+                instance["issn_from_note"] = issn
+
+        if original_note:
+            instance["hasNote"] = [
+                {
+                    "@type": "Note",
+                    "label": f"Fullständig beskrivning (OCR) ur SHBD: {original_note}",
+                }
+            ]
+            instance["hasNote"].append({"@type": "Note", "label": note_remainder})
+
+
+        # Parse the "part of" note (eg series, containing publication)
+        if partof_note:
+            part_name, part_title, part_subtitle, part_extent, part_remainder = (
+                parse_note(partof_note, dotnote=False)
+            )
+            # assert not subtitle
+            # TODO Deceide whether the thing in partOf is issue or series
+            issue = {"@type": "Instance", "label": part_title}
+            if part_name:
+                issue["responsibilityStatement"] = part_name
+            if part_title:
+                part_issn = extract_issn(part_title)
+                if part_issn:
+                    issue["identifiedBy"] = {"@type": "ISSN", "value": part_issn}
+            if part_remainder:
+                if USE_ANNOT:
+                    issue["@annotation"] = {"comment": part_remainder}
+                else:
+                    issue["label"] += " {part_remainder}"
+                    # raise NotImplementedError  # TODO
+            instance["partOf"] = issue
+
+        # TODO: remove 'ComponentPart', only re-add for obviously paginated,
+        # partOf:s and/or "newspaper reference"?
+
+    ### Add subject headings to the instance ###
+    # TODO Add SAB as well
+    sao_headings = add_sao_headings(shb_part_num, start_year, publ_year)
+    if sao_headings:
+        work["subjects"] = sao_headings
+
+    else:
+        curiosity_counts.update(["Missing SHB reference!"])
+        oddities.append(f"Missing SHB reference\t{instance}")
+
+    property_counts.update(walk_keys(instance))
+
+    return {"@id": graph[0]["@id"], "@graph": data}
+
+
+def add_sao_headings(shb_part_num, start_year, publ_year) -> list:
+    years_key = f"{start_year}-{publ_year}" if start_year else publ_year
+    if rownummap := subject_mappings.get(years_key):
+        if subjectrefs := rownummap.get(shb_part_num):  # TODO: opt + 'a' ...
+            work_subjects = [{"@id": s} for s in subjectrefs]
+            subject_counts.update(subjectrefs)
+
+            return work_subjects
+
+            # if USE_ANNOT and iri:
+            #    for s in work_subjects:
+            #        s["@annotation"] = {"source": source}
+        # else:
+        #    print(f"{partnum} not in {list(rownummap)} for {years_key}", file=sys.stderr)
+
+
+def link_local_entities(thing: dict, rec: dict, partnum: str) -> None:
     if hosts := thing.pop("isPartOf"):
         assert len(hosts) == 1
         host = hosts[0]
@@ -107,205 +226,173 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
                         rec.setdefault("_statementBy", {})["bibliography"] = annot
                     break
 
-    # Extract name, title, and subtitle from note
-    if "hasNote" in thing:
-        assert len(thing["hasNote"]) == 1
-        note = thing.pop("hasNote")[0]["label"]
 
-        note = note.replace("—", "-").replace(" ", " ").replace("  ", " ")
-
-        if note == "TABORT":
-            return None
-
-        PARTOF_MARK = " - I:"
-        if PARTOF_MARK in note:
-            note, partof_note = note.split(PARTOF_MARK, 1)
-        else:
-            partof_note = None
-
-        ### Parse the note ###
-        name, title, subtitle, extent, note_rest = parse_note(note)
-
-        thing["hasTitle"] = {"@type": "Title", "mainTitle": title}
-
-        ### Add information from the parsed note to the instance ###
-
-        if subtitle:
-            thing["hasTitle"]["subtitle"] = subtitle
-
-        if name:
-            thing["responsibilityStatement"] = name
-
-        if extent:
-            thing["extent"] = [{"@type": "Extent", "label": extent}]
-
-        if note_rest:
-            thing["hasNote"] = [{"@type": "Note", "label": note_rest}]
-            issn = extract_issn(note_rest)
-            if issn:
-                thing["issn_from_note"] = issn
-
-        if partof_note:
-            part_name, part_title, part_subtitle, part_extent, part_rest = parse_note(partof_note, dotnote=False)
-            # assert not subtitle
-            # TODO Deceide whether the thing in partOf is issue or series
-            issue = {"@type": "Instance", "label": part_title}
-            if part_name:
-                issue["responsibilityStatement"] = part_name
-            if part_title:
-                part_issn = extract_issn(part_title)
-                if part_issn:
-                    issue["identifiedBy"] = {"@type": "ISSN", "value": part_issn}
-            if part_rest:
-                if USE_ANNOT:
-                    issue["@annotation"] = {"comment": part_rest}
-                else:
-                    pass
-                    # raise NotImplementedError  # TODO
-            thing["partOf"] = issue
-
-        # TODO: remove 'ComponentPart', only re-add for obviously paginated,
-        # partOf:s and/or "newspaper reference"?
-
-    ### Add subject headings to the instance ###
-    # TODO Add SAB as well?
-    if partnum and publ_year:
-        years_key = f"{start_year}-{publ_year}" if start_year else publ_year
-        if rownummap := subject_mappings.get(years_key):
-            if subjectrefs := rownummap.get(partnum):  # TODO: opt + 'a' ...
-                work_subjects = work.setdefault("subject", [])
-
-                work_subjects += [{"@id": s} for s in subjectrefs]
-                subject_counts.update(subjectrefs)
-
-                if USE_ANNOT and iri:
-                    for s in work_subjects:
-                        s["@annotation"] = {"source": source}
-            # else:
-            #    print(f"{partnum} not in {list(rownummap)} for {years_key}", file=sys.stderr)
-
-    property_counts.update(walk_keys(thing))
-
-    return {"@id": graph[0]["@id"], "@graph": data}
-
-
-def parse_note(note, dotnote=True):
+def parse_note(note: dict, dotnote: bool = True):
     """
     >>> parse_note("Surname, G.-N., Anything")
-    ('Surname, G.-N.', 'Anything', None, None)
+    ('Surname, G.-N.', 'Anything', None, None, None)
 
     >>> parse_note("Anything. Surname, G.-N., Stuff.")
-    (None, 'Anything', None, 'Surname, G.-N., Stuff.')
+    (None, 'Anything', None, None, 'Surname, G.-N., Stuff.')
 
     >>> parse_note("Schuck, A., H. Schücks enka & Co. AB 150 år. [Stockholm.] Sthlm 1947, 28 s.")
-    ('Schuck, A.', 'H. Schücks enka & Co. AB 150 år', None,  '28 s.', '[Stockholm.] Sthlm 1947, 28 s.')
+    ('Schuck, A.', 'H. Schücks enka & Co. AB 150 år', None, '28 s.', '[Stockholm.] Sthlm 1947')
 
     >>> parse_note("Meyerson, Å., Ett besök vid Stora Kopparberget och Sala gruva år 1662. (BBV 23 (1938), s. 325-343.)")
-    ('Meyerson, Å.', 'Ett besök vid Stora Kopparberget och Sala gruva år 1662', None, ,'s. 325-343.', 'BBV 23 (1938), s. 325-343.')
+    ('Meyerson, Å.', 'Ett besök vid Stora Kopparberget och Sala gruva år 1662', None, 's. 325-343', 'BBV 23 (1938)')
 
     >>> parse_note('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar...". Nyköping, 1976, s. 48-62')
-    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', None, , 's. 48-62', 'Nyköping, 1976, s. 48-62')
+    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', None, 's. 48-62', 'Nyköping, 1976')
 
     >>> parse_note('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar..." : någotom Strängnäsgymnasiets musiksamling under 1600-talet. - I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62')
-    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', 'någotom Strängnäsgymnasiets musiksamling under 1600-talet.', '- I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62')
+    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', 'någotom Strängnäsgymnasiets musiksamling under 1600-talet', 's. 48-62', 'I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976')
 
     >>> parse_note('The Swedish pioneer, ISSN0039-7326, 27, 1976:3, s. 215-221')
-    (None, 'The Swedish pioneer, ISSN0039-7326, 27, 1976:3', None, 's. 215-221', 's. 215-221')
+    (None, 'The Swedish pioneer, ISSN0039-7326, 27, 1976:3', None, 's. 215-221', None)
 
     >>> parse_note('Jonsson, Inge, Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd / Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
-    ('Jonsson, Inge', 'Swedenborg', 'sökaren i naturens och andens värld :hans verk och efterföljd', '187 s.', '/ Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
+    ('Jonsson, Inge', 'Swedenborg', 'sökaren i naturens och andens värld :hans verk och efterföljd', '187 s.', 'Inge Jonsson, Olle Hjern. -Stockholm, 1976. - Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
 
     >>> parse_note('Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)')
-    ('Fries, Elias', 'Hembygdsperiodika', 'förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl.', '40 bl.', '- Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)')
+    ('Fries, Elias', 'Hembygdsperiodika', 'förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl', '40 bl.', 'Borås, 1976. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)')
 
     >>> parse_note('Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed')
-    ('Edvardsson, Lars', 'Kyrka och judendom', 'svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975.', '194 s.' '-Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed')
+    ('Edvardsson, Lars', 'Kyrka och judendom', 'svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975', '194 s.', 'Lund, 1976. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed')
+
+    >>> parse_note('Frithz, Carl-Gösta, Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning. - Lund, 1976. - 428 s. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec')
+    ('Frithz, Carl-Gösta', 'Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning', None, '428 s.', 'Lund, 1976. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec')
 
     """
-    personnameparts = []
-    initial = -1
-    commaseparated = note.split(",")
-    name = commaseparated.pop(0).strip()
-    rest = ""
-
-    if " " in name.strip():
-        name = None
-        rest = note
-
-    elif commaseparated:
-        first = commaseparated[0]
-        if looks_like_initial(first.strip()) or re.match(r"^(\w|\s)+$", first):
-            name += ", " + commaseparated.pop(0).strip()
-        else:
-            commaseparated.insert(0, name)
-            name = None
-
-        rest = ",".join(commaseparated).strip()
-
-    # Extract title and subtitle
-    title, subtitle, rest = extract_title_and_subtitle(rest, dotnote)
 
     # Extrct extent (pages, leaves)
-    extent = extract_extent(rest)
+    extent, remainder = extract_extent(note)
+
+    personnameparts = []
+    initial = -1
+    comma_separated = remainder.split(",")
+    name = comma_separated.pop(0).strip()
+
+    if comma_separated:
+        first = comma_separated[0]
+        if looks_like_initial(first.strip()) or re.fullmatch(r"[\w\s'.-]+", first):
+            name += ", " + comma_separated.pop(0).strip()
+        else:
+            comma_separated.insert(0, name)
+            name = ""
+
+    # If name contains more than a certain set of characters, it's probably not a name
+    if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ\s',.\-\[\]]+", name.strip()):
+        name = None
+    else:
+        remainder = ",".join(comma_separated).strip()
+    
+    # Extract title and subtitle
+    title, subtitle, remainder = extract_title_and_subtitle(remainder, dotnote)
 
     return (
         name,
         title.strip(),
         subtitle.strip() or None,
         extent or None,
-        rest.strip() or None,
+        remainder.strip(" ,.") or None,
     )
 
 
-def extract_title_and_subtitle(rest, dotnote):
+def extract_title_and_subtitle(
+    remainder: dict, dotnote: bool
+) -> tuple[dict, dict, dict]:
     subtitle = ""
 
-    if " : " in rest:
-        title, rest = rest.split(" : ", 1)
-        #        if ':' in rest:
-        parts = re.split(r" ([./-])", rest, maxsplit=1)
-        subtitle = parts[0]
-        if len(parts) > 1:
-            rest = "".join(parts[1:])
+    # This record is ISBD-like
+    if ". -" in remainder:
+        title_and_author_area, remainder = remainder.split(". -", 1)
+        # If the the title is followed by a " / ", signalling the contributor is next
+        if " / " in title_and_author_area:
+            curiosity_counts.update(["STRUCTURE\t Title / Author. - Publication"])
+            title, author_area = title_and_author_area.split(" / ", 1)
+            # TODO Do we want to fetch the author(s) for responsibilityStatememnt from here?
+            remainder = author_area + ". -" + remainder
 
-    # Another way to get the title
-    elif rest.endswith(")"):
+        # If the title is directly followed by a ". -", signalling other publication information is next
+        elif re.search(r"[0-9].?\(", title_and_author_area):
+            curiosity_counts.update(
+                ["STRUCTURE\t note doesn't start with author/title'"]
+            )
+            title = title_and_author_area + ". - " + remainder
+        else:
+            curiosity_counts.update(
+                ["STRUCTURE\t'Title. - Publication' between title and next area"]
+            )
+            title = title_and_author_area
+
+    # If author and title are followed by publication information in parenthesis
+    elif remainder.endswith(")"):
+        curiosity_counts.update(["STRUCTURE\tAuthor, title . (publication)"])
         opencount = 0
-        for i, c in enumerate(rest[::-1]):
+        for i, c in enumerate(remainder[::-1]):
             if c == ")":
                 opencount += 1
             if c == "(":
                 opencount -= 1
                 if opencount == 0:
                     break
-        title, rest = rest[: -i - 1], rest[-i:-1]
-        title = title.strip().removesuffix(".")
+        title, remainder = remainder[: -i - 1], remainder[-i:-1]
 
     # Another way to get the title
     else:
-        x = int(rest.count(". ") * 0.3) or 1
-        title, *rest = rest.rsplit(". ", x) if dotnote and ". " in rest else (rest, "")
-        rest = ". ".join(rest)
-        restispages = all(s.strip().isdigit() for s in rest.split("-"))
+        curiosity_counts.update(["STRUCTURE\tOther structure"])
+        x = int(remainder.count(". ") * 0.3) or 1
+        title, *remainder = (
+            remainder.rsplit(". ", x)
+            if dotnote and ". " in remainder
+            else (remainder, "")
+        )
+        remainder = ". ".join(remainder)
+        remainder_is_pages = all(s.strip().isdigit() for s in remainder.split("-"))
         if len(title.strip()) == 1:
-            moretitle, rest = rest.split(".", 1) if "." in rest else (rest, "")
+            moretitle, remainder = (
+                remainder.split(".", 1) if "." in remainder else (remainder, "")
+            )
             title += "." + moretitle
-        elif restispages:
-            title, prerest = title.rsplit(". ", 1) if ". " in title else (title, "")
-            if not prerest:
+        elif remainder_is_pages:
+            title, pre_remainder = (
+                title.rsplit(". ", 1) if ". " in title else (title, "")
+            )
+            if not pre_remainder:
                 title, posttitle = title.rsplit(" ", 1)
-                prerest = posttitle.strip()
-                title = title.strip().removesuffix(",")
+                pre_remainder = posttitle.strip()
+            remainder = pre_remainder + ". " + remainder
 
-            rest = prerest + ". " + rest
+    # Divide title into title and subtitle
+    if " : " in title:
+        title, subtitle = title.split(" : ", 1)
 
-    return title, subtitle, rest
+    title = title.strip().removesuffix(".").removesuffix(",")
+
+    return title, subtitle, remainder
 
 
-def extract_extent(note: str):
-    pages = re.search(r"(\d+)(?:-(\d+))?\s*(?:s|bl)\b.", note)
-    if pages:
-        return pages[0].strip()
+def extract_extent(remainder: str) -> tuple[str]:
+    pages = ""
+    page_match = re.search(
+        r"(\d+)(?:-(\d+))?\s*((?:s|bl)\.?)(?:\s+(: ill\.))?", remainder
+    )
+
+    if not page_match:
+        page_match = re.search(
+            r"\b((?:s|bl)\.?)\s*(\d+)(?:-(\d+))?(?:\s+(ill\.?))?", remainder
+        )
+
+    if page_match:
+        # Remove the matched part
+        remainder = (
+            (remainder[: page_match.start()] + remainder[page_match.end() :])
+            .strip(" ,;-")
+            .replace("-  -", "-")
+        )
+        pages = page_match.group(0)
+
+    return pages, remainder
 
 
 def looks_like_initial(s: str) -> bool:
@@ -415,7 +502,7 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
                     rownummap[f"{startnum}+"] = subjects
 
 
-def extract_issn(value):
+def extract_issn(value: str) -> str:
     ISSN_PATTERN = re.compile(r"\d{4}-\d{3}[\dX]")
 
     issn = re.findall(ISSN_PATTERN, value)
@@ -424,7 +511,7 @@ def extract_issn(value):
         return issn[0]
 
 
-def valid_issn(issn):
+def valid_issn(issn: str) -> bool:
     digits = issn.replace("-", "")
 
     total = sum(int(digits[i]) * (8 - i) for i in range(7))
@@ -442,7 +529,7 @@ def valid_issn(issn):
     return digits[-1] == expected
 
 
-def walk_keys(obj, prefix=""):
+def walk_keys(obj: dict, prefix: str = ""):
     if isinstance(obj, dict):
         for key, value in obj.items():
             path = f"{prefix}.{key}" if prefix else key
@@ -458,7 +545,8 @@ if __name__ == "__main__":
     argp.add_argument("--sample-pretty-with")
     argp.add_argument("infile")
     argp.add_argument("subject_mapping_sheets")
-    argp.add_argument("reportfile")
+    argp.add_argument("report_file")
+    argp.add_argument("info_and_errors_file")
     args = argp.parse_args()
 
     if args.test:
@@ -475,7 +563,10 @@ if __name__ == "__main__":
 
     biblios: dict = {}
 
-    with open(args.infile) as f:
+    with open(args.infile) as f, open(
+        args.report_file, "w", encoding="utf-8"
+    ) as report, open(args.info_and_errors_file, "w", encoding="utf-8") as info:
+
         if args.sample_pretty_with:
             pretty_print_sample(f, biblios, subject_mappings, args.sample_pretty_with)
             sys.exit()
@@ -483,19 +574,39 @@ if __name__ == "__main__":
             if data := convert(json.loads(l), biblios, subject_mappings):
                 print(json.dumps(data, ensure_ascii=False))
 
-    with open(args.reportfile, "w", encoding="utf-8") as f:
-        f.write("# Egenskaper\n\n")
-        f.write("| Egenskap | Antal |\n")
-        f.write("|----------|-------:|\n")
+        # Write some reports
+        report.write("# Egenskaper\n\n")
+        report.write("| Egenskap | Antal |\n")
+        report.write("|----------|-------:|\n")
 
         for prop, count in property_counts.most_common():
-            f.write(f"| {prop} | {count} |\n")
+            report.write(f"| {prop} | {count} |\n")
 
-        f.write("\n\n")
+        report.write("\n\n")
 
-        f.write("# Ämnesord\n\n")
-        f.write("| Ämne | Antal |\n")
-        f.write("|----------|-------:|\n")
+        report.write("# Kuriositeter\n\n")
+        report.write("| Kuriositet | Antal |\n")
+        report.write("|----------|-------:|\n")
+
+        for curiosity, count in curiosity_counts.most_common():
+            report.write(f"| {curiosity} | {count} |\n")
+
+        report.write("\n\n")
+
+        report.write("# Omfång\n\n")
+        report.write("| Omfång | Antal |\n")
+        report.write("|----------|-------:|\n")
+
+        for extent, count in extent_counts.most_common():
+            report.write(f"| {extent} | {count} |\n")
+
+        report.write("\n\n")
+
+        report.write("# Ämnesord\n\n")
+        report.write("| Ämne | Antal |\n")
+        report.write("|----------|-------:|\n")
 
         for subject, count in subject_counts.most_common():
-            f.write(f"| {subject} | {count} |\n")
+            report.write(f"| {subject} | {count} |\n")
+
+        print(*oddities, sep="\n", file=info)
