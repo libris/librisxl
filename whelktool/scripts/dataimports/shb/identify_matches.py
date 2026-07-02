@@ -103,7 +103,7 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
     if matches:
         id_with_matches = {shbd_prepepd["@id"]: [item["@id"] for item in res.json()["items"]]}
         id_map.append(id_with_matches)
-        match_file.write(f"{shbd_prepepd["@id"]}\t{number_of_matches}\t{query_string}\t{json.dumps(id_with_matches)}\n")
+        match_file.write(f"{shbd_prepepd["@id"]}\t{number_of_matches}\t{query_string}\t{json.dump(id_with_matches)}\n")
         return matches
 
 ### Main action ###
@@ -127,7 +127,7 @@ match_counts = {}
 #        libris_instance = json.loads(line)["@graph"]["@graph"][1]
 #        libris_prepepd_list.append(prepare(libris_instance))
 
-with open(args.shbd_file, "r") as sf, open(args.match_file, "w") as match_file, open(args.report, "w") as report:
+with open(args.shbd_file, "r") as sf, open(args.match_file, "w") as match_file, open(args.report, "w", encoding="utf-8") as report:
     match_file.write("id\tnumber_of_matches\tquery_string\tid_map\n")
 
 
