@@ -101,9 +101,9 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
         match_counts[number_of_matches] = 1
 
     if matches:
-        id_with_matches = {shbd_prepepd["@id"]: [item["@id"] for item in res.json()["items"]]}
+        id_with_matches = {shbd_prepepd['@id']: [item['@id'] for item in res.json()['items']]}
         id_map.append(id_with_matches)
-        match_file.write(f"{shbd_prepepd["@id"]}\t{number_of_matches}\t{query_string}\t{json.dump(id_with_matches)}\n")
+        match_file.write(f"{shbd_prepepd['@id']}\t{number_of_matches}\t{query_string}\t{json.dump(id_with_matches)}\n")
         return matches
 
 ### Main action ###
