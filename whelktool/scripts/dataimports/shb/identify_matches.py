@@ -32,7 +32,7 @@ def prepare(entity: dict, match_counts: dict) -> dict:
             match_counts["insufficient"] += 1
         else:
             match_counts["insufficient"] = 1
-        report.write(f"{instance["@id"]}\tTitle or contributor missing\t{json.dumps(instance)}\n")
+        report.write(f"{instance['@id']}\tTitle or contributor missing\t{json.dumps(instance)}\n")
 
 
 
@@ -87,7 +87,7 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
           "_lens": "cards",
           "limit": 50}
 
-    res = requests.get("{base_url}/find?", params = params, headers=headers)
+    res = requests.get(f"{base_url}/find?", params = params, headers=headers)
     res.raise_for_status()
     time.sleep(0.001)
 
@@ -124,7 +124,7 @@ match_counts = {}
 env_path = "" if args.env == "prod" else f"-{args.env}"
 base_url = f"http://libris{env_path}.kb.se"
 
-print("Getting started! Matching against records in {base_url}")
+print(f"Getting started! Matching against records in {base_url}")
 
 # Create a simple dictionary of minimal match records from Libris
 #with open(args.libris_file) as lf:
