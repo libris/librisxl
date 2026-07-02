@@ -239,7 +239,7 @@ def parse_note(note: dict, dotnote: bool = True):
     ('Schuck, A.', 'H. Schücks enka & Co. AB 150 år', None, '28 s.', '[Stockholm.] Sthlm 1947')
 
     >>> parse_note("Meyerson, Å., Ett besök vid Stora Kopparberget och Sala gruva år 1662. (BBV 23 (1938), s. 325-343.)")
-    ('Meyerson, Å.', 'Ett besök vid Stora Kopparberget och Sala gruva år 1662', None, 's. 325-343', 'BBV 23 (1938)')
+    ('Meyerson, Å.', 'Ett besök vid Stora Kopparberget och Sala gruva år 1662', None, 's. 325-343', 'BBV 23 (1938).')
 
     >>> parse_note('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar...". Nyköping, 1976, s. 48-62')
     ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', None, 's. 48-62', 'Nyköping, 1976')
@@ -251,7 +251,7 @@ def parse_note(note: dict, dotnote: bool = True):
     (None, 'The Swedish pioneer, ISSN0039-7326, 27, 1976:3', None, 's. 215-221', None)
 
     >>> parse_note('Jonsson, Inge, Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd / Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
-    ('Jonsson, Inge', 'Swedenborg', 'sökaren i naturens och andens värld :hans verk och efterföljd', '187 s.', 'Inge Jonsson, Olle Hjern. -Stockholm, 1976. - Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
+    ('Jonsson, Inge', 'Swedenborg', 'sökaren i naturens och andens värld :hans verk och efterföljd', '187 s.', 'Inge Jonsson, Olle Hjern. -Stockholm, 1976. -Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
 
     >>> parse_note('Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)')
     ('Fries, Elias', 'Hembygdsperiodika', 'förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl', '40 bl.', 'Borås, 1976. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)')
@@ -272,15 +272,20 @@ def parse_note(note: dict, dotnote: bool = True):
     comma_separated = remainder.split(",")
     name = comma_separated.pop(0).strip()
 
-    if comma_separated:
-        first = comma_separated[0]
-        if looks_like_initial(first.strip()) or re.fullmatch(r"[\w\s'.-]+", first):
-            name += ", " + comma_separated.pop(0).strip()
-        else:
+    # A last name containing a period is probably a title
+    if not re.fullmatch(r"[\w\s'-]+", name):
             comma_separated.insert(0, name)
             name = ""
+    else:
+        if comma_separated:
+            first = comma_separated[0]
+            if looks_like_initial(first.strip()) or re.fullmatch(r"[\w\s'-.]+", first) and re.fullmatch(r"[\w\s'-]+", name):
+                name += ", " + comma_separated.pop(0).strip()
+            else:
+                comma_separated.insert(0, name)
+                name = ""
 
-    # If name contains more than a certain set of characters, it's probably not a name
+    # If name contains more than letters and certain punctuation, it's probably not a name
     if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ\s',.\-\[\]]+", name.strip()):
         name = None
     else:
@@ -294,7 +299,7 @@ def parse_note(note: dict, dotnote: bool = True):
         title.strip(),
         subtitle.strip() or None,
         extent or None,
-        remainder.strip(" ,.") or None,
+        remainder.strip() or None,
     )
 
 
@@ -385,11 +390,9 @@ def extract_extent(remainder: str) -> tuple[str]:
 
     if page_match:
         # Remove the matched part
-        remainder = (
-            (remainder[: page_match.start()] + remainder[page_match.end() :])
-            .strip(" ,;-")
-            .replace("-  -", "-")
-        )
+        left_part = remainder[: page_match.start()].rstrip(" ,")
+        right_part = remainder[page_match.end() :]
+        remainder = (left_part + right_part).strip(",;-").replace("- -", "-")
         pages = page_match.group(0)
 
     return pages, remainder
