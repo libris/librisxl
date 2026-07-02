@@ -15,7 +15,6 @@ oddities = []
 
 
 def convert(data, biblios: dict, subject_mappings) -> dict | None:
-
     # Set start_year and publ_year to None
     start_year: str | None = None
     publ_year: str | None = None
@@ -60,6 +59,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     if "hasNote" in instance:
         assert len(instance["hasNote"]) == 1
         original_note = instance.pop("hasNote")[0]["label"]
+
         note = original_note.replace("—", "-").replace(" ", " ").replace("  ", " ")
 
         if note == "TABORT":
@@ -110,7 +110,6 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
             ]
             instance["hasNote"].append({"@type": "Note", "label": note_remainder})
 
-
         # Parse the "part of" note (eg series, containing publication)
         if partof_note:
             part_name, part_title, part_subtitle, part_extent, part_remainder = (
@@ -139,13 +138,11 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     ### Add subject headings to the instance ###
     # TODO Add SAB as well
     sao_headings = add_sao_headings(shb_part_num, start_year, publ_year)
+
     if sao_headings:
-        work["subjects"] = sao_headings
+        work["subject"] = sao_headings
 
-    else:
-        curiosity_counts.update(["Missing SHB reference!"])
-        oddities.append(f"Missing SHB reference\t{instance}")
-
+    # Count occurences of properties, icnluding nested
     property_counts.update(walk_keys(instance))
 
     return {"@id": graph[0]["@id"], "@graph": data}
@@ -159,10 +156,15 @@ def add_sao_headings(shb_part_num, start_year, publ_year) -> list:
             subject_counts.update(subjectrefs)
 
             return work_subjects
+    else:
+        curiosity_counts.update(["Missing SHB reference!"])
+        oddities.append(
+            f"Missing SHB reference\tSHB part num: {shb_part_num} Start year: {start_year} Publ year: {publ_year}"
+        )
 
-            # if USE_ANNOT and iri:
-            #    for s in work_subjects:
-            #        s["@annotation"] = {"source": source}
+        # if USE_ANNOT and iri:
+        #    for s in work_subjects:
+        #        s["@annotation"] = {"source": source}
         # else:
         #    print(f"{partnum} not in {list(rownummap)} for {years_key}", file=sys.stderr)
 
@@ -274,12 +276,16 @@ def parse_note(note: dict, dotnote: bool = True):
 
     # A last name containing a period is probably a title
     if not re.fullmatch(r"[\w\s'-]+", name):
-            comma_separated.insert(0, name)
-            name = ""
+        comma_separated.insert(0, name)
+        name = ""
     else:
         if comma_separated:
             first = comma_separated[0]
-            if looks_like_initial(first.strip()) or re.fullmatch(r"[\w\s'-.]+", first) and re.fullmatch(r"[\w\s'-]+", name):
+            if (
+                looks_like_initial(first.strip())
+                or re.fullmatch(r"[\w\s'-.]+", first)
+                and re.fullmatch(r"[\w\s'-]+", name)
+            ):
                 name += ", " + comma_separated.pop(0).strip()
             else:
                 comma_separated.insert(0, name)
@@ -290,7 +296,7 @@ def parse_note(note: dict, dotnote: bool = True):
         name = None
     else:
         remainder = ",".join(comma_separated).strip()
-    
+
     # Extract title and subtitle
     title, subtitle, remainder = extract_title_and_subtitle(remainder, dotnote)
 
@@ -325,9 +331,7 @@ def extract_title_and_subtitle(
             )
             title = title_and_author_area + ". - " + remainder
         else:
-            curiosity_counts.update(
-                ["STRUCTURE\t'Title. - Publication' between title and next area"]
-            )
+            curiosity_counts.update(["STRUCTURE\t'. - ' between title and next area"])
             title = title_and_author_area
 
     # If author and title are followed by publication information in parenthesis
@@ -486,6 +490,9 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
                         row,
                         file=sys.stderr,
                     )
+                    oddities.append(
+                        f"Missing startnum in {sheet_file} row {i} {row}"
+                    )
                     continue
 
                 assert startnum
@@ -561,7 +568,6 @@ if __name__ == "__main__":
     subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
     if not subject_files:
         raise FileNotFoundError("No CSV files found")
-
     subject_mappings = make_subject_mappings(subject_files)
 
     biblios: dict = {}
