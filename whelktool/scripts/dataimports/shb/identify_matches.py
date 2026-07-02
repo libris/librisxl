@@ -85,6 +85,7 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
 
     params = {"_q": query_string,
           "_lens": "cards",
+          "_stats": "false", # Not needed
           "limit": 50}
 
     res = requests.get(f"{base_url}/find?", params = params, headers=headers)
