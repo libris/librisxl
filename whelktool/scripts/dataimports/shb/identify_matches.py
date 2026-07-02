@@ -87,7 +87,7 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
           "_lens": "cards",
           "limit": 50}
 
-    res = requests.get("http://libris-qa.kb.se/find?", params = params, headers=headers)
+    res = requests.get("{base_url}/find?", params = params, headers=headers)
     res.raise_for_status()
     time.sleep(0.001)
 
@@ -110,6 +110,7 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
 
 argp = argparse.ArgumentParser()
 #argp.add_argument("libris_file")
+argp.add_argument("env")
 argp.add_argument("shbd_file")
 argp.add_argument("match_file")
 argp.add_argument("report")
@@ -120,6 +121,11 @@ start = time.time()
 id_map = []
 match_counts = {}
 
+env_path = "" if args.env == "prod" else f"-{args.env}"
+base_url = f"http://libris{env_path}.kb.se"
+
+print("Getting started! Matching against records in {base_url}")
+
 # Create a simple dictionary of minimal match records from Libris
 #with open(args.libris_file) as lf:
 #    libris_prepepd_list: list = []
@@ -129,7 +135,6 @@ match_counts = {}
 
 with open(args.shbd_file, "r") as sf, open(args.match_file, "w") as match_file, open(args.report, "w", encoding="utf-8") as report:
     match_file.write("id\tnumber_of_matches\tquery_string\tid_map\n")
-
 
     for idx, line in enumerate(sf):
         
