@@ -38,7 +38,7 @@ def prepare(entity: dict, match_counts: dict, report) -> dict:
         else:
             match_counts["insufficient"] = 1
         report.write(
-            f"{instance['@id']}\tTitle or contributor missing\t{json.dumps(instance)}\n"
+            f"{instance['@id']}\tTitle or contributor missing\t{json.dumps(instance, ensure_ascii=False)}\n"
         )
 
 
