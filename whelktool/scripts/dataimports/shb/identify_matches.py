@@ -82,8 +82,9 @@ def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
     """
     headers = {"Accept": "application/ld+json"}
 
+    
     # Match on full title and contributor
-    query_string = f"title:{shbd_prepepd['full_title']} contributor:{shbd_prepepd['responsibility_statement']}* {shbd_prepepd['part_of_issn']} {shbd_prepepd['issn_from_note']}"
+    query_string = f"instanceType:PhysicalResource title:({shbd_prepepd['full_title']}) contributor:({shbd_prepepd['responsibility_statement']}*) {shbd_prepepd['part_of_issn']} {shbd_prepepd['issn_from_note']}"
 
     params = {
         "_q": query_string,
