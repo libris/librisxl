@@ -76,7 +76,7 @@ def normalize(value: str):
     return value
 
 
-def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
+def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
     """
     Given an SHBD record, finds matching records already in LIBRIS.
     """
@@ -105,15 +105,17 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
     else:
         match_counts[number_of_matches] = 1
 
-    if matches:
-        id_with_matches = {
+    id_with_matches = {
             shbd_prepepd["@id"]: [item["@id"] for item in res.json()["items"]]
         }
-        id_map.append(id_with_matches)
-        match_file.write(
-            f"{shbd_prepepd['@id']}\t{number_of_matches}\t{query_string}\t{json.dumps(id_with_matches)}\n"
-        )
-        return matches
+    
+    if number_of_matches == 1:
+        perfect_matches.append(id_with_matches)
+
+    match_file.write(
+        f"{shbd_prepepd['@id']}\t{number_of_matches}\t{query_string}\t{json.dumps(id_with_matches)}\n"
+    )
+    return matches
 
 
 ### Main action ###
@@ -128,7 +130,7 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    id_map = []
+    perfect_matches = []
     match_counts = {}
 
     env_path = "" if args.env == "prod" else f"-{args.env}"
@@ -146,7 +148,7 @@ if __name__ == "__main__":
     with open(args.shbd_file, "r") as sf, open(
         args.match_file, "w"
     ) as match_file, open(args.report, "w", encoding="utf-8") as report:
-        match_file.write("id\tnumber_of_matches\tquery_string\tid_map\n")
+        match_file.write("id\tnumber_of_matches\tquery_string\tperfect_matches\n")
 
         for idx, line in enumerate(sf):
 
@@ -164,7 +166,7 @@ if __name__ == "__main__":
             shbd_prepepd = prepare(json.loads(line), match_counts, report)
 
             if shbd_prepepd:
-                matches = find_matches(shbd_prepepd, id_map, match_counts)
+                matches = find_matches(shbd_prepepd, perfect_matches, match_counts)
 
             # for libris_prepped in libris_prepepd_list:
             #    score = compare(libris_prepped, shbd_prepepd)
@@ -178,4 +180,4 @@ if __name__ == "__main__":
             # else:
             #    print(f"No matches for {shbd_instance['@id']}: {matches}")
 
-    print(f"\nMatches:\n{match_counts}")
+    print(f"\nTotal matches:\n{match_counts}")
