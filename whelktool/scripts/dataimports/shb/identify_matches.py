@@ -1,23 +1,21 @@
-"""
-Do I need to compare with ALL Libris records, or could I limti to eg physical ones?
-"""
-
 import argparse
 import json
-import unicodedata
 import re
 import requests
 import time
-
+import sys
+import doctest
 from rapidfuzz import fuzz
 
 
-def prepare(entity: dict, match_counts: dict) -> dict:
+def prepare(entity: dict, match_counts: dict, report) -> dict:
 
     instance = entity["@graph"]["@graph"][1]
-    has_title = instance["hasTitle"]
-    full_title = f"{has_title.get('mainTitle', '')} {has_title.get('subtitle', '')}".replace(
-        ":", ""
+    has_title = instance.get("hasTitle", {})
+    full_title = (
+        f"{has_title.get('mainTitle', '')} {has_title.get('subtitle', '')}".replace(
+            ":", ""
+        )
     )
     responsibility_statement = instance.get("responsibilityStatement", "").replace(
         ":", ""
@@ -119,63 +117,65 @@ def find_matches(shbd_prepepd: dict, id_map, match_counts: dict):
 
 
 ### Main action ###
+if __name__ == "__main__":
 
-argp = argparse.ArgumentParser()
-argp.add_argument("env")
-argp.add_argument("shbd_file")
-argp.add_argument("match_file")
-argp.add_argument("report")
-args = argp.parse_args()
+    argp = argparse.ArgumentParser()
+    argp.add_argument("env")
+    argp.add_argument("shbd_file")
+    argp.add_argument("match_file")
+    argp.add_argument("report")
+    args = argp.parse_args()
 
-start = time.time()
+    start = time.time()
 
-id_map = []
-match_counts = {}
+    id_map = []
+    match_counts = {}
 
-env_path = "" if args.env == "prod" else f"-{args.env}"
-base_url = f"http://libris{env_path}.kb.se"
+    env_path = "" if args.env == "prod" else f"-{args.env}"
+    base_url = f"http://libris{env_path}.kb.se"
 
-print(f"Getting started! Matching against records in {base_url}")
+    print(f"Getting started! Matching against records in {base_url}")
 
-# Create a simple dictionary of minimal match records from Libris
-# with open(args.libris_file) as lf:
-#    libris_prepepd_list: list = []
-#    for line in lf:
-#        libris_instance = json.loads(line)["@graph"]["@graph"][1]
-#        libris_prepepd_list.append(prepare(libris_instance))
+    # Create a simple dictionary of minimal match records from Libris
+    # with open(args.libris_file) as lf:
+    #    libris_prepepd_list: list = []
+    #    for line in lf:
+    #        libris_instance = json.loads(line)["@graph"]["@graph"][1]
+    #        libris_prepepd_list.append(prepare(libris_instance))
 
-with open(args.shbd_file, "r") as sf, open(args.match_file, "w") as match_file, open(
-    args.report, "w", encoding="utf-8") as report:
-    match_file.write("id\tnumber_of_matches\tquery_string\tid_map\n")
+    with open(args.shbd_file, "r") as sf, open(
+        args.match_file, "w"
+    ) as match_file, open(args.report, "w", encoding="utf-8") as report:
+        match_file.write("id\tnumber_of_matches\tquery_string\tid_map\n")
 
-    for idx, line in enumerate(sf):
+        for idx, line in enumerate(sf):
 
-        if idx % 500 == 0:
-            match_file.flush()
-            report.flush()
-            elapsed = idx / (time.time() - start)
-            elapsed_formatted = "{0:.4g}".format(elapsed)
-            if match_counts:
-                print(
-                    f"{idx + 1} records processed\t\t{elapsed_formatted} records/sec."
-                )
-                print(match_counts)
+            if idx % 500 == 0:
+                match_file.flush()
+                report.flush()
+                elapsed = idx / (time.time() - start)
+                elapsed_formatted = "{0:.4g}".format(elapsed)
+                if match_counts:
+                    print(
+                        f"{idx + 1} records processed\t\t{elapsed_formatted} records/sec."
+                    )
+                    print(match_counts)
 
-        shbd_prepepd = prepare(json.loads(line), match_counts)
+            shbd_prepepd = prepare(json.loads(line), match_counts, report)
 
-        if shbd_prepepd:
-            matches = find_matches(shbd_prepepd, id_map, match_counts)
+            if shbd_prepepd:
+                matches = find_matches(shbd_prepepd, id_map, match_counts)
 
-        # for libris_prepped in libris_prepepd_list:
-        #    score = compare(libris_prepped, shbd_prepepd)
-        #    if score > 0.9:
-        #        matches[shbd_instance['@id']] = libris_prepped['@id']
-        #
-        # if len(matches) == 1:
-        #    good_matches.append(good_matches)
-        # elif len(matches) > 1:
-        #    print(f"Too many matches for {shbd_instance['@id']}: {matches}")
-        # else:
-        #    print(f"No matches for {shbd_instance['@id']}: {matches}")
+            # for libris_prepped in libris_prepepd_list:
+            #    score = compare(libris_prepped, shbd_prepepd)
+            #    if score > 0.9:
+            #        matches[shbd_instance['@id']] = libris_prepped['@id']
+            #
+            # if len(matches) == 1:
+            #    good_matches.append(good_matches)
+            # elif len(matches) > 1:
+            #    print(f"Too many matches for {shbd_instance['@id']}: {matches}")
+            # else:
+            #    print(f"No matches for {shbd_instance['@id']}: {matches}")
 
-print(f"\nMatches:\n{match_counts}")
+    print(f"\nMatches:\n{match_counts}")
