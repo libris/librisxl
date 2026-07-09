@@ -191,9 +191,9 @@ class NotificationSender extends HouseKeeper {
     private Map matches(String trigger, List changeObservationsForInstance) {
         for (Object obj : changeObservationsForInstance) {
             Map changeObservationMap = mapper.readValue( (String) obj, Map )
-            List graphList = changeObservationMap["@graph"]
-            Map mainEntity = graphList?[1]
-            String category = mainEntity?.category["@id"]
+            List graphList = (List) changeObservationMap["@graph"]
+            Map mainEntity = (Map) graphList?[1]
+            String category = (String) mainEntity?.category["@id"]
             if (category && category == trigger)
                 return changeObservationMap
         }

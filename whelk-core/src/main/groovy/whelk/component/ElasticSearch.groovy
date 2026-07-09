@@ -105,13 +105,13 @@ class ElasticSearch {
     private final JsonLd jsonLd
 
     private static final class DerivedLenses {
-        public static final FresnelUtil.Lens CARD_ONLY = new FresnelUtil.Lens(
+        public static final Lens CARD_ONLY = new FresnelUtil.Lens(
                 FresnelUtil.CARD_CHAIN,
                 FresnelUtil.Lenses.SEARCH_CHIP,
                 List.of(FresnelUtil.CHIP_CHAIN)
         )
 
-        public static final FresnelUtil.Lens SEARCH_CARD_ONLY = new FresnelUtil.Lens(
+        public static final Lens SEARCH_CARD_ONLY = new FresnelUtil.Lens(
                 new FresnelUtil.LensGroupChain(FresnelUtil.SEARCH_CARDS),
                 FresnelUtil.Lenses.SEARCH_CHIP,
                 List.of(FresnelUtil.CHIP_CHAIN, FresnelUtil.CARD_CHAIN)
@@ -574,7 +574,7 @@ class ElasticSearch {
         var embellishedNonIntegralGraphs = fullEmbellishedGraph.drop(mainGraph.size() + embellishedIntegralGraphs.size())
         var shapedEmbellishedNonIntegralGraphs = shapeNonIntegralThings(whelk.fresnelUtil, embellishedNonIntegralGraphs)
 
-        copy.data[GRAPH_KEY] = shapedMainGraph + shapedEmbellishedIntegralGraphs + shapedEmbellishedNonIntegralGraphs
+        copy.data[GRAPH_KEY] = (List) shapedMainGraph + shapedEmbellishedIntegralGraphs + shapedEmbellishedNonIntegralGraphs
 
         setIdentifiers(copy)
         copy.setThingMeta(document.getCompleteId())

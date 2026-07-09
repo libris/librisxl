@@ -69,7 +69,7 @@ class ElasticFind {
 
             private void fetchFirst() {
                 def firstResult = getter(0)
-                total = firstResult['totalHits']
+                total = (int) firstResult['totalHits']
                 if (total > esQuery.getMaxItems()) {
                     throw new ElasticSearch.TooManyResultsException(total, esQuery.getMaxItems())
                 }

@@ -1115,7 +1115,7 @@ class ESQuery {
     private static Set getFieldsByCondition(Map mappings, Closure cond, String parentName) {
         Set fields = [] as Set
         if (mappings) {
-            (mappings['properties'] as Map)?.each { fieldName, fieldSettings ->
+            (mappings.get('properties') as Map)?.each { fieldName, fieldSettings ->
                 fields += getFieldsByCondition(fieldName as String, fieldSettings as Map, cond, parentName)
             }
         }

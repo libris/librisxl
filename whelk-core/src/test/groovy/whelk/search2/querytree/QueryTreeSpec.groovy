@@ -287,7 +287,7 @@ class QueryTreeSpec extends Specification {
         given:
         QueryTree queryTree = new QueryTree(q, disambiguate)
         Node nodeToMatch = QueryTreeBuilder.buildTree(replace, disambiguate)
-        Node nodeToReplace = queryTree.allDescendants().find(nodeToMatch::equals)
+        Node nodeToReplace = queryTree.allDescendants().find { it == nodeToMatch }
         Node replacementNode = QueryTreeBuilder.buildTree(replacement, disambiguate)
 
         expect:

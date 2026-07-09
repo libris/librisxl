@@ -94,7 +94,7 @@ class DatasetImporter {
                 continue
             }
             if (item[TYPE] == 'Dataset' && 'sourceData' in item) {
-                Map sourceRef = item['sourceData']
+                Map sourceRef = (Map) item['sourceData']
 
                 String sourceUrl = null
                 if (ID in sourceRef) {
