@@ -2,7 +2,6 @@ package whelk.importer
 
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
-import java.util.zip.GZIPOutputStream
 import groovy.cli.picocli.CliBuilder
 import groovy.util.logging.Slf4j as Log
 import org.apache.commons.io.output.CountingOutputStream
@@ -11,8 +10,6 @@ import org.apache.commons.io.FilenameUtils
 import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
-import whelk.converter.JsonLdToTrigSerializer
-import whelk.filter.LinkFinder
 import whelk.reindexer.CardRefresher
 import whelk.reindexer.ElasticReindexer
 import whelk.util.PropertyLoader
@@ -213,76 +210,16 @@ class ImporterMain {
     @Command(args='FILE [CHUNKSIZEINMB [--gzip]]')
     void lddbToTrig(String file, String chunkSizeInMB = null, String gzip = null, String collection = null) {
         def whelk = Whelk.createLoadedCoreWhelk(props)
-
-        boolean writingToFile = file && file != '-'
-        boolean shouldGzip = writingToFile && gzip && gzip == '--gzip'
-
-        String chunkedFormatString = FilenameUtils.getFullPath(file) + FilenameUtils.getBaseName(file) + "-%04d" +
-                (FilenameUtils.getExtension(file) ? "." + FilenameUtils.getExtension(file) : "") +
-                (shouldGzip ? ".gz" : "")
-
-        int partNumber = 1
-        long maxChunkSizeInBytes = 0 // 0 = no limit
-        if (chunkSizeInMB && chunkSizeInMB.toLong() > 0 && writingToFile) {
-            maxChunkSizeInBytes = chunkSizeInMB.toLong() * 1000000
-        }
-
-        def outputStream
-        if (writingToFile && maxChunkSizeInBytes > 0) {
-            System.err.println("Writing ${String.format(chunkedFormatString, partNumber)}")
-            outputStream = new FileOutputStream(String.format(chunkedFormatString, partNumber))
-        } else if (writingToFile) {
-            outputStream = new FileOutputStream(file)
-        } else {
-            outputStream = System.out
-        }
-
-        if (shouldGzip) {
-            outputStream = new GZIPOutputStream(outputStream)
-        }
-
-        CountingOutputStream cos = new CountingOutputStream(outputStream)
         def ctx = whelk.jsonld.context
-        def serializer = new JsonLdToTrigSerializer(ctx, cos)
-
-        serializer.prelude()
-        int i = 0
+        def trigDumper = new TrigFileDumper(ctx, file, chunkSizeInMB, gzip == '--gzip')
         for (Document doc : whelk.storage.loadAll(collection)) {
             if (doc.getShortId() in trigExcludeList) {
                 System.err.println("Excluding: ${doc.getShortId()}")
                 continue
             }
-
-            def id = doc.completeId
-            if (i % 500 == 0) {
-                System.err.println("$i records dumped.")
-            }
-            ++i
-            filterProblematicData(id, doc.data)
-            try {
-                serializer.writeGraph(id, doc.data['@graph'])
-            } catch (Throwable e) {
-                // Part of the record may still have been written to the stream, which is now corrupt.
-                System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
-            }
-
-            if (writingToFile && maxChunkSizeInBytes > 0 && cos.getByteCount() > maxChunkSizeInBytes) {
-                ++partNumber
-                cos.close()
-                System.err.println("Writing ${String.format(chunkedFormatString, partNumber)}")
-                def fos = new FileOutputStream(String.format(chunkedFormatString, partNumber))
-                if (shouldGzip) {
-                    cos = new CountingOutputStream(new GZIPOutputStream(fos))
-                } else {
-                    cos = new CountingOutputStream(fos)
-                }
-
-                serializer.setOutputStream(cos)
-                // Make sure each chunk gets the prefixes
-                serializer.prelude()
-            }
+            trigDumper.dump(doc.completeId, doc.data)
         }
-        cos.close()
+        trigDumper.close()
     }
 
     @Command(args='[FROM]')
