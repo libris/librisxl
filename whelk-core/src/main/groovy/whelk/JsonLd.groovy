@@ -187,7 +187,7 @@ class JsonLd {
     static String getDisplayUri(String vocabUri, Map vocabData) {
         for (Map node : (List<Map>) vocabData[GRAPH_KEY]) {
             if (node[ID_KEY] == vocabUri) {
-                Map displayRef = node[DISPLAY_KEY]
+                Map displayRef = (Map) node[DISPLAY_KEY]
                 if (displayRef) {
                     return displayRef[ID_KEY]
                 }
@@ -620,7 +620,7 @@ class JsonLd {
                 else if (graphIndex > 1) {
                     p.add(0, graphIndex) // Normally there should only be @graph,0 and @graph,1
                 }
-                result.add(new Link(relation: p.join('.'), iri: value[ID_KEY]))
+                result.add(new Link(relation: p.join('.'), iri: (String) value[ID_KEY]))
             }
             return DocumentUtil.NOP
         }
@@ -1394,7 +1394,7 @@ class JsonLd {
 
     static void putRecordReferencesIntoThings(Map<String, Map> idMap) {
         for (obj in idMap.values()) {
-            Map thingRef = obj[THING_KEY]
+            Map thingRef = (Map) obj[THING_KEY]
             if (thingRef) {
                 String thingId = thingRef[ID_KEY]
                 Map thing = idMap[thingId]

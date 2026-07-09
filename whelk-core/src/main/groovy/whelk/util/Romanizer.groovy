@@ -106,14 +106,14 @@ class Romanizer {
         Romanizer.class.getClassLoader().getResourceAsStream('romanizer/' + filename).getText("UTF-8")
     }
 
-    interface Transform {
-        String sourceTag()
-        String targetTag()
-        String transform(String s)
-        default String toString() {"${getClass().getSimpleName().take(1)}(${sourceTag()} -> ${targetTag()})"}
+    static abstract class Transform {
+        abstract String sourceTag()
+        abstract String targetTag()
+        abstract String transform(String s)
+        String toString() {"${getClass().getSimpleName().take(1)}(${sourceTag()} -> ${targetTag()})"}
     }
 
-    static class Auto implements Transform {
+    static class Auto extends Transform {
         private String sourceTag
         private Transliterator transliterator
 
@@ -138,7 +138,7 @@ class Romanizer {
         }
     }
 
-    static class Manual implements Transform {
+    static class Manual extends Transform {
         private static final var SOURCE = Pattern.compile(".*-t-(.*?)(-\\p{Alpha}\\p{Digit}-.*)?\$")
         private String sourceTag
         private String targetTag

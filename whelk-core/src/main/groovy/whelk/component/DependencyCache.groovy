@@ -125,17 +125,17 @@ class DependencyCache {
         log.info("dependenciesCache: ${dependenciesCache.stats()}")
     }
     
-    private CacheLoader<Link, Set<String>> loader(BiFunction<String, String, Set> func) {
+    private CacheLoader<Link, Set<String>> loader(BiFunction<String, String, List<String>> func) {
         return new CacheLoader<Link, Set<String>>() {
             @Override
             Set<String> load(Link link) {
                 try {
-                    def iris = func.apply(storage.getSystemIdByThingId(link.iri), link.relation)
+                    Collection<String> iris = func.apply(storage.getSystemIdByThingId(link.iri), link.relation)
                             .findResults (this.&tryGetThingMainIriBySystemId)
 
                     return iris.isEmpty()
                             ? Collections.EMPTY_SET
-                            : Collections.unmodifiableSet(new HashSet(iris))
+                            : Collections.unmodifiableSet(new HashSet<String>(iris))
                 }
                 catch (MissingMainIriException e) {
                     log.warn("Missing Main IRI: $e")
