@@ -203,23 +203,20 @@ class ImporterMain {
         copier.run()
     }
 
-    // Records that do not cleanly translate to trig/turtle (bad data).
-    // This obviously needs to be cleaned up!
-    def trigExcludeList = [] as Set
-
     @Command(args='FILE [CHUNKSIZEINMB [--gzip]]')
     void lddbToTrig(String file, String chunkSizeInMB = null, String gzip = null, String collection = null) {
-        def whelk = Whelk.createLoadedCoreWhelk(props)
-        def ctx = whelk.jsonld.context
-        def trigDumper = new TrigFileDumper(ctx, file, chunkSizeInMB, gzip == '--gzip')
-        for (Document doc : whelk.storage.loadAll(collection)) {
-            if (doc.getShortId() in trigExcludeList) {
-                System.err.println("Excluding: ${doc.getShortId()}")
-                continue
-            }
-            trigDumper.dump(doc.completeId, doc.data)
-        }
-        trigDumper.close()
+        var whelk = Whelk.createLoadedCoreWhelk(props)
+        var ctx = whelk.jsonld.context
+        var trigDumper = new RdfFileDumper(RdfFileDumper.TRIG, ctx, file, chunkSizeInMB, gzip == '--gzip')
+        trigDumper.dump(whelk, collection)
+    }
+
+    @Command(args='FILE [CHUNKSIZEINMB [--gzip]]')
+    void lddbToNquads(String file, String chunkSizeInMB = null, String gzip = null, String collection = null) {
+        var whelk = Whelk.createLoadedCoreWhelk(props)
+        var ctx = whelk.jsonld.context
+        var nquadsDumper = new RdfFileDumper(RdfFileDumper.NQUADS, ctx, file, chunkSizeInMB, gzip == '--gzip')
+        nquadsDumper.dump(whelk, collection)
     }
 
     @Command(args='[FROM]')

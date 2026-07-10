@@ -6,18 +6,27 @@ import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
 import groovy.transform.CompileStatic
 import static groovy.transform.TypeCheckingMode.SKIP
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 
 import whelk.JsonLd
-import whelk.converter.JsonLdToTrigSerializer
+import whelk.Whelk
 import whelk.util.Jackson
+
+import whelk.converter.JsonLdToNquadsSerializer
+import whelk.converter.JsonLdToRdfSerializer
+import whelk.converter.JsonLdToTrigSerializer
 
 @Log
 @CompileStatic
-class TrigFileDumper {
+class RdfFileDumper {
 
-    JsonLdToTrigSerializer serializer
+    static final String TRIG = "trig"
+    static final String NQUADS = "nquads"
+
+    JsonLdToRdfSerializer serializer
     CountingOutputStream cos
+
+    String format
 
     String chunkedFormatString
     boolean shouldGzip
@@ -26,7 +35,7 @@ class TrigFileDumper {
     int partNumber = 1
     long maxChunkSizeInBytes = 0 // 0 = no limit
 
-    TrigFileDumper(Map ctx, String file, String chunkSizeInMB, boolean shouldGzip) {
+    RdfFileDumper(String format, Map ctx, String file, String chunkSizeInMB, boolean shouldGzip) {
         writingToFile = file && file != '-'
         this.shouldGzip = shouldGzip && writingToFile
 
@@ -54,11 +63,19 @@ class TrigFileDumper {
 
         cos = new CountingOutputStream(outputStream)
 
-        serializer = new JsonLdToTrigSerializer(ctx, cos)
+        serializer = format == NQUADS ? new JsonLdToNquadsSerializer(ctx, cos) : new JsonLdToTrigSerializer(ctx, cos)
+
         serializer.prelude()
     }
 
-    void dump(String id, Map data) {
+    void dump(Whelk whelk, String collection = null) {
+        for (var doc : whelk.storage.loadAll(collection)) {
+            writeGraph(doc.completeId, doc.data)
+        }
+        close()
+    }
+
+    void writeGraph(String id, Map data) {
         if (i % 500 == 0) {
             System.err.println("$i records dumped.")
         }
@@ -131,7 +148,8 @@ class TrigFileDumper {
         String ctxFile = args[2]
         Map contextData = Jackson.mapper.readValue(new File(ctxFile), Map)
         var ctx = JsonLd.getNormalizedContext(contextData)
-        var trigDumper = new TrigFileDumper(ctx, outFile, "1000", true)
+        var ser
+        var trigDumper = new RdfFileDumper(TRIG, ctx, outFile, "1000", true)
         new File(inFile).withInputStream { ins ->
             if (inFile.endsWith('.gz')) {
                 ins = new GZIPInputStream(ins)
@@ -139,7 +157,7 @@ class TrigFileDumper {
             ins.eachLine { line ->
                 Map data = Jackson.mapper.readValue(line, Map)
                 String id = ((Map) ((List) data['@graph'])[0])['@id']
-                trigDumper.dump(id, data)
+                trigDumper.writeGraph(id, data)
             }
             trigDumper.close()
         }

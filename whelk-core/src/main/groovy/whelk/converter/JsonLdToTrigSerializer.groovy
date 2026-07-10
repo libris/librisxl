@@ -1,5 +1,6 @@
 package whelk.converter
 
+import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import groovy.util.logging.Slf4j as Log
 
@@ -10,7 +11,8 @@ import trld.platform.Output
 import trld.trig.SerializerState
 import trld.trig.Settings
 
-class JsonLdToTrigSerializer {
+@CompileStatic
+class JsonLdToTrigSerializer implements JsonLdToRdfSerializer {
 
     private CleanedTrigSerializerState state
 
@@ -33,19 +35,19 @@ class JsonLdToTrigSerializer {
         state.writeGraph(id, data)
     }
 
-    static OutputStream toTrig(context, source, base=null, String iri=null) {
+    static OutputStream toTrig(Map context, Map source, String base=null, String iri=null) {
         return serialize(context, source, base, new Settings())
     }
 
-    static OutputStream toTurtle(context, source, base=null) {
+    static OutputStream toTurtle(Map context, Map source, String base=null) {
         boolean union = true
-        def settings = new Settings(true, !union)
+        var settings = new Settings(true, !union)
         return serialize(context, source, base, settings)
     }
 
-    static OutputStream serialize(context, source, base, settings) {
-        def out = new Output()
-        def state = new CleanedTrigSerializerState(out, settings, context, base)
+    static OutputStream serialize(Map context, Map source, String base, Settings settings) {
+        var out = new Output()
+        var state = new CleanedTrigSerializerState(out, settings, context, base)
         state.serialize(source)
         return out.getCaptured()
     }
@@ -81,7 +83,13 @@ class CleanedTrigSerializerState extends SerializerState {
         // "http://foo:", http://", etc.
         IRI iri = iriFactory.create(cleanedIriString)
         if (iri.hasViolation(false)) { // false = ignore warnings, care only about errors
-            cleanedIriString = "https://BROKEN-IRI/"
+            String encoded = ""
+            try {
+              encoded = URLEncoder.encode(cleanedIriString, 'UTF-8')
+            } catch (UnsupportedEncodingException e) {
+              encoded = "broken"
+            }
+            cleanedIriString = "http://iri.invalid/?iri=${encoded}".toString()
         }
 
         if (cleanedIriString != iriString) {
