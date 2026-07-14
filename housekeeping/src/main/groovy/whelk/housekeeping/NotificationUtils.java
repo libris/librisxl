@@ -1,28 +1,38 @@
-package whelk.housekeeping
+package whelk.housekeeping;
 
-import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2
-import org.simplejavamail.api.email.Email
-import org.simplejavamail.api.mailer.Mailer
-import org.simplejavamail.email.EmailBuilder
-import org.simplejavamail.mailer.MailerBuilder
-import whelk.Document
-import whelk.JsonLd
-import whelk.Whelk
-import whelk.util.LegacyIntegrationTools
-import whelk.util.PropertyLoader
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.simplejavamail.api.email.Email;
+import org.simplejavamail.api.mailer.Mailer;
+import org.simplejavamail.email.EmailBuilder;
+import org.simplejavamail.mailer.MailerBuilder;
+import whelk.Document;
+import whelk.JsonLd;
+import whelk.Whelk;
+import whelk.util.LegacyIntegrationTools;
+import whelk.util.PropertyLoader;
 
-@CompileStatic
-@Log4j2
-class NotificationUtils {
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 
-    private static final String emailHeader = "[CXZ]"
-    static final String DIVIDER = '-------------------------------------------'
-    static final String EMAIL_FOOTER = """
-        $DIVIDER
-        Läs mer om CXZ-meddelanden:
-        https://metadatabyran.kb.se/arbetsfloden/hantera-poster-i-libris/cxz---andringsmeddelanden-och-fragor-i-libris
-        """.stripIndent()
+public class NotificationUtils {
+
+    private static final Logger log = LogManager.getLogger(NotificationUtils.class);
+
+    private static final String EMAIL_HEADER = "[CXZ]";
+    static final String DIVIDER = "-------------------------------------------";
+    static final String EMAIL_FOOTER = "\n" + DIVIDER + """
+
+            Läs mer om CXZ-meddelanden:
+            https://metadatabyran.kb.se/arbetsfloden/hantera-poster-i-libris/cxz---andringsmeddelanden-och-fragor-i-libris
+            """;
 
     enum NotificationType {
         ChangeObservation,
@@ -30,25 +40,36 @@ class NotificationUtils {
         InquiryAction
     }
 
-    static String subject(Whelk whelk, NotificationType notificationType, List<String> concerningSystemIDs, List<String> libraryUris = []) {
-        var typeLabel = whelk.jsonld.vocabIndex[notificationType.toString()]?['labelByLang']?['sv'] ?: ""
+    static String subject(Whelk whelk, NotificationType notificationType, List<String> concerningSystemIDs) {
+        return subject(whelk, notificationType, concerningSystemIDs, List.of());
+    }
 
-        List<String> concernedLibrisIDs = []
-        if (concerningSystemIDs) {
+    static String subject(Whelk whelk, NotificationType notificationType, List<String> concerningSystemIDs,
+                          List<String> libraryUris) {
+        String typeLabel = "";
+        Map<String, Object> typeDefinition = whelk.getJsonld().vocabIndex.get(notificationType.toString());
+        if (typeDefinition != null && typeDefinition.get("labelByLang") instanceof Map<?, ?> labelByLang) {
+            Object svLabel = labelByLang.get("sv");
+            if (svLabel != null)
+                typeLabel = svLabel.toString();
+        }
+
+        List<String> concernedLibrisIDs = new ArrayList<>();
+        if (concerningSystemIDs != null) {
             for (String systemId : concerningSystemIDs) {
-                Document doc = whelk.loadEmbellished(systemId)
-                if ( whelk.getJsonld().isSubClassOf(doc.getThingType(), "Instance") ) {
-                    concernedLibrisIDs.add( doc.getControlNumber() )
+                Document doc = whelk.loadEmbellished(systemId);
+                if (whelk.getJsonld().isSubClassOf(doc.getThingType(), "Instance")) {
+                    concernedLibrisIDs.add(doc.getControlNumber());
                 }
             }
         }
-        String librisIDs = String.join(", ", concernedLibrisIDs)
-        if (librisIDs.length() > 0) {
-            librisIDs = " Libris-ID " + librisIDs
+        String librisIDs = String.join(", ", concernedLibrisIDs);
+        if (!librisIDs.isEmpty()) {
+            librisIDs = " Libris-ID " + librisIDs;
         }
 
-        String collections = recipientCollections(libraryUris)
-        return "$emailHeader ${typeLabel}.${librisIDs}${collections ? ' ' : ''}${collections}"
+        String collections = recipientCollections(libraryUris);
+        return EMAIL_HEADER + " " + typeLabel + "." + librisIDs + (collections.isEmpty() ? "" : " " + collections);
     }
 
     /**
@@ -58,39 +79,42 @@ class NotificationUtils {
      * that library
      */
     static Map<String, List<Map>> getAllSubscribingUsers(Whelk whelk) {
-        Map<String, List<Map>> libraryToUserSettings = new HashMap<>()
-        List<Map> allUserSettingStrings = whelk.getStorage().getAllUserData()
-        for (Map settings : allUserSettingStrings) {
-            if (!settings["notificationEmail"])
-                continue
-            settings?.notificationCollections?.each { request ->
-                if (!request instanceof Map)
-                    return
-                if (!request["@id"])
-                    return
+        Map<String, List<Map>> libraryToUserSettings = new HashMap<>();
+        List<Map> allUserSettings = whelk.getStorage().getAllUserData();
+        for (Map settings : allUserSettings) {
+            if (!isTruthy(settings.get("notificationEmail")))
+                continue;
+            for (Object request : asList(settings.get("notificationCollections"))) {
+                if (!(request instanceof Map<?, ?> requestMap))
+                    continue;
+                Object heldBy = requestMap.get("@id");
+                if (heldBy == null)
+                    continue;
 
-                String heldBy = request["@id"]
-                if (!libraryToUserSettings.containsKey(heldBy))
-                    libraryToUserSettings.put(heldBy, [])
-                libraryToUserSettings[heldBy].add(settings)
+                libraryToUserSettings
+                        .computeIfAbsent((String) heldBy, k -> new ArrayList<>())
+                        .add(settings);
             }
         }
-        return libraryToUserSettings
+        return libraryToUserSettings;
     }
 
-    static List asList(Object o) {
+    static List<Object> asList(Object o) {
         if (o == null)
-            return []
-        if (o instanceof List)
-            return o
-        return [o]
+            return new ArrayList<>();
+        if (o instanceof List<?> list)
+            return new ArrayList<>(list);
+        List<Object> single = new ArrayList<>();
+        single.add(o);
+        return single;
     }
 
-    static Mailer mailer = null
-    static String senderAddress
+    private static Mailer mailer = null;
+    private static String senderAddress;
+
     static synchronized void sendEmail(String recipient, String subject, String body) {
         if (mailer == null) {
-            Properties props = PropertyLoader.loadProperties("secret")
+            Properties props = PropertyLoader.loadProperties("secret");
             if (props.containsKey("smtpServer") &&
                     props.containsKey("smtpPort") &&
                     props.containsKey("smtpSender") &&
@@ -99,72 +123,87 @@ class NotificationUtils {
                 mailer = MailerBuilder
                         .withSMTPServer(
                                 (String) props.get("smtpServer"),
-                                Integer.parseInt((String)props.get("smtpPort")),
+                                Integer.parseInt((String) props.get("smtpPort")),
                                 (String) props.get("smtpUser"),
                                 (String) props.get("smtpPassword")
-                        ).buildMailer()
-            senderAddress = props.get("smtpSender")
+                        ).buildMailer();
+            senderAddress = (String) props.get("smtpSender");
         }
 
-        if (mailer) {
+        if (mailer != null) {
             // unclear if simplejavamail checks subject length
-            subject = subject.substring(0, Math.min(subject.length(), 800))
+            subject = subject.substring(0, Math.min(subject.length(), 800));
 
             Email email = EmailBuilder.startingBlank()
                     .to(recipient)
                     .withSubject(subject)
                     .from(senderAddress)
                     .withPlainText(body)
-                    .buildEmail()
+                    .buildEmail();
 
-            log.info("Sending notification (cxz) email to " + recipient)
-            mailer.sendMail(email)
+            log.info("Sending notification (cxz) email to " + recipient);
+            mailer.sendMail(email);
         } else {
-            log.info("Should now have sent notification (cxz) email to " + recipient + " but SMTP is not configured.")
-            log.info(subject)
-            log.info("\n" + body)
+            log.info("Should now have sent notification (cxz) email to " + recipient + " but SMTP is not configured.");
+            log.info(subject);
+            log.info("\n" + body);
         }
     }
 
     static String recipientCollections(Collection<String> libraryUris) {
-        libraryUris.findResults { LegacyIntegrationTools.uriToLegacySigel(it) }.unique().sort().join(' ')
+        Set<String> sigels = new TreeSet<>();
+        for (String libraryUri : libraryUris) {
+            String sigel = LegacyIntegrationTools.uriToLegacySigel(libraryUri);
+            if (sigel != null)
+                sigels.add(sigel);
+        }
+        return String.join(" ", sigels);
     }
 
     // TODO use fresnel:Format mechanism here when stable
     static String describe(Document doc, Whelk whelk) {
-        Map data = JsonLd.frame(doc.getThingIdentifiers().first(), doc.data)
-        StringBuilder s = new StringBuilder()
-        s.append(chipString(data, whelk))
+        Map data = JsonLd.frame(doc.getThingIdentifiers().getFirst(), doc.data);
+        StringBuilder s = new StringBuilder();
+        s.append(chipString(data, whelk));
 
-        ['responsibilityStatement', 'publication', 'extent'].each {p ->
-            asList(data[p]).each { s.append("\n").append(chipString(it, whelk)) }
-        }
-        s.append("\n").append("Kontrollnummer: ").append(doc.getControlNumber())
-        List<String> isbnValues = doc.getIsbnValues()
-        if (isbnValues) {
-            for (String isbn : isbnValues) {
-                s.append("\n").append("ISBN: ").append(isbn)
+        for (String p : List.of("responsibilityStatement", "publication", "extent")) {
+            for (Object value : asList(data.get(p))) {
+                s.append("\n").append(chipString(value, whelk));
             }
         }
+        s.append("\n").append("Kontrollnummer: ").append(doc.getControlNumber());
+        for (String isbn : doc.getIsbnValues()) {
+            s.append("\n").append("ISBN: ").append(isbn);
+        }
 
-        return s.toString()
+        return s.toString();
     }
 
     // TODO use fresnel:Format mechanism here when stable
     static String chipString(Object data, Whelk whelk) {
-        if (data !instanceof Map) {
-            return data
+        if (!(data instanceof Map<?, ?> map)) {
+            return String.valueOf(data);
         }
 
         try {
-            return whelk.jsonld.applyLensAsMapByLang(data, whelk.locales as Set, [], ['chips'])['sv']
+            Map chip = whelk.getJsonld().applyLensAsMapByLang(
+                    (Map) map, new LinkedHashSet<>(whelk.getLocales()), List.of(), List.of("chips"));
+            return (String) chip.get("sv");
         } catch (Exception ignored) {
-            return ""
+            return "";
         }
     }
 
     // FIXME
     static String makeLink(String systemId) {
-        Document.BASE_URI.toString() + 'katalogisering/' + systemId // ???
+        return Document.getBASE_URI().toString() + "katalogisering/" + systemId; // ???
+    }
+
+    private static boolean isTruthy(Object o) {
+        if (o == null)
+            return false;
+        if (o instanceof String s)
+            return !s.isEmpty();
+        return true;
     }
 }

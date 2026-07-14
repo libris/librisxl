@@ -127,7 +127,7 @@ class InquirySender extends HouseKeeper {
                         messageType,
                         noticeSystemId,
                         concerningSystemIDs,
-                        NotificationUtils.asList(data["comment"]),
+                        (List<String>) NotificationUtils.asList(data["comment"]),
                         creatorId)
                 log.info("Sending ${recipients.size()} emails for $noticeSystemId")
                 for (String recipient : recipients) {
