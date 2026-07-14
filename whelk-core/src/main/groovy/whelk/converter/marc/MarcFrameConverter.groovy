@@ -2302,8 +2302,11 @@ class MarcFieldHandler extends BaseMarcFieldHandler {
             // TODO: use @id (existing or added bnode-id) instead of duplicating newEnt
             var entRef = newEnt
             if (useLinks && linkRule.link) {
-                if (!newEnt['@id'])
-                    newEnt['@id'] = "_:b-${((int) state.bnodeCounter)++}" as String
+                if (!newEnt['@id']) {
+                    int c = (int) state.bnodeCounter
+                    newEnt['@id'] = "_:b-${c}" as String
+                    state.bnodeCounter = c + 1
+                }
                 entRef = ['@id': newEnt['@id']]
             }
             if (linkRule.link) {
