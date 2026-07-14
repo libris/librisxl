@@ -162,11 +162,11 @@ class NotificationGenerator extends HouseKeeper {
         Document agentAfter = whelk.getStorage().loadAsOf(agentId, Timestamp.from(after))
         historicEmbellish(agentAfter, propertiesToEmbellish, after)
 
-        Tuple comparisonResult = NotificationRules.agentRecordChanged(agentBefore, agentAfter)
-        if (comparisonResult[0]) {
+        var comparisonResult = NotificationRules.agentRecordChanged(agentBefore, agentAfter)
+        if (comparisonResult.changed()) {
             return makeChangeObservation(
                             agentId, changeNotes, "https://id.kb.se/changecategory/agent",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
         }
 
         return null
@@ -198,95 +198,95 @@ class NotificationGenerator extends HouseKeeper {
         }
         historicEmbellish(instanceBeforeChange, propertiesToEmbellish, before)
         String agentId = instanceAfterChange.data?['descriptionLastModifier']?['@id'] // TODO? not necessarily the correct agent if multiple versions
-        Tuple comparisonResult
+        NotificationRules.ChangeResult comparisonResult
 
         // Primary Contribution
         comparisonResult = NotificationRules.primaryContributionChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
+        if (comparisonResult.changed()) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/primarycontribution",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
             )
         }
 
         // Intended Audience
         comparisonResult = NotificationRules.intendedAudienceChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
+        if (comparisonResult.changed()) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/intendedaudience",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
             )
         }
 
         // Subject (agent)
         comparisonResult = NotificationRules.subjectChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
+        if (comparisonResult.changed()) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/agentassubject",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
             )
         }
 
         // DDC classification
         comparisonResult = NotificationRules.DDCChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
+        if (comparisonResult.changed()) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/ddcclassification",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
             )
         }
 
         // SAB classification
         comparisonResult = NotificationRules.SABChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
+        if (comparisonResult.changed()) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/sabclassification",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
             )
         }
 
         // Main Title
         comparisonResult = NotificationRules.mainTitleChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
+        if (comparisonResult.changed()) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/maintitle",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
             )
         }
 
         // Key Title
         comparisonResult = NotificationRules.keyTitleChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
+        if (comparisonResult.changed()) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/keytitle",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
             )
         }
 
         // Serial relation
         comparisonResult = NotificationRules.serialRelationChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
+        if (comparisonResult.changed()) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/serialrelation",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
             )
         }
 
         // Serial termination
         comparisonResult = NotificationRules.serialTerminationChanged(instanceBeforeChange, instanceAfterChange)
-        if (comparisonResult[0]) {
+        if (comparisonResult.changed()) {
             generatedObservations.add(
                     makeChangeObservation(
                             instanceId, changeNotes, "https://id.kb.se/changecategory/endserial",
-                            comparisonResult[1], comparisonResult[2], agentId)
+                            comparisonResult.before(), comparisonResult.after(), agentId)
             )
         }
 
