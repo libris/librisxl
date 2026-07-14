@@ -3,9 +3,24 @@ package trld.platform;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.function.IntPredicate;
+
 import com.fasterxml.jackson.jr.ob.JSON;
 
 public class Common {
+
+    public static String escapeCodepoints(String s, IntPredicate needsEsc) {
+        StringBuilder sb = new  StringBuilder();
+        s.codePoints().forEach(cp -> {
+            if (needsEsc.test(cp)) {
+                sb.append(String.format("\\u%04X", cp));
+            } else {
+                sb.appendCodePoint(cp);
+            }
+        });
+        return sb.toString();
+    }
+
 
     public static String resolveIri(String base, String relative) {
         try {
