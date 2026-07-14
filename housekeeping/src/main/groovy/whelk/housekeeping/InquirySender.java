@@ -1,217 +1,240 @@
-package whelk.housekeeping
+package whelk.housekeeping;
 
-import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2
-import whelk.Document
-import whelk.JsonLd
-import whelk.Whelk
-import whelk.util.DocumentUtil
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import whelk.Document;
+import whelk.JsonLd;
+import whelk.Whelk;
+import whelk.util.DocumentUtil;
 
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
-import static whelk.util.Jackson.mapper
+import static whelk.util.Jackson.mapper;
 
-@CompileStatic
-@Log4j2
-class InquirySender extends HouseKeeper {
-    private final String STATE_KEY = "CXZ inquiry email sender"
-    private String status = "OK"
-    private final Whelk whelk
+public class InquirySender extends HouseKeeper {
+
+    private static final Logger log = LogManager.getLogger(InquirySender.class);
+
+    private static final String STATE_KEY = "CXZ inquiry email sender";
+    private String status = "OK";
+    private final Whelk whelk;
 
     public InquirySender(Whelk whelk) {
-        this.whelk = whelk
+        this.whelk = whelk;
     }
 
     @Override
-    String getName() {
-        return "Inquiry sender"
+    public String getName() {
+        return "Inquiry sender";
     }
 
     @Override
-    String getStatusDescription() {
-        return status
+    public String getStatusDescription() {
+        return status;
     }
 
+    @Override
     public String getCronSchedule() {
-        return "* * * * *"
+        return "* * * * *";
     }
 
     @Override
-    void trigger() {
+    public void trigger() {
+        Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS));
+        Map sendState = whelk.getStorage().getState(STATE_KEY);
+        if (sendState != null && sendState.get("notifiedChangesUpTo") != null)
+            from = Timestamp.from(ZonedDateTime.parse(
+                    (String) sendState.get("notifiedChangesUpTo"), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant());
 
-        Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS))
-        Map sendState = whelk.getStorage().getState(STATE_KEY)
-        if (sendState && sendState.notifiedChangesUpTo)
-            from = Timestamp.from( ZonedDateTime.parse( (String) sendState.notifiedChangesUpTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
+        Instant notifiedChangesUpTo = from.toInstant();
 
-        Connection connection
-        PreparedStatement statement
-        ResultSet resultSet
+        Map<String, List<Map>> heldByToUserSettings = NotificationUtils.getAllSubscribingUsers(whelk);
 
-        Instant notifiedChangesUpTo = from.toInstant()
-
-        Map<String, List<Map>> heldByToUserSettings = NotificationUtils.getAllSubscribingUsers(whelk)
-
-        connection = whelk.getStorage().getOuterConnection()
-        connection.setAutoCommit(false)
+        Connection connection = whelk.getStorage().getOuterConnection();
         try {
-            String sql = "SELECT modified, data#>>'{@graph,1}' as data FROM lddb WHERE deleted = false AND data#>>'{@graph,1,@type}' IN ('InquiryAction', 'ChangeNotice') AND modified > ?;"
-            connection.setAutoCommit(false)
-            statement = connection.prepareStatement(sql)
-            statement.setTimestamp(1, from)
-            statement.setFetchSize(512)
-            resultSet = statement.executeQuery()
+            connection.setAutoCommit(false);
 
-            while (resultSet.next()) {
-                String dataString = resultSet.getString("data")
-                Map data = mapper.readValue( dataString, Map )
-                var messageType = NotificationUtils.NotificationType.valueOf((String) data['@type'])
+            String sql = "SELECT modified, data#>>'{@graph,1}' as data FROM lddb WHERE deleted = false AND data#>>'{@graph,1,@type}' IN ('InquiryAction', 'ChangeNotice') AND modified > ?;";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setTimestamp(1, from);
+                statement.setFetchSize(512);
+                try (ResultSet resultSet = statement.executeQuery()) {
 
-                /* Assume data:
-                    {
-                        "@id": "http://libris.kb.se.localhost:5000/xflpmzvsv9nfr5q0#it",
-                        "@type": "InquiryAction",
-                        "comment": [
-                            "Det h\u00e4r \u00e4r en fr\u00e5ga!"
-                        ],
-                        "concerning": [
+                    while (resultSet.next()) {
+                        String dataString = resultSet.getString("data");
+                        Map data = mapper.readValue(dataString, Map.class);
+                        NotificationUtils.NotificationType messageType =
+                                NotificationUtils.NotificationType.valueOf((String) data.get("@type"));
+
+                        /* Assume data:
                             {
-                                "@id": "http://libris.kb.se.localhost:5000/s93qhl340tcvtcp#it"
+                                "@id": "http://libris.kb.se.localhost:5000/xflpmzvsv9nfr5q0#it",
+                                "@type": "InquiryAction",
+                                "comment": [
+                                    "Det här är en fråga!"
+                                ],
+                                "concerning": [
+                                    {
+                                        "@id": "http://libris.kb.se.localhost:5000/s93qhl340tcvtcp#it"
+                                    }
+                                ]
                             }
-                        ]
-                    }
-                 */
+                         */
 
-                // Compile list of concerned records
-                List<String> concerningSystemIDs = []
-                if (data["concerning"]) {
-                    NotificationUtils.asList(data["concerning"]).each { link ->
-                        if (link != null && link instanceof Map && link["@id"] != null) {
-                            String uri = link["@id"]
-                            String instanceId = whelk.getStorage().getSystemIdByIri((String) uri)
-                            if (instanceId != null)
-                                concerningSystemIDs.add(instanceId)
+                        // Compile list of concerned records
+                        List<String> concerningSystemIDs = new ArrayList<>();
+                        for (Object link : NotificationUtils.asList(data.get("concerning"))) {
+                            if (link instanceof Map<?, ?> linkMap && linkMap.get("@id") != null) {
+                                String uri = (String) linkMap.get("@id");
+                                String instanceId = whelk.getStorage().getSystemIdByIri(uri);
+                                if (instanceId != null)
+                                    concerningSystemIDs.add(instanceId);
+                            }
                         }
+
+                        // Figure out who to send to
+                        Set<String> recipients = new LinkedHashSet<>();
+                        String subject = NotificationUtils.subject(whelk, messageType, concerningSystemIDs);
+                        for (String concerningSystemID : concerningSystemIDs) {
+                            String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID);
+                            if (whelk.getJsonld().isSubClassOf(type, "Instance")) {
+                                // Send to all holders of said instance (including Electronic)
+                                List<String> libraries = whelk.getStorage().getAllLibrariesHolding(concerningSystemID);
+                                recipients.addAll(getRecipientsForLibraries(libraries, heldByToUserSettings));
+
+                                subject = NotificationUtils.subject(whelk, messageType, concerningSystemIDs, libraries);
+                            } else {
+                                // Send to all holders of non-electronic instances linking (in any number of steps)
+                                // to whatever the message was about
+                                List<String> libraries = whelk.getStorage()
+                                        .followLibrariesConcernedWith(concerningSystemID, List.of("Electronic"));
+                                recipients.addAll(getRecipientsForLibraries(libraries, heldByToUserSettings));
+                            }
+                        }
+
+                        // Send
+                        String noticeSystemId = whelk.getStorage().getSystemIdByIri((String) data.get("@id"));
+                        Optional<String> creatorId = Optional.ofNullable(
+                                (String) DocumentUtil.getAtPath(data, List.of("descriptionCreator", JsonLd.ID_KEY), null));
+                        String body = generateEmailBody(
+                                messageType,
+                                noticeSystemId,
+                                concerningSystemIDs,
+                                NotificationUtils.asList(data.get("comment")),
+                                creatorId);
+                        log.info("Sending " + recipients.size() + " emails for " + noticeSystemId);
+                        for (String recipient : recipients) {
+                            NotificationUtils.sendEmail(recipient, subject, body);
+                        }
+
+                        Instant lastChangeObservationForInstance = resultSet.getTimestamp("modified").toInstant();
+                        if (lastChangeObservationForInstance.isAfter(notifiedChangesUpTo))
+                            notifiedChangesUpTo = lastChangeObservationForInstance;
                     }
                 }
-
-                // Figure out who to send to
-                Set<String> recipients = []
-                String subject = NotificationUtils.subject(whelk, messageType, concerningSystemIDs)
-                for (String concerningSystemID : concerningSystemIDs) {
-                    String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemID)
-                    if (whelk.getJsonld().isSubClassOf(type, "Instance")) { // Send to all holders of said instance (including Electronic)
-                        List<String> libraries = whelk.getStorage().getAllLibrariesHolding(concerningSystemID)
-                        recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
-
-                        subject = NotificationUtils.subject(whelk, messageType, concerningSystemIDs, libraries)
-                    }
-                    else { // Send to all holders of non-electronic instances linking (in any number of steps) to whatever the message was about
-                        List<String> libraries = whelk.getStorage().followLibrariesConcernedWith(concerningSystemID, ["Electronic"])
-                        recipients.addAll( getRecipientsForLibraries(libraries, heldByToUserSettings) )
-                    }
-                }
-
-                // Send
-                String noticeSystemId = whelk.getStorage().getSystemIdByIri((String) data["@id"])
-                var creatorId = Optional.ofNullable(DocumentUtil.getAtPath(data, ['descriptionCreator', JsonLd.ID_KEY]) as String)
-                String body = generateEmailBody(
-                        messageType,
-                        noticeSystemId,
-                        concerningSystemIDs,
-                        (List<String>) NotificationUtils.asList(data["comment"]),
-                        creatorId)
-                log.info("Sending ${recipients.size()} emails for $noticeSystemId")
-                for (String recipient : recipients) {
-                    NotificationUtils.sendEmail(recipient, subject, body)
-                }
-
-                Instant lastChangeObservationForInstance = resultSet.getTimestamp("modified").toInstant()
-                if (lastChangeObservationForInstance.isAfter(notifiedChangesUpTo))
-                    notifiedChangesUpTo = lastChangeObservationForInstance
             }
         } catch (Throwable e) {
-            status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
-            throw e
+            status = "Failed with:\n" + e + "\nat:\n" + Arrays.toString(e.getStackTrace());
+            throw new RuntimeException(e);
         } finally {
-            connection.close()
+            try {
+                connection.close();
+            } catch (java.sql.SQLException ignored) {
+                // Matching the Groovy original, which let close() failures propagate silently past this point.
+            }
             if (notifiedChangesUpTo.isAfter(from.toInstant())) {
-                Map newState = new HashMap()
-                newState.notifiedChangesUpTo = notifiedChangesUpTo.atOffset(ZoneOffset.UTC).toString()
-                whelk.getStorage().putState(STATE_KEY, newState)
+                Map newState = new HashMap();
+                newState.put("notifiedChangesUpTo", notifiedChangesUpTo.atOffset(ZoneOffset.UTC).toString());
+                whelk.getStorage().putState(STATE_KEY, newState);
             }
         }
-
     }
 
     private List<String> getRecipientsForLibraries(List<String> libraries, Map<String, List<Map>> heldByToUserSettings) {
-        List<String> recipients = []
+        List<String> recipients = new ArrayList<>();
         for (String library : libraries) {
-            List<Map> usersSubbedToLibrary = heldByToUserSettings[library] ?: []
+            List<Map> usersSubbedToLibrary = heldByToUserSettings.getOrDefault(library, List.of());
             for (Map user : usersSubbedToLibrary) {
-                Object email = user["notificationEmail"]
-                if (email != null && email instanceof String) {
-                    recipients.add(email)
+                Object email = user.get("notificationEmail");
+                if (email instanceof String emailString) {
+                    recipients.add(emailString);
                 }
             }
         }
-        return recipients
+        return recipients;
     }
 
-    private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId, List<String> concerningSystemIDs, List<String> comments, Optional<String> creatorId) {
-        StringBuilder sb = new StringBuilder()
+    private String generateEmailBody(NotificationUtils.NotificationType messageType, String noticeSystemId,
+                                     List<String> concerningSystemIDs, List<Object> comments,
+                                     Optional<String> creatorId) {
+        StringBuilder sb = new StringBuilder();
 
         if (comments.size() < 2) {
-            for (String comment : comments) {
-                sb.append("- ").append(comment).append("\n")
+            for (Object comment : comments) {
+                sb.append("- ").append(comment).append("\n");
             }
         } else {
-            sb.append("Senaste:\n")
-            sb.append("- ").append(comments.last()).append("\n")
-            sb.append("\n")
-            sb.append("Alla:\n")
-            for (String comment : comments) {
-                sb.append("- ").append(comment).append("\n")
+            sb.append("Senaste:\n");
+            sb.append("- ").append(comments.getLast()).append("\n");
+            sb.append("\n");
+            sb.append("Alla:\n");
+            for (Object comment : comments) {
+                sb.append("- ").append(comment).append("\n");
             }
         }
-        sb.append("\n")
+        sb.append("\n");
 
         if (messageType == NotificationUtils.NotificationType.InquiryAction) {
-            sb.append("Länk till förfrågan:\n")
+            sb.append("Länk till förfrågan:\n");
         } else if (messageType == NotificationUtils.NotificationType.ChangeNotice) {
-            sb.append("Länk till meddelande:\n")
+            sb.append("Länk till meddelande:\n");
         }
-        sb.append( NotificationUtils.makeLink(noticeSystemId) ).append('\n')
+        sb.append(NotificationUtils.makeLink(noticeSystemId)).append("\n");
 
-        sb.append('\n')
-        creatorId.ifPresent {
-            var creatorLabel = whelk.jsonld.vocabIndex['descriptionCreator']?['labelByLang']?['sv'] ?: ""
-            var creator = NotificationUtils.chipString(DocumentUtil.getAtPath(whelk.loadData(it), [JsonLd.GRAPH_KEY, 1]), whelk)
-            sb.append(creatorLabel).append(': ').append(creator).append('\n')
-            sb.append('\n')
-        }
-        if (concerningSystemIDs) {
-            sb.append(NotificationUtils.DIVIDER).append('\n')
-            sb.append("Gäller:").append('\n')
-            sb.append('\n')
+        sb.append("\n");
+        creatorId.ifPresent(id -> {
+            String creatorLabel = "";
+            Map<String, Object> definition = whelk.getJsonld().vocabIndex.get("descriptionCreator");
+            if (definition != null && definition.get("labelByLang") instanceof Map<?, ?> labelByLang) {
+                Object svLabel = labelByLang.get("sv");
+                if (svLabel != null)
+                    creatorLabel = svLabel.toString();
+            }
+            String creator = NotificationUtils.chipString(
+                    DocumentUtil.getAtPath(whelk.loadData(id), List.of(JsonLd.GRAPH_KEY, 1), null), whelk);
+            sb.append(creatorLabel).append(": ").append(creator).append("\n");
+            sb.append("\n");
+        });
+        if (!concerningSystemIDs.isEmpty()) {
+            sb.append(NotificationUtils.DIVIDER).append("\n");
+            sb.append("Gäller:").append("\n");
+            sb.append("\n");
             for (String systemId : concerningSystemIDs) {
-                Document doc = whelk.loadEmbellished(systemId)
-                sb.append(NotificationUtils.describe(doc, whelk)).append('\n')
-                sb.append(NotificationUtils.makeLink(systemId)).append("\n")
-                sb.append("\n")
-                sb.append("\n")
+                Document doc = whelk.loadEmbellished(systemId);
+                sb.append(NotificationUtils.describe(doc, whelk)).append("\n");
+                sb.append(NotificationUtils.makeLink(systemId)).append("\n");
+                sb.append("\n");
+                sb.append("\n");
             }
         }
-        sb.append(NotificationUtils.EMAIL_FOOTER)
+        sb.append(NotificationUtils.EMAIL_FOOTER);
 
-        return sb.toString()
+        return sb.toString();
     }
 }
