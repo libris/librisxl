@@ -1,268 +1,295 @@
-package whelk.housekeeping
+package whelk.housekeeping;
 
-import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2
-import whelk.Document
-import whelk.JsonLd
-import whelk.Whelk
+import whelk.Document;
+import whelk.JsonLd;
+import whelk.Whelk;
 
-import java.sql.*
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
+import java.sql.Array;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import static whelk.util.Jackson.mapper
+import static whelk.util.Jackson.mapper;
 
-@CompileStatic
-@Log4j2
-class NotificationSender extends HouseKeeper {
+public class NotificationSender extends HouseKeeper {
 
-    private final String STATE_KEY = "CXZ notification email sender"
-    private String status = "OK"
-    private final Whelk whelk
+    private static final String STATE_KEY = "CXZ notification email sender";
+    private String status = "OK";
+    private final Whelk whelk;
 
     public NotificationSender(Whelk whelk) {
-        this.whelk = whelk
+        this.whelk = whelk;
     }
 
     @Override
-    String getName() {
-        return "Notifications sender"
+    public String getName() {
+        return "Notifications sender";
     }
 
     @Override
-    String getStatusDescription() {
-        return status
+    public String getStatusDescription() {
+        return status;
     }
 
+    @Override
     public String getCronSchedule() {
-        return "0 6 * * *"
+        return "0 6 * * *";
     }
 
     @Override
-    void trigger() {
-        Map<String, List<Map>> heldByToUserSettings = NotificationUtils.getAllSubscribingUsers(whelk)
+    public void trigger() {
+        Map<String, List<Map>> heldByToUserSettings = NotificationUtils.getAllSubscribingUsers(whelk);
 
         // Determine the time interval of ChangeObservations to consider
-        Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS)) // Default to last 24h if first time.
-        Map sendState = whelk.getStorage().getState(STATE_KEY)
-        if (sendState && sendState.notifiedChangesUpTo)
-            from = Timestamp.from( ZonedDateTime.parse( (String) sendState.notifiedChangesUpTo, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant() )
+        Timestamp from = Timestamp.from(Instant.now().minus(1, ChronoUnit.DAYS)); // Default to last 24h if first time.
+        Map sendState = whelk.getStorage().getState(STATE_KEY);
+        if (sendState != null && sendState.get("notifiedChangesUpTo") != null)
+            from = Timestamp.from(ZonedDateTime.parse(
+                    (String) sendState.get("notifiedChangesUpTo"), DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant());
 
-        Connection connection
-        PreparedStatement statement
-        ResultSet resultSet
+        Instant notifiedChangesUpTo = from.toInstant();
 
-        Instant notifiedChangesUpTo = from.toInstant()
-
-        connection = whelk.getStorage().getOuterConnection()
-        connection.setAutoCommit(false)
+        Connection connection = whelk.getStorage().getOuterConnection();
         try {
-            String sql = "SELECT MAX(created) as lastChange, data#>>'{@graph,1,concerning,@id}' as concerningUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND created > ? GROUP BY data#>>'{@graph,1,concerning,@id}';"
-            connection.setAutoCommit(false)
-            statement = connection.prepareStatement(sql)
-            statement.setTimestamp(1, from)
-            //System.err.println("  **  Searching for Observations: " + statement)
-            statement.setFetchSize(512)
-            resultSet = statement.executeQuery()
+            connection.setAutoCommit(false);
 
-            while (resultSet.next()) {
-                String concerningUri = resultSet.getString("concerningUri")
-                Array changeObservationsArray = resultSet.getArray("data")
-                // Groovy..
-                List changeObservationsForConcerned = []
-                for (Object o : changeObservationsArray.getArray()) {
-                    changeObservationsForConcerned.add(o)
+            String sql = "SELECT MAX(created) as lastChange, data#>>'{@graph,1,concerning,@id}' as concerningUri, ARRAY_AGG(data::text) as data FROM lddb WHERE data#>>'{@graph,1,@type}' = 'ChangeObservation' AND created > ? GROUP BY data#>>'{@graph,1,concerning,@id}';";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setTimestamp(1, from);
+                statement.setFetchSize(512);
+                try (ResultSet resultSet = statement.executeQuery()) {
+
+                    while (resultSet.next()) {
+                        String concerningUri = resultSet.getString("concerningUri");
+                        Array changeObservationsArray = resultSet.getArray("data");
+                        List<Object> changeObservationsForConcerned = new ArrayList<>();
+                        for (Object o : (Object[]) changeObservationsArray.getArray()) {
+                            changeObservationsForConcerned.add(o);
+                        }
+
+                        sendFor(concerningUri, heldByToUserSettings, changeObservationsForConcerned);
+
+                        Instant lastChangeObservationForInstance = resultSet.getTimestamp("lastChange").toInstant();
+                        if (lastChangeObservationForInstance.isAfter(notifiedChangesUpTo))
+                            notifiedChangesUpTo = lastChangeObservationForInstance;
+                    }
                 }
-
-                sendFor(concerningUri, heldByToUserSettings, changeObservationsForConcerned)
-
-                Instant lastChangeObservationForInstance = resultSet.getTimestamp("lastChange").toInstant()
-                if (lastChangeObservationForInstance.isAfter(notifiedChangesUpTo))
-                    notifiedChangesUpTo = lastChangeObservationForInstance
             }
         } catch (Throwable e) {
-            status = "Failed with:\n" + e + "\nat:\n" + e.getStackTrace().toString()
-            throw e
+            status = "Failed with:\n" + e + "\nat:\n" + Arrays.toString(e.getStackTrace());
+            throw new RuntimeException(e);
         } finally {
-            connection.close()
+            try {
+                connection.close();
+            } catch (java.sql.SQLException ignored) {
+                // Matching the Groovy original, which did not handle close() failures here.
+            }
             if (notifiedChangesUpTo.isAfter(from.toInstant())) {
-                Map newState = new HashMap()
-                newState.notifiedChangesUpTo = notifiedChangesUpTo.atOffset(ZoneOffset.UTC).toString()
-                whelk.getStorage().putState(STATE_KEY, newState)
+                Map newState = new HashMap();
+                newState.put("notifiedChangesUpTo", notifiedChangesUpTo.atOffset(ZoneOffset.UTC).toString());
+                whelk.getStorage().putState(STATE_KEY, newState);
             }
         }
-
     }
 
-    private void sendFor(String concerningUri, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForConcerned) {
-        String concerningSystemId = whelk.getStorage().getSystemIdByIri(concerningUri)
-        String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemId)
+    private void sendFor(String concerningUri, Map<String, List<Map>> heldByToUserSettings,
+                         List<Object> changeObservationsForConcerned) {
+        String concerningSystemId = whelk.getStorage().getSystemIdByIri(concerningUri);
+        String type = whelk.getStorage().getMainEntityTypeBySystemID(concerningSystemId);
 
         if (whelk.getJsonld().isSubClassOf(type, "Instance"))
-            sendForInstance(concerningSystemId, heldByToUserSettings, changeObservationsForConcerned)
+            sendForInstance(concerningSystemId, heldByToUserSettings, changeObservationsForConcerned);
         else if (whelk.getJsonld().isSubClassOf(type, "Agent"))
-            sendForAgent(concerningSystemId, heldByToUserSettings, changeObservationsForConcerned)
+            sendForAgent(concerningSystemId, heldByToUserSettings, changeObservationsForConcerned);
     }
 
-    private void sendForAgent(String concerningId, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForConcerned) {
-        List<String> concernedLibraries = whelk.getStorage().followLibrariesConcernedWith(concerningId, ["Electronic"])
-        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation, [concerningId], concernedLibraries)
+    private void sendForAgent(String concerningId, Map<String, List<Map>> heldByToUserSettings,
+                              List<Object> changeObservationsForConcerned) throws RuntimeException {
+        List<String> concernedLibraries = whelk.getStorage().followLibrariesConcernedWith(concerningId, List.of("Electronic"));
+        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation,
+                List.of(concerningId), concernedLibraries);
 
-        List<Map> changeObservationMaps = []
-        for (String observationDataString : changeObservationsForConcerned) {
-            Map changeObservationMap = mapper.readValue( (String) observationDataString, Map )
+        List<Map> changeObservationMaps = new ArrayList<>();
+        for (Object observationDataString : changeObservationsForConcerned) {
+            Map changeObservationMap = readMap((String) observationDataString);
             if (changeObservationMap != null)
-                changeObservationMaps.add(changeObservationMap)
+                changeObservationMaps.add(changeObservationMap);
         }
 
-        Set alreadySentTo = [] as Set
+        Set<Object> alreadySentTo = new LinkedHashSet<>();
 
         for (String library : concernedLibraries) {
-            List<Map> users = (List<Map>) heldByToUserSettings[library]
-            if (users) {
-                for (Map user : users) {
-                    if ( user?.notificationCategories?.find { it["@id"] == "https://id.kb.se/changecategory/agent" } != null ) {
+            List<Map> users = heldByToUserSettings.get(library);
+            if (users == null)
+                continue;
+            for (Map user : users) {
+                if (!subscribesToAgentChanges(user))
+                    continue;
 
-                        if (!changeObservationMaps.isEmpty() && user.notificationEmail &&
-                                user.notificationEmail instanceof String && !alreadySentTo.contains(user.notificationEmail)) {
-                            String body = generateEmailBody(concerningId, changeObservationMaps as Set)
-                            NotificationUtils.sendEmail((String) user.notificationEmail, subject, body)
-                            alreadySentTo.add(user.notificationEmail)
-                        }
-
-                    }
+                Object email = user.get("notificationEmail");
+                if (!changeObservationMaps.isEmpty() && email instanceof String emailString
+                        && !emailString.isEmpty() && !alreadySentTo.contains(email)) {
+                    String body = generateEmailBody(concerningId, new LinkedHashSet<>(changeObservationMaps));
+                    NotificationUtils.sendEmail(emailString, subject, body);
+                    alreadySentTo.add(email);
                 }
             }
         }
-
     }
 
-    private void sendForInstance(String instanceId, Map<String, List<Map>> heldByToUserSettings, List changeObservationsForInstance) {
-        List<String> libraries = whelk.getStorage().getAllLibrariesHolding(instanceId)
-        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation, [instanceId], libraries)
+    private boolean subscribesToAgentChanges(Map user) {
+        for (Object category : NotificationUtils.asList(user.get("notificationCategories"))) {
+            if (category instanceof Map<?, ?> categoryMap
+                    && "https://id.kb.se/changecategory/agent".equals(categoryMap.get("@id")))
+                return true;
+        }
+        return false;
+    }
+
+    private void sendForInstance(String instanceId, Map<String, List<Map>> heldByToUserSettings,
+                                 List<Object> changeObservationsForInstance) {
+        List<String> libraries = whelk.getStorage().getAllLibrariesHolding(instanceId);
+        String subject = NotificationUtils.subject(whelk, NotificationUtils.NotificationType.ChangeObservation,
+                List.of(instanceId), libraries);
 
         for (String library : libraries) {
-            List<Map> users = (List<Map>) heldByToUserSettings[library]
-            if (users) {
-                for (Map user : users) {
-                    /* 'user' is now a map looking something like this:
-                    {
-                        "notificationEmail": "...",
-                        "notificationCategories": [
-                            {
-                                "@id": "https://id.kb.se/changecategory/maintitle"
-                            },
-                            ...
-                        ],
-                        "notificationCollections": [
-                            {
-                                "@id": "https://libris.kb.se/library/Utb1"
-                            },
-                            ...
-                        ]
-                    }
-                    */
+            List<Map> users = heldByToUserSettings.get(library);
+            if (users == null)
+                continue;
+            for (Map user : users) {
+                /* 'user' is now a map looking something like this:
+                {
+                    "notificationEmail": "...",
+                    "notificationCategories": [
+                        {
+                            "@id": "https://id.kb.se/changecategory/maintitle"
+                        },
+                        ...
+                    ],
+                    "notificationCollections": [
+                        {
+                            "@id": "https://libris.kb.se/library/Utb1"
+                        },
+                        ...
+                    ]
+                }
+                */
 
-                    Set<Map> matchedObservations = new LinkedHashSet<>()
+                Set<Map> matchedObservations = new LinkedHashSet<>();
 
-                    user?.notificationCategories?.each { Map request ->
-                        String trigger = request?["@id"]
-                        if (trigger != null) {
-                            Map triggeredObservation = matches(trigger, changeObservationsForInstance)
-                            if (triggeredObservation != null) {
-                                matchedObservations.add(triggeredObservation)
-                            }
+                for (Object category : NotificationUtils.asList(user.get("notificationCategories"))) {
+                    if (!(category instanceof Map<?, ?> request))
+                        continue;
+                    String trigger = (String) request.get("@id");
+                    if (trigger != null) {
+                        Map triggeredObservation = matches(trigger, changeObservationsForInstance);
+                        if (triggeredObservation != null) {
+                            matchedObservations.add(triggeredObservation);
                         }
                     }
+                }
 
-                    if (!matchedObservations.isEmpty() && user.notificationEmail && user.notificationEmail instanceof String) {
-                        String body = generateEmailBody(instanceId, matchedObservations)
-                        NotificationUtils.sendEmail((String) user.notificationEmail, subject, body)
-                    }
+                Object email = user.get("notificationEmail");
+                if (!matchedObservations.isEmpty() && email instanceof String emailString && !emailString.isEmpty()) {
+                    String body = generateEmailBody(instanceId, matchedObservations);
+                    NotificationUtils.sendEmail(emailString, subject, body);
                 }
             }
         }
-
     }
 
-    private Map matches(String trigger, List changeObservationsForInstance) {
+    private Map matches(String trigger, List<Object> changeObservationsForInstance) {
         for (Object obj : changeObservationsForInstance) {
-            Map changeObservationMap = mapper.readValue( (String) obj, Map )
-            List graphList = changeObservationMap["@graph"]
-            Map mainEntity = graphList?[1]
-            String category = mainEntity?.category["@id"]
-            if (category && category == trigger)
-                return changeObservationMap
+            Map changeObservationMap = readMap((String) obj);
+            if (changeObservationMap == null)
+                continue;
+            Object category = Document._get(List.of("@graph", 1, "category", "@id"), changeObservationMap);
+            if (category != null && category.equals(trigger))
+                return changeObservationMap;
         }
-        return null
+        return null;
+    }
+
+    private static Map readMap(String json) {
+        try {
+            return mapper.readValue(json, Map.class);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String generateEmailBody(String changedInstanceId, Set<Map> triggeredObservations) {
-        Document current = whelk.getStorage().load(changedInstanceId)
-        StringBuilder sb = new StringBuilder()
-        sb.append("** Automatiskt ändringsmeddelande **\n")
-        sb.append("\n")
-        boolean commentsRendered = false
+        Document current = whelk.getStorage().load(changedInstanceId);
+        StringBuilder sb = new StringBuilder();
+        sb.append("** Automatiskt ändringsmeddelande **\n");
+        sb.append("\n");
+        boolean commentsRendered = false;
         for (Map observation : triggeredObservations) {
-            String observationUri = Document._get(["@graph", 1, "@id"], observation)
-            if (!observationUri)
-                continue
+            Object observationUriValue = Document._get(List.of("@graph", 1, "@id"), observation);
+            if (!(observationUriValue instanceof String observationUri) || observationUri.isEmpty())
+                continue;
 
             if (!commentsRendered) {
-                commentsRendered = true
-                Object comments = Document._get(["@graph", 1, "comment"], observation)
+                commentsRendered = true;
+                Object comments = Document._get(List.of("@graph", 1, "comment"), observation);
 
-                if (comments instanceof List) {
-                    sb.append("\nÄndringsanmärkningar:\n")
-                    for (String comment : comments)
-                        sb.append('\t- ' + comment.replace('\n', '\n\t') + "\n")
+                if (comments instanceof List<?> commentList) {
+                    sb.append("\nÄndringsanmärkningar:\n");
+                    for (Object comment : commentList)
+                        sb.append("\t- ").append(String.valueOf(comment).replace("\n", "\n\t")).append("\n");
                 }
-                sb.append("\n")
+                sb.append("\n");
             }
 
-            String observationId = whelk.getStorage().getSystemIdByIri(observationUri)
-            Document embellishedObservation = whelk.loadEmbellished(observationId)
-            Map framed = JsonLd.frame(observationUri, embellishedObservation.data)
+            String observationId = whelk.getStorage().getSystemIdByIri(observationUri);
+            Document embellishedObservation = whelk.loadEmbellished(observationId);
+            Map framed = JsonLd.frame(observationUri, embellishedObservation.data);
 
-            Map category = whelk.getJsonld().applyLensAsMapByLang( (Map) framed["category"], ["sv"] as Set, [], ["chips"])
-            sb.append(category["sv"])
+            Map category = whelk.getJsonld().applyLensAsMapByLang(
+                    (Map) framed.get("category"), Set.of("sv"), List.of(), List.of("chips"));
+            sb.append(category.get("sv"));
 
-            if (framed["representationAfter"] instanceof Map) {
-                Map after = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationAfter"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n  Nu:" + after["sv"])
-            } else if (framed["representationAfter"] instanceof List) {
-                sb.append("\n  Nu: ")
-                for (Object item : framed["representationAfter"]) {
-                    Map after = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
-                    sb.append((String) after["sv"] + ", ")
-                }
-            }
+            appendRepresentation(sb, framed.get("representationAfter"), "\n  Nu:", "\n  Nu: ");
+            appendRepresentation(sb, framed.get("representationBefore"), "\n  Tidigare: ", "\n  Tidigare: ");
 
-            if (framed["representationBefore"] instanceof Map) {
-                Map before = whelk.getJsonld().applyLensAsMapByLang((Map) framed["representationBefore"], ["sv"] as Set, [], ["chips"])
-                sb.append("\n  Tidigare: " + before["sv"])
-            } else if (framed["representationBefore"] instanceof List) {
-                sb.append("\n  Tidigare: ")
-                for (Object item : framed["representationBefore"]) {
-                    Map before = whelk.getJsonld().applyLensAsMapByLang((Map) item, ["sv"] as Set, [], ["chips"])
-                    sb.append((String) before["sv"] + ", ")
-                }
-            }
-            sb.append("\n\n")
+            sb.append("\n\n");
         }
 
-        sb.append('\n')
-        sb.append(NotificationUtils.DIVIDER).append('\n')
-        sb.append("Gäller:").append('\n')
-        sb.append('\n')
-        whelk.embellish(current)
-        sb.append(NotificationUtils.describe(current, whelk)).append('\n')
-        sb.append(NotificationUtils.makeLink(changedInstanceId)).append("\n")
-        sb.append(NotificationUtils.EMAIL_FOOTER)
+        sb.append("\n");
+        sb.append(NotificationUtils.DIVIDER).append("\n");
+        sb.append("Gäller:").append("\n");
+        sb.append("\n");
+        whelk.embellish(current);
+        sb.append(NotificationUtils.describe(current, whelk)).append("\n");
+        sb.append(NotificationUtils.makeLink(changedInstanceId)).append("\n");
+        sb.append(NotificationUtils.EMAIL_FOOTER);
 
-        return sb.toString()
+        return sb.toString();
+    }
+
+    private void appendRepresentation(StringBuilder sb, Object representation, String singularPrefix, String listPrefix) {
+        if (representation instanceof Map<?, ?> map) {
+            Map chip = whelk.getJsonld().applyLensAsMapByLang((Map) map, Set.of("sv"), List.of(), List.of("chips"));
+            sb.append(singularPrefix).append(chip.get("sv"));
+        } else if (representation instanceof List<?> list) {
+            sb.append(listPrefix);
+            for (Object item : list) {
+                Map chip = whelk.getJsonld().applyLensAsMapByLang((Map) item, Set.of("sv"), List.of(), List.of("chips"));
+                sb.append((String) chip.get("sv")).append(", ");
+            }
+        }
     }
 }
