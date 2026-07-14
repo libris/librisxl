@@ -559,7 +559,7 @@ class PostgreSQLComponent {
                 preparedStatement = connection.prepareStatement(UPSERT_EMBELLISHED_DOCUMENT)
                 preparedStatement.setString(1, id)
                 preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
-                preparedStatement.setArray(3, connection.createArrayOf("TEXT", ids as String[]))
+                preparedStatement.setArray(3, connection.createArrayOf("TEXT", ids.toArray(new String[0])))
 
                 preparedStatement.execute()
             }
@@ -1261,7 +1261,7 @@ class PostgreSQLComponent {
         ResultSet rs = null
         try {
             getSystemIds = connection.prepareStatement(GET_SYSTEMIDS_BY_IRIS)
-            getSystemIds.setArray(1, connection.createArrayOf("TEXT", iris as String[]))
+            getSystemIds.setArray(1, connection.createArrayOf("TEXT", iris.collect().toArray(new String[0])))
 
             rs = getSystemIds.executeQuery()
             while (rs.next()) {
@@ -1440,7 +1440,7 @@ class PostgreSQLComponent {
             ResultSet rs = null
             try {
                 preparedStatement = connection.prepareStatement(BULK_LOAD_CARDS)
-                preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
+                preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids.collect().toArray(new String[0])))
 
                 rs = preparedStatement.executeQuery()
                 SortedMap<String, Map> result = new TreeMap<>()
@@ -2004,7 +2004,7 @@ class PostgreSQLComponent {
                 // The latest version of every document
                 if(asOf == null) {
                     preparedStatement = connection.prepareStatement(BULK_LOAD_DOCUMENTS)
-                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
+                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds.collect().toArray(new String[0])))
 
                     rs = preparedStatement.executeQuery()
                     SortedMap<String, Document> result = new TreeMap<>()
@@ -2014,7 +2014,7 @@ class PostgreSQLComponent {
                     return result
                 } else { // Every document as it looked at time 'asOf'
                     preparedStatement = connection.prepareStatement(BULK_LOAD_DOCUMENTS_AS_OF)
-                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
+                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds.collect().toArray(new String[0])))
                     preparedStatement.setTimestamp(2, Timestamp.from(asOf))
 
                     rs = preparedStatement.executeQuery()
@@ -2443,8 +2443,8 @@ class PostgreSQLComponent {
             try {
                 Connection connection = getMyConnection()
                 preparedStatement = connection.prepareStatement(FILTER_BIB_IDS_BY_HELD_BY)
-                preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
-                preparedStatement.setArray(2, connection.createArrayOf("TEXT", libraryURIs as String[]))
+                preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds.toArray(new String[0])))
+                preparedStatement.setArray(2, connection.createArrayOf("TEXT", libraryURIs.toArray(new String[0])))
                 rs = preparedStatement.executeQuery()
                 Set<String> result = new HashSet<>()
                 while (rs.next()) {
