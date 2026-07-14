@@ -1,5 +1,7 @@
 package whelk.converter
 
+import groovy.transform.CompileStatic
+
 import java.util.regex.Pattern
 
 import whelk.ResourceCache
@@ -11,6 +13,7 @@ import static whelk.JsonLd.TYPE_KEY as TYPE
 import static whelk.JsonLd.asList
 import static whelk.JsonLd.isLink
 
+@CompileStatic
 class BibTypeNormalizer {
 
     static final var ANNOTATION = '@annotation'
@@ -70,7 +73,7 @@ class BibTypeNormalizer {
                     // Always keep old instance type
                     value.put(TYPE, "Instance")
                     // Since we typically can't tell if Electronic ones are digital or not, don't assume
-                    if (value.category) {
+                    if (value.category instanceof List) {
                         if (value.category.removeAll { it['@id'] == "https://id.kb.se/term/saobf/ElectronicStorageMedium" }) {
                             value.get('category', []) << [(ID): SAOBF + 'AbstractElectronic']
                         }
@@ -101,10 +104,11 @@ class BibTypeNormalizer {
         } else {
             var mappedTypes = normalizer.remappedLegacyInstanceTypes[itype]
             if (mappedTypes) {
-                if (mappedTypes.workCategory.contains('/rda/')) {
-                    work.get('contentType', []) << [(ID): mappedTypes.workCategory]
+                var workCategory = mappedTypes.workCategory
+                if (workCategory.contains('/rda/')) {
+                    work.get('contentType', []) << [(ID): workCategory]
                 } else {
-                    work.get('genreForm', []) << [(ID): mappedTypes.workCategory]
+                    work.get('genreForm', []) << [(ID): workCategory]
                 }
                 if (mappedTypes?.category) {
                     instance.get('carrierType', []) << [(ID): mappedTypes.category]
@@ -195,7 +199,7 @@ class BibTypeNormalizer {
             work.get('genreForm', []) << [(ID): SAOGF + 'Handskrifter']
             work.get('contentType', []) << [(ID): KBRDA + 'NotatedMusic']
         } else if (wtype == 'Cartography') {
-            if (!work['contentType'].any { it[ID]?.startsWith(KBRDA + 'Cartographic') }) {
+            if (!work['contentType'].any { it instanceof Map && ((String) it[ID])?.startsWith(KBRDA + 'Cartographic') }) {
                 work.get('contentType', []) << [(ID): KBRDA + 'CartographicImage'] // TODO: good enough guess?
             }
         } else {
@@ -211,7 +215,7 @@ class BibTypeNormalizer {
         var workGenreForms = normalizer.reduceSymbols(asList(work.get("genreForm")))
 
         // Replace genreForm and contentType properties with category
-        List<String> categories = []
+        List<Map> categories = []
         categories += workGenreForms + contentTypes
         work.remove("genreForm")
         work.remove("contentType")
@@ -244,7 +248,7 @@ class BibTypeNormalizer {
         categories += carrierTypes
 
         // Remove the ambiguous NARC term Other
-        categories.removeAll { it['@id'] == "https://id.kb.se/marc/Other" }
+        categories.removeAll { it[ID] == "https://id.kb.se/marc/Other" }
 
         instance.remove("carrierType")
         instance.remove("mediaType")
@@ -297,7 +301,7 @@ class BibTypeNormalizer {
 
         // resourceCache.get("https://id.kb.se/term/saobf/Braille").closeMatch.findResults { it[ID] } ==
         var legacyBrailleCategories = [MARC + "Braille", MARC + "TacMaterialType-b", MARC + "TextMaterialType-c"] as Set
-        var nonBrailleCarrierTypes = carrierTypes.findAll { !legacyBrailleCategories.contains(it.get(ID)) }
+        var nonBrailleCarrierTypes = carrierTypes.findAll { it instanceof Map && !legacyBrailleCategories.contains(it.get(ID)) }
         if (nonBrailleCarrierTypes.size() < carrierTypes.size()) {
             isBraille = true
             //carrierTypes = nonBrailleCarrierTypes
@@ -351,10 +355,14 @@ class BibTypeNormalizer {
     boolean moveInstanceGenreFormsToWork(Map instance, Map work) {
         var changed = false
 
-        var instanceGenreForms = asList(instance.get("genreForm"))
+        var instanceGenreForms = (List<Map>) asList(instance.get("genreForm"))
 
         var instanceGenreFormsToMove = instanceGenreForms.findAll {
-            isLink(it) && (it.'@id'?.startsWith('https://id.kb.se/term/barngf') || it.'@id'?.startsWith('https://id.kb.se/term/saogf'))
+            if (it !instanceof Map || !isLink(it)) {
+              return false
+            }
+            var id = (String) it[ID]
+            return id.startsWith('https://id.kb.se/term/barngf') || id.startsWith('https://id.kb.se/term/saogf')
         }
 
         var instanceGenreFormsToKeep  = instanceGenreForms - instanceGenreFormsToMove
@@ -384,7 +392,7 @@ class BibTypeNormalizer {
     }
 
     boolean looksLikeVolume(Map instance) {
-        for (extent in asList(instance.get("extent"))) {
+        for (extent in (List<Map>) asList(instance.get("extent"))) {
             for (label in asList(extent.get("label"))) {
                 if (label instanceof String && label.matches(/(?i).*\s(s|p|sidor|pages|vol(ym(er)?)?)\b\.?/)) {
                     return true
@@ -418,7 +426,7 @@ class BibTypeNormalizer {
     }
 
     protected static void reorderForReadability(Map thing) {
-        var copy = thing.clone()
+        var copy = new HashMap(thing)
         thing.clear()
         for (var key : [ID, TYPE, 'sameAs', 'category']) {
             if (key in copy) thing[key] = copy[key]
