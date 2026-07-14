@@ -289,7 +289,7 @@ public class Helpers
     private static PreparedStatement getIntervalStatement(Connection connection, ZonedDateTime fromDateTime,
                                                           ZonedDateTime untilDateTime, boolean includeSilentChanges,
                                                           Timestamp afterModified, String afterId,
-                                                          String explicitSet, String restrictToCollection, int limit)
+                                                          String explicitSet, List<String> scanCollections, int limit)
             throws SQLException
     {
         // By default we go by the modified date, but we support to option to include silent changes.
@@ -299,14 +299,14 @@ public class Helpers
                 ? "GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}'))"
                 : "modified";
 
+        // Only scan the collections that can actually emit records for the requested set.
+        StringJoiner collectionPlaceholders = new StringJoiner(", ", "(", ")");
+        for (int i = 0; i < scanCollections.size(); i++)
+            collectionPlaceholders.add("?");
+
         StringBuilder sql = new StringBuilder(
                 "SELECT id, " + effectiveModified + " AS effective_modified, data" +
-                " FROM lddb WHERE collection in ('bib', 'auth', 'hold')");
-
-        // If a collection has been requested and dependency expansion is not needed, we only need to scan
-        // the requested collection
-        if (restrictToCollection != null)
-            sql.append(" AND collection = ? ");
+                " FROM lddb WHERE collection in " + collectionPlaceholders);
 
         String explicitSetColumn = explicitSetColumn(explicitSet);
         if (explicitSetColumn != null)
@@ -327,8 +327,8 @@ public class Helpers
         preparedStatement.setFetchSize(512);
 
         int parameterIndex = 1;
-        if (restrictToCollection != null)
-            preparedStatement.setString(parameterIndex++, restrictToCollection);
+        for (String collection : scanCollections)
+            preparedStatement.setString(parameterIndex++, collection);
         if (explicitSetColumn != null)
             preparedStatement.setString(parameterIndex++, explicitSetValue(explicitSet));
         if (fromDateTime != null)
@@ -342,6 +342,17 @@ public class Helpers
         }
 
         return preparedStatement;
+    }
+
+    private static List<String> collectionsToScan(String requestedCollection, boolean includeDependenciesInTimeInterval)
+    {
+        if (requestedCollection == null)
+            return List.of("bib", "auth", "hold");
+
+        if (includeDependenciesInTimeInterval && !requestedCollection.equals("auth"))
+            return List.of(requestedCollection, "auth");
+
+        return List.of(requestedCollection);
     }
 
     private static String explicitSetColumn(String explicitSet)
@@ -394,14 +405,15 @@ public class Helpers
             }
         }
 
-        // This is to avoid paging through non-matching rows
-        String restrictToCollection = includeDependenciesInTimeInterval ? null : requestedCollection;
+        // Only scan the collections that can actually emit records for the requested set, to avoid
+        // paging through non-matching rows.
+        List<String> scanCollections = collectionsToScan(requestedCollection, includeDependenciesInTimeInterval);
 
         PreparedStatement preparedStatement;
         if (id == null)
         {
             preparedStatement = getIntervalStatement(connection, fromDateTime, untilDateTime,
-                    includeSilentChanges, afterModified, afterId, explicitSet, restrictToCollection, limit);
+                    includeSilentChanges, afterModified, afterId, explicitSet, scanCollections, limit);
         }
         else
         {

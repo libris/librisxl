@@ -25,9 +25,14 @@ public class ListRecords
     private final static String DELETED_DATA_PARAM = "x-withDeletedData";
     private final static String INCLUDE_SILENT_PARAM = "x-withSilentUpdates";
 
-    // Number of source rows from lddb to scan per page. One page = one HTTP response,
-    // possibly with a resumptionToken for the next page.
+    // Number of source rows from lddb to scan per db page
     private final static int PAGE_SIZE = 1000;
+
+    // A single HTTP response may chain several db pages, to avoid returning empty pages (= resumptionToken
+    // and no records) while the scan goes past rows that don't emit anything. This caps how many db pages
+    // one HTTP request will scan before giving up and returning an empty page with a resumptionToken, so
+    // that a request never results in an unbounded scan of the database.
+    private final static int MAX_PAGES_PER_REQUEST = 100;
 
     private static final Counter failedRequests = Counter.build()
             .name("oaipmh_failed_listrecords_requests_total").help("Total failed ListRecords requests.")
@@ -149,13 +154,48 @@ public class ListRecords
             ResumptionToken baseToken = new ResumptionToken(from, until, set, metadataPrefix,
                     withDeletedData, withSilentChanges, null, null);
 
-            try (Helpers.ResultIterator resultIterator = Helpers.getMatchingDocuments(dbconn, fromDateTime,
-                    untilDateTime, setSpec, null, includeDependencies, withSilentChanges,
-                    afterModified, afterId, PAGE_SIZE))
+            try
             {
-                respond(request, response, metadataPrefix, onlyIdentifiers,
-                        includeDependencies, withDeletedData, resultIterator, baseToken,
-                        resumptionTokenParam != null);
+                // Chain db pages until we have at least one record to emit, or run out of data, or hit
+                // the per-request page cap. This is to avoid returning a whole lof of empty pages
+                // (with resumptionToken) when the scan goes through records that don't emit anything.
+                Helpers.ResultIterator resultIterator = Helpers.getMatchingDocuments(dbconn, fromDateTime,
+                        untilDateTime, setSpec, null, includeDependencies, withSilentChanges,
+                        afterModified, afterId, PAGE_SIZE);
+                try
+                {
+                    int pagesScanned = 1;
+                    while (!resultIterator.hasNext() && !resultIterator.isExhausted()
+                            && pagesScanned < MAX_PAGES_PER_REQUEST)
+                    {
+                        // A full db page with nothing to emit. Advance the cursor to the end of the
+                        // page we just scanned and scan the next one. If the page reported no
+                        // position, keep the cursor where it was.
+                        String lastSourceModified = resultIterator.getLastSourceModified();
+                        if (lastSourceModified != null)
+                        {
+                            afterModified = Timestamp.from(
+                                    ZonedDateTime.parse(lastSourceModified).toInstant());
+                        }
+                        String lastSourceId = resultIterator.getLastSourceId();
+                        if (lastSourceId != null)
+                        {
+                            afterId = lastSourceId;
+                        }
+
+                        resultIterator.close();
+                        resultIterator = Helpers.getMatchingDocuments(dbconn, fromDateTime,
+                                untilDateTime, setSpec, null, includeDependencies, withSilentChanges,
+                                afterModified, afterId, PAGE_SIZE);
+                        pagesScanned++;
+                    }
+
+                    respond(request, response, metadataPrefix, onlyIdentifiers,
+                            includeDependencies, withDeletedData, resultIterator, baseToken,
+                            resumptionTokenParam != null);
+                } finally {
+                    resultIterator.close();
+                }
             } finally {
                 dbconn.commit();
             }
