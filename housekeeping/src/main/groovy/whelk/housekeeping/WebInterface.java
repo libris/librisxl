@@ -1,46 +1,23 @@
-package whelk.housekeeping
+package whelk.housekeeping;
 
-import whelk.Whelk
+import it.sauronsoftware.cron4j.Scheduler;
+import whelk.Whelk;
 import whelk.util.http.WhelkHttpServlet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2 as Log
-import java.time.ZonedDateTime
-import it.sauronsoftware.cron4j.Scheduler
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-@CompileStatic
-@Log
-public abstract class HouseKeeper {
-    public abstract String getName()
-    public abstract String getStatusDescription()
-    public abstract String getCronSchedule()
-    public abstract void trigger()
-
-    public ZonedDateTime lastFailAt = null
-    public ZonedDateTime lastRunAt = null
-
-    synchronized void _trigger() {
-        try {
-            trigger()
-            lastRunAt = ZonedDateTime.now()
-        } catch (Throwable e) {
-            log.error("Could not handle throwable in Housekeeper TimerTask.", e)
-            lastFailAt = ZonedDateTime.now()
-        }
-    }
-}
-
-@CompileStatic
-@Log
 public class WebInterface extends WhelkHttpServlet {
-    private Map<String, HouseKeeper> houseKeepersById = [:]
-    Scheduler cronScheduler = new Scheduler()
+    private final Map<String, HouseKeeper> houseKeepersById = new LinkedHashMap<>();
+    private final Scheduler cronScheduler = new Scheduler();
 
     @Override
-    void init(Whelk whelk) {
-        List<HouseKeeper> houseKeepers = [
+    public void init(Whelk whelk) {
+        List<HouseKeeper> houseKeepers = List.of(
                 // Automatic generation is disabled for now, may need design changes approved before activation.
                 //new NotificationGenerator(whelk),
                 //new NotificationSender(whelk),
@@ -57,57 +34,63 @@ public class WebInterface extends WhelkHttpServlet {
                 new ScriptRunner(whelk, "lxl-3873-remove-classification-without-code.groovy", "0 20 5 * *"),
                 new BulkChangeRunner(whelk),
                 new HistoryArchiver(whelk)
-        ]
+        );
 
-        houseKeepers.each { hk ->
-            String id = cronScheduler.schedule(hk.getCronSchedule(), {
-                hk._trigger()
-            })
-            houseKeepersById.put(id, hk)
+        for (HouseKeeper hk : houseKeepers) {
+            String id = cronScheduler.schedule(hk.getCronSchedule(), hk::_trigger);
+            houseKeepersById.put(id, hk);
         }
-        cronScheduler.start()
+        cronScheduler.start();
     }
 
+    @Override
     public void destroy() {
-        cronScheduler.stop()
+        cronScheduler.stop();
     }
 
-    public void doGet(HttpServletRequest req, HttpServletResponse res) {
-        StringBuilder sb = new StringBuilder()
-        sb.append("Active housekeepers: " + houseKeepersById.size() + "\n")
-        sb.append("--------------\n")
+    @Override
+    public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Active housekeepers: ").append(houseKeepersById.size()).append("\n");
+        sb.append("--------------\n");
         for (String key : houseKeepersById.keySet()) {
-            HouseKeeper hk = houseKeepersById[key]
-            sb.append(hk.getName() + "\n")
-            if (hk.lastRunAt)
-                sb.append("Last run at: " + hk.lastRunAt + "\n")
+            HouseKeeper hk = houseKeepersById.get(key);
+            sb.append(hk.getName()).append("\n");
+            if (hk.lastRunAt != null)
+                sb.append("Last run at: ").append(hk.lastRunAt).append("\n");
             else
-                sb.append("Has never run\n")
-            if (hk.lastFailAt)
-                sb.append("Last failed at: " + hk.lastFailAt + "\n")
+                sb.append("Has never run\n");
+            if (hk.lastFailAt != null)
+                sb.append("Last failed at: ").append(hk.lastFailAt).append("\n");
             else
-                sb.append("No failures\n")
-            sb.append("Status:\n")
-            sb.append(hk.statusDescription+"\n")
-            sb.append("Execution schedule:\n")
-            sb.append(hk.cronSchedule+"\n")
-            sb.append("To force immediate execution, POST to:\n" + req.getRequestURL() + key + "\n")
-            sb.append(req.getRequestURL() + hk.class.getSimpleName() + "\n")
-            sb.append("--------------\n")
+                sb.append("No failures\n");
+            sb.append("Status:\n");
+            sb.append(hk.getStatusDescription()).append("\n");
+            sb.append("Execution schedule:\n");
+            sb.append(hk.getCronSchedule()).append("\n");
+            sb.append("To force immediate execution, POST to:\n").append(req.getRequestURL()).append(key).append("\n");
+            sb.append(req.getRequestURL()).append(hk.getClass().getSimpleName()).append("\n");
+            sb.append("--------------\n");
         }
-        res.setStatus(HttpServletResponse.SC_OK)
-        res.setContentType("text/plain")
-        res.getOutputStream().print(sb.toString())
+        res.setStatus(HttpServletResponse.SC_OK);
+        res.setContentType("text/plain");
+        res.getOutputStream().print(sb.toString());
     }
 
+    @Override
     public void doPost(HttpServletRequest req, HttpServletResponse res) {
-        String key = req.getRequestURI().split("/").last()
-        if (houseKeepersById[key]) {
-            houseKeepersById[key]._trigger()
+        String[] pathSegments = req.getRequestURI().split("/");
+        String key = pathSegments[pathSegments.length - 1];
+
+        HouseKeeper houseKeeper = houseKeepersById.get(key);
+        if (houseKeeper != null) {
+            houseKeeper._trigger();
         } else {
-            houseKeepersById.values()
-                    .findAll{ it.class.getSimpleName() == key }
-                    .each {it._trigger() }
+            for (HouseKeeper hk : houseKeepersById.values()) {
+                if (hk.getClass().getSimpleName().equals(key)) {
+                    hk._trigger();
+                }
+            }
         }
     }
 }
