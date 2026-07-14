@@ -35,17 +35,17 @@ class JsonLdToTrigSerializer implements JsonLdToRdfSerializer {
         state.writeGraph(id, data)
     }
 
-    static OutputStream toTrig(Map context, Map source, String base=null, String iri=null) {
+    static OutputStream toTrig(Map context, Object source, String base=null, String iri=null) {
         return serialize(context, source, base, new Settings())
     }
 
-    static OutputStream toTurtle(Map context, Map source, String base=null) {
+    static OutputStream toTurtle(Map context, Object source, String base=null) {
         boolean union = true
         var settings = new Settings(true, !union)
         return serialize(context, source, base, settings)
     }
 
-    static OutputStream serialize(Map context, Map source, String base, Settings settings) {
+    static OutputStream serialize(Map context, Object source, String base, Settings settings) {
         var out = new Output()
         var state = new CleanedTrigSerializerState(out, settings, context, base)
         state.serialize(source)
