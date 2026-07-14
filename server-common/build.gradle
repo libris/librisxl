@@ -7,14 +7,12 @@ repositories {
 
 sourceSets {
     main {
-        java { srcDirs = [] }
-        groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+        java { srcDirs = ['src/main/java', 'src/main/groovy'] }
     }
     test {
         groovy { srcDir 'src/test/groovy/' }
     }
 }
-
 
 dependencies {
     // XL dependencies
