@@ -83,7 +83,7 @@ Map getClassification(String clsCode, isInstance=false) {
       cls[TYPE] = 'Classification'
       cls.code = clsCode
       cls.inScheme = [(ID): SAB]
-      cls.broader = sabRefs
+      cls.termComponentList = sabRefs
 
       var missed = sabRefs.findAll { ID !in it && it[TYPE] != 'Resource' }
       if (missed) {
