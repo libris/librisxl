@@ -1,112 +1,116 @@
-package whelk.util
+package whelk.util;
 
-import groovy.transform.CompileStatic
-import se.kb.libris.util.marc.Controlfield
-import se.kb.libris.util.marc.Field
-import se.kb.libris.util.marc.MarcRecord
-import se.kb.libris.util.marc.Subfield
-import se.kb.libris.util.marc.impl.ControlfieldImpl
-import se.kb.libris.util.marc.impl.DatafieldImpl
-import se.kb.libris.util.marc.impl.SubfieldImpl
+import se.kb.libris.util.marc.Controlfield;
+import se.kb.libris.util.marc.Datafield;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Subfield;
+import se.kb.libris.util.marc.impl.ControlfieldImpl;
+import se.kb.libris.util.marc.impl.DatafieldImpl;
+import se.kb.libris.util.marc.impl.SubfieldImpl;
 
-import whelk.Document
-import whelk.JsonLd
+import whelk.Document;
+import whelk.JsonLd;
 
-@CompileStatic
-class LegacyIntegrationTools {
-    // FIXME: de-KBV/Libris-ify
-    static final Map<String, String> MARC_COLLECTION_BY_CATEGORY = [
-        'https://id.kb.se/marc/auth': 'auth',
-        'https://id.kb.se/marc/bib': 'bib',
-        'https://id.kb.se/marc/hold': 'hold',
-        'https://id.kb.se/marc/none': NO_MARC_COLLECTION
-    ]
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
 
-    static final String NO_MARC_COLLECTION = 'none'
-    static final String UNDEFINED_MARC_COLLECTION = 'undefined'
+public class LegacyIntegrationTools {
+    public static final String NO_MARC_COLLECTION = "none";
+    public static final String UNDEFINED_MARC_COLLECTION = "undefined";
 
     // FIXME: de-KBV/Libris-ify
-    static final String BASE_LIBRARY_URI = "https://libris.kb.se/library/"
+    public static final Map<String, String> MARC_COLLECTION_BY_CATEGORY = Map.of(
+            "https://id.kb.se/marc/auth", "auth",
+            "https://id.kb.se/marc/bib", "bib",
+            "https://id.kb.se/marc/hold", "hold",
+            "https://id.kb.se/marc/none", NO_MARC_COLLECTION
+    );
 
-    static String legacySigelToUri(String sigel) {
+    // FIXME: de-KBV/Libris-ify
+    public static final String BASE_LIBRARY_URI = "https://libris.kb.se/library/";
+
+    public static String legacySigelToUri(String sigel) {
         if (sigel.startsWith(BASE_LIBRARY_URI))
-            return sigel
-        return BASE_LIBRARY_URI + URLEncoder.encode(sigel, "UTF-8")
+            return sigel;
+        return BASE_LIBRARY_URI + URLEncoder.encode(sigel, StandardCharsets.UTF_8);
     }
 
-    static String uriToLegacySigel(String uri) {
+    public static String uriToLegacySigel(String uri) {
         if (uri.startsWith(BASE_LIBRARY_URI))
-            return URLDecoder.decode(uri.substring(BASE_LIBRARY_URI.length()), "UTF-8")
-        return null
+            return URLDecoder.decode(uri.substring(BASE_LIBRARY_URI.length()), StandardCharsets.UTF_8);
+        return null;
     }
 
     /**
      * Will return "auth", "bib", "hold", "definitions" or "none"
      */
-    static String determineLegacyCollection(Document document, JsonLd jsonld) {
-        String type = document.getThingType() // for example "Instance"
+    public static String determineLegacyCollection(Document document, JsonLd jsonld) {
+        String type = document.getThingType(); // for example "Instance"
 
-        return getMarcCollectionInHierarchy(type, jsonld)
+        return getMarcCollectionInHierarchy(type, jsonld);
     }
 
-    static String getMarcCollectionInHierarchy(String type, JsonLd jsonld) {
-        String collection = _getMarcCollectionInHierarchy(type, jsonld)
-        return collection == UNDEFINED_MARC_COLLECTION ? NO_MARC_COLLECTION : collection
+    public static String getMarcCollectionInHierarchy(String type, JsonLd jsonld) {
+        String collection = _getMarcCollectionInHierarchy(type, jsonld);
+        return collection.equals(UNDEFINED_MARC_COLLECTION) ? NO_MARC_COLLECTION : collection;
     }
 
-    static String _getMarcCollectionInHierarchy(String type, JsonLd jsonld) {
-        Map termMap = jsonld.vocabIndex[type]
+    public static String _getMarcCollectionInHierarchy(String type, JsonLd jsonld) {
+        Map<String, Object> termMap = jsonld.vocabIndex.get(type);
         if (termMap == null)
-            return UNDEFINED_MARC_COLLECTION
+            return UNDEFINED_MARC_COLLECTION;
 
-        String marcCategory = getMarcCollectionForTerm(termMap)
-        if (marcCategory != UNDEFINED_MARC_COLLECTION) {
-            return marcCategory
+        String marcCategory = getMarcCollectionForTerm(termMap);
+        if (!marcCategory.equals(UNDEFINED_MARC_COLLECTION)) {
+            return marcCategory;
         }
 
-        List superClasses = (List) termMap["subClassOf"]
+        List<?> superClasses = (List<?>) termMap.get("subClassOf");
         if (superClasses == null) {
-            return UNDEFINED_MARC_COLLECTION
+            return UNDEFINED_MARC_COLLECTION;
         }
 
-        for (superClass in superClasses) {
-            if (superClass == null || superClass["@id"] == null) {
-                continue
+        for (Object superClass : superClasses) {
+            if (!(superClass instanceof Map<?, ?> superClassMap) || superClassMap.get("@id") == null) {
+                continue;
             }
-            String superClassType = jsonld.toTermKey( (String) superClass["@id"] )
-            String category = _getMarcCollectionInHierarchy(superClassType, jsonld)
-            if ( category != UNDEFINED_MARC_COLLECTION )
-                return category
+            String superClassType = jsonld.toTermKey(superClassMap.get("@id").toString());
+            String category = _getMarcCollectionInHierarchy(superClassType, jsonld);
+            if (!category.equals(UNDEFINED_MARC_COLLECTION))
+                return category;
         }
 
-        return UNDEFINED_MARC_COLLECTION
+        return UNDEFINED_MARC_COLLECTION;
     }
 
-    static String getMarcCollectionForTerm(Map termMap) {
-        def categories = termMap["category"]
-        if (!(categories instanceof List)) {
-            categories = categories ? [categories] : []
-        }
-        for (category in categories) {
-            String id = category["@id"]
-            String collection = MARC_COLLECTION_BY_CATEGORY[id]
+    public static String getMarcCollectionForTerm(Map<String, Object> termMap) {
+        Object categoriesValue = termMap.get("category");
+        List<?> categories = categoriesValue instanceof List<?> list
+                ? list
+                : categoriesValue != null ? List.of(categoriesValue) : List.of();
+        for (Object category : categories) {
+            Object id = ((Map<?, ?>) category).get("@id");
+            String collection = id != null ? MARC_COLLECTION_BY_CATEGORY.get(id.toString()) : null;
             if (collection != null) {
-                return collection
+                return collection;
             }
         }
-        return UNDEFINED_MARC_COLLECTION
+        return UNDEFINED_MARC_COLLECTION;
     }
 
     /**
      * Tomcat incorrectly strips away double slashes from the pathinfo. Compensate here.
      */
-    static String fixUri(String uri) {
-        if (uri ==~ "/http:/[^/].+") {
-            uri = uri.replace("http:/", "http://")
-        } else if (uri ==~ "/https:/[^/].+") {
-            uri = uri.replace("https:/", "https://")
+    public static String fixUri(String uri) {
+        if (uri.matches("/http:/[^/].+")) {
+            uri = uri.replace("http:/", "http://");
+        } else if (uri.matches("/https:/[^/].+")) {
+            uri = uri.replace("https:/", "https://");
         }
-        return uri
+        return uri;
     }
 
     // FIXME: de-KBV/Libris-ify
@@ -115,37 +119,41 @@ class LegacyIntegrationTools {
      *
      * After calling this on a record, you SHOULD IMMEDIATELY also set a new 001 on that record.
      */
-    static void makeRecordLibrisResident(MarcRecord record) {
+    public static void makeRecordLibrisResident(MarcRecord record) {
         // Add new 035$a
-        Controlfield field003 = (Controlfield) record.getControlfields("003")[0] // non-repeatable
-        Controlfield field001 = (Controlfield) record.getControlfields("001")[0] // non-repeatable
+        Controlfield field003 = firstOrNull(record.getControlfields("003")); // non-repeatable
+        Controlfield field001 = firstOrNull(record.getControlfields("001")); // non-repeatable
 
         if (field001 != null && field003 != null && field001.getData()
-                != null && field003.getData() != null && field003.getData()
-                != "SE-LIBR" && field003.getData() != "LIBRIS") {
+                != null && field003.getData() != null && !field003.getData()
+                .equals("SE-LIBR") && !field003.getData().equals("LIBRIS")) {
 
-            String idInOtherSystem = "(" + field003.getData().trim() + ")" + field001.getData().trim()
+            String idInOtherSystem = "(" + field003.getData().trim() + ")" + field001.getData().trim();
 
-            boolean hasRelevant035aAlready = false
-            record.getDatafields("035").each { f ->
-                f.getSubfields("a").each { sf ->
-                    if (sf.getData() == idInOtherSystem)
-                        hasRelevant035aAlready = true
+            boolean hasRelevant035aAlready = false;
+            for (Datafield f : record.getDatafields("035")) {
+                for (Subfield sf : f.getSubfields("a")) {
+                    if (idInOtherSystem.equals(sf.getData()))
+                        hasRelevant035aAlready = true;
                 }
             }
 
             if (!hasRelevant035aAlready) {
-                Field field035 = new DatafieldImpl("035")
-                Subfield a = new SubfieldImpl("a".charAt(0), idInOtherSystem)
-                field035.addSubfield(a)
-                record.addField(field035)
+                Datafield field035 = new DatafieldImpl("035");
+                Subfield a = new SubfieldImpl("a".charAt(0), idInOtherSystem);
+                field035.addSubfield(a);
+                record.addField(field035);
             }
         }
 
         // Replace 003
         while (record.getControlfields("003").size() > 0)
-            record.getFields().remove(record.getControlfields("003").get(0))
+            record.getFields().remove(record.getControlfields("003").get(0));
 
-        record.addField(new ControlfieldImpl("003", "SE-LIBR"))
+        record.addField(new ControlfieldImpl("003", "SE-LIBR"));
+    }
+
+    private static Controlfield firstOrNull(List<? extends Controlfield> fields) {
+        return fields.isEmpty() ? null : fields.get(0);
     }
 }
