@@ -219,6 +219,12 @@ public class DocumentUtil {
             }
             if (newLinked != null && !newLinked.isEmpty()) {
                 for (Map l : newLinked) {
+                    // NOTE/TODO: the original Groovy had a second dedup clause
+                    // `!result.contains { it['@id'] == l['@id'] }` that was inert
+                    // (List.contains(closure) is always false), so it never filtered
+                    // anything. This bug-compatible port keeps that behavior, i.e., 
+                    // two sibling blank nodes that link to the same *new* @id will
+                    // (still) each be added.
                     if (!existingLinks.contains(l.get("@id"))) {
                         result.add(l);
                     }
