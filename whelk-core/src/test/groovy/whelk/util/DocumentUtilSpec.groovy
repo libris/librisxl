@@ -423,4 +423,19 @@ class DocumentUtilSpec extends Specification {
         expect:
         getAtPath(data, ['c']) == null
     }
+
+    def "get at path treats falsy scalars as absent"() {
+        expect:
+        // Groovy `if (!item)` truthiness: 0, false, empty string all yield defaultTo.
+        // Reached via the '*' recursion, so falsy leaves are dropped when flattening.
+        getAtPath([a: [0, [x: 1]]], ['a', '*'], 'DEF') == [[x: 1]]
+        getAtPath([a: [false, [x: 1]]], ['a', '*'], 'DEF') == [[x: 1]]
+        getAtPath([a: ['', [x: 1]]], ['a', '*'], 'DEF') == [[x: 1]]
+        getAtPath([a: [0L, 0.0, [x: 1]]], ['a', '*'], 'DEF') == [[x: 1]]
+        // Non-zero scalars are kept
+        getAtPath([a: [0, 5, [x: 1]]], ['a', '*'], 'DEF') == [5, [x: 1]]
+        // The falsy guard only fires at (recursive) call entry, not on a resolved leaf:
+        // here each list element is a non-empty map at entry, so a b:0 leaf is returned as-is.
+        getAtPath([a: [[b: 0], [b: 5]]], ['a', 'b'], 'DEF', false) == [0, 5]
+    }
 }

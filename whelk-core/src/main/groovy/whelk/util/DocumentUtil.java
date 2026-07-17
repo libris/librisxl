@@ -123,10 +123,13 @@ public class DocumentUtil {
     }
 
     public static Object getAtPath(Object item, Iterable<?> path, Object defaultTo, boolean requireListIndex) {
+        // Mirror Groovy truthiness of the original `if (!item)`
         if (item == null
                 || (item instanceof Map<?, ?> m && m.isEmpty())
                 || (item instanceof Collection<?> c && c.isEmpty())
-                || (item instanceof CharSequence s && s.isEmpty())) {
+                || (item instanceof CharSequence s && s.isEmpty())
+                || (item instanceof Number n && n.doubleValue() == 0)
+                || (item instanceof Boolean b && !b)) {
             return defaultTo;
         }
 
