@@ -420,13 +420,15 @@ class Whelk {
             String p = link.property()
             if (jsonld.isIntegral(jsonld.getInverseProperty(p))) {
                 String id = storage.getSystemIdByIri(link.iri)
-                Document doc = storage.load(id)
-                def lenses = ['chips', 'cards', 'full']
-                def reverseRelations = lenses
-                        .collect { jsonld.getInverseProperties(doc.data, it) }
-                        .flatten()
-                if (reverseRelations.contains(p)) {
-                    indexDocAndVirtual(doc)
+                if (id) {
+                    Document doc = storage.load(id)
+                    def lenses = ['chips', 'cards', 'full']
+                    def reverseRelations = lenses
+                            .collect { jsonld.getInverseProperties(doc.data, it) }
+                            .flatten()
+                    if (reverseRelations.contains(p)) {
+                        indexDocAndVirtual(doc)
+                    }
                 }
             }
         }
