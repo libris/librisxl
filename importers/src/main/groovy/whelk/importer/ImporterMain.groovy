@@ -172,6 +172,40 @@ class ImporterMain {
         copier.run()
     }
 
+    /**
+     * Copy one or a few records, specified by XL id (or IRI) on the command line, from
+     * another whelk, and index them. Like copywhelk, records that the specified records
+     * link to, and records that link to them, are copied as well.
+     *
+     * Unlike copywhelk's --copy-versions, this one is boolean: if set, all
+     * historical versions of the *specified records* (not of their deps) are copied.
+     *
+     * By default a specified record that already exists in the destination is skipped.
+     * With --overwrite-existing its contents are instead overwritten (via an atomic
+     * update) with the source version, and its dependencies/dependers are copied as normal.
+     * Note that overwriting does not reconstruct version history, so --copy-versions
+     * has no effect on records that were overwritten rather than freshly copied.
+     *
+     * E.g., copy two records including their holdings and full history:
+     * --include-items --copy-versions SOURCE_PROPERTIES_FILE s93zr6j40v97d0f 3mfj87vf5t3zg3w
+     */
+    @Command(args='SOURCE_PROPERTIES RECORD_ID...', flags='--copy-versions --include-items --overwrite-existing')
+    void copyRecords(Map flags, String sourcePropsFile, String... recordIds) {
+        if (!recordIds) {
+            throw new IllegalArgumentException("At least one record id must be given.")
+        }
+        def sourceProps = new Properties()
+        new File(sourcePropsFile).withInputStream {
+            sourceProps.load(it)
+        }
+        Whelk source = Whelk.createLoadedCoreWhelk(sourceProps)
+        Whelk dest = Whelk.createLoadedSearchWhelk(props)
+        def copier = new RecordCopier(source, dest, recordIds as List,
+                (boolean) flags['copy-versions'], (boolean) flags['include-items'],
+                (boolean) flags['overwrite-existing'])
+        copier.run()
+    }
+
     // Records that do not cleanly translate to trig/turtle (bad data).
     // This obviously needs to be cleaned up!
     def trigExcludeList = [] as Set
