@@ -12,7 +12,6 @@ import whelk.exception.InvalidQueryException;
 import whelk.search2.*;
 import whelk.sru.cql.Translation;
 import whelk.util.http.WhelkHttpServlet;
-//import javax.xml.transform.stax.StAXResult;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLInputFactory;
@@ -93,22 +92,22 @@ public class SruServlet extends WhelkHttpServlet {
             return;
         }
 
-	Transformer transformer = null;
-	String recordsschema = "";
+        Transformer transformer = null;
+        String recordsschema = "";
 
-	try {
-	switch (Formats.FORMATS.getOrDefault(format, Formats.Format.MARC_XML)) {
-		case MARC_XML -> { transformer = null; recordsschema = "marcxml-v1.1"; }
+        try {
+            switch (Formats.FORMATS.getOrDefault(format, Formats.Format.MARC_XML)) {
+                case MARC_XML -> { transformer = null; recordsschema = "marcxml-v1.1"; }
                 case MODS -> { transformer = formats.transformers.get(Formats.Format.MODS).newTransformer(); recordsschema = "mods-v3.0"; }
                 case DC -> { transformer = formats.transformers.get(Formats.Format.DC).newTransformer(); recordsschema = "dc-v1.1"; }
-		case UNSUPPORTED -> { transformer = null; recordsschema = "marcxml-v1.1"; }
+                case UNSUPPORTED -> { transformer = null; recordsschema = "marcxml-v1.1"; }
+            }
         }
-	}
-	catch (TransformerException e){
+        catch (TransformerException e){
             logger.info(e.getMessage());
             res.sendError(400);
             return;
-	}
+        }
 
         // Like the pre-existing implementation, supply only up to 10 hits per query.
         List items = (List) results.get("items");
@@ -133,7 +132,6 @@ public class SruServlet extends WhelkHttpServlet {
             writer.writeEndElement(); // numberOfRecords
 
             writer.writeStartElement("records");
-	    //writer.flush();
 
             for (Object o : items) {
                 Map m = (Map) o;
@@ -156,27 +154,24 @@ public class SruServlet extends WhelkHttpServlet {
                 writer.writeCharacters("info:srw/schema/1/"+recordsschema);
                 writer.writeEndElement(); // recordSchema
 
-                //writer.writeStartElement("recordData");
 	    	writer.flush();
 
-		out.write("<recordData>".getBytes("UTF-8"));
+                out.write("<recordData>".getBytes("UTF-8"));
 
-		if ( transformer == null ) {
+                if ( transformer == null ) {
                 	StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
-		} else {
-			try {
-        			transformer.transform(new StreamSource(new StringReader(convertedText)), new StreamResult(out));
-			}
-			catch (TransformerException e) {
-            			logger.info(e.getMessage());
-            			res.sendError(400);
-            			return;
-			}
-		}
-		out.write("</recordData>".getBytes("UTF-8"));
+                } else {
+                       try {
+                           transformer.transform(new StreamSource(new StringReader(convertedText)), new StreamResult(out));
+                       }
+                       catch (TransformerException e) {
+                           logger.info(e.getMessage());
+                           res.sendError(400);
+                           return;
+                       }
+                }
+                out.write("</recordData>".getBytes("UTF-8"));
                 out.flush();
-
-                //writer.writeEndElement(); // recordData
 
                 writer.writeEndElement(); // record
 	    	writer.flush();
@@ -186,7 +181,7 @@ public class SruServlet extends WhelkHttpServlet {
             writer.writeEndElement(); // searchRetrieveResponse
             writer.writeEndDocument();
 
-	    writer.flush();
+            writer.flush();
             writer.close();
             out.flush();
             out.close();
