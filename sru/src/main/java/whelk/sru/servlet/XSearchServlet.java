@@ -3,9 +3,12 @@ package whelk.sru.servlet;
 import groovy.lang.Tuple2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcFieldComparator;
 import se.kb.libris.util.marc.MarcRecord;
+import se.kb.libris.util.marc.Subfield;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
 import se.kb.libris.utils.isbn.ConvertException;
@@ -44,6 +47,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -88,6 +92,8 @@ public class XSearchServlet extends WhelkHttpServlet {
     private final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     private Formats formats = null;
 
+    private static final String appId = "https://libris.kb.se/xsearch";
+
     private static final int DEFAULT_N = 10;
     private static final int MAX_N = 200;
     private static final int DEFAULT_START = 1;
@@ -123,12 +129,14 @@ public class XSearchServlet extends WhelkHttpServlet {
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     ResourceLookup resourceLookup;
     ESSettings esSettings;
+    AppParams appParams;
 
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
+        appParams = new AppParams(appId, whelk);
 	formats = new Formats();
     }
 
@@ -165,7 +173,10 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map("true"::equals).orElse(false)
                 && (format == Formats.Format.MARC_XML || format == Formats.Format.MODS);
 
-        var include9xx = getOptionalSingleNonEmpty(Params.FORMAT_LEVEL, parameters)
+        //var include9xx = getOptionalSingleNonEmpty(Params.FORMAT_LEVEL, parameters)
+        //        .map("full"::equals).orElse(false);
+
+        boolean formatLevelFull = getOptionalSingleNonEmpty(Params.FORMAT_LEVEL, parameters)
                 .map("full"::equals).orElse(false);
 
         if (format == Formats.Format.UNSUPPORTED) {
@@ -179,11 +190,12 @@ public class XSearchServlet extends WhelkHttpServlet {
         try {
             // TODO handle onr (record ID) here or in search2?
 
-            String instanceOnlyQueryString = "(" + query + ") AND type=Instance";
+            //String instanceOnlyQueryString = "(" + query + ") AND type=Instance";
 
             // This part is a little weird
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
-            String[] q = new String[]{ instanceOnlyQueryString };
+            //String[] q = new String[]{ instanceOnlyQueryString };
+            String[] q = new String[]{ query };
             paramsAsIfSearch.put("_q", q);
             paramsAsIfSearch.put("_stats", new String[]{"false"}); // don't need facets
             paramsAsIfSearch.put("_offset", new String[]{"" + (start - 1)});
@@ -193,8 +205,8 @@ public class XSearchServlet extends WhelkHttpServlet {
             }
 
             QueryParams qp = new QueryParams(paramsAsIfSearch);
-            AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
-            var results = new Query(qp, ap, resourceLookup, esSettings, whelk).collectResults();
+            //AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
+            var results = new Query(qp, appParams, resourceLookup, esSettings, whelk).collectResults();
 
             @SuppressWarnings("unchecked")
             List<Map<?,?>> items = (List<Map<?,?>>) results.get("items");
@@ -202,10 +214,11 @@ public class XSearchServlet extends WhelkHttpServlet {
             int to = Math.min(start + n, totalItems);
 
             switch (format) {
-                case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, include9xx);
+                case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, formatLevelFull);
                 case JSON -> sendJson(res, items, start, to, totalItems);
-                case MODS -> sendTransformedMarc(res, Formats.Format.MODS, items, start, to, totalItems, includeHoldings, include9xx);
+                case MODS -> sendTransformedMarc(res, Formats.Format.MODS, items, start, to, totalItems, includeHoldings, formatLevelFull);
                 case DC -> sendTransformedMarc(res, Formats.Format.DC, items, start, to, totalItems, false, false);
+                case REF_WORKS -> sendTransformedMarc(res, Formats.Format.REF_WORKS, items, start, to, totalItems, includeHoldings, formatLevelFull);
             }
 
         } catch (InvalidQueryException e) {
@@ -223,11 +236,11 @@ public class XSearchServlet extends WhelkHttpServlet {
                              int to,
                              int totalItems,
                              boolean includeHoldings,
-                             boolean include9xx) throws IOException, XMLStreamException {
+                             boolean formatLevelFull) throws IOException, XMLStreamException {
         res.setCharacterEncoding("UTF-8");
         res.setContentType("text/xml");
         OutputStream out = res.getOutputStream();
-        writeMarcXml(out, items, from, to, totalItems, includeHoldings, include9xx);
+        writeMarcXml(out, items, from, to, totalItems, includeHoldings, formatLevelFull);
         out.flush();
         out.close();
     }
@@ -238,7 +251,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                               int to,
                               int totalItems,
                               boolean includeHoldings,
-                              boolean include9xx) throws XMLStreamException {
+                              boolean formatLevelFull) throws XMLStreamException {
 
         XMLStreamWriter writer = xmlOutputFactory.createXMLStreamWriter(o);
 
@@ -262,7 +275,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                     var bibXml = (String) converter.convert(embellished.data, embellished.getShortId())
                             .get(JsonLd.NON_JSON_CONTENT_KEY);
 
-                    bibXml = expandRecord(bibXml, embellished, includeHoldings, include9xx);
+                    bibXml = expandRecord(bibXml, embellished, includeHoldings, formatLevelFull);
 
                     return bibXml;
                 }).forEachOrdered( convertedText -> {
@@ -338,7 +351,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         writeMarcXml(o, items, from, to, totalItems, includeHoldings, include9xx);
         ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
 
-        Transformer transformer = formats.transformers.get(format).newTransformer();
+        Transformer transformer = formats.transformers.get(format).templates().newTransformer();
 
         OutputStream out = res.getOutputStream();
         transformer.transform(new StreamSource(i), new StreamResult(res.getOutputStream()));
@@ -346,33 +359,33 @@ public class XSearchServlet extends WhelkHttpServlet {
         out.close();
     }
 
-    private String expandRecord(String bibXml, Document bib, boolean includeHoldings, boolean include9xx) {
-        if (!includeHoldings && !include9xx) {
-            return bibXml;
-        }
-
+    private String expandRecord(String bibXml, Document bib, boolean includeHoldings, boolean formatLevelFull) {
         try {
             MarcRecord bibRecord = MarcXmlRecordReader.fromXml(bibXml);
 
-            ListIterator<Field> li = bibRecord.listIterator();
-            while (li.hasNext()) {
-                if (Objects.equals((li.next()).getTag(), "003")) {
-                    li.remove();
+            if (formatLevelFull) {
+                ListIterator<Field> li = bibRecord.listIterator();
+                while (li.hasNext()) {
+                    if (Objects.equals((li.next()).getTag(), "003")) {
+                        li.remove();
+                    }
                 }
+                bibRecord.addField(bibRecord.createControlfield("003", "SE-LIBR"), MarcFieldComparator.strictSorted);
             }
-            bibRecord.addField(bibRecord.createControlfield("003", "SE-LIBR"), MarcFieldComparator.strictSorted);
 
-            if (includeHoldings) {
-                List<Document> holdingDocuments = whelk.getAttachedHoldings(bib.getThingIdentifiers());
-                for (Document holding : holdingDocuments) {
-                    var holdXml = (String) converter.convert(holding.data, holding.getShortId())
-                            .get(JsonLd.NON_JSON_CONTENT_KEY);
-                    MarcRecord holdRecord = MarcXmlRecordReader.fromXml(holdXml);
+            for (Document holding : whelk.getAttachedHoldings(bib.getThingIdentifiers())) {
+                var holdXml = (String) converter.convert(holding.data, holding.getShortId())
+                        .get(JsonLd.NON_JSON_CONTENT_KEY);
+                MarcRecord holdRecord = MarcXmlRecordReader.fromXml(holdXml);
+
+                if (includeHoldings) {
                     mergeBibMfhd(bibRecord, holding.getHeldBySigel(), holdRecord);
+                } else {
+                    copy856(bibRecord, holding.getHeldBySigel(), holdRecord);
                 }
             }
 
-            if (include9xx) {
+            if (formatLevelFull) {
                 // Only 976...
                 addSabTitles(bibRecord);
             }
@@ -384,6 +397,26 @@ public class XSearchServlet extends WhelkHttpServlet {
             return o.toString(StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    // associatedMedia links from holdings
+    private static void copy856(MarcRecord bibRecord, String sigel, MarcRecord holdRecord) {
+        for (var f : holdRecord.getFields("856")) {
+            if (f instanceof Datafield) {
+                Datafield df = bibRecord.createDatafield(f.getTag());
+                df.addSubfield('5', sigel);
+                df.setIndicator(0, ((Datafield)f).getIndicator(0));
+                df.setIndicator(1, ((Datafield)f).getIndicator(1));
+
+                Iterator<Subfield> i = ((Datafield)f).iterator();
+                while (i.hasNext()) {
+                    Subfield sf = i.next();
+                    df.addSubfield(sf.getCode(), sf.getData());
+                }
+
+                bibRecord.addField(df);
+            }
         }
     }
 
