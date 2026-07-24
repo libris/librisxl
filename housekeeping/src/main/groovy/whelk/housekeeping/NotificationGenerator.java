@@ -281,42 +281,41 @@ public class NotificationGenerator extends HouseKeeper {
             newValue = newCopy;
         }
 
+        // Everything in the document data must be mutable: the storage layer normalizes
+        // documents in place (e.g. LinkFinder rewriting "@id" values) before writing.
         Map<String, Object> record = new LinkedHashMap<>();
         record.put("@id", metadataUri);
         record.put("@type", "Record");
-        record.put("mainEntity", Map.of("@id", mainEntityUri));
+        record.put("mainEntity", mutableIdMap(mainEntityUri));
 
         Map<String, Object> mainEntity = new LinkedHashMap<>();
         mainEntity.put("@id", mainEntityUri);
         mainEntity.put("@type", "ChangeObservation");
-        mainEntity.put("concerning", Map.of("@id", Document.getBASE_URI().toString() + instanceId + "#it"));
+        mainEntity.put("concerning", mutableIdMap(Document.getBASE_URI().toString() + instanceId + "#it"));
         mainEntity.put("representationBefore", oldValue);
         mainEntity.put("representationAfter", newValue);
-        mainEntity.put("category", Map.of("@id", categoryUri));
-        mainEntity.put("descriptionLastModifier", singletonIdMap(agentId));
+        mainEntity.put("category", mutableIdMap(categoryUri));
+        mainEntity.put("descriptionLastModifier", mutableIdMap(agentId));
 
-        List<String> comments = extractComments(changeNotes);
+        List<Object> comments = extractComments(changeNotes);
         if (!comments.isEmpty()) {
             mainEntity.put("comment", comments);
         }
 
         Map<String, Object> observationData = new LinkedHashMap<>();
-        observationData.put("@graph", List.of(record, mainEntity));
+        observationData.put("@graph", new ArrayList<>(List.of(record, mainEntity)));
 
         return new Document(observationData);
     }
 
-    /**
-     * A one-entry map, permitting a null value (unlike Map.of).
-     */
-    private static Map<String, Object> singletonIdMap(String id) {
+    private static Map<String, Object> mutableIdMap(String id) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("@id", id);
         return map;
     }
 
-    private List<String> extractComments(List<Object> changeNotes) {
-        List<String> comments = new ArrayList<>();
+    private List<Object> extractComments(List<Object> changeNotes) {
+        List<Object> comments = new ArrayList<>();
         for (Object changeNote : changeNotes) {
             if (!(changeNote instanceof String changeNoteString))
                 continue;
@@ -329,8 +328,7 @@ public class NotificationGenerator extends HouseKeeper {
                 throw new RuntimeException(e);
             }
             if (changeNoteMap != null) {
-                for (Object comment : NotificationUtils.asList(changeNoteMap.get("comment")))
-                    comments.add((String) comment);
+                comments.addAll(NotificationUtils.asList(changeNoteMap.get("comment")));
             }
         }
         return comments;

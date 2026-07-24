@@ -156,7 +156,6 @@ public class InquirySender extends HouseKeeper {
             try {
                 connection.close();
             } catch (java.sql.SQLException ignored) {
-                // Matching the Groovy original, which let close() failures propagate silently past this point.
             }
             if (notifiedChangesUpTo.isAfter(from.toInstant())) {
                 Map newState = new HashMap();
