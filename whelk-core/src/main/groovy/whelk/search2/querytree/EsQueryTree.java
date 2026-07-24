@@ -191,7 +191,11 @@ public class EsQueryTree {
             List<List<Node>> multiSelectGroups = selectedFacets.getAllMultiOrRadioSelected()
                     .values()
                     .stream()
-                    .map(origSelected -> origSelected.stream().map(eqt.nodeMap()::get).toList())
+                    .map(origSelected -> origSelected.stream()
+                            .map(eqt.nodeMap()::get)
+                            .filter(Objects::nonNull)
+                            .toList())
+                    .filter(Predicate.not(List::isEmpty))
                     .toList();
 
             if (multiSelectGroups.isEmpty()) {
