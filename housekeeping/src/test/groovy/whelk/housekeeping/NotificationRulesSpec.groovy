@@ -1119,4 +1119,314 @@ class NotificationRulesSpec extends Specification {
         result.changed() == true
     }
 
+
+    def "agentRecordChanged for Person"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : [
+                        "@type"     : "Person",
+                        "familyName": "aaa",
+                        "givenName" : "bbb",
+                        "name"      : "ccc"
+                ]
+        ])
+        Document after = new Document([
+                "mainEntity" : [
+                        "@type"     : "Person",
+                        "familyName": "ddd",
+                        "givenName" : "bbb",
+                        "name"      : "ccc"
+                ]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "agentRecordChanged for Organization"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : ["@type": "Organization", "name": "aaa"]
+        ])
+        Document after = new Document([
+                "mainEntity" : ["@type": "Organization", "name": "bbb"]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "agentRecordChanged for unchanged Person"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : ["@type": "Person", "name": "aaa"]
+        ])
+        Document after = new Document([
+                "mainEntity" : ["@type": "Person", "name": "aaa"]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == false
+    }
+
+    def "agentRecordChanged for Jurisdiction"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : ["@type": "Jurisdiction", "name": "aaa"]
+        ])
+        Document after = new Document([
+                "mainEntity" : ["@type": "Jurisdiction", "name": "bbb"]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "agentRecordChanged for Family"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : ["@type": "Family", "name": "aaa"]
+        ])
+        Document after = new Document([
+                "mainEntity" : ["@type": "Family", "name": "bbb"]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Family subject change"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        ["@type": "Family", "name": "aaa"]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        ["@type": "Family", "name": "bbb"]
+                                ]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Jurisdiction subject change"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        ["@type": "Jurisdiction", "name": "aaa"]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        ["@type": "Jurisdiction", "name": "bbb"]
+                                ]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Change serial relation via continues"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "continues": [
+                                [
+                                        "@type" : "Instance",
+                                        "hasTitle" : [
+                                                [ "@type" : "Title", "mainTitle" : "aaa" ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "continues": [
+                                [
+                                        "@type" : "Instance",
+                                        "hasTitle" : [
+                                                [ "@type" : "Title", "mainTitle" : "bbb" ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Serial relation change ignored for non-Serial"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Monograph",
+                        "continuedBy": [
+                                ["@type": "Instance", "hasTitle": [["@type": "Title", "mainTitle": "aaa"]]]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Monograph",
+                        "continuedBy": [
+                                ["@type": "Instance", "hasTitle": [["@type": "Title", "mainTitle": "bbb"]]]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == false
+    }
+
+    def "Remove serial termination"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+        // 'before' is populated (non-null) because it had an endYear
+        result.before() != null
+    }
+
+    def "Serial termination unchanged"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == false
+    }
+
+    def "Serial termination ignored when publication list size differs"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"],
+                                ["@type": "Publication", "endYear": "2023"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == false
+    }
+
+    def "Remove DDC classification"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                ["@type": "ClassificationDdc", "edition": "full"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                ["@type": "ClassificationDdc", "edition": "abridged"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.DDCChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Remove SAB classification"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                ["@type": "Classification", "inScheme": ["code": "kssb"], "code": "aaa"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                ["@type": "Classification", "inScheme": ["code": "kssb"], "code": "bbb"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.SABChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+    }
+
 }
