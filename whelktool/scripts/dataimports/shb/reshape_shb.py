@@ -51,7 +51,9 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
         work = {"@type": "Work"}
 
     instance["instanceOf"] = work
-
+    # We can assume all titles are published and printed
+    
+    instance["category"].append({"@id":"https://id.kb.se/term/saobf/Print"})
     ### Try to link local entities
     link_local_entities(instance, rec, shb_part_num)
 
@@ -94,7 +96,8 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
             else:
                 extent_counts.update(["Monographic extent (e.g. 47)"])
                 # Remove category "componentPart"
-                del instance["category"]
+                instance["category"].remove({"@id":"https://id.kb.se/term/saobf/ComponentPart"})
+        
 
         if note_remainder:
             issn = extract_issn(note_remainder)
@@ -134,6 +137,8 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
 
         # TODO: remove 'ComponentPart', only re-add for obviously paginated,
         # partOf:s and/or "newspaper reference"?
+
+
 
     ### Add subject headings to the instance ###
     # TODO Add SAB as well
