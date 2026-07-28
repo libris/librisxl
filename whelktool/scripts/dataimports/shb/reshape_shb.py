@@ -88,7 +88,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
 
         # Parenthesis syntax (series or publication)
         if note.endswith(")"):
-            note, partof_note = extract_partof_from_paranthesis(note, syntax_era)
+            note, partof_note = extract_partof_from_parenthesis(note, syntax_era)
 
         ### Parse out information about the ting itself
         name, title, subtitle, extent, note_remainder = parse_note(note)
@@ -113,7 +113,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
                 extent_counts.update(["Monographic extent (e.g. 47)"])
 
         if note_remainder:
-            note_remainder, series = extract_partof_from_paranthesis(note_remainder, syntax_era)
+            note_remainder, series = extract_partof_from_parenthesis(note_remainder, syntax_era)
             if series:
                 series_membership = {"seriesStatement": series}
                 series_issn = extract_issn(series)
@@ -471,15 +471,15 @@ def extract_title_and_subtitle(
     return title, subtitle, remainder
 
 
-def extract_partof_from_paranthesis(note, syntax_era) -> tuple[dict]:
+def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
     """
-    >>> extract_partof_from_paranthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287.) Stockholm')
+    >>> extract_partof_from_parenthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287.) Stockholm', 'era_2')
     ('isborgs slott.  Stockholm', 'Antikvariska studier. 4. Sthlm 1950, s. 221-287.')
-    >>> extract_partof_from_paranthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.))')
+    >>> extract_partof_from_parenthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.))', 'era_2')
     ('isborgs slott.', 'Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.)')
-    >>> extract_partof_from_paranthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))')
+    >>> extract_partof_from_parenthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))', 'era_2')
     ('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))', None)
-    >>> extract_partof_from_paranthesis('isborgs slott.')
+    >>> extract_partof_from_parenthesis('isborgs slott.', 'era_2')
     ('isborgs slott.', None)
     """
 
