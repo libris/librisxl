@@ -6,6 +6,7 @@ from pathlib import Path
 from collections import Counter
 
 USE_ANNOT = False
+PARENTHESIS_ERAS = ["era_2", "era_3", "era_5", "era_6"]
 
 property_counts = Counter()
 subject_counts = Counter()
@@ -16,6 +17,7 @@ oddities = []
 
 def convert(data, biblios: dict, subject_mappings) -> dict | None:
     # Set start_year and publ_year to None
+    is_component_part = False
     start_year: str | None = None
     publ_year: str | None = None
 
@@ -24,6 +26,13 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     rec, instance, *remainder = graph
 
     # Extract information about the source SHB volume
+    shb_volume_title = (
+        instance.get("isPartOf", [])[0].get("hasTitle", [])[0].get("mainTitle", "")
+    )
+    curiosity_counts.update([f"VOLUME\t{shb_volume_title}"])
+
+    syntax_era = identify_syntax_era(shb_volume_title)
+
     if "marc:primaryProvisionActivity" in instance and "publication" in instance:
         publ = instance["publication"][0]
         start_year = publ.get("startYear")
@@ -52,8 +61,8 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
 
     instance["instanceOf"] = work
     # We can assume all titles are published and printed
-    
-    instance["category"].append({"@id":"https://id.kb.se/term/saobf/Print"})
+
+    instance["category"].append({"@id": "https://id.kb.se/term/saobf/Print"})
     ### Try to link local entities
     link_local_entities(instance, rec, shb_part_num)
 
@@ -67,20 +76,26 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
         if note == "TABORT":
             return None
 
-        # Separate information concerning the thing itself
-        # from information concerning a publication/series it is part of
+        ### Separate part/article from publication/series ###
+
+        # "I:" syntax (publication)
         PARTOF_MARK = " - I:"
         if PARTOF_MARK in note:
             note, partof_note = note.split(PARTOF_MARK, 1)
+            is_component_part = True
         else:
             partof_note = None
 
-        # Parse the "main" note
+        # Parenthesis syntax (series or publication)
+        if note.endswith(")"):
+            note, partof_note = extract_partof_from_paranthesis(note, syntax_era)
+
+        ### Parse out information about the ting itself
         name, title, subtitle, extent, note_remainder = parse_note(note)
 
-        instance["hasTitle"] = {"@type": "Title", "mainTitle": title}
-
         ### Add information from the parsed note to the instance ###
+
+        instance["hasTitle"] = {"@type": "Title", "mainTitle": title}
 
         if subtitle:
             instance["hasTitle"]["subtitle"] = subtitle
@@ -92,18 +107,57 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
             instance["extent"] = [{"@type": "Extent", "label": extent}]
 
             if "-" in extent:
+                is_component_part = True
                 extent_counts.update(["Part extent (e.g. 's. 23-31')"])
             else:
                 extent_counts.update(["Monographic extent (e.g. 47)"])
-                # Remove category "componentPart"
-                instance["category"].remove({"@id":"https://id.kb.se/term/saobf/ComponentPart"})
-        
 
         if note_remainder:
-            issn = extract_issn(note_remainder)
-            if issn:
-                instance["issn_from_note"] = issn
+            note_remainder, series = extract_partof_from_paranthesis(note_remainder, syntax_era)
+            if series:
+                series_membership = {"seriesStatement": series}
+                series_issn = extract_issn(series)
+                if series_issn:
+                    series_membership["identifiedBy"] = {"@type": "ISSN", "value": series_issn}
 
+        # Parse the "part of" note (publication which contains an article/chapter)
+        if partof_note:
+            part_name, part_title, part_subtitle, part_extent, part_remainder = (
+                parse_note(partof_note, dotnote=False)
+            )
+            part_issn = extract_issn(part_title)
+            part = {"@type": "Instance", "label": part_title}
+
+            if part_name:
+                part["responsibilityStatement"] = part_name
+            if part_title:
+                part["hasTitle"] = {"@type": "Title", "mainTitle": part_title}
+            if part_issn:
+                part["identifiedBy"] = {"@type": "ISSN", "value": part_issn}
+            if part_extent:
+                part["extent"] = [{"@type": "Extent", "label": extent}]
+            if part_remainder:
+                if USE_ANNOT:
+                    part["@annotation"] = {"comment": part_remainder}
+                else:
+                    part["label"] += part_remainder
+                    # raise NotImplementedError  # TODO
+
+            if is_component_part:
+                instance["partOf"] = [part]
+            else:
+                instance["seriesMembership"] = [part]
+
+        # Remove the category "componentPart" if there is nothing indicating it
+        if not is_component_part:
+            instance["category"].remove(
+                {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
+            )
+            curiosity_counts.update(["ComponentPart - TRUE"])
+        else:
+            curiosity_counts.update(["ComponentPart - FALSE"])
+
+        # Finally, for backup, keep the original note as a note...
         if original_note:
             instance["hasNote"] = [
                 {
@@ -111,34 +165,8 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
                     "label": f"Fullständig beskrivning (OCR) ur SHBD: {original_note}",
                 }
             ]
+            # Along with the note remainder
             instance["hasNote"].append({"@type": "Note", "label": note_remainder})
-
-        # Parse the "part of" note (eg series, containing publication)
-        if partof_note:
-            part_name, part_title, part_subtitle, part_extent, part_remainder = (
-                parse_note(partof_note, dotnote=False)
-            )
-            # assert not subtitle
-            # TODO Deceide whether the thing in partOf is issue or series
-            issue = {"@type": "Instance", "label": part_title}
-            if part_name:
-                issue["responsibilityStatement"] = part_name
-            if part_title:
-                part_issn = extract_issn(part_title)
-                if part_issn:
-                    issue["identifiedBy"] = {"@type": "ISSN", "value": part_issn}
-            if part_remainder:
-                if USE_ANNOT:
-                    issue["@annotation"] = {"comment": part_remainder}
-                else:
-                    issue["label"] += " {part_remainder}"
-                    # raise NotImplementedError  # TODO
-            instance["partOf"] = issue
-
-        # TODO: remove 'ComponentPart', only re-add for obviously paginated,
-        # partOf:s and/or "newspaper reference"?
-
-
 
     ### Add subject headings to the instance ###
     # TODO Add SAB as well
@@ -151,6 +179,73 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     property_counts.update(walk_keys(instance))
 
     return {"@id": graph[0]["@id"], "@graph": data}
+
+
+def identify_syntax_era(shb_volume_title) -> str:
+
+    # Monografi: Efternamn, Förnamn., Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
+    # Monografi utan författare: Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
+    # Bidrag: Efternamn, Förnamn., Titel. undertitel. Publ-titel. nr, sid.
+    # Bidrag utan författare: Titel. undertitel. Publ-titel. nr, sid.
+    # Bidrag (tidningsartikel): Efternamn, Förnamn., Titel. Publ-titel YYYY, nr (DD/MM).
+    if shb_volume_title in [
+        "Svensk historisk bibliografi 1771-1874",
+        "Svensk historisk bibliografi 1875-1900",
+        "Svensk historisk bibliografi 1901-1920",
+    ]:
+        return "era_1"
+
+    ### This is where "parenthesis" syntax first shows up
+    # Monografi: Efternamn, Förnamn., Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
+    # Monografi utan författare: Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
+    # Bidrag:  Efternamn, Förnamn., Titel. undertitel. Publ-titel. nr, sid.
+    # Bidrag utan författare: Titel. undertitel. Publ-titel. nr, sid.
+    # Bidrag (tidningsartikel): Efternamn, Förnamn., Titel. Publ-titel YYYY, nr.
+    elif shb_volume_title in [
+        "Svensk historisk bibliografi 1921-1935",
+        "Svensk historisk bibliografi 1936-1950",
+    ]:
+        return "era_2"
+
+    # Monografi: Efternamn, Förnamn, Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)
+    # Monografi utan författare: Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)
+    # Bidrag: Efternamn, Förnamn, Titel. undertitel. (Publ-titel nr (årtal), sid.)
+    # Bidrag (tidningsartikel): Efternamn, Förnamn, Titel. undertitel. (Publ-titel DD/MM YYYY.)
+    elif shb_volume_title in ["Svensk historisk bibliografi 1951-1960"]:
+        return "era_3"
+
+    ### Taking a break from parentheses
+    ### Sidor now comes after "Ort år"
+    ### Introducing dashes as separator before series/publication
+    # Monografi: Efternamn, Förnamn, Titel : undertitel. Ort år. sid. - Serietillhörighet. numrering.
+    # Monografi utan författare: Titel. undertitel. Ort år. sid. - Serietillhörighet. numrering.
+    # Bidrag: Efternamn, Förnamn, Titel. - Publ-titel årg (årtal):numrering, sid.
+    # Bidrag utan författare: Titel. - Publ-titel årg (årtal):numrering, sid.
+    # Bidrag (tidningsartikel): Efternamn, Förnamn, Titel. - Publ-titel DD.MM YYYY.
+    elif shb_volume_title in ["Svensk historisk bibliografi 1961-1970"]:
+        return "era_4"
+
+    ### This is where the "I:" syntax starts
+    ### The two below are very similar, apart from the presence of ISSN and the order of the values in "I:"
+    # Monografi: Efternamn, Förnamn, Titel : undertitel. Ort år. sid. - (Serietillhörighet ; numrering)
+    # Monografi utan författare: Titel : undertitel / Upphov. Ort år. sid. - (Serietillhörighet ; numrering)
+    # Bidrag: Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel årg(årtal):numrering, sid.
+    # Bidrag utan författare: Titel : undertitel / Upphov. - "I:" Publ-titel årg(årtal):numrering, sid.
+    # Bidrag (tidningsartikel): Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel DD.MM YYYY
+    elif shb_volume_title in ["Svensk historisk bibliografi 1971-1975"]:
+        return "era_5"
+
+    # Monografi: Efternamn, Förnamn, Titel : undertitel. - Ort, år. - sid. - (Serietillhörighet, ISSN)
+    # Monografi utan författare: Titel : undertitel / Upphov. - Ort, år. - sid.
+    # Bidrag: Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel, ISSN, numrering, årg, sid.
+    # Bidrag utan författare: Titel : undertitel / Upphov. - "I:" Publ-titel, ISSN, numrering, årg, sid.
+    # Bidrag (tidningsartikel) Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel DD.MM.YYYY
+    elif shb_volume_title in ["Svensk historisk bibliografi 1976"]:
+        return "era_6"
+
+    # Fallbck
+    else:
+        return "era_1"
 
 
 def add_sao_headings(shb_part_num, start_year, publ_year) -> list:
@@ -342,19 +437,6 @@ def extract_title_and_subtitle(
             curiosity_counts.update(["STRUCTURE\t'. - ' between title and next area"])
             title = title_and_author_area
 
-    # If author and title are followed by publication information in parenthesis
-    elif remainder.endswith(")"):
-        curiosity_counts.update(["STRUCTURE\tAuthor, title . (publication)"])
-        opencount = 0
-        for i, c in enumerate(remainder[::-1]):
-            if c == ")":
-                opencount += 1
-            if c == "(":
-                opencount -= 1
-                if opencount == 0:
-                    break
-        title, remainder = remainder[: -i - 1], remainder[-i:-1]
-
     # Another way to get the title
     else:
         curiosity_counts.update(["STRUCTURE\tOther structure"])
@@ -388,6 +470,39 @@ def extract_title_and_subtitle(
 
     return title, subtitle, remainder
 
+
+def extract_partof_from_paranthesis(note, syntax_era) -> tuple[dict]:
+    """
+    >>> extract_partof_from_paranthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287.) Stockholm')
+    ('isborgs slott.  Stockholm', 'Antikvariska studier. 4. Sthlm 1950, s. 221-287.')
+    >>> extract_partof_from_paranthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.))')
+    ('isborgs slott.', 'Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.)')
+    >>> extract_partof_from_paranthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))')
+    ('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))', None)
+    >>> extract_partof_from_paranthesis('isborgs slott.')
+    ('isborgs slott.', None)
+    """
+
+    end = note.rfind(")")
+    if (end == -1) or syntax_era not in PARENTHESIS_ERAS:
+        return note, None
+
+    curiosity_counts.update(["STRUCTURE\tAuthor, title . (publication)"])
+
+    depth = 0
+
+    for i in range(end, -1, -1):
+        if note[i] == ")":
+            depth += 1
+        elif note[i] == "(":
+            depth -= 1
+            if depth == 0:
+                partof_note = note[i + 1:end]
+                remainder = (note[:i] + note[end + 1:]).strip()
+                return remainder, partof_note
+
+    # Unbalanced parentheses
+    return note, None
 
 def extract_extent(remainder: str) -> tuple[str]:
     pages = ""
@@ -498,9 +613,7 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
                         row,
                         file=sys.stderr,
                     )
-                    oddities.append(
-                        f"Missing startnum in {sheet_file} row {i} {row}"
-                    )
+                    oddities.append(f"Missing startnum in {sheet_file} row {i} {row}")
                     continue
 
                 assert startnum
@@ -547,12 +660,16 @@ def valid_issn(issn: str) -> bool:
     return digits[-1] == expected
 
 
-def walk_keys(obj: dict, prefix: str = ""):
+def walk_keys(obj, prefix=""):
     if isinstance(obj, dict):
         for key, value in obj.items():
             path = f"{prefix}.{key}" if prefix else key
             yield path
             yield from walk_keys(value, path)
+
+    elif isinstance(obj, list):
+        for i, item in enumerate(obj):
+            yield from walk_keys(item, f"{prefix}[{i}]")
 
 
 if __name__ == "__main__":
