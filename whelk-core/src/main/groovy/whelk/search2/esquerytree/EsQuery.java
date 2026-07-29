@@ -120,10 +120,24 @@ public sealed interface EsQuery {
         }
     }
 
-    record Should(List<EsQuery> subQueries) implements EsQuery {
+    sealed interface Disjunction extends EsQuery {
+        @Override
+        Map<String, Object> dsl();
+
+        List<EsQuery> subQueries();
+    }
+
+    record Should(List<EsQuery> subQueries) implements Disjunction {
         @Override
         public Map<String, Object> dsl() {
             return Map.of("bool", Map.of("should", subQueries.stream().map(EsQuery::dsl).toList()));
+        }
+    }
+
+    record DisMax(List<EsQuery> subQueries) implements Disjunction {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("dis_max", Map.of("queries", subQueries.stream().map(EsQuery::dsl).toList()));
         }
     }
 

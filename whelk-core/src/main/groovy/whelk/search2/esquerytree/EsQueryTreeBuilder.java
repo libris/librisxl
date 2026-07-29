@@ -9,6 +9,7 @@ import whelk.search2.querytree.And;
 import whelk.search2.querytree.Any;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.DateTime;
+import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.FilterAlias;
 import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.InvalidValue;
@@ -49,46 +50,48 @@ import static whelk.search2.QueryUtil.quote;
 
 public class EsQueryTreeBuilder {
     public static EsQuery buildFrom(QueryTree queryTree, ESSettings settings) {
-        return buildFrom(queryTree.tree(), settings);
+        return buildFrom(queryTree.tree(), settings, queryTree instanceof ExpandedQueryTree e ? invertMap(e.nodeMap()) : Map.of());
     }
 
-    public static EsQuery buildFrom(Node queryTreeNode, ESSettings settings) {
+    public static EsQuery buildFrom(Node queryTreeNode, ESSettings settings, Map<Node, Node> nodeMap) {
         return switch (queryTreeNode) {
             case Any ignored -> new EsQuery.MatchAll();
             case Condition c -> buildFromCondition(c, settings);
             case FreeText ft -> buildFromFreeText(ft, settings.boost());
-            case FilterAlias fa -> buildFrom(fa.getParsed(), settings);
-            case And and -> buildFromAnd(and, settings);
-            case Or or -> buildFromOr(or, settings);
-            case Not not -> buildFromNot(not, settings);
+            case FilterAlias fa -> buildFrom(fa.getParsed(), settings, nodeMap);
+            case And and -> buildFromAnd(and, settings, nodeMap);
+            case Or or -> buildFromOr(or, settings, nodeMap);
+            case Not not -> buildFromNot(not, settings, nodeMap);
         };
     }
 
-    private static EsQuery buildFromNot(Not not, ESSettings esSettings) {
-        return new EsQuery.MustNot(buildFrom(not.node(), esSettings));
+    private static EsQuery buildFromNot(Not not, ESSettings esSettings, Map<Node, Node> nodeMap) {
+        return new EsQuery.MustNot(buildFrom(not.node(), esSettings, nodeMap));
     }
 
-    private static EsQuery buildFromOr(Or or, ESSettings esSettings) {
+    private static EsQuery buildFromOr(Or or, ESSettings esSettings, Map<Node, Node> nodeMap) {
         List<EsQuery> subQueries = or.children().stream()
-                .map(n -> buildFrom(n, esSettings))
+                .map(n -> buildFrom(n, esSettings, nodeMap))
                 .toList();
-        EsQuery.Should should = new EsQuery.Should(subQueries);
-        return handleNested(should);
+        EsQuery.Disjunction dis = nodeMap.get(or) instanceof Condition
+                ? new EsQuery.DisMax(subQueries)
+                : new EsQuery.Should(subQueries);
+        return handleNested(dis);
     }
 
-    private static EsQuery handleNested(EsQuery.Should should) {
-        boolean allSubQueriesAreNested = should.subQueries().stream().allMatch(EsQuery.Nested.class::isInstance);
+    private static EsQuery handleNested(EsQuery.Disjunction dis) {
+        boolean allSubQueriesAreNested = dis.subQueries().stream().allMatch(EsQuery.Nested.class::isInstance);
         if (!allSubQueriesAreNested) {
-            return should;
+            return dis;
         }
 
-        List<EsQuery.Nested> nestedSubQueries = should.subQueries().stream()
+        List<EsQuery.Nested> nestedSubQueries = dis.subQueries().stream()
                 .map(EsQuery.Nested.class::cast)
                 .toList();
 
         boolean differentStems = nestedSubQueries.stream().map(EsQuery.Nested::stem).distinct().count() > 1;
         if (differentStems) {
-            return should;
+            return dis;
         }
 
         List<EsQuery> subQueriesAsNonNested = nestedSubQueries.stream()
@@ -100,12 +103,17 @@ public class EsQueryTreeBuilder {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
 
-        return new EsQuery.Nested(new EsQuery.Should(subQueriesAsNonNested), stem, nestedFields);
+        EsQuery.Disjunction newDis = switch (dis) {
+            case EsQuery.Should ignored -> new EsQuery.Should(subQueriesAsNonNested);
+            case EsQuery.DisMax ignored -> new EsQuery.DisMax(subQueriesAsNonNested);
+        };
+
+        return new EsQuery.Nested(newDis, stem, nestedFields);
     }
 
-    private static EsQuery buildFromAnd(And and, ESSettings esSettings) {
+    private static EsQuery buildFromAnd(And and, ESSettings esSettings, Map<Node, Node> nodeMap) {
         List<EsQuery> subQueries = and.children().stream()
-                .map(n -> buildFrom(n, esSettings))
+                .map(n -> buildFrom(n, esSettings, nodeMap))
                 .toList();
         EsQuery.Must must = new EsQuery.Must(subQueries);
         return groupNested(must);
@@ -481,5 +489,11 @@ public class EsQueryTreeBuilder {
             return Optional.of(field);
         }
         return esMappings.getNestedTypeFields().stream().filter(field::startsWith).findFirst();
+    }
+
+    private static Map<Node, Node> invertMap(Map<Node, Node> nodeMap) {
+        Map<Node, Node> inverted = new HashMap<>();
+        nodeMap.forEach((k, v) -> inverted.put(v, k));
+        return inverted;
     }
 }

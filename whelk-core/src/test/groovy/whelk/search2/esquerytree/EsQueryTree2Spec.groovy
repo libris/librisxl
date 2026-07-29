@@ -1332,4 +1332,72 @@ class EsQueryTree2Spec extends Specification {
 //                ]
 //        ]
 //    }
+
+    def "To ES query: CONDITION expanding to OR should result in dis_max query"() {
+        given:
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
+        String q = 'type:T2x p1:x'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ExpandedQueryTree eqt = qt.expand(jsonLd) // --> 'type:T2x (hasInstance.p1:x OR p1:x)'
+        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+
+        expect:
+        esQueryTree.getMainQuery() == [
+                "bool": [
+                        "must": [[
+                                         "bool": [
+                                                 "filter": [
+                                                         "term": [
+                                                                 "@type": "T2x"
+                                                         ]
+                                                 ]
+                                         ]
+                                 ], [
+                                         "dis_max": [
+                                                 "queries": [[
+                                                                     "simple_query_string": [
+                                                                             "default_operator": "AND",
+                                                                             "query"           : "x",
+                                                                             "fields"          : ["@reverse.instanceOf.p1"]
+                                                                     ]
+                                                             ], [
+                                                                     "simple_query_string": [
+                                                                             "default_operator": "AND",
+                                                                             "query"           : "x",
+                                                                             "fields"          : ["p1"]
+                                                                     ]
+                                                             ]]
+                                         ]
+                                 ]]
+                ]
+        ]
+    }
+
+    def "To ES query: CONDITION expanding to OR should result in dis_max query 2"() {
+        given:
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
+        String q = 'p16:x' // p16 is a composite property
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ExpandedQueryTree eqt = qt.expand(jsonLd) // --> 'p18:x OR p17:x'
+        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+
+        expect:
+        esQueryTree.getMainQuery() == [
+                "dis_max": [
+                        "queries": [[
+                                            "simple_query_string": [
+                                                    "default_operator": "AND",
+                                                    "query"           : "x",
+                                                    "fields"          : ["p18"]
+                                            ]
+                                    ], [
+                                            "simple_query_string": [
+                                                    "default_operator": "AND",
+                                                    "query"           : "x",
+                                                    "fields"          : ["p17"]
+                                            ]
+                                    ]]
+                ]
+        ]
+    }
 }
