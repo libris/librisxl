@@ -154,7 +154,7 @@ public class QueryUtil {
                 .toList();
 
         return integralRelations.stream()
-                .filter(prop -> prop.domain().stream().anyMatch(d -> jsonLd.isSubClassOf(d, type)))
+                .filter(prop -> prop.domain().stream().anyMatch(d -> jsonLd.isSubClassOf(type, d)))
                 .toList();
     }
 
