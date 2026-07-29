@@ -160,6 +160,14 @@ public class EsQueryTreeBuilder {
                 } else {
                     currentGroup.add(nested);
                 }
+            } else if (subQuery instanceof EsQuery.MustNot(EsQuery.Nested nested)
+                    // A must_not(nested(...)) clause may only join an existing nested group if that group
+                    // already contains a "positive" nested clause for the same path.
+                    && nested.stem().equals(currentNestedStem.get())) {
+                // Move the negation inside the nested query so it can be grouped with the existing nested clauses
+                EsQuery.MustNot nonNested = new EsQuery.MustNot(nested.query());
+                EsQuery.Nested outerNested = new EsQuery.Nested(nonNested, nested.stem(), Set.of());
+                currentGroup.add(outerNested);
             } else {
                 // A non-nested sub-query works as a separator for nested groups
                 collectNested.run(); // Collect previous group

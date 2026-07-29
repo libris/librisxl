@@ -1056,112 +1056,111 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    // TODO: Hantera nested NOT
-//    def "To ES query: group nested (NOT in AND, mixed with non-negated)"() {
-//        given:
-//        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
-//        String q = 'p3.p2:E1 NOT p3.p4:"https://id.kb.se/x"'
-//        QueryTree qt = new QueryTree(q, disambiguate)
-//        ExpandedQueryTree eqt = qt.expand(jsonLd)
-//        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
-//
-//        expect:
-//        esQueryTree.getMainQuery() == [
-//                "nested": [
-//                        "path" : "p3",
-//                        "query": [
-//                                "bool": [
-//                                        "must": [[
-//                                                         "bool": [
-//                                                                 "filter": [
-//                                                                         "term": [
-//                                                                                 "p3.p2": "E1"
-//                                                                         ]
-//                                                                 ]
-//                                                         ]
-//                                                 ], [
-//                                                         "bool": [
-//                                                                 "must_not": [
-//                                                                         "bool": [
-//                                                                                 "filter": [
-//                                                                                         "term": [
-//                                                                                                 "p3.p4.@id": "https://id.kb.se/x"
-//                                                                                         ]
-//                                                                                 ]
-//                                                                         ]
-//                                                                 ]
-//                                                         ]
-//                                                 ]]
-//                                ]
-//                        ],
-//                        "ignore_unmapped" : true
-//                ]
-//        ]
-//    }
+    def "To ES query: group nested (NOT in AND, mixed with non-negated)"() {
+        given:
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
+        String q = 'p3.p2:E1 NOT p3.p4:"https://id.kb.se/x"'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ExpandedQueryTree eqt = qt.expand(jsonLd)
+        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
 
-//    def "To ES query: group nested (NOT in AND, mixed with non-negated) 2"() {
-//        given:
-//        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
-//        String q = 'p3.p2:E1 NOT p3.p4:"https://id.kb.se/x" NOT p3.p4:"https://id.kb.se/y" NOT p3.p1:1'
-//        QueryTree qt = new QueryTree(q, disambiguate)
-//        ExpandedQueryTree eqt = qt.expand(jsonLd)
-//        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
-//
-//        expect:
-//        esQueryTree.getMainQuery() == [
-//                "nested": [
-//                        "query": [
-//                                "bool": [
-//                                        "must": [[
-//                                                         "bool": [
-//                                                                 "filter": [
-//                                                                         "term": [
-//                                                                                 "p3.p2": "E1"
-//                                                                         ]
-//                                                                 ]
-//                                                         ]
-//                                                 ], [
-//                                                         "bool": [
-//                                                                 "must_not": [
-//                                                                         "bool": [
-//                                                                                 "filter": [
-//                                                                                         "term": [
-//                                                                                                 "p3.p4.@id": "https://id.kb.se/x"
-//                                                                                         ]
-//                                                                                 ]
-//                                                                         ]
-//                                                                 ]
-//                                                         ]
-//                                                 ], [
-//                                                         "bool": [
-//                                                                 "must_not": [
-//                                                                         "bool": [
-//                                                                                 "filter": [
-//                                                                                         "term": [
-//                                                                                                 "p3.p4.@id": "https://id.kb.se/y"
-//                                                                                         ]
-//                                                                                 ]
-//                                                                         ]
-//                                                                 ]
-//                                                         ]
-//                                                 ], [
-//                                                         "bool": [
-//                                                                 "must_not": [
-//                                                                         "simple_query_string": [
-//                                                                                 "default_operator"  : "AND",
-//                                                                                 "query"             : "1",
-//                                                                                 "fields"            : ["p3.p1"]
-//                                                                         ]
-//                                                                 ]
-//                                                         ]
-//                                                 ]]
-//                                ]
-//                        ],
-//                        "path" : "p3",
-//                        "ignore_unmapped" : true
-//                ]
-//        ]
-//    }
+        expect:
+        esQueryTree.getMainQuery() == [
+                "nested": [
+                        "path" : "p3",
+                        "query": [
+                                "bool": [
+                                        "must": [[
+                                                         "bool": [
+                                                                 "filter": [
+                                                                         "term": [
+                                                                                 "p3.p2": "E1"
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ], [
+                                                         "bool": [
+                                                                 "must_not": [
+                                                                         "bool": [
+                                                                                 "filter": [
+                                                                                         "term": [
+                                                                                                 "p3.p4.@id": "https://id.kb.se/x"
+                                                                                         ]
+                                                                                 ]
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ]]
+                                ]
+                        ],
+                        "ignore_unmapped" : true
+                ]
+        ]
+    }
+
+    def "To ES query: group nested (NOT in AND, mixed with non-negated) 2"() {
+        given:
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
+        String q = 'p3.p2:E1 NOT p3.p4:"https://id.kb.se/x" NOT p3.p4:"https://id.kb.se/y" NOT p3.p1:1'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ExpandedQueryTree eqt = qt.expand(jsonLd)
+        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+
+        expect:
+        esQueryTree.getMainQuery() == [
+                "nested": [
+                        "query": [
+                                "bool": [
+                                        "must": [[
+                                                         "bool": [
+                                                                 "filter": [
+                                                                         "term": [
+                                                                                 "p3.p2": "E1"
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ], [
+                                                         "bool": [
+                                                                 "must_not": [
+                                                                         "bool": [
+                                                                                 "filter": [
+                                                                                         "term": [
+                                                                                                 "p3.p4.@id": "https://id.kb.se/x"
+                                                                                         ]
+                                                                                 ]
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ], [
+                                                         "bool": [
+                                                                 "must_not": [
+                                                                         "bool": [
+                                                                                 "filter": [
+                                                                                         "term": [
+                                                                                                 "p3.p4.@id": "https://id.kb.se/y"
+                                                                                         ]
+                                                                                 ]
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ], [
+                                                         "bool": [
+                                                                 "must_not": [
+                                                                         "simple_query_string": [
+                                                                                 "default_operator"  : "AND",
+                                                                                 "query"             : "1",
+                                                                                 "fields"            : ["p3.p1"]
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ]]
+                                ]
+                        ],
+                        "path" : "p3",
+                        "ignore_unmapped" : true
+                ]
+        ]
+    }
 
     def "To ES query: group nested (NOT in AND, all negated)"() {
         given:
