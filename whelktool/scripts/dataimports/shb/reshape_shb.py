@@ -1,6 +1,7 @@
 from io import TextIOBase
 import csv
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -8,6 +9,40 @@ from collections import Counter
 
 USE_ANNOT = False
 PARENTHESIS_ERAS = ["era_2", "era_3", "era_5", "era_6"]
+
+EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl)\.", re.I)
+COMPONENT_EXTENT = re.compile(r"\b((?:s|bl)\.?)\s*(\d+)(?:-(\d+))?(?:\s+(ill\.?))?")
+MONOGRAPH_EXTENT_RE = re.compile(
+    r"""
+    (?:
+        (?:
+            \[\d+\]              # [2]
+            |\(\d+\)              # (2)
+            |\d+                  # 806
+            |\b[ivxlcdm]{2,}\b      # Roman numerals
+        )
+        (?:,\s*)?
+    )+
+    \s*(?:s|bl)\.?
+
+    (?:
+        \s*\+\s*
+        (?:
+            (?:
+                \[\d+\]
+                |\(\d+\)
+                |\d+
+                |\b[ivxlcdm]{2,}\b
+            )
+            (?:,\s*)?
+        )+
+        \s*(?:s|bl)\.?
+    )*
+
+    (?:\s*:\s*ill\.?)?
+    """,
+    re.I | re.X,
+)
 
 counters = {
     "properties": Counter(),
@@ -44,7 +79,6 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
         if publ_year == instance["marc:primaryProvisionActivity"]["year"]:
             del instance["marc:primaryProvisionActivity"]
 
-
     ### Some initial cleanup ###
     # TODO Review this section - what are we doing and do we want to?
     if "bibliography" in rec:
@@ -59,8 +93,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
         del graph[2]
     else:
         work = {"@type": "Work"}
-    
-    work["@type"] = "Monograph"
+
     instance["instanceOf"] = work
 
     ### Try to link local entities ###
@@ -70,12 +103,14 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     parse_note(instance, syntax_era)
 
     ### Add subject headings to the instance ###
-    sao_headings = add_sao_headings(shb_part_num, start_year, publ_year, subject_mappings)
+    sao_headings = add_sao_headings(
+        shb_part_num, start_year, publ_year, subject_mappings
+    )
 
     if sao_headings:
         work["subject"] = sao_headings
 
-    ### Wrap up ### 
+    ### Wrap up ###
 
     # Count all properties, icnluding nested, in the final instance ###
     counters["properties"].update(walk_keys(instance))
@@ -118,8 +153,8 @@ def parse_note(instance: str, syntax_era: str):
             note, partof_note = extract_partof_from_parenthesis(note, syntax_era)
 
         ### Parse and store information about the main entity (instance)) ###
-        name, title, subtitle, extent, note_remainder, is_component_part = extract_properties_and_values(
-            note, is_component_part
+        name, title, subtitle, extent, note_remainder, is_component_part = (
+            extract_properties_and_values(note, is_component_part)
         )
 
         instance["hasTitle"] = {"@type": "Title", "mainTitle": title}
@@ -141,8 +176,15 @@ def parse_note(instance: str, syntax_era: str):
 
         ### Parse and store information from the "part of" note (publication OR series as local entity) ###
         if partof_note:
-            part_name, part_title, part_subtitle, part_extent, part_remainder, is_component_part = (
-                extract_properties_and_values(partof_note, is_component_part, dotnote=False)
+            (
+                part_name,
+                part_title,
+                part_subtitle,
+                part_extent,
+                part_remainder,
+                is_component_part,
+            ) = extract_properties_and_values(
+                partof_note, is_component_part, dotnote=False
             )
             part_issn = extract_issn(part_title)
             part = {"@type": "Instance", "label": part_title}
@@ -277,7 +319,7 @@ def extract_properties_and_values(note: dict, is_component_part, dotnote: bool =
         subtitle.strip() or None,
         extent or None,
         remainder.strip() or None,
-        is_component_part
+        is_component_part,
     )
 
 
@@ -370,7 +412,9 @@ def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
             if depth == 0:
                 partof_note = note[i + 1 : end]
                 remainder = (note[:i] + note[end + 1 :]).strip()
-                return remainder, partof_note
+                # If it doesn't contain more than one charatcer and at least one is alphabetic, it's probbably not a title
+                if len(partof_note) > 1 and any(char.isalpha() for char in partof_note):
+                    return remainder, partof_note
 
     # Unbalanced parentheses
     return note, None
@@ -379,28 +423,30 @@ def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
 def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
     pages = ""
 
-    # s. NN(-NN) - probably a component part
-    if page_match := re.search(
-        r"\b((?:s|bl)\.?)\s*(\d+)(?:-(\d+))?(?:\s+(ill\.?))?", remainder
-    ):
-        counters["extents"].update(["Part extent (e.g. 's. 23-31')"])
-        is_component_part = True
-
-    # NN s. - probably a monograph
+    if not EXTENT_MARKER_RE.search(remainder):
+        return "", remainder, is_component_part
+    
     else:
-        if page_match := re.search(
-            r"(\d+)(?:-(\d+))?\s*((?:s|bl)\.?)(?:\s+(: ill\.))?", remainder
+        # s. NN(-NN) - probably a component part
+        if page_match := COMPONENT_EXTENT.search(
+            remainder,
         ):
-            counters["extents"].update(["Monographic extent (e.g. 47 s.)"])
+            counters["extents"].update(["Part extent (e.g. 's. 23-31')"])
+            is_component_part = True
+
+        # NN s. - probably a monograph
+        elif page_match := MONOGRAPH_EXTENT_RE.search(remainder):
+            counters["extents"].update(["Monographic extent"])
+        else:
+            page_match = None
 
     if page_match:
-        # Remove the matched part
         left_part = remainder[: page_match.start()].rstrip(" ,")
         right_part = remainder[page_match.end() :]
         remainder = (left_part + right_part).strip(",;-").replace("- -", "-")
+
         pages = page_match.group(0)
 
-        # Probably a component part
         if "-" in pages:
             is_component_part = True
 
@@ -687,14 +733,6 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
 
             if subjects:
                 if not startnum:
-                    print(
-                        "Missing startnum in",
-                        sheet_file,
-                        "row",
-                        i,
-                        row,
-                        file=sys.stderr,
-                    )
                     anomalies.append(f"Missing startnum in {sheet_file} row {i} {row}")
                     continue
 
@@ -765,15 +803,19 @@ if __name__ == "__main__":
     argp.add_argument("--sample-pretty-with")
     argp.add_argument("infile")
     argp.add_argument("subject_mapping_sheets")
+    argp.add_argument("outfile")
     argp.add_argument("report_file")
     argp.add_argument("info_and_errors_file")
     args = argp.parse_args()
+
 
     if args.test:
         import doctest
 
         doctest.testmod()
         sys.exit(0)
+
+    print("Getting started!")
 
     subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
     if not subject_files:
@@ -782,18 +824,25 @@ if __name__ == "__main__":
 
     biblios: dict = {}
 
-    with open(args.infile) as f, open(
-        args.report_file, "w", encoding="utf-8"
-    ) as report_file, open(
+    with open(args.infile) as infile, open(
+        args.outfile, "w", encoding="utf-8"
+    ) as outfile, open(args.report_file, "w", encoding="utf-8") as report_file, open(
         args.info_and_errors_file, "w", encoding="utf-8"
     ) as anomalies_file:
 
         if args.sample_pretty_with:
-            pretty_print_sample(f, biblios, subject_mappings, args.sample_pretty_with)
+            pretty_print_sample(
+                infile, biblios, subject_mappings, args.sample_pretty_with
+            )
             sys.exit()
-        for line in f:
+        for i, line in enumerate(infile):
+            if i % 1000 == 0:
+                print(f"Processing record {i+1}")
+            #if i + 1 == 12316:
+            #    print(f"Processing record {i+1}")
             if data := convert(json.loads(line), biblios, subject_mappings):
-                print(json.dumps(data, ensure_ascii=False))
+                json.dump(data, outfile, ensure_ascii=False)
+                outfile.write("\n")
 
         # Write some reports
         write_reports(counters, anomalies, report_file, anomalies_file)
