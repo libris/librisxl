@@ -73,13 +73,30 @@ public class EsQueryTreeBuilder {
         List<EsQuery> subQueries = or.children().stream()
                 .map(n -> buildFrom(n, esSettings, nodeMap))
                 .toList();
-        EsQuery.Disjunction dis = nodeMap.get(or) instanceof Condition
+
+        Node origNode = nodeMap.get(or);
+
+        // TODO: Explaining comments
+        EsQuery.Disjunction disjunction = origNode instanceof Condition
                 ? new EsQuery.DisMax(subQueries)
                 : new EsQuery.Should(subQueries);
-        return handleNested(dis);
+
+        EsQuery query = factorOutNested(disjunction);
+
+        boolean shouldCombineFields = origNode instanceof Condition cond && cond.selector().isComposite();
+
+        if (shouldCombineFields) {
+            return query instanceof EsQuery.Nested(EsQuery.Disjunction dis,
+                                                   EsQuery.NestedStem stem,
+                                                   Set<EsQuery.NestedField> fields)
+                    ? new EsQuery.Nested(combineFields(dis), stem, fields)
+                    : combineFields(disjunction);
+        }
+
+        return query;
     }
 
-    private static EsQuery handleNested(EsQuery.Disjunction dis) {
+    private static EsQuery factorOutNested(EsQuery.Disjunction dis) {
         boolean allSubQueriesAreNested = dis.subQueries().stream().allMatch(EsQuery.Nested.class::isInstance);
         if (!allSubQueriesAreNested) {
             return dis;
@@ -103,12 +120,38 @@ public class EsQueryTreeBuilder {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
 
-        EsQuery.Disjunction newDis = switch (dis) {
-            case EsQuery.Should ignored -> new EsQuery.Should(subQueriesAsNonNested);
-            case EsQuery.DisMax ignored -> new EsQuery.DisMax(subQueriesAsNonNested);
-        };
+        return new EsQuery.Nested(dis.withSubQueries(subQueriesAsNonNested), stem, nestedFields);
+    }
 
-        return new EsQuery.Nested(newDis, stem, nestedFields);
+    private static EsQuery combineFields(EsQuery.Disjunction dis) {
+        List<EsQuery> subQueries = combineSimpleTextQueryFields(dis.subQueries());
+        return subQueries.size() == 1
+                ? subQueries.getFirst()
+                : dis.withSubQueries(subQueries);
+    }
+
+    private static List<EsQuery> combineSimpleTextQueryFields(List<EsQuery> subQueries) {
+        List<EsQuery.TextQuery> simpleQueries = subQueries.stream()
+                .filter(subQuery -> subQuery instanceof EsQuery.TextQuery t && t.isSimple())
+                .map(EsQuery.TextQuery.class::cast)
+                .toList();
+
+        if (simpleQueries.size() < 2) {
+            return subQueries;
+        }
+
+        List<EsBoost.Field> mergedFields = simpleQueries.stream()
+                .flatMap(q -> q.boostFields().stream())
+                .toList();
+
+        EsQuery.TextQuery first = simpleQueries.getFirst();
+        int firstIdx = subQueries.indexOf(first);
+
+        List<EsQuery> result = new ArrayList<>(subQueries);
+        result.removeAll(simpleQueries);
+        result.add(firstIdx, first.withFields(mergedFields));
+
+        return result;
     }
 
     private static EsQuery buildFromAnd(And and, ESSettings esSettings, Map<Node, Node> nodeMap) {

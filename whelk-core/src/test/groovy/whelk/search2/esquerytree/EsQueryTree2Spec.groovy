@@ -1373,31 +1373,50 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: CONDITION expanding to OR should result in dis_max query 2"() {
+    def "To ES query: Simple text queries on sub-properties of the same composite property should be combined into a single query clause"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
-        String q = 'p16:x' // p16 is a composite property
+        String q = 'p16:(x y)' // p16 is a composite property
         QueryTree qt = new QueryTree(q, disambiguate)
         ExpandedQueryTree eqt = qt.expand(jsonLd) // --> 'p18:x OR p17:x'
         EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
 
         expect:
         esQueryTree.getMainQuery() == [
-                "dis_max": [
-                        "queries": [[
-                                            "simple_query_string": [
-                                                    "default_operator": "AND",
-                                                    "query"           : "x",
-                                                    "fields"          : ["p18"]
-                                            ]
-                                    ], [
-                                            "simple_query_string": [
-                                                    "default_operator": "AND",
-                                                    "query"           : "x",
-                                                    "fields"          : ["p17"]
-                                            ]
-                                    ]]
+                "simple_query_string": [
+                        "default_operator": "AND",
+                        "query"           : "x y",
+                        "fields"          : ["p18", "p17"]
                 ]
         ]
     }
+
+    // TODO: Should pass
+//    def "To ES query: Simple text queries on sub-properties of the same composite property should be combined into a single query clause 2"() {
+//        given:
+//        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
+//        String q = 'p1:x OR p16:(x y)' // p16 is a composite property
+//        QueryTree qt = new QueryTree(q, disambiguate)
+//        ExpandedQueryTree eqt = qt.expand(jsonLd) // --> 'p18:x OR p17:x'
+//        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+//
+//        expect:
+//        esQueryTree.getMainQuery() == [
+//                "bool": [
+//                        "should": [[
+//                                           "simple_query_string": [
+//                                                   "default_operator": "AND",
+//                                                   "query"           : "x",
+//                                                   "fields"          : ["p1"]
+//                                           ]
+//                                   ], [
+//                                           "simple_query_string": [
+//                                                   "default_operator": "AND",
+//                                                   "query"           : "x y",
+//                                                   "fields"          : ["p18", "p17"]
+//                                           ]
+//                                   ]]
+//                ]
+//        ]
+//    }
 }

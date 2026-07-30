@@ -101,6 +101,10 @@ public sealed interface EsQuery {
             return new TextQuery(query, newFields, connective, settings);
         }
 
+        public boolean isSimple() {
+            return query instanceof SimpleQueryString;
+        }
+
         public static TextQuery simpleUnboostedQuery(String query, String field) {
             return new TextQuery(new SimpleQueryString(query),
                     List.of(EsBoost.Field.unboosted(field)),
@@ -125,6 +129,7 @@ public sealed interface EsQuery {
         Map<String, Object> dsl();
 
         List<EsQuery> subQueries();
+        Disjunction withSubQueries(List<EsQuery> subQueries);
     }
 
     record Should(List<EsQuery> subQueries) implements Disjunction {
@@ -132,12 +137,22 @@ public sealed interface EsQuery {
         public Map<String, Object> dsl() {
             return Map.of("bool", Map.of("should", subQueries.stream().map(EsQuery::dsl).toList()));
         }
+
+        @Override
+        public Should withSubQueries(List<EsQuery> subQueries) {
+            return new Should(subQueries);
+        }
     }
 
     record DisMax(List<EsQuery> subQueries) implements Disjunction {
         @Override
         public Map<String, Object> dsl() {
             return Map.of("dis_max", Map.of("queries", subQueries.stream().map(EsQuery::dsl).toList()));
+        }
+
+        @Override
+        public DisMax withSubQueries(List<EsQuery> subQueries) {
+            return new DisMax(subQueries);
         }
     }
 
