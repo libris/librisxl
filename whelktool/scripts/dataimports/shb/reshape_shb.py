@@ -1,7 +1,6 @@
 from io import TextIOBase
 import csv
 import json
-import os
 import re
 import sys
 from pathlib import Path
@@ -10,6 +9,8 @@ from collections import Counter
 USE_ANNOT = False
 PARENTHESIS_ERAS = ["era_2", "era_3", "era_5", "era_6"]
 
+### Extreme regex ###
+PUB_YEAR_RE = re.compile(r"(^17\d{2}|18\d{2}|19[0-7]\d)(?:,|$)")
 EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl)\.", re.I)
 COMPONENT_EXTENT = re.compile(r"\b((?:s|bl)\.?)\s*(\d+)(?:-(\d+))?(?:\s+(ill\.?))?")
 MONOGRAPH_EXTENT_RE = re.compile(
@@ -239,44 +240,47 @@ def parse_note(instance: str, syntax_era: str):
             )
 
 
-def extract_properties_and_values(note: dict, is_component_part, dotnote: bool = True):
+def extract_properties_and_values(note: dict, is_component_part: bool, dotnote: bool = True) -> tuple:
     """
-    >>> parse_note("Surname, G.-N., Anything")
-    ('Surname, G.-N.', 'Anything', None, None, None)
+    >>> extract_properties_and_values("Surname, G.-N., Anything", False)
+    ('Surname, G.-N.', 'Anything', None, None, None, False)
 
-    >>> parse_note("Anything. Surname, G.-N., Stuff.")
-    (None, 'Anything', None, None, 'Surname, G.-N., Stuff.')
+    >>> extract_properties_and_values("Anything. Surname, G.-N., Stuff.", False)
+    (None, 'Anything', None, None, 'Surname, G.-N., Stuff.', False)
 
-    >>> parse_note("Schuck, A., H. Schücks enka & Co. AB 150 år. [Stockholm.] Sthlm 1947, 28 s.")
-    ('Schuck, A.', 'H. Schücks enka & Co. AB 150 år', None, '28 s.', '[Stockholm.] Sthlm 1947')
+    >>> extract_properties_and_values("Schuck, A., H. Schücks enka & Co. AB 150 år. [Stockholm.] Sthlm 1947, 28 s.", False)
+    ('Schuck, A.', 'H. Schücks enka & Co. AB 150 år', None, '28 s.', '[Stockholm.] Sthlm 1947', False)
 
-    >>> parse_note("Meyerson, Å., Ett besök vid Stora Kopparberget och Sala gruva år 1662. (BBV 23 (1938), s. 325-343.)")
-    ('Meyerson, Å.', 'Ett besök vid Stora Kopparberget och Sala gruva år 1662', None, 's. 325-343', 'BBV 23 (1938).')
+    >>> extract_properties_and_values("Meyerson, Å., Ett besök vid Stora Kopparberget och Sala gruva år 1662. (BBV 23 (1938), s. 325-343.)", False)
+    ('Meyerson, Å.', 'Ett besök vid Stora Kopparberget och Sala gruva år 1662', None, 's. 325-343', 'BBV 23 (1938).', True)
 
-    >>> parse_note('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar...". Nyköping, 1976, s. 48-62')
-    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', None, 's. 48-62', 'Nyköping, 1976')
+    >>> extract_properties_and_values('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar...". Nyköping, 1976, s. 48-62', False)
+    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', None, 's. 48-62', 'Nyköping, 1976', True)
 
-    >>> parse_note('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar..." : någotom Strängnäsgymnasiets musiksamling under 1600-talet. - I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62')
-    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', 'någotom Strängnäsgymnasiets musiksamling under 1600-talet', 's. 48-62', 'I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976')
+    >>> extract_properties_and_values('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar..." : någotom Strängnäsgymnasiets musiksamling under 1600-talet. - I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62', False)
+    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', 'någotom Strängnäsgymnasiets musiksamling under 1600-talet', 's. 48-62', 'I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976', True)
 
-    >>> parse_note('The Swedish pioneer, ISSN0039-7326, 27, 1976:3, s. 215-221')
-    (None, 'The Swedish pioneer, ISSN0039-7326, 27, 1976:3', None, 's. 215-221', None)
+    >>> extract_properties_and_values('The Swedish pioneer, ISSN0039-7326, 27, 1976:3, s. 215-221', False)
+    (None, 'The Swedish pioneer, ISSN0039-7326, 27, 1976:3', None, 's. 215-221', None, True)
 
-    >>> parse_note('Jonsson, Inge, Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd / Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
-    ('Jonsson, Inge', 'Swedenborg', 'sökaren i naturens och andens värld :hans verk och efterföljd', '187 s.', 'Inge Jonsson, Olle Hjern. -Stockholm, 1976. -Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin')
+    >>> extract_properties_and_values('Jonsson, Inge, Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd / Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin', False)
+    ('Jonsson, Inge', 'Swedenborg', 'sökaren i naturens och andens värld :hans verk och efterföljd', '187 s.', 'Inge Jonsson, Olle Hjern. -Stockholm, 1976. -Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin', False)
 
-    >>> parse_note('Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)')
-    ('Fries, Elias', 'Hembygdsperiodika', 'förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl', '40 bl.', 'Borås, 1976. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)')
+    >>> extract_properties_and_values('Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)', False)
+    ('Fries, Elias', 'Hembygdsperiodika', 'förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl', '40 bl.', 'Borås, 1976. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)', False)
 
-    >>> parse_note('Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed')
-    ('Edvardsson, Lars', 'Kyrka och judendom', 'svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975', '194 s.', 'Lund, 1976. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed')
+    >>> extract_properties_and_values('Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed', False)
+    ('Edvardsson, Lars', 'Kyrka och judendom', 'svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975', '194 s.', 'Lund, 1976. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed', False)
 
-    >>> parse_note('Frithz, Carl-Gösta, Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning. - Lund, 1976. - 428 s. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec')
-    ('Frithz, Carl-Gösta', 'Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning', None, '428 s.', 'Lund, 1976. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec')
+    >>> extract_properties_and_values('Frithz, Carl-Gösta, Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning. - Lund, 1976. - 428 s. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec', False)
+    ('Frithz, Carl-Gösta', 'Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning', None, '428 s.', 'Lund, 1976. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec', False)
+
+    >>> extract_properties_and_values('Erichsen, B., & Krarup, A., Dansk historisk Bibliografi. Bd 1-3. Khvn1918-21, 1925-27, 1917. xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.', False)
+    (''Erichsen, B., & Krarup, A.', 'Dansk historisk Bibliografi. Bd 1-3.', None, 'xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.',  'Khvn1918-21, 1925-27, 1917.', False)
 
     Testet failar just nu p.g.a. "Slott, Svenska" misstas för titeln. Mödan värt att fixa?
-    >>> parse_note('Slott, Svenska, och herresäten vid 1900-talets början. Bd l-5. 4;o. Med många illustr. i texten. Sthlm 1008-14. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, \"Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland.')
-    (None, 'Slott, Svenska, och herresäten vid 1900-talets början.', None, None, 'Bd l-5. 4;o. Med många illustr. i texten. Sthlm 1008-14. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, \"Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland.')
+    >>> extract_properties_and_values('Slott, Svenska, och herresäten vid 1900-talets början. Bd l-5. 4;o. Med många illustr. i texten. Sthlm 1008-14. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, \"Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland.', False)
+    (None, 'Slott, Svenska, och herresäten vid 1900-talets början.', None, None, 'Bd l-5. 4;o. Med många illustr. i texten. Sthlm 1008-14. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, \"Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland.', False)
     """
 
     # Extrct extent (pages, leaves)
@@ -420,6 +424,7 @@ def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
     return note, None
 
 
+
 def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
     pages = ""
 
@@ -443,9 +448,17 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
     if page_match:
         left_part = remainder[: page_match.start()].rstrip(" ,")
         right_part = remainder[page_match.end() :]
-        remainder = (left_part + right_part).strip(",;-").replace("- -", "-")
 
         pages = page_match.group(0)
+
+        # A matched extent may incorrectly start with a publication year,
+        # e.g. "Sthlm 1947, 28 s.". Move the year back to the imprint.
+        year_like = re.match(PUB_YEAR_RE, pages)
+        if year_like:
+            left_part = f"{left_part} {year_like.group(0)}".rstrip()
+            pages = pages[year_like.end():].lstrip(",; ")
+
+        remainder = (left_part + right_part).strip(",;- ").replace("- -", "-")
 
         if "-" in pages:
             is_component_part = True
