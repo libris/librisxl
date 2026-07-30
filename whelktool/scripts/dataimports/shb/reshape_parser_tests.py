@@ -1,9 +1,9 @@
 import pytest
 
-from reshape_shb import extract_properties_and_values
+from reshape_shb import extract_properties_and_values, extract_partof_from_parenthesis, extract_extent
 
 
-TEST_CASES = {
+EXTRACT_PROPERTIES_TEST_CASES = {
     "simple-author-with-initials": (
         "Surname, G.-N., Anything",
         (
@@ -138,11 +138,99 @@ TEST_CASES = {
     ),
 }
 
-
-@pytest.mark.parametrize("case_name", TEST_CASES)
+@pytest.mark.parametrize("case_name", EXTRACT_PROPERTIES_TEST_CASES)
 def test_extract_properties_and_values(case_name):
-    record, expected = TEST_CASES[case_name]
+    record, expected = EXTRACT_PROPERTIES_TEST_CASES[case_name]
 
     actual = extract_properties_and_values(record, False)
 
     assert actual == expected, f"\nInput record:\n{record}"
+
+
+@pytest.mark.parametrize(
+    "record, era, expected",
+    [
+        pytest.param(
+            "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287.) Stockholm",
+            "era_2",
+            (
+                "isborgs slott.  Stockholm",
+                "Antikvariska studier. 4. Sthlm 1950, s. 221-287.",
+            ),
+            id="simple-parenthesized-partof",
+        ),
+        pytest.param(
+            "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.))",
+            "era_2",
+            (
+                "isborgs slott.",
+                "Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.)",
+            ),
+            id="nested-parentheses-inside-partof",
+        ),
+        pytest.param(
+            "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))",
+            "era_2",
+            (
+                "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))",
+                None,
+            ),
+            id="unbalanced-parentheses-not-extracted",
+        ),
+        pytest.param(
+            "isborgs slott.",
+            "era_2",
+            (
+                "isborgs slott.",
+                None,
+            ),
+            id="no-parentheses",
+        ),
+    ],
+)
+def test_extract_partof_from_parenthesis(record, era, expected):
+    actual = extract_partof_from_parenthesis(record, era)
+
+    assert actual == expected, f"\nInput record:\n{record}"
+
+
+### Extent ###
+@pytest.mark.parametrize(
+    "note, expected",
+    [
+        pytest.param(
+            "Antikvariska studier. 4. Sthlm 1950, s. 221-287.",
+            (   "s. 221-287",
+                "Antikvariska studier. 4. Sthlm 1950.",
+                True
+            ),
+            id="simple-component-extent",
+        )
+        ])
+
+def test_extract_extent(note, expected):
+    actual = extract_extent(note, False)
+
+    assert actual == expected, f"\nInput record:\n{note}"
+
+
+### Known failing tests ###
+@pytest.mark.xfail(
+    reason="Surname-like title beginning is currently misidentified as author"
+)
+def test_slott_svenska_title_start():
+    record = "Slott, Svenska, och herresäten vid 1900-talets början."
+
+    result = extract_properties_and_values(record, False)
+
+    assert result[0] is None
+    assert result[1] == "Slott, Svenska, och herresäten vid 1900-talets början."
+
+@pytest.mark.xfail(
+    reason="If removing a year that has been confused with extent leads to the extent just being 's', give up on extrating the extent."
+)
+
+def test_extent_dot_year(note, expected):
+    note = "524, (2) s. 1951."
+    result = extract_extent(note, False)
+    assert result == ""
