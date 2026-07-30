@@ -10,7 +10,6 @@ USE_ANNOT = False
 PARENTHESIS_ERAS = ["era_2", "era_3", "era_5", "era_6"]
 
 ### Extreme regex ###
-PUB_YEAR_RE = re.compile(r"(^17\d{2}|18\d{2}|19[0-7]\d)(?:,|$)")
 EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl)\.", re.I)
 COMPONENT_EXTENT = re.compile(r"\b((?:s|bl)\.?)\s*(\d+)(?:-(\d+))?(?:\s+(ill\.?))?")
 MONOGRAPH_EXTENT_RE = re.compile(
@@ -153,7 +152,7 @@ def parse_note(instance: str, syntax_era: str):
         elif note.endswith(")"):
             note, partof_note = extract_partof_from_parenthesis(note, syntax_era)
 
-        ### Parse and store information about the main entity (instance)) ###
+        ### Parse and store information about the main entity (instance) ###
         name, title, subtitle, extent, issn, note_remainder, is_component_part = (
             extract_properties_and_values(note, is_component_part)
         )
@@ -168,6 +167,9 @@ def parse_note(instance: str, syntax_era: str):
 
         if extent:
             instance["extent"] = [{"@type": "Extent", "label": extent}]
+
+        if issn:
+            instance["identifiedBy"] = {"@type": "ISSN", "value": issn}
 
         ### Check remaining parentheses for information about series/publichation membership ###
         if note_remainder and not partof_note:
@@ -188,7 +190,7 @@ def parse_note(instance: str, syntax_era: str):
             ) = extract_properties_and_values(
                 partof_note, is_component_part, dotnote=False
             )
-            part_issn = extract_issn(part_title)
+
             part = {"@type": "Instance", "label": part_title}
 
             if part_name:
@@ -196,11 +198,11 @@ def parse_note(instance: str, syntax_era: str):
             if part_title:
                 part["hasTitle"] = {"@type": "Title", "mainTitle": part_title}
             if part_subtitle:
-                instance["hasTitle"]["subtitle"] = subtitle
+                instance["hasTitle"]["subtitle"] = part_subtitle
             if part_issn:
                 part["identifiedBy"] = {"@type": "ISSN", "value": part_issn}
             if part_extent:
-                part["extent"] = [{"@type": "Extent", "label": extent}]
+                part["extent"] = [{"@type": "Extent", "label": part_extent}]
             if part_remainder:
                 if USE_ANNOT:
                     part["@annotation"] = {"comment": part_remainder}
@@ -292,8 +294,9 @@ def extract_contributors(remainder: dict) -> tuple[str, str]:
                 comma_separated.insert(0, contributors)
                 contributors = ""
 
-            if comma_separated[0].lstrip().startswith("&") and looks_like_initial(
-                comma_separated[1].strip()
+            if (
+                len(comma_separated) > 2 and comma_separated[0].lstrip().startswith("&")
+                and looks_like_initial(comma_separated[1].strip())
             ):
                 surname = comma_separated.pop(0).strip()
                 initials = comma_separated.pop(0).strip()
@@ -307,6 +310,7 @@ def extract_contributors(remainder: dict) -> tuple[str, str]:
         remainder = ",".join(comma_separated).strip()
 
     return contributors, remainder
+
 
 def extract_title_and_subtitle(
     remainder: dict, dotnote: bool
@@ -433,10 +437,24 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
 
         # A matched extent may incorrectly start with a publication year,
         # e.g. "Sthlm 1947, 28 s.". Move the year back to the imprint.
-        year_like = re.match(PUB_YEAR_RE, pages)
-        if year_like:
-            left_part = f"{left_part} {year_like.group(0)}".rstrip()
-            pages = pages[year_like.end() :].lstrip(",; ")
+        year_before_extent = re.match(r"(^1[7-9]\d{2})(?:,|$)", pages)
+        if year_before_extent:
+            left_part = f"{left_part} {year_before_extent.group(0)}".rstrip()
+            pages = pages[year_before_extent.end() :].lstrip(",; ")
+            if pages == "s." or pages == "s":
+                left_part = left_part + " " + pages
+                pages = ""
+                
+        # A year immediately after the extent probably belongs to the imprint,
+        # e.g. "155 s. 1955." -> extent "155 s.", imprint "1955."
+        year_after_extent = re.search(r"\s+1[7-9]\d{2}\.?$", pages)
+        if year_after_extent:
+            year = year_after_extent.group(0).strip()
+            pages = pages[:year_after_extent.start()].rstrip()
+            right_part = f"{year} " + right_part
+            if pages == "s." or pages == "s":
+                right_part = pages + " " + right_part
+                pages = ""
 
         remainder = (left_part + right_part).strip(",;- ").replace("- -", "-")
 
