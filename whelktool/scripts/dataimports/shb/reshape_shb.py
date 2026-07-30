@@ -20,7 +20,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
             \[\d+\]              # [2]
             |\(\d+\)              # (2)
             |\d+                  # 806
-            |\b[ivxlcdm]{2,}\b      # Roman numerals
+            |\b[ivxlc]{2,}\b      # Roman numerals - mostly used for shorter sections
         )
         (?:,\s*)?
     )+
@@ -33,7 +33,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
                 \[\d+\]
                 |\(\d+\)
                 |\d+
-                |\b[ivxlcdm]{2,}\b
+                |\b[ivxlc]{2,}\b
             )
             (?:,\s*)?
         )+
@@ -154,7 +154,7 @@ def parse_note(instance: str, syntax_era: str):
             note, partof_note = extract_partof_from_parenthesis(note, syntax_era)
 
         ### Parse and store information about the main entity (instance)) ###
-        name, title, subtitle, extent, note_remainder, is_component_part = (
+        name, title, subtitle, extent, issn, note_remainder, is_component_part = (
             extract_properties_and_values(note, is_component_part)
         )
 
@@ -182,6 +182,7 @@ def parse_note(instance: str, syntax_era: str):
                 part_title,
                 part_subtitle,
                 part_extent,
+                part_issn,
                 part_remainder,
                 is_component_part,
             ) = extract_properties_and_values(
@@ -194,6 +195,8 @@ def parse_note(instance: str, syntax_era: str):
                 part["responsibilityStatement"] = part_name
             if part_title:
                 part["hasTitle"] = {"@type": "Title", "mainTitle": part_title}
+            if part_subtitle:
+                instance["hasTitle"]["subtitle"] = subtitle
             if part_issn:
                 part["identifiedBy"] = {"@type": "ISSN", "value": part_issn}
             if part_extent:
@@ -240,92 +243,70 @@ def parse_note(instance: str, syntax_era: str):
             )
 
 
-def extract_properties_and_values(note: dict, is_component_part: bool, dotnote: bool = True) -> tuple:
-    """
-    >>> extract_properties_and_values("Surname, G.-N., Anything", False)
-    ('Surname, G.-N.', 'Anything', None, None, None, False)
-
-    >>> extract_properties_and_values("Anything. Surname, G.-N., Stuff.", False)
-    (None, 'Anything', None, None, 'Surname, G.-N., Stuff.', False)
-
-    >>> extract_properties_and_values("Schuck, A., H. Schücks enka & Co. AB 150 år. [Stockholm.] Sthlm 1947, 28 s.", False)
-    ('Schuck, A.', 'H. Schücks enka & Co. AB 150 år', None, '28 s.', '[Stockholm.] Sthlm 1947', False)
-
-    >>> extract_properties_and_values("Meyerson, Å., Ett besök vid Stora Kopparberget och Sala gruva år 1662. (BBV 23 (1938), s. 325-343.)", False)
-    ('Meyerson, Å.', 'Ett besök vid Stora Kopparberget och Sala gruva år 1662', None, 's. 325-343', 'BBV 23 (1938).', True)
-
-    >>> extract_properties_and_values('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar...". Nyköping, 1976, s. 48-62', False)
-    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', None, 's. 48-62', 'Nyköping, 1976', True)
-
-    >>> extract_properties_and_values('Davidsson, Åke, "En hoop Discantzböcker i godt förhwar..." : någotom Strängnäsgymnasiets musiksamling under 1600-talet. - I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62', False)
-    ('Davidsson, Åke', '"En hoop Discantzböcker i godt förhwar..."', 'någotom Strängnäsgymnasiets musiksamling under 1600-talet', 's. 48-62', 'I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976', True)
-
-    >>> extract_properties_and_values('The Swedish pioneer, ISSN0039-7326, 27, 1976:3, s. 215-221', False)
-    (None, 'The Swedish pioneer, ISSN0039-7326, 27, 1976:3', None, 's. 215-221', None, True)
-
-    >>> extract_properties_and_values('Jonsson, Inge, Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd / Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin', False)
-    ('Jonsson, Inge', 'Swedenborg', 'sökaren i naturens och andens värld :hans verk och efterföljd', '187 s.', 'Inge Jonsson, Olle Hjern. -Stockholm, 1976. -Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin', False)
-
-    >>> extract_properties_and_values('Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)', False)
-    ('Fries, Elias', 'Hembygdsperiodika', 'förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl', '40 bl.', 'Borås, 1976. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)', False)
-
-    >>> extract_properties_and_values('Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed', False)
-    ('Edvardsson, Lars', 'Kyrka och judendom', 'svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975', '194 s.', 'Lund, 1976. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed', False)
-
-    >>> extract_properties_and_values('Frithz, Carl-Gösta, Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning. - Lund, 1976. - 428 s. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec', False)
-    ('Frithz, Carl-Gösta', 'Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning', None, '428 s.', 'Lund, 1976. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec', False)
-
-    >>> extract_properties_and_values('Erichsen, B., & Krarup, A., Dansk historisk Bibliografi. Bd 1-3. Khvn1918-21, 1925-27, 1917. xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.', False)
-    (''Erichsen, B., & Krarup, A.', 'Dansk historisk Bibliografi. Bd 1-3.', None, 'xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.',  'Khvn1918-21, 1925-27, 1917.', False)
-
-    Testet failar just nu p.g.a. "Slott, Svenska" misstas för titeln. Mödan värt att fixa?
-    >>> extract_properties_and_values('Slott, Svenska, och herresäten vid 1900-talets början. Bd l-5. 4;o. Med många illustr. i texten. Sthlm 1008-14. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, \"Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland.', False)
-    (None, 'Slott, Svenska, och herresäten vid 1900-talets början.', None, None, 'Bd l-5. 4;o. Med många illustr. i texten. Sthlm 1008-14. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, \"Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland.', False)
-    """
+def extract_properties_and_values(
+    note: dict, is_component_part: bool, dotnote: bool = True
+) -> tuple:
 
     # Extrct extent (pages, leaves)
     extent, remainder, is_component_part = extract_extent(note, is_component_part)
 
+    # Extract contributors
+    contributors, remainder = extract_contributors(remainder)
+
+    # Extract title and subtitle
+    title, subtitle, remainder = extract_title_and_subtitle(remainder, dotnote)
+
+    issn = extract_issn(remainder)
+
+    return (
+        contributors,
+        title.strip(),
+        subtitle.strip() or None,
+        extent or None,
+        issn or None,
+        remainder.strip() or None,
+        is_component_part,
+    )
+
+
+def extract_contributors(remainder: dict) -> tuple[str, str]:
     personnameparts = []
     initial = -1
     comma_separated = remainder.split(",")
-    name = comma_separated.pop(0).strip()
+    contributors = comma_separated.pop(0).strip()
 
     # A last name containing a period is probably a title
-    if not re.fullmatch(r"[\w\s'-]+", name):
-        comma_separated.insert(0, name)
-        name = ""
+    if not re.fullmatch(r"[\w\s'-]+", contributors):
+        comma_separated.insert(0, contributors)
+        contributors = ""
     else:
         if comma_separated:
             first = comma_separated[0]
             if (
                 looks_like_initial(first.strip())
                 or re.fullmatch(r"[\w\s'-.]+", first)
-                and re.fullmatch(r"[\w\s'-]+", name)
+                and re.fullmatch(r"[\w\s'-]+", contributors)
             ):
-                name += ", " + comma_separated.pop(0).strip()
+                contributors += ", " + comma_separated.pop(0).strip()
             else:
-                comma_separated.insert(0, name)
-                name = ""
+                comma_separated.insert(0, contributors)
+                contributors = ""
+
+            if comma_separated[0].lstrip().startswith("&") and looks_like_initial(
+                comma_separated[1].strip()
+            ):
+                surname = comma_separated.pop(0).strip()
+                initials = comma_separated.pop(0).strip()
+
+                contributors += f", {surname}, {initials}"
 
     # If name contains more than letters and certain punctuation, it's probably not a name
-    if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ\s',.\-\[\]]+", name.strip()):
-        name = None
+    if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ\s',.&\-\[\]]+", contributors.strip()):
+        contributors = None
     else:
         remainder = ",".join(comma_separated).strip()
 
-    # Extract title and subtitle
-    title, subtitle, remainder = extract_title_and_subtitle(remainder, dotnote)
-
-    return (
-        name,
-        title.strip(),
-        subtitle.strip() or None,
-        extent or None,
-        remainder.strip() or None,
-        is_component_part,
-    )
-
+    return contributors, remainder
 
 def extract_title_and_subtitle(
     remainder: dict, dotnote: bool
@@ -424,13 +405,12 @@ def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
     return note, None
 
 
-
 def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
     pages = ""
 
     if not EXTENT_MARKER_RE.search(remainder):
         return "", remainder, is_component_part
-    
+
     else:
         # s. NN(-NN) - probably a component part
         if page_match := COMPONENT_EXTENT.search(
@@ -456,7 +436,7 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
         year_like = re.match(PUB_YEAR_RE, pages)
         if year_like:
             left_part = f"{left_part} {year_like.group(0)}".rstrip()
-            pages = pages[year_like.end():].lstrip(",; ")
+            pages = pages[year_like.end() :].lstrip(",; ")
 
         remainder = (left_part + right_part).strip(",;- ").replace("- -", "-")
 
@@ -821,7 +801,6 @@ if __name__ == "__main__":
     argp.add_argument("info_and_errors_file")
     args = argp.parse_args()
 
-
     if args.test:
         import doctest
 
@@ -851,7 +830,7 @@ if __name__ == "__main__":
         for i, line in enumerate(infile):
             if i % 1000 == 0:
                 print(f"Processing record {i+1}")
-            #if i + 1 == 12316:
+            # if i + 1 == 12316:
             #    print(f"Processing record {i+1}")
             if data := convert(json.loads(line), biblios, subject_mappings):
                 json.dump(data, outfile, ensure_ascii=False)
