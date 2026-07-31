@@ -1,6 +1,6 @@
 import pytest
 
-from reshape_shb import extract_properties_and_values, extract_partof_from_parenthesis, extract_extent
+from reshape_shb import extract_structured_values, extract_partof_from_parenthesis, extract_extent
 
 
 EXTRACT_PROPERTIES_TEST_CASES = {
@@ -142,7 +142,7 @@ EXTRACT_PROPERTIES_TEST_CASES = {
 def test_extract_properties_and_values(case_name):
     record, expected = EXTRACT_PROPERTIES_TEST_CASES[case_name]
 
-    actual = extract_properties_and_values(record, False)
+    actual = extract_structured_values(record, False)
 
     assert actual == expected, f"\nInput record:\n{record}"
 
@@ -221,7 +221,7 @@ def test_extract_extent(note, expected):
 def test_slott_svenska_title_start():
     record = "Slott, Svenska, och herresäten vid 1900-talets början."
 
-    result = extract_properties_and_values(record, False)
+    result = extract_structured_values(record, False)
 
     assert result[0] is None
     assert result[1] == "Slott, Svenska, och herresäten vid 1900-talets början."

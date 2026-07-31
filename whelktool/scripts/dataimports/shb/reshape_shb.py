@@ -52,8 +52,12 @@ counters = {
 }
 anomalies = []
 
+### Function that gathers the action (parsing data, cleaning and enriching records) ###
 
-def convert(data, biblios: dict, subject_mappings) -> dict | None:
+def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
+    """Convert a single SHB record into a KBV instance.
+    Returns the converted record as a dictionary, or None if the record is invalid or cannot be processed.
+    """
 
     # Set start_year and publ_year to None
     start_year: str | None = None
@@ -97,7 +101,7 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
     instance["instanceOf"] = work
 
     ### Try to link local entities ###
-    link_local_entities(instance, rec, shb_part_num)
+    link_local_entities(instance, rec, shb_part_num, bibliographies)
 
     ### Parse notes ###
     parse_note(instance, syntax_era)
@@ -121,7 +125,10 @@ def convert(data, biblios: dict, subject_mappings) -> dict | None:
 ### Functions for parsing the SHB records ###
 
 
-def parse_note(instance: str, syntax_era: str):
+def parse_note(instance: str, syntax_era: str) -> None:
+    """Parse the note of the instance, extracting information about the main entity and its host publication or series membership.
+    Updates the instance in place with the extracted information."""
+
     # Assume it's a monograph until otherwise indicated
     is_component_part = False
 
@@ -148,13 +155,14 @@ def parse_note(instance: str, syntax_era: str):
         if partof_mark in note:
             note, partof_note = note.split(partof_mark, 1)
             is_component_part = True
+
         # Denoted by parenthesis syntax (series or publication) at the end
         elif note.endswith(")"):
             note, partof_note = extract_partof_from_parenthesis(note, syntax_era)
 
         ### Parse and store information about the main entity (instance) ###
         name, title, subtitle, extent, issn, note_remainder, is_component_part = (
-            extract_properties_and_values(note, is_component_part)
+            extract_structured_values(note, is_component_part)
         )
 
         instance["hasTitle"] = {"@type": "Title", "mainTitle": title}
@@ -187,8 +195,8 @@ def parse_note(instance: str, syntax_era: str):
                 part_issn,
                 part_remainder,
                 is_component_part,
-            ) = extract_properties_and_values(
-                partof_note, is_component_part, dotnote=False
+            ) = extract_structured_values(
+                partof_note, is_component_part, is_main_entity_note=False
             )
 
             part = {"@type": "Instance", "label": part_title}
@@ -245,20 +253,27 @@ def parse_note(instance: str, syntax_era: str):
             )
 
 
-def extract_properties_and_values(
-    note: dict, is_component_part: bool, dotnote: bool = True
+def extract_structured_values(
+    note: dict, is_component_part: bool, is_main_entity_note: bool = True
 ) -> tuple:
+    """Extract information about the main entity from the note, including name, title, subtitle, extent, ISSN, and any remaining unstructured information.
+    Returns a tuple of (name, title, subtitle, extent, ISSN, remainder, is_component_part).
+    """
 
     # Extrct extent (pages, leaves)
     extent, remainder, is_component_part = extract_extent(note, is_component_part)
+
+    # Extract ISSN - but only from embedded series/publication info
+    if not is_main_entity_note:
+        issn = extract_issn(remainder)
+    else:
+        issn = ""
 
     # Extract contributors
     contributors, remainder = extract_contributors(remainder)
 
     # Extract title and subtitle
-    title, subtitle, remainder = extract_title_and_subtitle(remainder, dotnote)
-
-    issn = extract_issn(remainder)
+    title, subtitle, remainder = extract_title_and_subtitle(remainder, is_main_entity_note)
 
     return (
         contributors,
@@ -272,6 +287,9 @@ def extract_properties_and_values(
 
 
 def extract_contributors(remainder: dict) -> tuple[str, str]:
+    """Extract contributor names from the remainder of the note.
+    Returns a tuple of (contributors, remainder)."""
+
     personnameparts = []
     initial = -1
     comma_separated = remainder.split(",")
@@ -295,7 +313,8 @@ def extract_contributors(remainder: dict) -> tuple[str, str]:
                 contributors = ""
 
             if (
-                len(comma_separated) > 2 and comma_separated[0].lstrip().startswith("&")
+                len(comma_separated) > 2
+                and comma_separated[0].lstrip().startswith("&")
                 and looks_like_initial(comma_separated[1].strip())
             ):
                 surname = comma_separated.pop(0).strip()
@@ -313,8 +332,12 @@ def extract_contributors(remainder: dict) -> tuple[str, str]:
 
 
 def extract_title_and_subtitle(
-    remainder: dict, dotnote: bool
+    remainder: dict, is_main_entity_note: bool
 ) -> tuple[dict, dict, dict]:
+    """Extract title and subtitle from the remainder of the note.
+    Returns a tuple of (title, subtitle, remainder).
+    """
+
     subtitle = ""
 
     # This record is ISBD-like
@@ -345,7 +368,7 @@ def extract_title_and_subtitle(
         x = int(remainder.count(". ") * 0.3) or 1
         title, *remainder = (
             remainder.rsplit(". ", x)
-            if dotnote and ". " in remainder
+            if is_main_entity_note and ". " in remainder
             else (remainder, "")
         )
         remainder = ". ".join(remainder)
@@ -374,15 +397,9 @@ def extract_title_and_subtitle(
 
 
 def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
-    """
-    >>> extract_partof_from_parenthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287.) Stockholm', 'era_2')
-    ('isborgs slott.  Stockholm', 'Antikvariska studier. 4. Sthlm 1950, s. 221-287.')
-    >>> extract_partof_from_parenthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.))', 'era_2')
-    ('isborgs slott.', 'Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.)')
-    >>> extract_partof_from_parenthesis('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))', 'era_2')
-    ('isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))', None)
-    >>> extract_partof_from_parenthesis('isborgs slott.', 'era_2')
-    ('isborgs slott.', None)
+    """Extract partOf information, i.e. information about the host publication, from balanced parentheses present in the note.
+    If the description comes from an SHB volume where parentheses were used for host publication,
+    return the note with the parentheses removed, and the extracted part-of information.
     """
 
     end = note.rfind(")")
@@ -410,6 +427,9 @@ def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
 
 
 def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
+    """Extract extent information (pages, leaves) from the note, if present.
+    Returns a tuple of (extent, remainder, is_component_part)."""
+
     pages = ""
 
     if not EXTENT_MARKER_RE.search(remainder):
@@ -444,13 +464,13 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
             if pages == "s." or pages == "s":
                 left_part = left_part + " " + pages
                 pages = ""
-                
+
         # A year immediately after the extent probably belongs to the imprint,
         # e.g. "155 s. 1955." -> extent "155 s.", imprint "1955."
         year_after_extent = re.search(r"\s+1[7-9]\d{2}\.?$", pages)
         if year_after_extent:
             year = year_after_extent.group(0).strip()
-            pages = pages[:year_after_extent.start()].rstrip()
+            pages = pages[: year_after_extent.start()].rstrip()
             right_part = f"{year} " + right_part
             if pages == "s." or pages == "s":
                 right_part = pages + " " + right_part
@@ -465,18 +485,24 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
 
 
 def extract_issn(value: str) -> str:
+    """Extract ISSN from the given value, if present and valid.
+    Returns the ISSN as a string, or None if not found or invalid."""
+
     ISSN_PATTERN = re.compile(r"\d{4}-\d{3}[\dX]")
 
     issn = re.findall(ISSN_PATTERN, value)
 
-    if len(issn) == 1 and valid_issn(issn[0]):
+    issn = [n for n in issn if valid_issn(n)]
+    if len(issn) == 1:
         return issn[0]
 
 
 ### Functions for enriching the records ###
 
-
 def add_sao_headings(shb_part_num, start_year, publ_year, subject_mappings) -> list:
+    """Add subject headings to the work based on the SHB part number and publication years.
+    Returns a list of subject references, or None if no subjects found."""
+
     years_key = f"{start_year}-{publ_year}" if start_year else publ_year
     if rownummap := subject_mappings.get(years_key):
         if subjectrefs := rownummap.get(shb_part_num):  # TODO: opt + 'a' ...
@@ -497,8 +523,11 @@ def add_sao_headings(shb_part_num, start_year, publ_year, subject_mappings) -> l
         #    print(f"{partnum} not in {list(rownummap)} for {years_key}", file=sys.stderr)
 
 
-def link_local_entities(thing: dict, rec: dict, partnum: str) -> None:
-    # TODO Review that this is doing what we want it to
+def link_local_entities(thing: dict, rec: dict, partnum: str, bibliographies: dict) -> None:
+    """Moves information about SHB as bibliography, as local and linked entitites, from thing (instance) to record.
+    Updates the instance and record in place with local and linked entities."""
+    # TODO Review this function to make sure it does what we want and complies with the current KBV data model
+
     if hosts := thing.pop("isPartOf"):
         assert len(hosts) == 1
         host = hosts[0]
@@ -523,8 +552,8 @@ def link_local_entities(thing: dict, rec: dict, partnum: str) -> None:
         if ctrlnr := hostrecs[0].get("controlNumber"):
             iri = f"http://libris.kb.se/resource/bib/{ctrlnr}"
             host["@id"] = iri
-            if iri in biblios:
-                existing_host_desc = biblios[iri]
+            if iri in bibliographies:
+                existing_host_desc = bibliographies[iri]
                 has_biblio_repr = json.dumps(existing_host_desc, sort_keys=True)
                 new_biblio_repr = json.dumps(host, sort_keys=True)
                 if has_biblio_repr != new_biblio_repr:
@@ -533,7 +562,7 @@ def link_local_entities(thing: dict, rec: dict, partnum: str) -> None:
                         has_biblio_repr[:bigslice] == new_biblio_repr[:bigslice]
                     ), f"Mismatch:\n{has_biblio_repr}\n{new_biblio_repr}"
             else:
-                biblios[iri] = host
+                bibliographies[iri] = host
 
             # Alternative to bibliography annotation:
             # thing['cataloguedIn'] = {'@id': iri, "@annotation": {"part": thing.pop("part")}} # in the work...
@@ -560,8 +589,10 @@ def link_local_entities(thing: dict, rec: dict, partnum: str) -> None:
 
 ### Helper functions ###
 
-
 def valid_issn(issn: str) -> bool:
+    """Check if the given ISSN is valid according to the ISSN check digit algorithm.
+    Returns True if valid, False otherwise."""
+
     digits = issn.replace("-", "")
 
     total = sum(int(digits[i]) * (8 - i) for i in range(7))
@@ -580,6 +611,8 @@ def valid_issn(issn: str) -> bool:
 
 
 def walk_keys(obj, prefix=""):
+    """Recursively walk through a nested dictionary or list and yield all keys with their paths."""
+
     if isinstance(obj, dict):
         for key, value in obj.items():
             path = f"{prefix}.{key}" if prefix else key
@@ -592,6 +625,8 @@ def walk_keys(obj, prefix=""):
 
 
 def identify_syntax_era(instance) -> str:
+    """Identify the "syntax era" (syntactical characteristics typical to a volume/set of volumes) based on the SHB volume title.
+    Returns a string representing the syntax era, e.g., "era_1", "era_2", etc., or fallback ""era_1" if the era cannot be determined."""
 
     # Extract information about the source SHB volume
     shb_volume_title = (
@@ -666,6 +701,9 @@ def identify_syntax_era(instance) -> str:
 
 def looks_like_initial(s: str) -> bool:
     """
+    Check if the given string looks like an initial (e.g., "A." or "A.-B.").
+    Returns True if it looks like an initial, False otherwise.
+
     >>> looks_like_initial("")
     False
     >>> looks_like_initial("A")
@@ -682,31 +720,8 @@ def looks_like_initial(s: str) -> bool:
     return s[0].isupper() and s.endswith(".") and (len(s) == 2 or s[-2].isupper())
 
 
-def pretty_print_sample(lines, biblios, subject_mappings, context_file):
-    with open(context_file) as f:
-        ctx = json.load(f)
-
-    results = []
-
-    x = 0
-    for i, l in enumerate(lines):
-        x += 1
-        if x > 19:
-            if i % 10_000 != 0:
-                continue
-            else:
-                x = 0
-        if data := convert(json.loads(l), biblios, subject_mappings):
-            results.append(data)
-
-    results = list(biblios.values()) + results
-
-    print(
-        json.dumps({"@context": ctx["@context"], "@graph": results}, ensure_ascii=False)
-    )
-
-
 def make_subject_mappings(subject_mapping_sheets: list[str]) -> dict:
+    """Load subject mappings from the given CSV files and return a dictionary of mappings."""
     subject_mappings: dict = {}
 
     for sheet_file in subject_mapping_sheets:
@@ -716,6 +731,7 @@ def make_subject_mappings(subject_mapping_sheets: list[str]) -> dict:
 
 
 def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
+    """Load subject mappings from a single CSV file and update the given subject_mappings dictionary."""
     years_key = sheet_file.with_suffix("").name.split("-", 1)[-1]
     assert years_key not in subject_mappings
     rownummap = subject_mappings[years_key] = {}
@@ -764,9 +780,38 @@ def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
                     rownummap[f"{startnum}+"] = subjects
 
 
+def pretty_print_sample(lines, biblios, subject_mappings, context_file):
+    """Pretty print a sample of converted records for inspection."""
+
+    with open(context_file) as f:
+        ctx = json.load(f)
+
+    results = []
+
+    x = 0
+    for i, l in enumerate(lines):
+        x += 1
+        if x > 19:
+            if i % 10_000 != 0:
+                continue
+            else:
+                x = 0
+        if data := convert(json.loads(l), biblios, subject_mappings):
+            results.append(data)
+
+    results = list(biblios.values()) + results
+
+    print(
+        json.dumps({"@context": ctx["@context"], "@graph": results}, ensure_ascii=False)
+    )
+
+
 def write_reports(
     counters: dict, anomalies: list, report_file: TextIOBase, anomalies_file: TextIOBase
 ) -> None:
+    """Write reports of the counts of properties, curiosities, extents, and subjects to the given report file.
+    Also write a list of encountered anomalies, with record IDs and records, to the anomalies file."""
+
     report_file.write("# Egenskaper\n\n")
     report_file.write("| Egenskap | Antal |\n")
     report_file.write("|----------|-------:|\n")
@@ -803,7 +848,6 @@ def write_reports(
 
     print(*anomalies, sep="\n", file=anomalies_file)
 
-
 ### Main action ###
 
 if __name__ == "__main__":
@@ -827,30 +871,33 @@ if __name__ == "__main__":
 
     print("Getting started!")
 
+    # Load subject mappings from CSV files
     subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
     if not subject_files:
         raise FileNotFoundError("No CSV files found")
     subject_mappings = make_subject_mappings(subject_files)
 
-    biblios: dict = {}
+    bibliographies: dict = {}
 
+    # Open files
     with open(args.infile) as infile, open(
         args.outfile, "w", encoding="utf-8"
     ) as outfile, open(args.report_file, "w", encoding="utf-8") as report_file, open(
         args.info_and_errors_file, "w", encoding="utf-8"
     ) as anomalies_file:
 
+        # Optionally pretty print a sample of converted records for inspection
         if args.sample_pretty_with:
             pretty_print_sample(
-                infile, biblios, subject_mappings, args.sample_pretty_with
+                infile, bibliographies, subject_mappings, args.sample_pretty_with
             )
             sys.exit()
+
+        # Process each line in the input file
         for i, line in enumerate(infile):
             if i % 1000 == 0:
                 print(f"Processing record {i+1}")
-            # if i + 1 == 12316:
-            #    print(f"Processing record {i+1}")
-            if data := convert(json.loads(line), biblios, subject_mappings):
+            if data := convert(json.loads(line), bibliographies, subject_mappings):
                 json.dump(data, outfile, ensure_ascii=False)
                 outfile.write("\n")
 
