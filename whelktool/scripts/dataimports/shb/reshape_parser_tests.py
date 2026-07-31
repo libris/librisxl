@@ -9,6 +9,9 @@ from reshape_shb import (
 
 ### End-to-end parsing ###
 
+# TODO or not todo?
+# Parse out series/partOf info for older descriptions (no parenthesis or "I:" to go by)
+# Identify contributions (bidrag) when there is no extent to go by
 
 def test_parse_note_1771_1874_Bidrag_tidningsartikel():
     instance = {
@@ -28,9 +31,6 @@ def test_parse_note_1771_1874_Bidrag_tidningsartikel():
     )
     assert result["responsibilityStatement"] == "Holm, C. J."
     assert result["hasNote"][0]["label"] == "Svenska Tidningen 1853, N:o 72 (81/8),"
-    # TODO? assert result["partOf"][0]["label"] == ...
-
-
 
 def test_parse_note_1875_1900_Bidrag_tidningsartikel():
     instance = {
@@ -45,8 +45,6 @@ def test_parse_note_1875_1900_Bidrag_tidningsartikel():
     assert result["hasTitle"]["mainTitle"] == "Et historisk Minde i Höifjeldet"
     assert result["responsibilityStatement"] == "Hagemann, A."
     assert result["hasNote"][0]["label"] == "[1657.] Aftenposten (Kristiania) 1897, N:r 186."
-    # TODO? assert result["partOf"][0]["label"] == ...
-
 
 def test_parse_note_1936_1950_Bidrag_tidningsartikel():
     instance = {
@@ -62,14 +60,16 @@ def test_parse_note_1936_1950_Bidrag_tidningsartikel():
 
     assert result["hasTitle"]["mainTitle"] == "Rikskanslerns titlar"
     assert result["responsibilityStatement"] == "Ahnlund, N."
-    assert result["hasNote"][0]["label"] == "[Axel Oxenstierna.] (SvD 14/7 1939.)"
+    assert result["hasNote"][0]["label"] == "[Axel Oxenstierna.]"
+    assert result["partOf"][0]["label"] == "SvD 14/7 1939"
 
 
 def test_parse_note_1936_1950_Bidrag():
     instance = {
         "hasNote": [
             {
-                "label": "Efternamn, Förnamn [initial]., Titel. undertitel. (Publ-titel nr (årtal), sid.)"
+                "pattern": "Efternamn, Förnamn [initial]., Titel. undertitel. (Publ-titel nr (årtal), sid.)",
+                "label": "Walde, O., Bielkeättens insatser i svensk bibliofili. Med särskild hänsyn till Bielkebiblioteket på Skokloster. (NTBB 27 (1940), s. 1-45.)"
             }
         ]
     }
@@ -77,9 +77,9 @@ def test_parse_note_1936_1950_Bidrag():
     result = parse_note(instance, "parenthesized")
 
     assert result["category"] == None
-    assert result["hasTitle"]["mainTitle"] == None
-    assert result["hasTitle"]["subtitle"] == None
-    assert result["responsibilityStatement"] == None
+    assert result["hasTitle"]["mainTitle"] == "Bielkeättens insatser i svensk bibliofili"
+    assert result["hasTitle"]["subtitle"] == "Med särskild hänsyn till Bielkebiblioteket på Skokloster"
+    assert result["responsibilityStatement"] == "Walde, O."
     assert result["extent"] == None
     assert result["partOf"] == None
     assert result["seriesMembership"] == None
@@ -665,7 +665,7 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi_utan_författare():
 
 ### Parsing for specific values ###
 # Main entity values
-EXTRACT_STRUCTURED_TEST_CASES = {
+EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
     "simple-author-with-initials": (
         "Surname, G.-N., Anything",
         (
@@ -675,7 +675,7 @@ EXTRACT_STRUCTURED_TEST_CASES = {
             None,
             None,
             None,
-            False,
+            True,
         ),
     ),
     "simple-title-before-author": (
@@ -687,7 +687,7 @@ EXTRACT_STRUCTURED_TEST_CASES = {
             None,
             None,
             "Surname, G.-N., Stuff.",
-            False,
+            True,
         ),
     ),
     "publication-year-before-monograph-extent": (
@@ -733,7 +733,7 @@ EXTRACT_STRUCTURED_TEST_CASES = {
             "A bibliography of writings in English by or onrecent Swedish emigration historians",
             None,
             "s. 215-221",
-            "0039-7326",
+            None,
             "I: The Swedish pioneer, ISSN0039-7326, 27, 1976:3",
             True,
         ),
@@ -757,7 +757,7 @@ EXTRACT_STRUCTURED_TEST_CASES = {
             "Hembygdsperiodika",
             "förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl",
             "40 bl.",
-            "0347-1128",
+            None,
             "Borås, 1976. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)",
             False,
         ),
@@ -769,7 +769,7 @@ EXTRACT_STRUCTURED_TEST_CASES = {
             "Kyrka och judendom",
             "svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975",
             "194 s.",
-            "0346-5438",
+            None,
             "Lund, 1976. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
             False,
         ),
@@ -781,7 +781,7 @@ EXTRACT_STRUCTURED_TEST_CASES = {
             "Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning",
             None,
             "428 s.",
-            "0519-9859",
+            None,
             "Lund, 1976. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec",
             False,
         ),
@@ -801,11 +801,11 @@ EXTRACT_STRUCTURED_TEST_CASES = {
 }
 
 
-@pytest.mark.parametrize("case_name", EXTRACT_STRUCTURED_TEST_CASES)
+@pytest.mark.parametrize("case_name", EXTRACT_STRUCTURED_VALUES_TEST_CASES)
 def test_extract_structured_values(case_name):
-    record, expected = EXTRACT_STRUCTURED_TEST_CASES[case_name]
+    record, expected = EXTRACT_STRUCTURED_VALUES_TEST_CASES[case_name]
 
-    actual = extract_structured_values(record, False)
+    actual = extract_structured_values(record, False, True)
 
     assert actual == expected, f"\nInput record:\n{record}"
 
@@ -816,7 +816,7 @@ def test_extract_structured_values(case_name):
     [
         pytest.param(
             "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287.) Stockholm",
-            "era_2",
+            "parenthesized",
             (
                 "isborgs slott.  Stockholm",
                 "Antikvariska studier. 4. Sthlm 1950, s. 221-287.",
@@ -825,7 +825,7 @@ def test_extract_structured_values(case_name):
         ),
         pytest.param(
             "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.))",
-            "era_2",
+            "parenthesized",
             (
                 "isborgs slott.",
                 "Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.)",
@@ -834,7 +834,7 @@ def test_extract_structured_values(case_name):
         ),
         pytest.param(
             "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))",
-            "era_2",
+            "parenthesized",
             (
                 "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))",
                 None,
@@ -843,7 +843,7 @@ def test_extract_structured_values(case_name):
         ),
         pytest.param(
             "isborgs slott.",
-            "era_2",
+            "parenthesized",
             (
                 "isborgs slott.",
                 None,
