@@ -453,6 +453,8 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
     pages = ""
 
     if not EXTENT_MARKER_RE.search(remainder):
+        # It might make sense to assume descriptions without pages are component parts
+        is_component_part = True
         return "", remainder, is_component_part
 
     else:
