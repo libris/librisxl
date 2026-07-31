@@ -1,9 +1,671 @@
 import pytest
 
-from reshape_shb import extract_structured_values, extract_partof_from_parenthesis, extract_extent
+from reshape_shb import (
+    parse_note,
+    extract_structured_values,
+    extract_partof_from_parenthesis,
+    extract_extent,
+)
+
+### End-to-end parsing ###
 
 
-EXTRACT_PROPERTIES_TEST_CASES = {
+def test_parse_note_1771_1874_Bidrag_tidningsartikel():
+    instance = {
+        "hasNote": [
+            {
+                "pattern": "Efternamn, Förnamn [initial]., Titel. Publ-titel YYYY, nr (DD/MM).",
+                "label": "Holm, C. J., Också några ord om slaget vid Porosalmiden 12 juni 1789. Svenska Tidningen 1853, N:o 72 (81/8),"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "early")
+
+    assert (
+        result["hasTitle"]["mainTitle"]
+        == "Också några ord om slaget vid Porosalmiden 12 juni 1789"
+    )
+    assert result["responsibilityStatement"] == "Holm, C. J."
+    assert result["hasNote"][0]["label"] == "Svenska Tidningen 1853, N:o 72 (81/8),"
+    # TODO? assert result["partOf"][0]["label"] == ...
+
+
+
+def test_parse_note_1875_1900_Bidrag_tidningsartikel():
+    instance = {
+        "hasNote": [
+            {"pattern": "Efternamn, Förnamn [initial]., Titel. Publ-titel YYYY, nr.",
+             "label": "Hagemann, A., Et historisk Minde i Höifjeldet. [1657.] Aftenposten (Kristiania) 1897, N:r 186."}
+        ]
+    }
+
+    result = parse_note(instance, "early")
+
+    assert result["hasTitle"]["mainTitle"] == "Et historisk Minde i Höifjeldet"
+    assert result["responsibilityStatement"] == "Hagemann, A."
+    assert result["hasNote"][0]["label"] == "[1657.] Aftenposten (Kristiania) 1897, N:r 186."
+    # TODO? assert result["partOf"][0]["label"] == ...
+
+
+def test_parse_note_1936_1950_Bidrag_tidningsartikel():
+    instance = {
+        "hasNote": [
+            {
+                "pattern": "Efternamn, Förnamn [initial]., Titel. undertitel. (Publ-titel DD/MM YYYY.)",
+                "label": "Ahnlund, N., Rikskanslerns titlar. [Axel Oxenstierna.] (SvD 14/7 1939.)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["hasTitle"]["mainTitle"] == "Rikskanslerns titlar"
+    assert result["responsibilityStatement"] == "Ahnlund, N."
+    assert result["hasNote"][0]["label"] == "[Axel Oxenstierna.] (SvD 14/7 1939.)"
+
+
+def test_parse_note_1936_1950_Bidrag():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn [initial]., Titel. undertitel. (Publ-titel nr (årtal), sid.)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1936_1950_Monografi():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn [initial]., Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1901_1920_Bidrag_tidningsartikel():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel YYYY, numrering (DD/MM)."
+            }
+        ]
+    }
+
+    result = parse_note(instance, "early")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel. nr, sid."
+            }
+        ]
+    }
+
+    result = parse_note(instance, "early")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn [initial]., Titel. undertitel. sid. Ort år. Serietillhörighet. numrering."
+            }
+        ]
+    }
+
+    result = parse_note(instance, "early")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1971_1975_Bidrag_tidningsartikel():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel : undertitel. - I: Publ-titel DD.MM YYYY"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "isbd_transition")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1976_Bidrag_tidningsartikel():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel : undertitel. - I: Publ-titel DD.MM.YYYY"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "isbd")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1971_1975_Bidrag():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel : undertitel. - I: Publ-titel årg(årtal):numrering, sid."
+            }
+        ]
+    }
+
+    result = parse_note(instance, "isbd_transition")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1976_Bidrag():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel : undertitel. - I: Publ-titel, ISSN, numrering, årg, sid."
+            }
+        ]
+    }
+
+    result = parse_note(instance, "isbd")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1976_Monografi():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel : undertitel. - Ort, år. - sid. - (Serietillhörighet, ISSN)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "isbd")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1971_1975_Monografi():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel : undertitel. Ort år. sid. - (Serietillhörighet ; numrering)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "isbd_transition")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1961_1970_Bidrag_tidningsartikel():
+    instance = {
+        "hasNote": [{"label": "Efternamn, Förnamn, Titel. - Publ-titel DD.MM YYYY."}]
+    }
+
+    result = parse_note(instance, "dash_style")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1961_1970_Bidrag():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel. - Publ-titel årg (årtal):numrering, sid."
+            }
+        ]
+    }
+
+    result = parse_note(instance, "dash_style")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1951_1960_Bidrag_tidningsartikel():
+    instance = {
+        "hasNote": [
+            {"label": "Efternamn, Förnamn, Titel. undertitel. (Publ-titel DD/MM YYYY.)"}
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1921_1935_Bidrag_tidningsartikel():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel. undertitel. (Publ-titel YYYY: DD/MM.)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1921_1935_1951_1960_Bidrag():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel. undertitel. (Publ-titel nr (årtal), sid.)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1921_1935_Monografi():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1961_1970_Monografi():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel. undertitel. Ort år. sid. - Serietillhörighet. numrering."
+            }
+        ]
+    }
+
+    result = parse_note(instance, "dash_style")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1951_1960_Monografi():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Efternamn, Förnamn, Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1971_1975_Bidrag_utan_författare():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Titel : undertitel / Upphov. - I: Publ-titel årg(årtal):numrering, sid."
+            }
+        ]
+    }
+
+    result = parse_note(instance, "isbd_transition")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1976_Bidrag_utan_författare():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Titel : undertitel / Upphov. - I: Publ-titel, ISSN, numrering, årg, sid."
+            }
+        ]
+    }
+
+    result = parse_note(instance, "isbd")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1976_Monografi_utan_författare():
+    instance = {
+        "hasNote": [{"label": "Titel : undertitel / Upphov. - Ort, år. - sid."}]
+    }
+
+    result = parse_note(instance, "isbd")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1971_1975_Monografi_utan_författare():
+    instance = {
+        "hasNote": [
+            {
+                "label": "Titel : undertitel / Upphov. Ort år. sid. - (Serietillhörighet ; numrering)"
+            }
+        ]
+    }
+
+    result = parse_note(instance, "isbd_transition")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1961_1970_Bidrag_utan_författare():
+    instance = {
+        "hasNote": [{"label": "Titel. - Publ-titel årg (årtal):numrering, sid."}]
+    }
+
+    result = parse_note(instance, "dash_style")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1921_1935_1936_1950_Bidrag_utan_författare():
+    instance = {
+        "hasNote": [{"label": "Titel. undertitel. (Publ-titel. nr. årg, sid.)"}]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1921_1935_1936_1950_Monografi_utan_författare():
+    instance = {
+        "hasNote": [
+            {"label": "Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)"}
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1961_1970_Monografi_utan_författare():
+    instance = {
+        "hasNote": [
+            {"label": "Titel. undertitel. Ort år. sid. - Serietillhörighet. numrering."}
+        ]
+    }
+
+    result = parse_note(instance, "dash_style")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag_utan_författare():
+    instance = {"hasNote": [{"label": "Titel. undertitel. Publ-titel. nr, sid."}]}
+
+    result = parse_note(instance, "early")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1951_1960_Monografi_utan_författare():
+    instance = {
+        "hasNote": [
+            {"label": "Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)"}
+        ]
+    }
+
+    result = parse_note(instance, "parenthesized")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi_utan_författare():
+    instance = {
+        "hasNote": [
+            {"label": "Titel. undertitel. sid. Ort år. Serietillhörighet. numrering."}
+        ]
+    }
+
+    result = parse_note(instance, "early")
+
+    assert result["category"] == None
+    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["subtitle"] == None
+    assert result["responsibilityStatement"] == None
+    assert result["extent"] == None
+    assert result["partOf"] == None
+    assert result["seriesMembership"] == None
+    assert result["hasNote"] == None
+
+
+### Parsing for specific values ###
+# Main entity values
+EXTRACT_STRUCTURED_TEST_CASES = {
     "simple-author-with-initials": (
         "Surname, G.-N., Anything",
         (
@@ -138,15 +800,17 @@ EXTRACT_PROPERTIES_TEST_CASES = {
     ),
 }
 
-@pytest.mark.parametrize("case_name", EXTRACT_PROPERTIES_TEST_CASES)
-def test_extract_properties_and_values(case_name):
-    record, expected = EXTRACT_PROPERTIES_TEST_CASES[case_name]
+
+@pytest.mark.parametrize("case_name", EXTRACT_STRUCTURED_TEST_CASES)
+def test_extract_structured_values(case_name):
+    record, expected = EXTRACT_STRUCTURED_TEST_CASES[case_name]
 
     actual = extract_structured_values(record, False)
 
     assert actual == expected, f"\nInput record:\n{record}"
 
 
+# Part-of from parenthesis
 @pytest.mark.parametrize(
     "record, era, expected",
     [
@@ -194,20 +858,17 @@ def test_extract_partof_from_parenthesis(record, era, expected):
     assert actual == expected, f"\nInput record:\n{record}"
 
 
-### Extent ###
+# Extent
 @pytest.mark.parametrize(
     "note, expected",
     [
         pytest.param(
             "Antikvariska studier. 4. Sthlm 1950, s. 221-287.",
-            (   "s. 221-287",
-                "Antikvariska studier. 4. Sthlm 1950.",
-                True
-            ),
+            ("s. 221-287", "Antikvariska studier. 4. Sthlm 1950.", True),
             id="simple-component-extent",
         )
-        ])
-
+    ],
+)
 def test_extract_extent(note, expected):
     actual = extract_extent(note, False)
 
@@ -226,10 +887,10 @@ def test_slott_svenska_title_start():
     assert result[0] is None
     assert result[1] == "Slott, Svenska, och herresäten vid 1900-talets början."
 
+
 @pytest.mark.xfail(
     reason="If removing a year that has been confused with extent leads to the extent just being 's', give up on extrating the extent."
 )
-
 def test_extent_dot_year(note, expected):
     note = "524, (2) s. 1951."
     result = extract_extent(note, False)
