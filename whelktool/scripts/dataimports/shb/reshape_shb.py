@@ -7,7 +7,21 @@ from pathlib import Path
 from collections import Counter
 
 USE_ANNOT = False
-PARENTHESIS_ERAS = ["era_2", "era_3", "era_5", "era_6"]
+
+SYNTAX_ERAS = {
+    "Svensk historisk bibliografi 1771-1874": "early", 
+    "Svensk historisk bibliografi 1875-1900": "early",
+    "Svensk historisk bibliografi 1901-1920": "early",
+    "Svensk historisk bibliografi 1921-1935": "parenthesized",  # Serietillhörighet och källpublikation anges inom parentes. Sidor anges efter Ort/år
+    "Svensk historisk bibliografi 1936-1950": "parenthesized",  # -||- . -||-
+    "Svensk historisk bibliografi 1951-1960": "parenthesized", # Serietillhörighet och källpublikation anges inom parentes. Sidor anges före Ort/år
+    "Svensk historisk bibliografi 1961-1970": "dash_style", # Serietillhörighet och källpublikation anges efter ". -". Sidor anges efter Ort/år
+    "Svensk historisk bibliografi 1971-1975": "isbd_transition", # Kolon ":" mellan huvudtitel och undertitel. Serietillhörighet anges inom parentes efter ". -". Bidrag: Källpublikation anges efter ". - I: "
+    "Svensk historisk bibliografi 1976": "isbd", # -||- ". - " anges före nytt avsnitt (utgivning, omfång, serietillhörighet). -||- . -||- . ISSN anges
+}
+
+PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
+DASH_ERAS = ["dash_style", "isbd_transition", "isbd"]
 
 ### Extreme regex ###
 EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl)\.", re.I)
@@ -53,6 +67,7 @@ counters = {
 anomalies = []
 
 ### Function that gathers the action (parsing data, cleaning and enriching records) ###
+
 
 def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     """Convert a single SHB record into a KBV instance.
@@ -233,9 +248,9 @@ def parse_note(instance: str, syntax_era: str) -> None:
             instance["category"].remove(
                 {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
             )
-            counters["various"].update(["ComponentPart - TRUE"])
+            counters["various"].update(["Regular monograph"])
         else:
-            counters["various"].update(["ComponentPart - FALSE"])
+            counters["various"].update(["Component part"])
 
         ### Store remaining unstructured information as a note on the instance ###
         if note_remainder:
@@ -273,7 +288,9 @@ def extract_structured_values(
     contributors, remainder = extract_contributors(remainder)
 
     # Extract title and subtitle
-    title, subtitle, remainder = extract_title_and_subtitle(remainder, is_main_entity_note)
+    title, subtitle, remainder = extract_title_and_subtitle(
+        remainder, is_main_entity_note
+    )
 
     return (
         contributors,
@@ -499,6 +516,7 @@ def extract_issn(value: str) -> str:
 
 ### Functions for enriching the records ###
 
+
 def add_sao_headings(shb_part_num, start_year, publ_year, subject_mappings) -> list:
     """Add subject headings to the work based on the SHB part number and publication years.
     Returns a list of subject references, or None if no subjects found."""
@@ -523,7 +541,9 @@ def add_sao_headings(shb_part_num, start_year, publ_year, subject_mappings) -> l
         #    print(f"{partnum} not in {list(rownummap)} for {years_key}", file=sys.stderr)
 
 
-def link_local_entities(thing: dict, rec: dict, partnum: str, bibliographies: dict) -> None:
+def link_local_entities(
+    thing: dict, rec: dict, partnum: str, bibliographies: dict
+) -> None:
     """Moves information about SHB as bibliography, as local and linked entitites, from thing (instance) to record.
     Updates the instance and record in place with local and linked entities."""
     # TODO Review this function to make sure it does what we want and complies with the current KBV data model
@@ -589,6 +609,7 @@ def link_local_entities(thing: dict, rec: dict, partnum: str, bibliographies: di
 
 ### Helper functions ###
 
+
 def valid_issn(issn: str) -> bool:
     """Check if the given ISSN is valid according to the ISSN check digit algorithm.
     Returns True if valid, False otherwise."""
@@ -626,7 +647,8 @@ def walk_keys(obj, prefix=""):
 
 def identify_syntax_era(instance) -> str:
     """Identify the "syntax era" (syntactical characteristics typical to a volume/set of volumes) based on the SHB volume title.
-    Returns a string representing the syntax era, e.g., "era_1", "era_2", etc., or fallback ""era_1" if the era cannot be determined."""
+    Returns a string representing the syntax era, e.g., "era_1", "era_2", etc., or fallback ""era_1" if the era cannot be determined.
+    """
 
     # Extract information about the source SHB volume
     shb_volume_title = (
@@ -634,69 +656,7 @@ def identify_syntax_era(instance) -> str:
     )
     counters["various"].update([f"VOLUME\t{shb_volume_title}"])
 
-    # Monografi: Efternamn, Förnamn., Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
-    # Monografi utan författare: Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
-    # Bidrag: Efternamn, Förnamn., Titel. undertitel. Publ-titel. nr, sid.
-    # Bidrag utan författare: Titel. undertitel. Publ-titel. nr, sid.
-    # Bidrag (tidningsartikel): Efternamn, Förnamn., Titel. Publ-titel YYYY, nr (DD/MM).
-    if shb_volume_title in [
-        "Svensk historisk bibliografi 1771-1874",
-        "Svensk historisk bibliografi 1875-1900",
-        "Svensk historisk bibliografi 1901-1920",
-    ]:
-        return "era_1"
-
-    ### This is where "parenthesis" syntax first shows up
-    # Monografi: Efternamn, Förnamn., Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
-    # Monografi utan författare: Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
-    # Bidrag:  Efternamn, Förnamn., Titel. undertitel. Publ-titel. nr, sid.
-    # Bidrag utan författare: Titel. undertitel. Publ-titel. nr, sid.
-    # Bidrag (tidningsartikel): Efternamn, Förnamn., Titel. Publ-titel YYYY, nr.
-    elif shb_volume_title in [
-        "Svensk historisk bibliografi 1921-1935",
-        "Svensk historisk bibliografi 1936-1950",
-    ]:
-        return "era_2"
-
-    # Monografi: Efternamn, Förnamn, Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)
-    # Monografi utan författare: Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)
-    # Bidrag: Efternamn, Förnamn, Titel. undertitel. (Publ-titel nr (årtal), sid.)
-    # Bidrag (tidningsartikel): Efternamn, Förnamn, Titel. undertitel. (Publ-titel DD/MM YYYY.)
-    elif shb_volume_title in ["Svensk historisk bibliografi 1951-1960"]:
-        return "era_3"
-
-    ### Taking a break from parentheses
-    ### Sidor now comes after "Ort år"
-    ### Introducing dashes as separator before series/publication
-    # Monografi: Efternamn, Förnamn, Titel : undertitel. Ort år. sid. - Serietillhörighet. numrering.
-    # Monografi utan författare: Titel. undertitel. Ort år. sid. - Serietillhörighet. numrering.
-    # Bidrag: Efternamn, Förnamn, Titel. - Publ-titel årg (årtal):numrering, sid.
-    # Bidrag utan författare: Titel. - Publ-titel årg (årtal):numrering, sid.
-    # Bidrag (tidningsartikel): Efternamn, Förnamn, Titel. - Publ-titel DD.MM YYYY.
-    elif shb_volume_title in ["Svensk historisk bibliografi 1961-1970"]:
-        return "era_4"
-
-    ### This is where the "I:" syntax starts
-    ### The two below are very similar, apart from the presence of ISSN and the order of the values in "I:"
-    # Monografi: Efternamn, Förnamn, Titel : undertitel. Ort år. sid. - (Serietillhörighet ; numrering)
-    # Monografi utan författare: Titel : undertitel / Upphov. Ort år. sid. - (Serietillhörighet ; numrering)
-    # Bidrag: Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel årg(årtal):numrering, sid.
-    # Bidrag utan författare: Titel : undertitel / Upphov. - "I:" Publ-titel årg(årtal):numrering, sid.
-    # Bidrag (tidningsartikel): Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel DD.MM YYYY
-    elif shb_volume_title in ["Svensk historisk bibliografi 1971-1975"]:
-        return "era_5"
-
-    # Monografi: Efternamn, Förnamn, Titel : undertitel. - Ort, år. - sid. - (Serietillhörighet, ISSN)
-    # Monografi utan författare: Titel : undertitel / Upphov. - Ort, år. - sid.
-    # Bidrag: Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel, ISSN, numrering, årg, sid.
-    # Bidrag utan författare: Titel : undertitel / Upphov. - "I:" Publ-titel, ISSN, numrering, årg, sid.
-    # Bidrag (tidningsartikel) Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel DD.MM.YYYY
-    elif shb_volume_title in ["Svensk historisk bibliografi 1976"]:
-        return "era_6"
-
-    # Fallbck
-    else:
-        return "era_1"
+    return SYNTAX_ERAS.get(shb_volume_title, "early")
 
 
 def looks_like_initial(s: str) -> bool:
@@ -810,7 +770,8 @@ def write_reports(
     counters: dict, anomalies: list, report_file: TextIOBase, anomalies_file: TextIOBase
 ) -> None:
     """Write reports of the counts of properties, curiosities, extents, and subjects to the given report file.
-    Also write a list of encountered anomalies, with record IDs and records, to the anomalies file."""
+    Also write a list of encountered anomalies, with record IDs and records, to the anomalies file.
+    """
 
     report_file.write("# Egenskaper\n\n")
     report_file.write("| Egenskap | Antal |\n")
@@ -847,6 +808,7 @@ def write_reports(
         report_file.write(f"| {subject} | {count} |\n")
 
     print(*anomalies, sep="\n", file=anomalies_file)
+
 
 ### Main action ###
 
