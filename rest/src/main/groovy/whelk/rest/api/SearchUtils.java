@@ -670,13 +670,15 @@ public class SearchUtils {
                 }
                 String label = String.join(" ", parts);
 
-                if (matchesTerm) {
+                if (matchesTerm && !chain.isEmpty()) {
                     Object proptype = chain.getLast().get(JsonLd.TYPE_KEY);
                     List<String> proptypes;
                     if (proptype instanceof String) {
                         proptypes = List.of((String) proptype);
-                    } else {
+                    } else if (proptype instanceof List) {
                         proptypes = (List<String>) proptype;
+                    } else {
+                        proptypes = List.of();
                     }
                     boolean anyObjectProperty = proptypes.stream().anyMatch(pt -> ld.isSubClassOf(pt, "ObjectProperty"));
                     if (anyObjectProperty) {
