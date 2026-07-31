@@ -9,15 +9,15 @@ from collections import Counter
 USE_ANNOT = False
 
 SYNTAX_ERAS = {
-    "Svensk historisk bibliografi 1771-1874": "early", 
-    "Svensk historisk bibliografi 1875-1900": "early",
-    "Svensk historisk bibliografi 1901-1920": "early",
-    "Svensk historisk bibliografi 1921-1935": "parenthesized",  # Serietillhörighet och källpublikation anges inom parentes. Sidor anges efter Ort/år
-    "Svensk historisk bibliografi 1936-1950": "parenthesized",  # -||- . -||-
-    "Svensk historisk bibliografi 1951-1960": "parenthesized", # Serietillhörighet och källpublikation anges inom parentes. Sidor anges före Ort/år
-    "Svensk historisk bibliografi 1961-1970": "dash_style", # Serietillhörighet och källpublikation anges efter ". -". Sidor anges efter Ort/år
-    "Svensk historisk bibliografi 1971-1975": "isbd_transition", # Kolon ":" mellan huvudtitel och undertitel. Serietillhörighet anges inom parentes efter ". -". Bidrag: Källpublikation anges efter ". - I: "
-    "Svensk historisk bibliografi 1976": "isbd", # -||- ". - " anges före nytt avsnitt (utgivning, omfång, serietillhörighet). -||- . -||- . ISSN anges
+    "1771-1874": "early", 
+    "1875-1900": "early",
+    "1901-1920": "early",
+    "1921-1935": "parenthesized",  # Serietillhörighet och källpublikation anges inom parentes. Sidor anges efter Ort/år
+    "1936-1950": "parenthesized",  # -||- . -||-
+    "1951-1960": "parenthesized", # Serietillhörighet och källpublikation anges inom parentes. Sidor anges före Ort/år
+    "1961-1970": "dash_style", # Serietillhörighet och källpublikation anges efter ". -". Sidor anges efter Ort/år
+    "1971-1975": "isbd_transition", # Kolon ":" mellan huvudtitel och undertitel. Serietillhörighet anges inom parentes efter ". -". Bidrag: Källpublikation anges efter ". - I: "
+    "1976": "isbd", # -||- ". - " anges före nytt avsnitt (utgivning, omfång, serietillhörighet). -||- . -||- . ISSN anges
 }
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
@@ -119,7 +119,8 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     link_local_entities(instance, rec, shb_part_num, bibliographies)
 
     ### Parse notes ###
-    parse_note(instance, syntax_era)
+    
+    instance = parse_note(instance, syntax_era)
 
     ### Add subject headings to the instance ###
     sao_headings = add_sao_headings(
@@ -140,8 +141,8 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 ### Functions for parsing the SHB records ###
 
 
-def parse_note(instance: str, syntax_era: str) -> None:
-    """Parse the note of the instance, extracting information about the main entity and its host publication or series membership.
+def parse_note(instance: dict, syntax_era: str) -> None:
+    """Parse instance, extracting information about the main entity and its host publication or series membership.
     Updates the instance in place with the extracted information."""
 
     # Assume it's a monograph until otherwise indicated
@@ -241,13 +242,13 @@ def parse_note(instance: str, syntax_era: str) -> None:
         ### Clean up categories ###
 
         # We can assume all titles are published and printed
-        instance["category"].append({"@id": "https://id.kb.se/term/saobf/Print"})
+        instance.setdefault("category", []).append({"@id": "https://id.kb.se/term/saobf/Print"})
 
         # Remove the category "componentPart" if there is nothing indicating it
         if not is_component_part:
-            instance["category"].remove(
-                {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
-            )
+            component = {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
+            if component in instance["category"]:
+                instance["category"].remove(component)
             counters["various"].update(["Regular monograph"])
         else:
             counters["various"].update(["Component part"])
@@ -266,6 +267,8 @@ def parse_note(instance: str, syntax_era: str) -> None:
                     "label": f"Fullständig beskrivning (OCR) ur SHBD: {original_note}",
                 }
             )
+
+    return instance        
 
 
 def extract_structured_values(
@@ -648,11 +651,17 @@ def walk_keys(obj, prefix=""):
 def identify_syntax_era(instance) -> str:
     """Identify the "syntax era" (syntactical characteristics typical to a volume/set of volumes) based on the SHB volume title.
     Returns a string representing the syntax era, e.g., "era_1", "era_2", etc., or fallback ""era_1" if the era cannot be determined.
+    >>> identify_syntax_era({"isPartOf": [{"hasTitle": [{"mainTitle": "Svensk historisk bibliografi 1921-1935"}]}]})
+    'parenthesized'
+    >>> identify_syntax_era({"isPartOf": [{"hasTitle": [{"mainTitle": "Svensk historisk bibliografi 1976"}]}]})
+    'isbd'
+    >>> identify_syntax_era({"isPartOf": [{"hasTitle": [{"mainTitle": "Svensk historisk bibliografi 1901-1920"}]}]})
+    'early'
     """
 
     # Extract information about the source SHB volume
     shb_volume_title = (
-        instance.get("isPartOf", [])[0].get("hasTitle", [])[0].get("mainTitle", "")
+        instance.get("isPartOf", [])[0].get("hasTitle", [])[0].get("mainTitle", "").replace("Svensk historisk bibliografi", "").strip()
     )
     counters["various"].update([f"VOLUME\t{shb_volume_title}"])
 
