@@ -147,7 +147,6 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
 ### Functions for parsing the SHB records ###
 
-
 def parse_note(instance: dict, syntax_era: str) -> None:
     """Parse instance, extracting information about the main entity and its host publication or series membership.
     Updates the instance in place with the extracted information."""
@@ -189,8 +188,25 @@ def parse_note(instance: dict, syntax_era: str) -> None:
         if structured_record.get("subtitle"):
             instance["hasTitle"]["subtitle"] = structured_record["subtitle"]
 
-        if structured_record.get("name"):
-            instance["responsibilityStatement"] = structured_record["name"]
+        if structured_record.get("contributors"):
+            instance["responsibilityStatement"] = structured_record["contributors"]
+
+        publication = {}
+        if structured_record.get("place"):
+            publication["place"] = [
+                {"@type": "Place", "label": structured_record["place"]}
+            ]
+
+        if structured_record.get("year"):
+            publication["year"] = structured_record["year"]
+
+        if publication:
+            instance["publication"] = [
+                {
+                    "@type": "PrimaryPublication",
+                    **publication,
+                }
+            ]
 
         if structured_record.get("extent"):
             instance["extent"] = [
@@ -324,11 +340,16 @@ def extract_structured_values(
     if remainder and not host_note:
         remainder, host_note = extract_partof_from_parenthesis(remainder, syntax_era)
 
+    place, year, remainder = extract_place_year(remainder)
+
+
     structured_record.update(
         {
             "contributors": contributors.strip() if contributors else None,
             "title": title.strip() if title else None,
             "subtitle": subtitle.strip() if subtitle else None,
+            "place": place.strip() if place else None,
+            "year": year.strip() if year else None,
             "extent": extent.strip() if extent else None,
             "issn": issn.strip() if issn else None,
             "review_note": review_note.strip() if review_note else None,
@@ -342,8 +363,6 @@ def extract_structured_values(
         structured_record["host"] = extract_structured_values(
             host_note, syntax_era, is_main_entity_note=False
         )
-
-    _place, _year, _experimental_remainder = extract_place_year(remainder)
 
     return structured_record
 
@@ -369,11 +388,11 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
 
         match = PLACE_YEAR_RE.search(remainder)
         if match:
-            year = match.group("year")
+            year = match.group("year").strip()
 
             if 1771 <= int(year) <= 1976:
                 remainder = remainder[: match.start()].rstrip()
-                place = match.group("place")
+                place = match.group("place").strip()
                 counters["various"].update(["Place and year extracted"])
                 counters["place_year"].update([f"{place}, {year}"])
 
@@ -902,6 +921,15 @@ def write_reports(
 
     for extent, count in counters["extents"].most_common():
         report_file.write(f"| {extent} | {count} |\n")
+
+    report_file.write("\n\n")
+
+    report_file.write("# Publikation\n\n")
+    report_file.write("| Plats, år | Antal |\n")
+    report_file.write("|----------|-------:|\n")
+
+    for place_year, count in counters["place_year"].most_common():
+        report_file.write(f"| {place_year} | {count} |\n")
 
     report_file.write("\n\n")
 
