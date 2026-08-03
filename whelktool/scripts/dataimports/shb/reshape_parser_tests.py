@@ -61,7 +61,9 @@ def test_parse_note_1936_1950_Bidrag_tidningsartikel():
     assert result["hasTitle"]["mainTitle"] == "Rikskanslerns titlar"
     assert result["responsibilityStatement"] == "Ahnlund, N."
     assert result["hasNote"][0]["label"] == "[Axel Oxenstierna.]"
-    assert result["partOf"][0]["label"] == "SvD 14/7 1939"
+    assert result["isPartOf"][0]["hasTitle"]["mainTitle"] == "SvD 14/7 1939"
+    print(result)
+    assert any((it["@id"] == "https://id.kb.se/term/saobf/ComponentPart") for it in result["category"])
 
 
 def test_parse_note_1936_1950_Bidrag():

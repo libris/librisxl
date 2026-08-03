@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from collections import Counter
 
+# Formatting of isPartOf: https://metadatabyran.kb.se/arbetsfloden/bidrag/instans---bidrag#h-Vardpublikationsomlokalentitet 
+
 USE_ANNOT = False
 
 SYNTAX_ERAS = {
@@ -86,6 +88,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     syntax_era = identify_syntax_era(instance)
 
     shb_part_num = instance.pop("part")[0]
+
     iri: str | None = None
     source: dict | None = None
 
@@ -103,6 +106,10 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     if "bibliography" in rec:
         rec["bibliography"] = [{"@id": it["@id"]} for it in rec["bibliography"]]
     del rec["marc:catalogingSource"]  # "Annan verksamhet"
+
+    # Remove category ("componentPart") - new categories will be added after parsing
+    instance.remove("category")
+
 
     ### Store work as a local entity in the instance ###
     if remainder:
@@ -215,40 +222,43 @@ def parse_note(instance: dict, syntax_era: str) -> None:
                 partof_note, is_component_part, is_main_entity_note=False
             )
 
-            part = {"@type": "Instance", "label": part_title}
+            part = {"@type": "PhysicalResource", "category": [{"@id": "https://id.kb.se/term/saobf/Print"}]}
 
             if part_name:
                 part["responsibilityStatement"] = part_name
             if part_title:
                 part["hasTitle"] = {"@type": "Title", "mainTitle": part_title}
             if part_subtitle:
-                instance["hasTitle"]["subtitle"] = part_subtitle
+                part["hasTitle"]["subtitle"] = part_subtitle
             if part_issn:
                 part["identifiedBy"] = {"@type": "ISSN", "value": part_issn}
-            if part_extent:
-                part["extent"] = [{"@type": "Extent", "label": part_extent}]
+            if is_component_part:
+                instance["isPartOf"] = [part]
+            else:
+                instance["seriesMembership"] = [part]
+
+            # Part-specific information
             if part_remainder:
                 if USE_ANNOT:
                     part["@annotation"] = {"comment": part_remainder}
                 else:
-                    part["label"] += part_remainder
+                    instance["part"] = part_remainder
                     # raise NotImplementedError  # TODO
+            if part_extent:
+                if "part" in instance:
+                    instance["part"] = instance["part"] + ", " + part_extent
+                else: 
+                    instance["part"] = part_extent
 
-            if is_component_part:
-                instance["partOf"] = [part]
-            else:
-                instance["seriesMembership"] = [part]
 
-        ### Clean up categories ###
+        ### Add categories ###
 
         # We can assume all titles are published and printed
-        instance.setdefault("category", []).append({"@id": "https://id.kb.se/term/saobf/Print"})
+        instance["category"] = [{"@id": "https://id.kb.se/term/saobf/Print"}]
 
         # Remove the category "componentPart" if there is nothing indicating it
-        if not is_component_part:
-            component = {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
-            if component in instance["category"]:
-                instance["category"].remove(component)
+        if is_component_part:
+            instance["category"].append({"@id": "https://id.kb.se/term/saobf/ComponentPart"})
             counters["various"].update(["Regular monograph"])
         else:
             counters["various"].update(["Component part"])
