@@ -6,20 +6,20 @@ import sys
 from pathlib import Path
 from collections import Counter
 
-# Formatting of isPartOf: https://metadatabyran.kb.se/arbetsfloden/bidrag/instans---bidrag#h-Vardpublikationsomlokalentitet 
+# Formatting of isPartOf: https://metadatabyran.kb.se/arbetsfloden/bidrag/instans---bidrag#h-Vardpublikationsomlokalentitet
 
 USE_ANNOT = False
 
 SYNTAX_ERAS = {
-    "1771-1874": "early", 
+    "1771-1874": "early",
     "1875-1900": "early",
     "1901-1920": "early",
     "1921-1935": "parenthesized",  # Serietillhörighet och källpublikation anges inom parentes. Sidor anges efter Ort/år
     "1936-1950": "parenthesized",  # -||- . -||-
-    "1951-1960": "parenthesized", # Serietillhörighet och källpublikation anges inom parentes. Sidor anges före Ort/år
-    "1961-1970": "dash_style", # Serietillhörighet och källpublikation anges efter ". -". Sidor anges efter Ort/år
-    "1971-1975": "isbd_transition", # Kolon ":" mellan huvudtitel och undertitel. Serietillhörighet anges inom parentes efter ". -". Bidrag: Källpublikation anges efter ". - I: "
-    "1976": "isbd", # -||- ". - " anges före nytt avsnitt (utgivning, omfång, serietillhörighet). -||- . -||- . ISSN anges
+    "1951-1960": "parenthesized",  # Serietillhörighet och källpublikation anges inom parentes. Sidor anges före Ort/år
+    "1961-1970": "dash_style",  # Serietillhörighet och källpublikation anges efter ". -". Sidor anges efter Ort/år
+    "1971-1975": "isbd_transition",  # Kolon ":" mellan huvudtitel och undertitel. Serietillhörighet anges inom parentes efter ". -". Bidrag: Källpublikation anges efter ". - I: "
+    "1976": "isbd",  # -||- ". - " anges före nytt avsnitt (utgivning, omfång, serietillhörighet). -||- . -||- . ISSN anges
 }
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
@@ -63,6 +63,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
 counters = {
     "properties": Counter(),
     "subjects": Counter(),
+    "place_year": Counter(),
     "extents": Counter(),
     "various": Counter(),
 }
@@ -87,7 +88,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     # Check which historical syntax group the record belongs to
     syntax_era = identify_syntax_era(instance)
 
-    shb_part_num = instance.pop("part")[0]
+    shb_host_num = instance.pop("part")[0]
 
     iri: str | None = None
     source: dict | None = None
@@ -108,8 +109,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     del rec["marc:catalogingSource"]  # "Annan verksamhet"
 
     # Remove category ("componentPart") - new categories will be added after parsing
-    instance.remove("category")
-
+    instance.pop("category", None)
 
     ### Store work as a local entity in the instance ###
     if remainder:
@@ -123,15 +123,15 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     instance["instanceOf"] = work
 
     ### Try to link local entities ###
-    link_local_entities(instance, rec, shb_part_num, bibliographies)
+    link_local_entities(instance, rec, shb_host_num, bibliographies)
 
     ### Parse notes ###
-    
+
     instance = parse_note(instance, syntax_era)
 
     ### Add subject headings to the instance ###
     sao_headings = add_sao_headings(
-        shb_part_num, start_year, publ_year, subject_mappings
+        shb_host_num, start_year, publ_year, subject_mappings
     )
 
     if sao_headings:
@@ -152,11 +152,6 @@ def parse_note(instance: dict, syntax_era: str) -> None:
     """Parse instance, extracting information about the main entity and its host publication or series membership.
     Updates the instance in place with the extracted information."""
 
-    # Assume it's a monograph until otherwise indicated
-    is_component_part = False
-
-    partof_note = None
-
     if "hasNote" not in instance:
         anomalies.append(
             f"Missing hasNote property - no information to parse\t{instance['@id']}\t{instance}"
@@ -164,138 +159,126 @@ def parse_note(instance: dict, syntax_era: str) -> None:
         return None
     else:
         assert len(instance["hasNote"]) == 1
-        original_note = instance.pop("hasNote")[0]["label"]
 
-        if original_note == "TABORT":
+        note = instance.pop("hasNote")[0]["label"].replace("—", "-").replace(" ", " ").replace("  ", " ")
+
+        if note == "TABORT":
             return None
 
-        note = original_note.replace("—", "-").replace(" ", " ").replace("  ", " ")
+        ### Parse note ###
+        structured_record = extract_structured_values(note, syntax_era, is_main_entity_note=True)
 
-        ### Distinguish part/article from publication/series ###
-
-        # Denoted by "I:" syntax (publication)
-        partof_mark = " - I:"
-        if partof_mark in note:
-            note, partof_note = note.split(partof_mark, 1)
-            is_component_part = True
-
-        # Denoted by parenthesis syntax (series or publication) at the end
-        elif note.endswith(")"):
-            note, partof_note = extract_partof_from_parenthesis(note, syntax_era)
-
-        ### Parse and store information about the main entity (instance) ###
-        name, title, subtitle, extent, issn, note_remainder, is_component_part = (
-            extract_structured_values(note, is_component_part)
-        )
-
-        instance["hasTitle"] = {"@type": "Title", "mainTitle": title}
-
-        if subtitle:
-            instance["hasTitle"]["subtitle"] = subtitle
-
-        if name:
-            instance["responsibilityStatement"] = name
-
-        if extent:
-            instance["extent"] = [{"@type": "Extent", "label": extent}]
-
-        if issn:
-            instance["identifiedBy"] = {"@type": "ISSN", "value": issn}
-
-        ### Check remaining parentheses for information about series/publichation membership ###
-        if note_remainder and not partof_note:
-            note_remainder, partof_note = extract_partof_from_parenthesis(
-                note_remainder, syntax_era
-            )
-
-        ### Parse and store information from the "part of" note (publication OR series as local entity) ###
-        if partof_note:
-            (
-                part_name,
-                part_title,
-                part_subtitle,
-                part_extent,
-                part_issn,
-                part_remainder,
-                is_component_part,
-            ) = extract_structured_values(
-                partof_note, is_component_part, is_main_entity_note=False
-            )
-
-            part = {"@type": "PhysicalResource", "category": [{"@id": "https://id.kb.se/term/saobf/Print"}]}
-
-            if part_name:
-                part["responsibilityStatement"] = part_name
-            if part_title:
-                part["hasTitle"] = {"@type": "Title", "mainTitle": part_title}
-            if part_subtitle:
-                part["hasTitle"]["subtitle"] = part_subtitle
-            if part_issn:
-                part["identifiedBy"] = {"@type": "ISSN", "value": part_issn}
-            if is_component_part:
-                instance["isPartOf"] = [part]
-            else:
-                instance["seriesMembership"] = [part]
-
-            # Part-specific information
-            if part_remainder:
-                if USE_ANNOT:
-                    part["@annotation"] = {"comment": part_remainder}
-                else:
-                    instance["part"] = part_remainder
-                    # raise NotImplementedError  # TODO
-            if part_extent:
-                if "part" in instance:
-                    instance["part"] = instance["part"] + ", " + part_extent
-                else: 
-                    instance["part"] = part_extent
-
-
-        ### Add categories ###
+        ### Store extracted information to the instance ###
 
         # We can assume all titles are published and printed
         instance["category"] = [{"@id": "https://id.kb.se/term/saobf/Print"}]
 
-        # Remove the category "componentPart" if there is nothing indicating it
-        if is_component_part:
-            instance["category"].append({"@id": "https://id.kb.se/term/saobf/ComponentPart"})
-            counters["various"].update(["Regular monograph"])
-        else:
-            counters["various"].update(["Component part"])
+        if structured_record.get("title"):
+            instance["hasTitle"] = {"@type": "Title", "mainTitle": structured_record["title"]}
+
+        if structured_record.get("subtitle"):
+            instance["hasTitle"]["subtitle"] = structured_record["subtitle"]
+
+        if structured_record.get("name"):
+            instance["responsibilityStatement"] = structured_record["name"]
+
+        if structured_record.get("extent"):
+            instance["extent"] = [{"@type": "Extent", "label": structured_record["extent"]}]
+
+        # Store information about the host publication or series membership
+        if structured_record.get("host"):
+            part = {
+                    "@type": "PhysicalResource",
+                    "category": [{"@id": "https://id.kb.se/term/saobf/Print"}],
+                }
+
+            if structured_record["host"].get("title"):
+                part["hasTitle"] = {"@type": "Title", "mainTitle": structured_record["host"]["title"]}
+
+            if structured_record["host"].get("name"):
+                part["responsibilityStatement"] = structured_record["host"]["name"]
+
+            if structured_record["host"].get("subtitle"):
+                part["hasTitle"]["subtitle"] = structured_record["host"]["subtitle"]
+
+            if structured_record["host"].get("issn"):
+                part["identifiedBy"] = {"@type": "ISSN", "value": structured_record["host"]["issn"]}
+
+            if structured_record["is_component_part"]:
+                instance["isPartOf"] = [part]
+                instance["category"].append(
+                {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
+            )
+                counters["various"].update(["Component part"])
+            else:
+                instance["seriesMembership"] = [part]
+                counters["various"].update(["Regular monograph"])
+
+            # Part-specific information
+            if structured_record["host"].get("remainder"):
+                if USE_ANNOT:
+                    part["@annotation"] = {"comment": structured_record["host"]["remainder"]}
+                else:
+                    instance["part"] = structured_record["host"]["remainder"]
+
+            if structured_record["host"].get("extent"):
+                if "part" in instance:
+                    instance["part"] = instance["part"] + ", " + structured_record["host"]["extent"]
+                else:
+                    instance["part"] = structured_record["host"]["extent"]
 
         ### Store remaining unstructured information as a note on the instance ###
-        if note_remainder:
+
+        remaining_note = ". ".join([structured_record["remainder"], structured_record["review_note"]])
+        if remaining_note:
             instance.setdefault("hasNote", []).append(
-                {"@type": "Note", "label": note_remainder}
+                {"@type": "Note", "label": remaining_note}
             )
 
         ### Finally, for backup, store the full original OCR'd note as an instance note ###
-        if original_note:
+        if note:
             instance.setdefault("hasNote", []).append(
                 {
                     "@type": "Note",
-                    "label": f"Fullständig beskrivning (OCR) ur SHBD: {original_note}",
+                    "label": f"Fullständig beskrivning (OCR) ur SHBD: {note}",
                 }
             )
 
-    return instance        
+    return instance
 
 
 def extract_structured_values(
-    note: dict, is_component_part: bool, is_main_entity_note: bool = True
+    note: dict, syntax_era: str, is_main_entity_note: bool 
 ) -> tuple:
     """Extract information about the main entity from the note, including name, title, subtitle, extent, ISSN, and any remaining unstructured information.
-    Returns a tuple of (name, title, subtitle, extent, ISSN, remainder, is_component_part).
+    Returns a dictionary containing the extracted values.
     """
+    is_component_part = False
+    structured_record = {}
+    host_note = ""
 
-    # Extrct extent (pages, leaves)
-    extent, remainder, is_component_part = extract_extent(note, is_component_part)
 
-    # Extract ISSN - but only from embedded series/publication info
-    if not is_main_entity_note:
+    # Extract information about reviews, when they occur to the right of a prenthesis
+    if is_main_entity_note:
+        review_note, remainder = extract_reviews(note)
+    else:
+        review_note, remainder = None, note
+
+    # Distinguish part/article from publication/series
+    if " - I:" in remainder:
+        remainder, host_note = remainder.split(" - I:", 1)
+        is_component_part = True
+    elif remainder.endswith(")"):
+        remainder, host_note = extract_partof_from_parenthesis(remainder, syntax_era)
+
+    # Extract extent (pages, leaves)
+    extent, remainder, is_component_part = extract_extent(remainder,is_component_part)
+
+    # Extract ISSN from embedded series/publication info
+    if not is_main_entity_note and syntax_era == "isbd":
         issn = extract_issn(remainder)
     else:
-        issn = ""
+        issn = None
 
     # Extract contributors
     contributors, remainder = extract_contributors(remainder)
@@ -305,15 +288,81 @@ def extract_structured_values(
         remainder, is_main_entity_note
     )
 
-    return (
-        contributors,
-        title.strip(),
-        subtitle.strip() or None,
-        extent or None,
-        issn or None,
-        remainder.strip() or None,
-        is_component_part,
+    # If there is not already a host note, check remaining parentheses for information about series/publichation membership
+    if remainder and not host_note:
+        remainder, host_note = extract_partof_from_parenthesis(
+            remainder, syntax_era
+        )
+
+    structured_record.update(
+        {
+            "contributors": contributors.strip() if contributors else None,
+            "title": title.strip() if title else None,
+            "subtitle": subtitle.strip() if subtitle else None,
+            "extent": extent.strip() if extent else None,
+            "issn": issn.strip() if issn else None,
+            "review_note": review_note.strip() if review_note else None,
+            "remainder": remainder.strip().strip(".") if remainder else None,
+            "is_component_part": is_component_part,
+        }
     )
+    
+    # Extract informationfrom about host publication or series
+    if is_main_entity_note and host_note:
+        structured_record["host"] = extract_structured_values(
+            host_note, syntax_era, is_main_entity_note=False
+        )
+
+    _place, _year, _experimental_remainder = extract_place_year(remainder)
+
+    return structured_record
+
+
+def extract_place_year(remainder: str) -> tuple[str, str, str]:
+    """Extract place and year from the remainder of the note, if present.
+    Returns a tuple of (place, year, remainder)."""
+
+    place, year = None, None
+
+    if remainder:
+        PLACE_YEAR_RE = re.compile(
+            r"""
+            ^
+            (?P<place>[A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]+?)
+            ,?
+            \s+
+            (?P<year>\d{4})
+            $
+            """,
+            re.X,
+        )
+
+        match = PLACE_YEAR_RE.search(remainder)
+        if match:
+            year = match.group("year")
+
+            if 1771 <= int(year) <= 1976:
+                remainder = remainder[: match.start()].rstrip()
+                place = match.group("place")
+                counters["various"].update(["Place and year extracted"])
+                counters["place_year"].update([f"{place}, {year}"])
+
+    return place, year, remainder
+
+def extract_reviews(note: str) -> tuple[str, str]:
+    """Extract review information from the note, if present.
+    Returns a tuple of (review_note, remainder)."""
+
+    match = re.search(r"\bRec\.\s+i\b", note)
+
+    if match:
+        remainder = note[: match.start()].rstrip()
+        review_note = note[match.start() :]
+    else:
+        remainder = note
+        review_note = None
+
+    return review_note, remainder
 
 
 def extract_contributors(remainder: dict) -> tuple[str, str]:
@@ -446,11 +495,11 @@ def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
         elif note[i] == "(":
             depth -= 1
             if depth == 0:
-                partof_note = note[i + 1 : end]
+                host_note = note[i + 1 : end]
                 remainder = (note[:i] + note[end + 1 :]).strip()
                 # If it doesn't contain more than one charatcer and at least one is alphabetic, it's probbably not a title
-                if len(partof_note) > 1 and any(char.isalpha() for char in partof_note):
-                    return remainder, partof_note
+                if len(host_note) > 1 and any(char.isalpha() for char in host_note):
+                    return remainder, host_note
 
     # Unbalanced parentheses
     return note, None
@@ -532,13 +581,13 @@ def extract_issn(value: str) -> str:
 ### Functions for enriching the records ###
 
 
-def add_sao_headings(shb_part_num, start_year, publ_year, subject_mappings) -> list:
+def add_sao_headings(shb_host_num, start_year, publ_year, subject_mappings) -> list:
     """Add subject headings to the work based on the SHB part number and publication years.
     Returns a list of subject references, or None if no subjects found."""
 
     years_key = f"{start_year}-{publ_year}" if start_year else publ_year
     if rownummap := subject_mappings.get(years_key):
-        if subjectrefs := rownummap.get(shb_part_num):  # TODO: opt + 'a' ...
+        if subjectrefs := rownummap.get(shb_host_num):  # TODO: opt + 'a' ...
             work_subjects = [{"@id": s} for s in subjectrefs]
             counters["subjects"].update(subjectrefs)
 
@@ -546,7 +595,7 @@ def add_sao_headings(shb_part_num, start_year, publ_year, subject_mappings) -> l
     else:
         counters["subjects"].update(["Missing SHB reference!"])
         anomalies.append(
-            f"Missing SHB reference\tSHB part num: {shb_part_num} Start year: {start_year} Publ year: {publ_year}"
+            f"Missing SHB reference\tSHB part num: {shb_host_num} Start year: {start_year} Publ year: {publ_year}"
         )
 
         # if USE_ANNOT and iri:
@@ -673,7 +722,11 @@ def identify_syntax_era(instance) -> str:
 
     # Extract information about the source SHB volume
     shb_volume_title = (
-        instance.get("isPartOf", [])[0].get("hasTitle", [])[0].get("mainTitle", "").replace("Svensk historisk bibliografi", "").strip()
+        instance.get("isPartOf", [])[0]
+        .get("hasTitle", [])[0]
+        .get("mainTitle", "")
+        .replace("Svensk historisk bibliografi", "")
+        .strip()
     )
     counters["various"].update([f"VOLUME\t{shb_volume_title}"])
 
