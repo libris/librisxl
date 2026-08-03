@@ -160,13 +160,20 @@ def parse_note(instance: dict, syntax_era: str) -> None:
     else:
         assert len(instance["hasNote"]) == 1
 
-        note = instance.pop("hasNote")[0]["label"].replace("—", "-").replace(" ", " ").replace("  ", " ")
+        note = (
+            instance.pop("hasNote")[0]["label"]
+            .replace("—", "-")
+            .replace(" ", " ")
+            .replace("  ", " ")
+        )
 
         if note == "TABORT":
             return None
 
         ### Parse note ###
-        structured_record = extract_structured_values(note, syntax_era, is_main_entity_note=True)
+        structured_record = extract_structured_values(
+            note, syntax_era, is_main_entity_note=True
+        )
 
         ### Store extracted information to the instance ###
 
@@ -174,7 +181,10 @@ def parse_note(instance: dict, syntax_era: str) -> None:
         instance["category"] = [{"@id": "https://id.kb.se/term/saobf/Print"}]
 
         if structured_record.get("title"):
-            instance["hasTitle"] = {"@type": "Title", "mainTitle": structured_record["title"]}
+            instance["hasTitle"] = {
+                "@type": "Title",
+                "mainTitle": structured_record["title"],
+            }
 
         if structured_record.get("subtitle"):
             instance["hasTitle"]["subtitle"] = structured_record["subtitle"]
@@ -183,17 +193,22 @@ def parse_note(instance: dict, syntax_era: str) -> None:
             instance["responsibilityStatement"] = structured_record["name"]
 
         if structured_record.get("extent"):
-            instance["extent"] = [{"@type": "Extent", "label": structured_record["extent"]}]
+            instance["extent"] = [
+                {"@type": "Extent", "label": structured_record["extent"]}
+            ]
 
         # Store information about the host publication or series membership
         if structured_record.get("host"):
             part = {
-                    "@type": "PhysicalResource",
-                    "category": [{"@id": "https://id.kb.se/term/saobf/Print"}],
-                }
+                "@type": "PhysicalResource",
+                "category": [{"@id": "https://id.kb.se/term/saobf/Print"}],
+            }
 
             if structured_record["host"].get("title"):
-                part["hasTitle"] = {"@type": "Title", "mainTitle": structured_record["host"]["title"]}
+                part["hasTitle"] = {
+                    "@type": "Title",
+                    "mainTitle": structured_record["host"]["title"],
+                }
 
             if structured_record["host"].get("name"):
                 part["responsibilityStatement"] = structured_record["host"]["name"]
@@ -202,13 +217,16 @@ def parse_note(instance: dict, syntax_era: str) -> None:
                 part["hasTitle"]["subtitle"] = structured_record["host"]["subtitle"]
 
             if structured_record["host"].get("issn"):
-                part["identifiedBy"] = {"@type": "ISSN", "value": structured_record["host"]["issn"]}
+                part["identifiedBy"] = {
+                    "@type": "ISSN",
+                    "value": structured_record["host"]["issn"],
+                }
 
             if structured_record["is_component_part"]:
                 instance["isPartOf"] = [part]
                 instance["category"].append(
-                {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
-            )
+                    {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
+                )
                 counters["various"].update(["Component part"])
             else:
                 instance["seriesMembership"] = [part]
@@ -217,19 +235,34 @@ def parse_note(instance: dict, syntax_era: str) -> None:
             # Part-specific information
             if structured_record["host"].get("remainder"):
                 if USE_ANNOT:
-                    part["@annotation"] = {"comment": structured_record["host"]["remainder"]}
+                    part["@annotation"] = {
+                        "comment": structured_record["host"]["remainder"]
+                    }
                 else:
                     instance["part"] = structured_record["host"]["remainder"]
 
             if structured_record["host"].get("extent"):
                 if "part" in instance:
-                    instance["part"] = instance["part"] + ", " + structured_record["host"]["extent"]
+                    instance["part"] = (
+                        instance["part"] + ", " + structured_record["host"]["extent"]
+                    )
                 else:
                     instance["part"] = structured_record["host"]["extent"]
 
         ### Store remaining unstructured information as a note on the instance ###
 
-        remaining_note = ". ".join([structured_record["remainder"], structured_record["review_note"]])
+        remaining_note = (
+            ". ".join(
+                part
+                for part in (
+                    structured_record.get("remainder"),
+                    structured_record.get("review_note"),
+                )
+                if part
+            )
+            or None
+        )
+
         if remaining_note:
             instance.setdefault("hasNote", []).append(
                 {"@type": "Note", "label": remaining_note}
@@ -248,7 +281,7 @@ def parse_note(instance: dict, syntax_era: str) -> None:
 
 
 def extract_structured_values(
-    note: dict, syntax_era: str, is_main_entity_note: bool 
+    note: dict, syntax_era: str, is_main_entity_note: bool
 ) -> tuple:
     """Extract information about the main entity from the note, including name, title, subtitle, extent, ISSN, and any remaining unstructured information.
     Returns a dictionary containing the extracted values.
@@ -256,7 +289,6 @@ def extract_structured_values(
     is_component_part = False
     structured_record = {}
     host_note = ""
-
 
     # Extract information about reviews, when they occur to the right of a prenthesis
     if is_main_entity_note:
@@ -272,7 +304,7 @@ def extract_structured_values(
         remainder, host_note = extract_partof_from_parenthesis(remainder, syntax_era)
 
     # Extract extent (pages, leaves)
-    extent, remainder, is_component_part = extract_extent(remainder,is_component_part)
+    extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
 
     # Extract ISSN from embedded series/publication info
     if not is_main_entity_note and syntax_era == "isbd":
@@ -290,9 +322,7 @@ def extract_structured_values(
 
     # If there is not already a host note, check remaining parentheses for information about series/publichation membership
     if remainder and not host_note:
-        remainder, host_note = extract_partof_from_parenthesis(
-            remainder, syntax_era
-        )
+        remainder, host_note = extract_partof_from_parenthesis(remainder, syntax_era)
 
     structured_record.update(
         {
@@ -306,7 +336,7 @@ def extract_structured_values(
             "is_component_part": is_component_part,
         }
     )
-    
+
     # Extract informationfrom about host publication or series
     if is_main_entity_note and host_note:
         structured_record["host"] = extract_structured_values(
@@ -348,6 +378,7 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
                 counters["place_year"].update([f"{place}, {year}"])
 
     return place, year, remainder
+
 
 def extract_reviews(note: str) -> tuple[str, str]:
     """Extract review information from the note, if present.
