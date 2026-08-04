@@ -342,7 +342,7 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
     if extent:
         structured_record["extent"] = extent.strip()
     if remaining_note:
-        structured_record["remaining_note"] = remaining_note.strip()
+        structured_record["remaining_note"] = remaining_note.rstrip(" .,-;")
 
     # Parse and store information about host publication or series membership
     if host_note:
@@ -371,10 +371,13 @@ def extract_host_values(
     extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
 
     if "." in remainder:
-        remainder_parts = remainder.split(".")
-        if len(remainder_parts) > 1:
-            probably_part = " ".join(part.strip() for part in remainder_parts[1:])
-            remainder = remainder_parts[0]
+        remainder_split = remainder.split(".")
+        if len(remainder_split) > 1:
+            probably_part = " ".join([part for part in remainder_split[1:] if any(c.isdigit() for c in part)])
+            if probably_part:
+                remainder = remainder_split[0]
+            else:
+                probably_part = None
 
     # Extract part number if present
     if probably_part:
@@ -397,7 +400,7 @@ def extract_host_values(
     if extent:
         host["extent"] = extent.strip()
     if part_remainder:
-        host["remaining_note"] = part_remainder
+        host["remaining_note"] = part_remainder.strip()
 
     return host
 
@@ -421,12 +424,12 @@ def extract_part_number(remainder: str) -> str:
     match = PART_INFO_RE.match(remainder)
 
     if match:
-        number = match.group("part")
+        number = match.group("part").rstrip(" ,.;-")
         remainder = match.group("title").rstrip(" ,.;-")
 
         return number, remainder
 
-    return remainder, None
+    return None, remainder
 
 
 def extract_place_year(remainder: str) -> tuple[str, str, str]:
