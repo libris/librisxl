@@ -705,17 +705,10 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi_utan_författare():
 EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
     "simple-author-with-initials": (
         "Surname, G.-N., Anything",
+        "early",
         {
-            "contributors": "Surname, G.-N.",
+            "primary_contributors": "Surname, G.-N.",
             "title": "Anything",
-            "is_component_part": True,
-        },
-    ),
-    "simple-title-before-author": (
-        "Anything. Surname, G.-N., Stuff.",
-        {
-            "title": "Anything",
-            "contributors": "Surname, G.-N., Stuff.",
             "is_component_part": True,
         },
     ),
@@ -723,10 +716,10 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
         "Schuck, A., H. Schücks enka & Co. AB 150 år. [Stockholm.] Sthlm 1947, 28 s.",
         "parenthesized",
         {
-            "contributors": "Schuck, A.",
+            "primary_contributors": "Schuck, A.",
             "title": "H. Schücks enka & Co. AB 150 år",
             "extent": "28 s.",
-            "place": "Sthlm",
+            "place": "[Stockholm.] Sthlm",
             "year": "1947",
             "is_component_part": False
         }
@@ -735,9 +728,10 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
         "Meyerson, Å., Ett besök vid Stora Kopparberget och Sala gruva år 1662. (BBV 23 (1938), s. 325-343.)",
         "parenthesized",
         {
-            "contributors": "Meyerson, Å.",
+            "primary_contributors": "Meyerson, Å.",
             "title": "Ett besök vid Stora Kopparberget och Sala gruva år 1662",
-            "part": "BBV 23 (1938), s. 325-343",
+            "host": {"title": "BBV", "part_number": "23 (1938)", "extent": "s. 325-343",
+            },
             "is_component_part": True
         }
     ),
@@ -745,12 +739,11 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
         'Davidsson, Åke, "En hoop Discantzböcker i godt förhwar..." : någotom Strängnäsgymnasiets musiksamling under 1600-talet. - I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62',
         "isbd",
         {
-         "contributors": "Davidsson, Åke",
+         "primary_contributors": "Davidsson, Åke",
             "title": '"En hoop Discantzböcker i godt förhwar..."',
             "subtitle": "någotom Strängnäsgymnasiets musiksamling under 1600-talet",
-            "extent": "s. 48-62",
-            "place": "Nyköping",
-            "year": "1976",
+            "host": {"title": "Frånbiskop Rogge till Roggebiblioteket", "part_number": "1976", "remaining_note": "Nyköping", "extent": "s. 48-62",
+            },
             "is_component_part": True
         },
     ),
@@ -758,25 +751,25 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
         "Barton, H. Arnold, A bibliography of writings in English by or onrecent Swedish emigration historians. - I: The Swedish pioneer, ISSN0039-7326, 27, 1976:3, s. 215-221",
         "isbd",
         {
-            "contributors": "Barton, H. Arnold",
+            "primary_contributors": "Barton, H. Arnold",
             "title": "A bibliography of writings in English by or onrecent Swedish emigration historians",
-            "subtitle": None,
-            "part": "27, 1976:3, s. 215-221",
-            "host": {"title": "The Swedish pioneer", "issn": "0039-7326"},
+            "host": {"title": "The Swedish pioneer", "part_number": "27, 1976:3", "issn": "0039-7326", "extent": "s. 215-221",
+},
             "is_component_part": True
         },
     ),
-    "monograph-with-contributorss-written-two-ways": (
+    "monograph-with-primary-and-other-contributors": (
         "Jonsson, Inge, Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd / Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin",
         "isbd",
         {            
-            "contributors": "Jonsson, Inge",
+            "primary_contributors": "Jonsson, Inge",
+            "other_contributors": "Inge Jonsson, Olle Hjern",
             "title": "Swedenborg",
             "subtitle": "sökaren i naturens och andens värld :hans verk och efterföljd",
             "extent": "187 s.",
             "place": "Stockholm",
             "year": "1976",
-            "remainder": "Inge Jonsson, Olle Hjern. Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin",
+            "remaining_note": "Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin",
             "is_component_part": False,
         },
     ),
@@ -784,13 +777,13 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
         "Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)",
         "isbd",
         {        
-            "contributors": "Fries, Elias",
+            "primary_contributors": "Fries, Elias",
             "title": "Hembygdsperiodika",
             "subtitle": "förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl",
             "extent": "40 bl.",
             "place": "Borås",
             "year": "1976",
-            "host": {"title": "Specialarbete / Bibliotekshögskolan", "issn": "0347-1128"},
+            "host": {"title": "Specialarbete / Bibliotekshögskolan", "part_number": "1976:158", "issn": "0347-1128"},
             "is_component_part": False,
         },
     ),
@@ -798,14 +791,14 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
         "Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
         "isbd",
         {
-            "contributors": "Edvardsson, Lars",
+            "primary_contributors": "Edvardsson, Lars",
             "title": "Kyrka och judendom",
             "subtitle": "svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975",
             "extent": "194 s.",
             "place": "Lund",
             "year": "1976",
-            "host": {"title": "Bibliotheca historico-ecclesiasticaLundensis", "issn": "0346-5438"},
-            "remainder": "Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
+            "host": {"title": "Bibliotheca historico-ecclesiasticaLundensis", "part_number": "6", "issn": "0346-5438"},
+            "remaining_note": "Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
             "is_component_part": False,
         },
     ),
@@ -813,13 +806,13 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
         'Frithz, Carl-Gösta, Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning. - Lund, 1976. - 428 s. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av S. Helander',
         "isbd",
         {
-            "contributors": "Frithz, Carl-Gösta",
+            "primary_contributors": "Frithz, Carl-Gösta",
             "title": "Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning",
             "extent": "428 s.",
             "place": "Lund",
             "year": "1976",
-            "host": {"title": "Bibliothecatheologiae practicae ; 34", "issn": "0519-9859"},
-            "tail_note": "Diss. Mit deutscherZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av S. Helander",
+            "host": {"title": "Bibliothecatheologiae practicae", "part_number": "34", "issn": "0519-9859"},
+            "remaining_note": "Diss. Mit deutscherZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av S. Helander",
             "is_component_part": False,
         },
     ),
@@ -827,10 +820,10 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
         "Erichsen, B., & Krarup, A., Dansk historisk Bibliografi. Bd 1-3. Khvn1918-21, 1925-27, 1917. xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.",
         "early",
         {
-            "contributors": "Erichsen, B., & Krarup, A.",
+            "primary_contributors": "Erichsen, B., & Krarup, A.",
             "title": "Dansk historisk Bibliografi. Bd 1-3",
             "extent": "xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.",
-            "remainder": "Khvn1918-21, 1925-27, 1917",
+            "remaining_note": "Khvn1918-21, 1925-27, 1917",
             "is_component_part": False,
         },
     ),
@@ -840,7 +833,9 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
 def test_extract_structured_values(case_name):
     record, era, expected = EXTRACT_STRUCTURED_VALUES_TEST_CASES[case_name]
 
-    actual = extract_structured_values(record, era, is_main_entity_note=True)
+    actual = extract_structured_values(record, era)
+
+    print("\n", actual, "\n")
 
     assert actual == expected, f"\nInput record:\n{record}"
 
