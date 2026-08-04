@@ -27,7 +27,7 @@ DASH_ERAS = ["dash_style", "isbd_transition", "isbd"]
 
 ### Extreme regex ###
 EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl)\.", re.I)
-COMPONENT_EXTENT = re.compile(r"\b((?:s|bl)\.?)\s*(\d+)(?:-(\d+))?(?:\s+(ill\.?))?")
+COMPONENT_EXTENT = re.compile(r"\b((?:s|bl|pl)\.?)\s*(\d+)(?:-(\d+))?(?:\s*:?\s+(ill\.?))?")
 MONOGRAPH_EXTENT_RE = re.compile(
     r"""
     (?:
@@ -37,9 +37,9 @@ MONOGRAPH_EXTENT_RE = re.compile(
             |\d+                  # 806
             |\b[ivxlc]{2,}\b      # Roman numerals - mostly used for shorter sections
         )
-        (?:,\s*)?
+        (?:\s*(?:,|\+)\s*)?
     )+
-    \s*(?:s|bl)\.?
+    \s*(?:s|bl|pl)\.?
 
     (?:
         \s*\+\s*
@@ -52,7 +52,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
             )
             (?:,\s*)?
         )+
-        \s*(?:s|bl)\.?
+        \s*(?:s|bl|pl)\.?
     )*
 
     (?:\s*:\s*ill\.?)?
@@ -310,6 +310,8 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
     # If there is not already a host note, check remaining parentheses for information about series/publichation membership
     if remainder and not host_note:
         remainder, host_note = extract_partof_from_parenthesis(remainder, syntax_era)
+        # TODO Possibly look at interpreting the two rightmost remainder.split(".") as series/publication for the pre-parenthesis era
+        # See tests for syntax and examples
 
     place, year, remainder = extract_place_year(remainder)
 
@@ -351,7 +353,6 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
         )
 
     structured_record["is_component_part"] = is_component_part
-    print("Hey hey! \n", structured_record, {"\n"})
     return structured_record
 
 
@@ -370,7 +371,7 @@ def extract_host_values(
     # Extract extent (pages, leaves)
     extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
 
-    if "." in remainder:
+    if ". " in remainder:
         remainder_split = remainder.split(".")
         if len(remainder_split) > 1:
             probably_part = " ".join([part for part in remainder_split[1:] if any(c.isdigit() for c in part)])
@@ -389,18 +390,19 @@ def extract_host_values(
     # Extract title and subtitle
     title, _subtitle, publisher, remainder = extract_title_and_subtitle(remainder, False)
 
+    if part_remainder:
+        title = ". ".join(part for part in [title.strip().removesuffix(".").removesuffix(","), part_remainder.strip()])
+
     if title:
-        host["title"] = title.strip().removesuffix(".").removesuffix(",")
+        host["title"] = title
     if publisher:
-        host["publisher"] = publisher
+        host["publisher"] = publisher.strip()
     if issn:
         host["issn"] = issn.strip()
     if part_number:
         host["part_number"] = part_number.strip()
     if extent:
         host["extent"] = extent.strip()
-    if part_remainder:
-        host["remaining_note"] = part_remainder.strip()
 
     return host
 
@@ -539,22 +541,14 @@ def extract_title_and_subtitle(
     """
 
     subtitle = ""
-    contributor_area = ""
+    contributors = ""
 
     # This record is ISBD-like
     if ". -" in remainder:
         title_and_contributor_area, remainder = remainder.split(". -", 1)
-        # If the the title is followed by a " / ", signalling the contributor is next
-        if " / " in title_and_contributor_area:
-            counters["various"].update(["STRUCTURE\t Title / Author. - Publication"])
-            title = title_and_contributor_area
-            # TODO Do we want to fetch the author(s) for additional responsibilityStatememnt from here? 
-            # Or just keep it in the title, as this is uncommon (a few hundred) in SHB.
-            title, contributor_area = title_and_contributor_area.split(" / ", 1)
-            #remainder = author_area + ". -" + remainder
 
         # If the title is directly followed by a ". -", signalling other publication information is next
-        elif re.search(r"[0-9].?\(", title_and_contributor_area):
+        if re.search(r"[0-9].?\(", title_and_contributor_area):
             counters["various"].update(
                 ["STRUCTURE\t note doesn't start with author/title'"]
             )
@@ -590,6 +584,11 @@ def extract_title_and_subtitle(
                 pre_remainder = posttitle.strip()
             remainder = pre_remainder + ". " + remainder
 
+    # If the the title is followed by a " / ", signalling the contributor is next
+    if " / " in title:
+        counters["various"].update(["STRUCTURE\t Title / Author"])
+        title, contributors = title.split(" / ", 1)
+
     # Divide title into title and subtitle
     if " : " in title:
         title, subtitle = title.split(" : ", 1)
@@ -597,7 +596,7 @@ def extract_title_and_subtitle(
     title = title.strip().removesuffix(".").removesuffix(",")
     subtitle = subtitle.strip().strip(".")
 
-    return title, subtitle, contributor_area, remainder
+    return title, subtitle, contributors, remainder
 
 
 def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
