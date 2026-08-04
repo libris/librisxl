@@ -1,10 +1,9 @@
 import pytest
-
 from reshape_shb import (
-    parse_note,
-    extract_structured_values,
-    extract_partof_from_parenthesis,
     extract_extent,
+    extract_partof_from_parenthesis,
+    extract_structured_values,
+    parse_note,
 )
 
 ### End-to-end parsing ###
@@ -13,12 +12,13 @@ from reshape_shb import (
 # Parse out series/partOf info for older descriptions (no parenthesis or "I:" to go by)
 # Identify contributions (bidrag) when there is no extent to go by
 
+
 def test_parse_note_1771_1874_Bidrag_tidningsartikel():
     instance = {
         "hasNote": [
             {
                 "pattern": "Efternamn, Förnamn [initial]., Titel. Publ-titel YYYY, nr (DD/MM).",
-                "label": "Holm, C. J., Också några ord om slaget vid Porosalmiden 12 juni 1789. Svenska Tidningen 1853, N:o 72 (81/8),"
+                "label": "Holm, C. J., Också några ord om slaget vid Porosalmiden 12 juni 1789. Svenska Tidningen 1853, N:o 72 (81/8),",
             }
         ]
     }
@@ -31,12 +31,19 @@ def test_parse_note_1771_1874_Bidrag_tidningsartikel():
     )
     assert result["responsibilityStatement"] == "Holm, C. J."
     assert result["hasNote"][0]["label"] == "Svenska Tidningen 1853, N:o 72 (81/8),"
+    assert any(
+        (it["@id"] == "https://id.kb.se/term/saobf/ComponentPart")
+        for it in result["category"]
+    )
+
 
 def test_parse_note_1875_1900_Bidrag_tidningsartikel():
     instance = {
         "hasNote": [
-            {"pattern": "Efternamn, Förnamn [initial]., Titel. Publ-titel YYYY, nr.",
-             "label": "Hagemann, A., Et historisk Minde i Höifjeldet. [1657.] Aftenposten (Kristiania) 1897, N:r 186."}
+            {
+                "pattern": "Efternamn, Förnamn [initial]., Titel. Publ-titel YYYY, nr.",
+                "label": "Hagemann, A., Et historisk Minde i Höifjeldet. [1657.] Aftenposten (Kristiania) 1897, N:r 186.",
+            }
         ]
     }
 
@@ -44,14 +51,23 @@ def test_parse_note_1875_1900_Bidrag_tidningsartikel():
 
     assert result["hasTitle"]["mainTitle"] == "Et historisk Minde i Höifjeldet"
     assert result["responsibilityStatement"] == "Hagemann, A."
-    assert result["hasNote"][0]["label"] == "[1657.] Aftenposten (Kristiania) 1897, N:r 186."
+    assert (
+        result["hasNote"][0]["label"]
+        == "[1657.] Aftenposten (Kristiania) 1897, N:r 186."
+    )
+
+    assert any(
+        (it["@id"] == "https://id.kb.se/term/saobf/ComponentPart")
+        for it in result["category"]
+    )
+
 
 def test_parse_note_1936_1950_Bidrag_tidningsartikel():
     instance = {
         "hasNote": [
             {
                 "pattern": "Efternamn, Förnamn [initial]., Titel. undertitel. (Publ-titel DD/MM YYYY.)",
-                "label": "Ahnlund, N., Rikskanslerns titlar. [Axel Oxenstierna.] (SvD 14/7 1939.)"
+                "label": "Ahnlund, N., Rikskanslerns titlar. [Axel Oxenstierna.] (SvD 14/7 1939.)",
             }
         ]
     }
@@ -62,8 +78,11 @@ def test_parse_note_1936_1950_Bidrag_tidningsartikel():
     assert result["responsibilityStatement"] == "Ahnlund, N."
     assert result["hasNote"][0]["label"] == "[Axel Oxenstierna.]"
     assert result["isPartOf"][0]["hasTitle"]["mainTitle"] == "SvD 14/7 1939"
-    print(result)
-    assert any((it["@id"] == "https://id.kb.se/term/saobf/ComponentPart") for it in result["category"])
+
+    assert any(
+        (it["@id"] == "https://id.kb.se/term/saobf/ComponentPart")
+        for it in result["category"]
+    )
 
 
 def test_parse_note_1936_1950_Bidrag():
@@ -71,49 +90,65 @@ def test_parse_note_1936_1950_Bidrag():
         "hasNote": [
             {
                 "pattern": "Efternamn, Förnamn [initial]., Titel. undertitel. (Publ-titel nr (årtal), sid.)",
-                "label": "Walde, O., Bielkeättens insatser i svensk bibliofili. Med särskild hänsyn till Bielkebiblioteket på Skokloster. (NTBB 27 (1940), s. 1-45.)"
+                "label": "Walde, O., Bielkeättens insatser i svensk bibliofili. Med särskild hänsyn till Bielkebiblioteket på Skokloster. (NTBB 27 (1940), s. 1-45.)",
             }
         ]
     }
 
     result = parse_note(instance, "parenthesized")
 
-    assert result["category"] == None
-    assert result["hasTitle"]["mainTitle"] == "Bielkeättens insatser i svensk bibliofili"
-    assert result["hasTitle"]["subtitle"] == "Med särskild hänsyn till Bielkebiblioteket på Skokloster"
+    assert (
+        result["hasTitle"]["mainTitle"] == "Bielkeättens insatser i svensk bibliofili"
+    )
     assert result["responsibilityStatement"] == "Walde, O."
-    assert result["extent"] == None
-    assert result["partOf"] == None
-    assert result["seriesMembership"] == None
-    assert result["hasNote"] == None
+    assert result["isPartOf"][0]["hasTitle"]["mainTitle"] == "NTBB 27 (1940)"
+    assert result["part"] == "s. 1-45"
+    assert (
+        result["hasNote"][0]["label"]
+        == "Med särskild hänsyn till Bielkebiblioteket på Skokloster."
+    )
+    assert any(
+        (it["@id"] == "https://id.kb.se/term/saobf/ComponentPart")
+        for it in result["category"]
+    )
 
 
 def test_parse_note_1936_1950_Monografi():
     instance = {
         "hasNote": [
             {
-                "label": "Efternamn, Förnamn [initial]., Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)"
+                "pattern": "Efternamn, Förnamn, Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)",
+                "label": "Weibull, C, Händelser och utvecklingslinjer. Historiska studier. Lund 1949,  254 s. (Göteborgs högskola. Forskningar och föreläsningar.) Rec. i HT 70 (1950), s. 69-70 av T. [T:son] H[öjer]; i SvD 21/11 1949 av  dens.; i SDS 25/11 1949 av K.-E. L[öfqvist]; i FT 148 (1950), s. 59-61 av 0.  M[usteli]n; i StT 1/12 1949 av S. U. Palme; i GHT 7/12 1949 av K[nut] P[etersson]. ",
             }
         ]
     }
 
     result = parse_note(instance, "parenthesized")
 
-    assert result["category"] == None
-    assert result["hasTitle"]["mainTitle"] == None
-    assert result["hasTitle"]["subtitle"] == None
-    assert result["responsibilityStatement"] == None
-    assert result["extent"] == None
-    assert result["partOf"] == None
-    assert result["seriesMembership"] == None
-    assert result["hasNote"] == None
+    assert (
+        result["hasTitle"]["mainTitle"]
+        == "Händelser och utvecklingslinjer. Historiska studier"
+    )
+    assert result["responsibilityStatement"] == "Weibull, C"
+    assert result["publication"][0]["year"] == "1949"
+    assert result["publication"][0]["place"][0]["label"] == "Lund"
+    assert result["extent"][0]["label"] == "254 s."
+    assert (
+        result["seriesMembership"][0]["hasTitle"]["mainTitle"]
+        == "Göteborgs högskola. Forskningar och föreläsningar"
+    )
+    assert not any(
+        (it["@id"] == "https://id.kb.se/term/saobf/ComponentPart")
+        for it in result["category"]
+    )
 
 
 def test_parse_note_1901_1920_Bidrag_tidningsartikel():
     instance = {
         "hasNote": [
             {
-                "label": "Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel YYYY, numrering (DD/MM)."
+                "pattern": "Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel YYYY, numrering (DD/MM).",
+                "label": "Stridsberg, G., En svensk kulturbild. Sveriges historia och kammararkivets traditioner. Svenska Dagbladet 1908, N:o 127 (n/6).",
             }
         ]
     }
@@ -121,9 +156,9 @@ def test_parse_note_1901_1920_Bidrag_tidningsartikel():
     result = parse_note(instance, "early")
 
     assert result["category"] == None
-    assert result["hasTitle"]["mainTitle"] == None
+    assert result["hasTitle"]["mainTitle"] == "En svensk kulturbild"
     assert result["hasTitle"]["subtitle"] == None
-    assert result["responsibilityStatement"] == None
+    assert result["responsibilityStatement"] == "Stridsberg, G."
     assert result["extent"] == None
     assert result["partOf"] == None
     assert result["seriesMembership"] == None
@@ -670,144 +705,142 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi_utan_författare():
 EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
     "simple-author-with-initials": (
         "Surname, G.-N., Anything",
-        (
-            "Surname, G.-N.",
-            "Anything",
-            None,
-            None,
-            None,
-            None,
-            True,
-        ),
+        {
+            "contributors": "Surname, G.-N.",
+            "title": "Anything",
+            "is_component_part": True,
+        },
     ),
     "simple-title-before-author": (
         "Anything. Surname, G.-N., Stuff.",
-        (
-            None,
-            "Anything",
-            None,
-            None,
-            None,
-            "Surname, G.-N., Stuff.",
-            True,
-        ),
+        {
+            "title": "Anything",
+            "contributors": "Surname, G.-N., Stuff.",
+            "is_component_part": True,
+        },
     ),
     "publication-year-before-monograph-extent": (
         "Schuck, A., H. Schücks enka & Co. AB 150 år. [Stockholm.] Sthlm 1947, 28 s.",
-        (
-            "Schuck, A.",
-            "H. Schücks enka & Co. AB 150 år",
-            None,
-            "28 s.",
-            None,
-            "[Stockholm.] Sthlm 1947",
-            False,
-        ),
+        "parenthesized",
+        {
+            "contributors": "Schuck, A.",
+            "title": "H. Schücks enka & Co. AB 150 år",
+            "extent": "28 s.",
+            "place": "Sthlm",
+            "year": "1947",
+            "is_component_part": False
+        }
     ),
     "component-part-extent-in-parentheses": (
         "Meyerson, Å., Ett besök vid Stora Kopparberget och Sala gruva år 1662. (BBV 23 (1938), s. 325-343.)",
-        (
-            "Meyerson, Å.",
-            "Ett besök vid Stora Kopparberget och Sala gruva år 1662",
-            None,
-            "s. 325-343",
-            None,
-            "(BBV 23 (1938).)",
-            True,
-        ),
+        "parenthesized",
+        {
+            "contributors": "Meyerson, Å.",
+            "title": "Ett besök vid Stora Kopparberget och Sala gruva år 1662",
+            "part": "BBV 23 (1938), s. 325-343",
+            "is_component_part": True
+        }
     ),
     "component-part-with-subtitle-and-series": (
         'Davidsson, Åke, "En hoop Discantzböcker i godt förhwar..." : någotom Strängnäsgymnasiets musiksamling under 1600-talet. - I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976, s. 48-62',
-        (
-            "Davidsson, Åke",
-            '"En hoop Discantzböcker i godt förhwar..."',
-            "någotom Strängnäsgymnasiets musiksamling under 1600-talet",
-            "s. 48-62",
-            None,
-            "I: Frånbiskop Rogge till Roggebiblioteket. Nyköping, 1976",
-            True,
-        ),
+        "isbd",
+        {
+         "contributors": "Davidsson, Åke",
+            "title": '"En hoop Discantzböcker i godt förhwar..."',
+            "subtitle": "någotom Strängnäsgymnasiets musiksamling under 1600-talet",
+            "extent": "s. 48-62",
+            "place": "Nyköping",
+            "year": "1976",
+            "is_component_part": True
+        },
     ),
     "component-part-without-author-with-issn": (
         "Barton, H. Arnold, A bibliography of writings in English by or onrecent Swedish emigration historians. - I: The Swedish pioneer, ISSN0039-7326, 27, 1976:3, s. 215-221",
-        (
-            "Barton, H. Arnold",
-            "A bibliography of writings in English by or onrecent Swedish emigration historians",
-            None,
-            "s. 215-221",
-            None,
-            "I: The Swedish pioneer, ISSN0039-7326, 27, 1976:3",
-            True,
-        ),
+        "isbd",
+        {
+            "contributors": "Barton, H. Arnold",
+            "title": "A bibliography of writings in English by or onrecent Swedish emigration historians",
+            "subtitle": None,
+            "part": "27, 1976:3, s. 215-221",
+            "host": {"title": "The Swedish pioneer", "issn": "0039-7326"},
+            "is_component_part": True
+        },
     ),
-    "monograph-with-contributors-written-two-ways": (
+    "monograph-with-contributorss-written-two-ways": (
         "Jonsson, Inge, Swedenborg : sökaren i naturens och andens värld :hans verk och efterföljd / Inge Jonsson, Olle Hjern. -Stockholm, 1976. - 187 s.Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin",
-        (
-            "Jonsson, Inge",
-            "Swedenborg",
-            "sökaren i naturens och andens värld :hans verk och efterföljd",
-            "187 s.",
-            None,
-            "Inge Jonsson, Olle Hjern. -Stockholm, 1976. -Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin",
-            False,
-        ),
+        "isbd",
+        {            
+            "contributors": "Jonsson, Inge",
+            "title": "Swedenborg",
+            "subtitle": "sökaren i naturens och andens värld :hans verk och efterföljd",
+            "extent": "187 s.",
+            "place": "Stockholm",
+            "year": "1976",
+            "remainder": "Inge Jonsson, Olle Hjern. Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin",
+            "is_component_part": False,
+        },
     ),
     "monograph-with-series-statement-with-issn": (
         "Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)",
-        (
-            "Fries, Elias",
-            "Hembygdsperiodika",
-            "förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl",
-            "40 bl.",
-            None,
-            "Borås, 1976. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)",
-            False,
-        ),
+        "isbd",
+        {        
+            "contributors": "Fries, Elias",
+            "title": "Hembygdsperiodika",
+            "subtitle": "förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl",
+            "extent": "40 bl.",
+            "place": "Borås",
+            "year": "1976",
+            "host": {"title": "Specialarbete / Bibliotekshögskolan", "issn": "0347-1128"},
+            "is_component_part": False,
+        },
     ),
     "monograph-with-series-and-dissertation-note-with-issn": (
         "Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
-        (
-            "Edvardsson, Lars",
-            "Kyrka och judendom",
-            "svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975",
-            "194 s.",
-            None,
-            "Lund, 1976. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
-            False,
-        ),
+        "isbd",
+        {
+            "contributors": "Edvardsson, Lars",
+            "title": "Kyrka och judendom",
+            "subtitle": "svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975",
+            "extent": "194 s.",
+            "place": "Lund",
+            "year": "1976",
+            "host": {"title": "Bibliotheca historico-ecclesiasticaLundensis", "issn": "0346-5438"},
+            "remainder": "Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
+            "is_component_part": False,
+        },
     ),
     "monograph-without-secondary-title-with-issn": (
-        "Frithz, Carl-Gösta, Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning. - Lund, 1976. - 428 s. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec",
-        (
-            "Frithz, Carl-Gösta",
-            "Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning",
-            None,
-            "428 s.",
-            None,
-            "Lund, 1976. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec",
-            False,
-        ),
+        'Frithz, Carl-Gösta, Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning. - Lund, 1976. - 428 s. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av S. Helander',
+        "isbd",
+        {
+            "contributors": "Frithz, Carl-Gösta",
+            "title": "Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning",
+            "extent": "428 s.",
+            "place": "Lund",
+            "year": "1976",
+            "host": {"title": "Bibliothecatheologiae practicae ; 34", "issn": "0519-9859"},
+            "tail_note": "Diss. Mit deutscherZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av S. Helander",
+            "is_component_part": False,
+        },
     ),
     "multiple-authors-and-complex-multi-part-extent": (
         "Erichsen, B., & Krarup, A., Dansk historisk Bibliografi. Bd 1-3. Khvn1918-21, 1925-27, 1917. xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.",
-        (
-            "Erichsen, B., & Krarup, A.",
-            "Dansk historisk Bibliografi. Bd 1-3",
-            None,
-            "xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.",
-            None,
-            "Khvn1918-21, 1925-27, 1917.",
-            False,
-        ),
+        "early",
+        {
+            "contributors": "Erichsen, B., & Krarup, A.",
+            "title": "Dansk historisk Bibliografi. Bd 1-3",
+            "extent": "xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.",
+            "remainder": "Khvn1918-21, 1925-27, 1917",
+            "is_component_part": False,
+        },
     ),
-}
-
+}   
 
 @pytest.mark.parametrize("case_name", EXTRACT_STRUCTURED_VALUES_TEST_CASES)
 def test_extract_structured_values(case_name):
-    record, expected = EXTRACT_STRUCTURED_VALUES_TEST_CASES[case_name]
+    record, era, expected = EXTRACT_STRUCTURED_VALUES_TEST_CASES[case_name]
 
-    actual = extract_structured_values(record, False, True)
+    actual = extract_structured_values(record, era, is_main_entity_note=True)
 
     assert actual == expected, f"\nInput record:\n{record}"
 

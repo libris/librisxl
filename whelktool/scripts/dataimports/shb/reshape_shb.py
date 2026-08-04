@@ -147,6 +147,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
 ### Functions for parsing the SHB records ###
 
+
 def parse_note(instance: dict, syntax_era: str) -> None:
     """Parse instance, extracting information about the main entity and its host publication or series membership.
     Updates the instance in place with the extracted information."""
@@ -159,12 +160,7 @@ def parse_note(instance: dict, syntax_era: str) -> None:
     else:
         assert len(instance["hasNote"]) == 1
 
-        note = (
-            instance.pop("hasNote")[0]["label"]
-            .replace("—", "-")
-            .replace(" ", " ")
-            .replace("  ", " ")
-        )
+        note = instance.pop("hasNote")[0]["label"]
 
         if note == "TABORT":
             return None
@@ -272,7 +268,7 @@ def parse_note(instance: dict, syntax_era: str) -> None:
                 part
                 for part in (
                     structured_record.get("remainder"),
-                    structured_record.get("review_note"),
+                    structured_record.get("tail_note"),
                 )
                 if part
             )
@@ -306,11 +302,10 @@ def extract_structured_values(
     structured_record = {}
     host_note = ""
 
-    # Extract information about reviews, when they occur to the right of a prenthesis
-    if is_main_entity_note:
-        review_note, remainder = extract_reviews(note)
-    else:
-        review_note, remainder = None, note
+    note = note.replace("—", "-").replace(" ", " ").replace("  ", " ")
+
+    # Extract information about reviews and dissertation notes
+    tail_note, remainder = extract_reviews_or_diss(note)
 
     # Distinguish part/article from publication/series
     if " - I:" in remainder:
@@ -321,12 +316,6 @@ def extract_structured_values(
 
     # Extract extent (pages, leaves)
     extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
-
-    # Extract ISSN from embedded series/publication info
-    if not is_main_entity_note and syntax_era == "isbd":
-        issn = extract_issn(remainder)
-    else:
-        issn = None
 
     # Extract contributors
     contributors, remainder = extract_contributors(remainder)
@@ -342,29 +331,92 @@ def extract_structured_values(
 
     place, year, remainder = extract_place_year(remainder)
 
+    # Store the information parsed in a dictionary
 
-    structured_record.update(
-        {
-            "contributors": contributors.strip() if contributors else None,
-            "title": title.strip() if title else None,
-            "subtitle": subtitle.strip() if subtitle else None,
-            "place": place.strip() if place else None,
-            "year": year.strip() if year else None,
-            "extent": extent.strip() if extent else None,
-            "issn": issn.strip() if issn else None,
-            "review_note": review_note.strip() if review_note else None,
-            "remainder": remainder.strip().strip(".") if remainder else None,
-            "is_component_part": is_component_part,
-        }
-    )
+    if contributors:
+        structured_record["contributors"] = contributors.strip()
+    if title:
+        structured_record["title"] = title.strip()
+    if subtitle:
+        structured_record["subtitle"] = subtitle.strip()
+    if place:
+        structured_record["place"] = place.strip()
+    if year:
+        structured_record["year"] = year.strip()
+    if extent:
+        structured_record["extent"] = extent.strip()
+    if tail_note:
+        structured_record["tail_note"] = tail_note.strip()
+    if remainder:
+        structured_record["remainder"] = remainder.strip().strip(".")
 
-    # Extract informationfrom about host publication or series
+    # Parse and store information about host publication or series membership
     if is_main_entity_note and host_note:
-        structured_record["host"] = extract_structured_values(
-            host_note, syntax_era, is_main_entity_note=False
-        )
+        structured_record["host"] = extract_host_values(host_note, syntax_era)
+
+    structured_record["is_component_part"] = is_component_part
 
     return structured_record
+
+
+def extract_host_values(host_note: str, syntax_era) -> tuple[str, str, str]:
+    """Extract information about the host publication or series membership from the host note.
+    Returns a tuple of (title, subtitle, issn)."""
+
+    host = {}
+    title, subtitle, issn = None, None, None
+
+    # Extract ISSN
+    issn, remainder = extract_issn(host_note)
+
+    # Extract part number if present
+    part_number, remainder = extract_part_number(remainder)
+
+    # Extract title and subtitle
+    title, subtitle, remainder = extract_title_and_subtitle(remainder, False)
+
+    if title:
+        host["title"] = title.strip().removesuffix(".").removesuffix(",")
+    if subtitle:
+        host["subtitle"] = (
+            subtitle.strip().removesuffix(".").removesuffix(",") if subtitle else None
+        )
+    if issn:
+        host["issn"] = issn.strip()
+    if part_number:
+        host["part_number"] = part_number.strip()
+
+    return host
+
+
+def extract_part_number(remainder: str) -> str:
+    """Extract part number from the remainder of the host note, if present.
+    Returns the part number as a string, or None if not found."""
+
+    SERIES_NUMBER_RE = re.compile(
+        r"""
+        ^(?P<title>.*?\D)      # title must end in a non-digit
+        \s*
+        (?P<part>
+            \d{1,4}            # number/year
+            (?:[/:()]\s*[\d/-]+)*  # optional :3, /7, (17), etc.
+            |
+            \d{1,2}/\d{1,2}\s+\d{4} # date like 14/7 1939
+        )
+        \.?$
+        """,
+        re.VERBOSE,
+    )
+
+    match = SERIES_NUMBER_RE.match(remainder)
+
+    if match:
+        number = match.group("part")
+        remainder = match.group("title").rstrip(" ,.;-")
+
+        return number, remainder
+
+    return remainder, None
 
 
 def extract_place_year(remainder: str) -> tuple[str, str, str]:
@@ -373,19 +425,12 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
 
     place, year = None, None
 
-    if remainder:
-        PLACE_YEAR_RE = re.compile(
-            r"""
-            ^
-            (?P<place>[A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]+?)
-            ,?
-            \s+
-            (?P<year>\d{4})
-            $
-            """,
-            re.X,
-        )
+    PLACE_YEAR_RE = re.compile(
+        r"^(?P<place>[A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]*?)[, ]+(?P<year>\d{4})$",
+        re.X,
+    )
 
+    if remainder := remainder.strip().rstrip("."):
         match = PLACE_YEAR_RE.search(remainder)
         if match:
             year = match.group("year").strip()
@@ -399,20 +444,23 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
     return place, year, remainder
 
 
-def extract_reviews(note: str) -> tuple[str, str]:
+def extract_reviews_or_diss(note: str) -> tuple[str, str]:
     """Extract review information from the note, if present.
     Returns a tuple of (review_note, remainder)."""
 
-    match = re.search(r"\bRec\.\s+i\b", note)
+    match = re.search(
+        r"\bRec\.\s+i\b|\s*-\s*Diss\b|\s*-\s*Oiss\b",
+        note,
+    )
 
     if match:
         remainder = note[: match.start()].rstrip()
-        review_note = note[match.start() :]
+        tail_note = note[match.start() :].replace("- Oiss", "- Diss").lstrip("- ")
     else:
         remainder = note
-        review_note = None
+        tail_note = None
 
-    return review_note, remainder
+    return tail_note, remainder
 
 
 def extract_contributors(remainder: dict) -> tuple[str, str]:
@@ -615,17 +663,18 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
     return pages, remainder, is_component_part
 
 
-def extract_issn(value: str) -> str:
+def extract_issn(note: str) -> str:
     """Extract ISSN from the given value, if present and valid.
     Returns the ISSN as a string, or None if not found or invalid."""
 
-    ISSN_PATTERN = re.compile(r"\d{4}-\d{3}[\dX]")
+    ISSN_RE = re.compile(r"\b(?:ISSN\s*:?\s*)?(\d{4}-\d{3}[\dX])\b")
+    for match in ISSN_RE.finditer(note):
+        issn = match.group(1)
+        if valid_issn(issn):
+            remainder = note[: match.start()].rstrip(" ,") + note[match.end() :]
+            return issn, remainder
 
-    issn = re.findall(ISSN_PATTERN, value)
-
-    issn = [n for n in issn if valid_issn(n)]
-    if len(issn) == 1:
-        return issn[0]
+    return None, note
 
 
 ### Functions for enriching the records ###
