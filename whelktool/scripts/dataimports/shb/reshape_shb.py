@@ -166,9 +166,7 @@ def parse_note(instance: dict, syntax_era: str) -> None:
             return None
 
         ### Parse note ###
-        structured_record = extract_structured_values(
-            note, syntax_era, is_main_entity_note=True
-        )
+        structured_record = extract_structured_values(note, syntax_era)
 
         ### Store extracted information to the instance ###
 
@@ -263,21 +261,9 @@ def parse_note(instance: dict, syntax_era: str) -> None:
 
         ### Store remaining unstructured information as a note on the instance ###
 
-        remaining_note = (
-            ". ".join(
-                part
-                for part in (
-                    structured_record.get("remainder"),
-                    structured_record.get("tail_note"),
-                )
-                if part
-            )
-            or None
-        )
-
-        if remaining_note:
+        if structured_record.get("remaining_note"):
             instance.setdefault("hasNote", []).append(
-                {"@type": "Note", "label": remaining_note}
+                {"@type": "Note", "label": structured_record["remaining_note"]}
             )
 
         ### Finally, for backup, store the full original OCR'd note as an instance note ###
@@ -292,9 +278,7 @@ def parse_note(instance: dict, syntax_era: str) -> None:
     return instance
 
 
-def extract_structured_values(
-    note: dict, syntax_era: str, is_main_entity_note: bool
-) -> tuple:
+def extract_structured_values(note: dict, syntax_era: str) -> tuple:
     """Extract information about the main entity from the note, including name, title, subtitle, extent, ISSN, and any remaining unstructured information.
     Returns a dictionary containing the extracted values.
     """
@@ -308,22 +292,20 @@ def extract_structured_values(
     tail_note, remainder = extract_reviews_or_diss(note)
 
     # Distinguish part/article from publication/series
-    if " - I:" in remainder:
+    if syntax_era in ["isbd", "isbd_transition"] and " - I:" in remainder:
         remainder, host_note = remainder.split(" - I:", 1)
         is_component_part = True
-    elif remainder.endswith(")"):
+    elif remainder.rstrip(".").endswith(")"):
         remainder, host_note = extract_partof_from_parenthesis(remainder, syntax_era)
 
     # Extract extent (pages, leaves)
     extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
 
     # Extract contributors
-    contributors, remainder = extract_contributors(remainder)
+    primary_contributors, remainder = extract_contributors(remainder)
 
     # Extract title and subtitle
-    title, subtitle, remainder = extract_title_and_subtitle(
-        remainder, is_main_entity_note
-    )
+    title, subtitle, other_contributors, remainder = extract_title_and_subtitle(remainder, True)
 
     # If there is not already a host note, check remaining parentheses for information about series/publichation membership
     if remainder and not host_note:
@@ -331,10 +313,24 @@ def extract_structured_values(
 
     place, year, remainder = extract_place_year(remainder)
 
+    remaining_note = (
+        ". ".join(
+            part
+            for part in (
+                remainder,
+                tail_note,
+            )
+            if part
+        )
+        or None
+    )
+
     # Store the information parsed in a dictionary
 
-    if contributors:
-        structured_record["contributors"] = contributors.strip()
+    if primary_contributors:
+        structured_record["primary_contributors"] = primary_contributors.strip()
+    if other_contributors:
+        structured_record["other_contributors"] = other_contributors.strip()
     if title:
         structured_record["title"] = title.strip()
     if subtitle:
@@ -345,46 +341,63 @@ def extract_structured_values(
         structured_record["year"] = year.strip()
     if extent:
         structured_record["extent"] = extent.strip()
-    if tail_note:
-        structured_record["tail_note"] = tail_note.strip()
-    if remainder:
-        structured_record["remainder"] = remainder.strip().strip(".")
+    if remaining_note:
+        structured_record["remaining_note"] = remaining_note.strip()
 
     # Parse and store information about host publication or series membership
-    if is_main_entity_note and host_note:
-        structured_record["host"] = extract_host_values(host_note, syntax_era)
+    if host_note:
+        structured_record["host"] = extract_host_values(
+            host_note, syntax_era, is_component_part
+        )
 
     structured_record["is_component_part"] = is_component_part
-
+    print("Hey hey! \n", structured_record, {"\n"})
     return structured_record
 
 
-def extract_host_values(host_note: str, syntax_era) -> tuple[str, str, str]:
+def extract_host_values(
+    host_note: str, syntax_era, is_component_part
+) -> tuple[str, str, str]:
     """Extract information about the host publication or series membership from the host note.
     Returns a tuple of (title, subtitle, issn)."""
 
     host = {}
-    title, subtitle, issn = None, None, None
+    title, subtitle, issn, part_remainder, probably_part = None, None, None, None, None
 
     # Extract ISSN
     issn, remainder = extract_issn(host_note)
 
+    # Extract extent (pages, leaves)
+    extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
+
+    if "." in remainder:
+        remainder_parts = remainder.split(".")
+        if len(remainder_parts) > 1:
+            probably_part = " ".join(part.strip() for part in remainder_parts[1:])
+            remainder = remainder_parts[0]
+
     # Extract part number if present
-    part_number, remainder = extract_part_number(remainder)
+    if probably_part:
+        part_number, part_remainder = extract_part_number(probably_part)
+
+    else:
+        part_number, remainder = extract_part_number(remainder)
 
     # Extract title and subtitle
-    title, subtitle, remainder = extract_title_and_subtitle(remainder, False)
+    title, _subtitle, publisher, remainder = extract_title_and_subtitle(remainder, False)
 
     if title:
         host["title"] = title.strip().removesuffix(".").removesuffix(",")
-    if subtitle:
-        host["subtitle"] = (
-            subtitle.strip().removesuffix(".").removesuffix(",") if subtitle else None
-        )
+    if publisher:
+        host["publisher"] = publisher
     if issn:
         host["issn"] = issn.strip()
     if part_number:
         host["part_number"] = part_number.strip()
+    if extent:
+        host["extent"] = extent.strip()
+    if part_remainder:
+        host["remaining_note"] = part_remainder
 
     return host
 
@@ -393,22 +406,19 @@ def extract_part_number(remainder: str) -> str:
     """Extract part number from the remainder of the host note, if present.
     Returns the part number as a string, or None if not found."""
 
-    SERIES_NUMBER_RE = re.compile(
+    PART_INFO_RE = re.compile(
         r"""
-        ^(?P<title>.*?\D)      # title must end in a non-digit
-        \s*
+        ^(?P<title>.*?\D)
+        \s*[,;.-]?\s*
         (?P<part>
-            \d{1,4}            # number/year
-            (?:[/:()]\s*[\d/-]+)*  # optional :3, /7, (17), etc.
-            |
-            \d{1,2}/\d{1,2}\s+\d{4} # date like 14/7 1939
+            \d.* 
         )
-        \.?$
+        $
         """,
         re.VERBOSE,
     )
 
-    match = SERIES_NUMBER_RE.match(remainder)
+    match = PART_INFO_RE.match(remainder)
 
     if match:
         number = match.group("part")
@@ -426,11 +436,20 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
     place, year = None, None
 
     PLACE_YEAR_RE = re.compile(
-        r"^(?P<place>[A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]*?)[, ]+(?P<year>\d{4})$",
+        r"""
+        ^
+        (?P<place>
+            (?:\[[^\]]+\]\s*)?   # optional bracketed place
+            [A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]*?
+        )
+        [, ]+
+        (?P<year>\d{4})
+        $
+        """,
         re.X,
     )
 
-    if remainder := remainder.strip().rstrip("."):
+    if remainder := remainder.strip().rstrip(" .-"):
         match = PLACE_YEAR_RE.search(remainder)
         if match:
             year = match.group("year").strip()
@@ -479,6 +498,8 @@ def extract_contributors(remainder: dict) -> tuple[str, str]:
     else:
         if comma_separated:
             first = comma_separated[0]
+            
+
             if (
                 looks_like_initial(first.strip())
                 or re.fullmatch(r"[\w\s'-.]+", first)
@@ -498,7 +519,6 @@ def extract_contributors(remainder: dict) -> tuple[str, str]:
                 initials = comma_separated.pop(0).strip()
 
                 contributors += f", {surname}, {initials}"
-
     # If name contains more than letters and certain punctuation, it's probably not a name
     if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ\s',.&\-\[\]]+", contributors.strip()):
         contributors = None
@@ -516,28 +536,31 @@ def extract_title_and_subtitle(
     """
 
     subtitle = ""
+    contributor_area = ""
 
     # This record is ISBD-like
     if ". -" in remainder:
-        title_and_author_area, remainder = remainder.split(". -", 1)
+        title_and_contributor_area, remainder = remainder.split(". -", 1)
         # If the the title is followed by a " / ", signalling the contributor is next
-        if " / " in title_and_author_area:
+        if " / " in title_and_contributor_area:
             counters["various"].update(["STRUCTURE\t Title / Author. - Publication"])
-            title, author_area = title_and_author_area.split(" / ", 1)
-            # TODO Do we want to fetch the author(s) for responsibilityStatememnt from here?
-            remainder = author_area + ". -" + remainder
+            title = title_and_contributor_area
+            # TODO Do we want to fetch the author(s) for additional responsibilityStatememnt from here? 
+            # Or just keep it in the title, as this is uncommon (a few hundred) in SHB.
+            title, contributor_area = title_and_contributor_area.split(" / ", 1)
+            #remainder = author_area + ". -" + remainder
 
         # If the title is directly followed by a ". -", signalling other publication information is next
-        elif re.search(r"[0-9].?\(", title_and_author_area):
+        elif re.search(r"[0-9].?\(", title_and_contributor_area):
             counters["various"].update(
                 ["STRUCTURE\t note doesn't start with author/title'"]
             )
-            title = title_and_author_area + ". - " + remainder
+            title = title_and_contributor_area + ". - " + remainder
         else:
             counters["various"].update(
                 ["STRUCTURE\t'. - ' between title and next area"]
             )
-            title = title_and_author_area
+            title = title_and_contributor_area
 
     # Another way to get the title
     else:
@@ -569,8 +592,9 @@ def extract_title_and_subtitle(
         title, subtitle = title.split(" : ", 1)
 
     title = title.strip().removesuffix(".").removesuffix(",")
+    subtitle = subtitle.strip().strip(".")
 
-    return title, subtitle, remainder
+    return title, subtitle, contributor_area, remainder
 
 
 def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
@@ -597,7 +621,7 @@ def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
                 remainder = (note[:i] + note[end + 1 :]).strip()
                 # If it doesn't contain more than one charatcer and at least one is alphabetic, it's probbably not a title
                 if len(host_note) > 1 and any(char.isalpha() for char in host_note):
-                    return remainder, host_note
+                    return remainder.strip(), host_note
 
     # Unbalanced parentheses
     return note, None
