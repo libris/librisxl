@@ -52,7 +52,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
             )
             (?:,\s*)?
         )+
-        \s*(?:s|bl|pl)\.?
+        \s*(?:s|bl|pl|kartbl)\.?
     )*
 
     (?:\s*:\s*ill\.?)?
@@ -481,12 +481,12 @@ def extract_reviews_or_diss(note: str) -> tuple[str, str]:
     Returns a tuple of (review_note, remainder)."""
 
     match = re.search(
-        r"\bRec\.\s+i\b|\s*-\s*Diss\b|\s*-\s*Oiss\b",
+        r"\bRec\.\s+i\b|\bSummary:\s*|\s*-\s*Diss\b|\s*-\s*Oiss\b",
         note,
     )
 
     if match:
-        remainder = note[: match.start()].rstrip()
+        remainder = note[: match.start()].rstrip(".- ")
         tail_note = note[match.start() :].replace("- Oiss", "- Diss").lstrip("- ")
     else:
         remainder = note
