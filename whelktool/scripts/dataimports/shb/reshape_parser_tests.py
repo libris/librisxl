@@ -257,106 +257,120 @@ def test_extract_structured_values_1971_1975_Monografi():
 
 
 def test_extract_structured_values_1961_1970_Bidrag_tidningsartikel():
-    record = {"sample": "Efternamn, Förnamn, Titel. - Publ-titel DD.MM YYYY."}
+    record = {"pattern": "Efternamn, Förnamn, Titel. - Publ-titel DD.MM YYYY.",
+              "sample": "Jansson, Leonard, Ivar Axelsson Tott. - ÖresP 2.6 1962."}
 
     result = extract_structured_values(record["sample"], "dash_style")
 
     assert result["is_component_part"] == True
-    assert result["primary_contributors"] == "Ahnlund, N."
-    assert result["title"] == "Rikskanslerns titlar"
-    assert result["remaining_note"] == "[Axel Oxenstierna.]"
-    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
-
+    assert result["primary_contributors"] == "Jansson, Leonard"
+    assert result["title"] == "Ivar Axelsson Tott"
+    assert result["remaining_note"] == "ÖresP 2.6 1962"
 
 def test_extract_structured_values_1961_1970_Bidrag():
     record = {
-        "sample": "Efternamn, Förnamn, Titel. - Publ-titel årg (årtal):numrering, sid."
+        "pattern": "Efternamn, Förnamn, Titel. - Publ-titel årg (årtal):numrering, sid.",
+        "sample": "Lagerroth, Fredrik, Positiv rätt eller naturrätt? Ett statsrattsligt dilemma från svenskt 1700-tal. [Zusammenfassung.] - Scandia 33 (1967), s. 270-312."
     }
     result = extract_structured_values(record["sample"], "dash_style")
 
     assert result["is_component_part"] == True
-    assert result["primary_contributors"] == "Ahnlund, N."
-    assert result["title"] == "Rikskanslerns titlar"
-    assert result["remaining_note"] == "[Axel Oxenstierna.]"
-    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
-
+    assert result["primary_contributors"] == "Lagerroth, Fredrik"
+    assert result["title"] == "Positiv rätt eller naturrätt? Ett statsrattsligt dilemma från svenskt 1700-tal"
+    assert result["extent"] == "s. 270-312"
+    assert result["remaining_note"] == "[Zusammenfassung.] - Scandia 33 (1967)"
 
 def test_extract_structured_values_1951_1960_Bidrag_tidningsartikel():
     record = {
-        "sample": "Efternamn, Förnamn, Titel. undertitel. (Publ-titel DD/MM YYYY.)"
+        "pattern": "Efternamn, Förnamn, Titel. undertitel. (Publ-titel DD/MM YYYY.)",
+        "sample": "Ennermark, S., Brasks boktryckare en pionjär i Malmö. (SDS 31/8 1952.)"
     }
     result = extract_structured_values(record["sample"], "parenthesized")
 
     assert result["is_component_part"] == True
-    assert result["primary_contributors"] == "Ahnlund, N."
-    assert result["title"] == "Rikskanslerns titlar"
-    assert result["remaining_note"] == "[Axel Oxenstierna.]"
-    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
+    assert result["primary_contributors"] == "Ennermark, S."
+    assert result["title"] == "Brasks boktryckare en pionjär i Malmö"
+    assert result["host"] == {"title": "SDS", "part_number": "31/8 1952"}
 
 
 def test_extract_structured_values_1921_1935_Bidrag_tidningsartikel():
     record = {
-        "sample": "Efternamn, Förnamn, Titel. undertitel. (Publ-titel YYYY: DD/MM.)"
+        "pattern": "Efternamn, Förnamn, Titel. undertitel. (Publ-titel YYYY: DD/MM.)",
+        "sample": "Steckzén, B., Med svärdet och plogen. (SvD 1935: 2/9.)"
     }
     result = extract_structured_values(record["sample"], "parenthesized")
 
     assert result["is_component_part"] == True
-    assert result["primary_contributors"] == "Ahnlund, N."
-    assert result["title"] == "Rikskanslerns titlar"
-    assert result["remaining_note"] == "[Axel Oxenstierna.]"
-    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
+    assert result["primary_contributors"] == "Steckzén, B."
+    assert result["title"] == "Med svärdet och plogen"
+    assert result["host"] == {"title": "SvD", "part_number": "1935: 2/9"}
 
 
 def test_extract_structured_values_1921_1935_1951_1960_Bidrag():
     record = {
-        "sample": "Efternamn, Förnamn, Titel. undertitel. (Publ-titel nr (årtal), sid.)"
+        "pattern": "Efternamn, Förnamn, Titel. undertitel. (Publ-titel nr (årtal), sid.)",
+        "sample": "Berg, Gösta, Svensk folklivskännedom. En översikt av de senare årenslitteratur. (Hävd och hembygd. 2 (1927), s. 76-95.)"
     }
     result = extract_structured_values(record["sample"], "parenthesized")
 
     assert result["is_component_part"] == True
-    assert result["primary_contributors"] == "Ahnlund, N."
-    assert result["title"] == "Rikskanslerns titlar"
-    assert result["remaining_note"] == "[Axel Oxenstierna.]"
-    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
+    assert result["primary_contributors"] == "Berg, Gösta"
+    assert result["title"] == "Svensk folklivskännedom"
+    assert result["remaining_note"] == "En översikt av de senare årenslitteratur"
+    assert result["host"] == {"title": "Hävd och hembygd", "part_number": "2 (1927)", "extent": "s. 76-95"}
 
 
 def test_extract_structured_values_1921_1935_Monografi():
     record = {
-        "sample": "Efternamn, Förnamn, Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)"
+        "pattern": "Efternamn, Förnamn, Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)",
+        "sample": "Nohrstrom, Holger, Borgå gymnasiebibliotek och dess föregångare blandFinlands läroverksbibliotek. Ett bidrag till Finlands biblioteks- och kulturhistoria.Hfors 1927. (2), 291 s. (Helsingfors universitetsbiblioteks skrifter.10.)"
     }
     result = extract_structured_values(record["sample"], "parenthesized")
 
-    assert result["is_component_part"] == True
-    assert result["primary_contributors"] == "Ahnlund, N."
-    assert result["title"] == "Rikskanslerns titlar"
-    assert result["remaining_note"] == "[Axel Oxenstierna.]"
-    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
+    print(result)
+
+    assert result["is_component_part"] == False
+    assert result["primary_contributors"] == "Nohrstrom, Holger"
+    assert result["title"] == "Borgå gymnasiebibliotek och dess föregångare blandFinlands läroverksbibliotek. Ett bidrag till Finlands biblioteks- och kulturhistoria"
+    assert result["place"] == "Hfors"
+    assert result["year"] == "1927"
+    assert result["extent"] == "(2), 291 s."
+    assert result["host"] == {"title": "Helsingfors universitetsbiblioteks skrifter", "part_number": "10"}
 
 
 def test_extract_structured_values_1961_1970_Monografi():
     record = {
-        "sample": "Efternamn, Förnamn, Titel. undertitel. Ort år. sid. - Serietillhörighet. numrering."
+        "pattern": "Efternamn, Förnamn, Titel. undertitel. Ort år. sid. - Serietillhörighet. numrering.",
+        "sample": "Clemedson, Carl-Johan, Taxinge socken. Kultur, vegetation, flora. Nyköping 1970. 93 s. Ill. - Sörmländska handlingar. 27."
     }
     result = extract_structured_values(record["sample"], "dash_style")
 
-    assert result["is_component_part"] == True
-    assert result["primary_contributors"] == "Ahnlund, N."
-    assert result["title"] == "Rikskanslerns titlar"
-    assert result["remaining_note"] == "[Axel Oxenstierna.]"
-    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
+    print(result)
 
+    assert result["is_component_part"] == False
+    assert result["primary_contributors"] == "Clemedson, Carl-Johan"
+    assert result["title"] == "Taxinge socken. Kultur, vegetation, flora."
+    assert result["place"] == "Nyköping"
+    assert result["year"] == "1970"
+    assert result["extent"] == "93 s. Ill."
+    assert result["remaining_note"] == "Sörmländska handlingar. 27"
 
 def test_extract_structured_values_1951_1960_Monografi():
     record = {
-        "sample": "Efternamn, Förnamn, Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)"
+        "pattern": "Efternamn, Förnamn, Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)",
+        "sample": "Davidsson, Åke, Handritade kartor över Finland i Uppsala universitetsbibliotek.  60 s., 3 pl.-bl. Uppsala 1957. (Acta Bibliothecae R. Universitatis Upsaliensis. 11.)"
     }
     result = extract_structured_values(record["sample"], "parenthesized")
 
-    assert result["is_component_part"] == True
-    assert result["primary_contributors"] == "Ahnlund, N."
-    assert result["title"] == "Rikskanslerns titlar"
-    assert result["remaining_note"] == "[Axel Oxenstierna.]"
-    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
+    print(result)
+
+    assert result["is_component_part"] == False
+    assert result["primary_contributors"] == "Davidsson, Åke"
+    assert result["title"] == "Handritade kartor över Finland i Uppsala universitetsbibliotek"
+    assert result["extent"] == "60 s., 3 pl.-bl."
+    assert result["palce"] == "Uppsala"
+    assert result["year"] == "1957"
+    assert result["host"] == {"title": "Acta Bibliothecae R. Universitatis Upsaliensis", "part_number": "11"}
 
 
 def test_extract_structured_values_1971_1975_Bidrag_utan_författare():
