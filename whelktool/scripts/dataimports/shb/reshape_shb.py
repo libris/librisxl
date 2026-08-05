@@ -341,10 +341,14 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
         structured_record["place"] = place.strip()
     if year:
         structured_record["year"] = year.strip()
-    if extent:
-        structured_record["extent"] = extent.strip()
     if remaining_note:
         structured_record["remaining_note"] = remaining_note.rstrip(" .,-;")
+
+    if extent:
+        structured_record["extent"] = extent.strip()
+    else:
+        # Assume descriptions without any extent info are component parts
+        is_component_part = True
 
     # Parse and store information about host publication or series membership
     if host_note:
@@ -401,8 +405,12 @@ def extract_host_values(
         host["issn"] = issn.strip()
     if part_number:
         host["part_number"] = part_number.strip()
+
     if extent:
         host["extent"] = extent.strip()
+    else:
+        # Assume descriptions without any extent info are component parts
+        is_component_part = True
 
     return host
 
@@ -636,8 +644,6 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
     pages = ""
 
     if not EXTENT_MARKER_RE.search(remainder):
-        # It might make sense to assume descriptions without pages are component parts
-        is_component_part = True
         return "", remainder, is_component_part
 
     else:
