@@ -286,7 +286,7 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
     """
     is_component_part = False
     structured_record = {}
-    host_note = ""
+    host_or_series = ""
 
     note = note.replace("—", "-").replace(" ", " ").replace("  ", " ")
 
@@ -295,10 +295,19 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
 
     # Distinguish part/article from publication/series
     if syntax_era in ["isbd", "isbd_transition"] and " - I:" in remainder:
-        remainder, host_note = remainder.split(" - I:", 1)
+        remainder, host_or_series = remainder.split(" - I:", 1)
         is_component_part = True
-    elif remainder.rstrip(".").endswith(")"):
-        remainder, host_note = extract_partof_from_parenthesis(remainder, syntax_era)
+    elif syntax_era in PARENTHESIS_ERAS and remainder.rstrip(".").endswith(")"):
+        remainder, host_or_series = extract_partof_from_parenthesis(
+            remainder, syntax_era
+        )
+    elif syntax_era in (
+        "dash_style",
+        "isbd_transition",
+    ):  # Excluding "isbd", where ". -" is a generic delimiter
+        host_or_series, remainder = extract_dash_style_host_or_series(
+            remainder, syntax_era
+        )
 
     # Extract extent (pages, leaves)
     extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
@@ -310,17 +319,21 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
 
     other_contributors, remainder = extract_other_contributors(remainder)
 
-    if not host_note:
-        host_note, remainder = extract_dash_style_host_note(remainder, syntax_era)
+    if syntax_era == "early":
+        host_or_series, remainder, is_component_part = extract_early_host_or_series(
+            remainder, extent, is_component_part
+        )
 
     # Extract title and subtitle
     title, subtitle, remainder = extract_title_and_subtitle(
-        remainder, syntax_era, True
+        remainder, syntax_era, True, is_component_part
     )
 
     # If there is not already a host note, check remaining parentheses for information about series/publichation membership
-    if remainder and not host_note:
-        remainder, host_note = extract_partof_from_parenthesis(remainder, syntax_era)
+    if remainder and not host_or_series:
+        remainder, host_or_series = extract_partof_from_parenthesis(
+            remainder, syntax_era
+        )
         # TODO Possibly look at interpreting the two rightmost remainder.split(".") as series/publication for the pre-parenthesis era
         # See tests for syntax and examples
 
@@ -360,9 +373,9 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
         is_component_part = True
 
     # Parse and store information about host publication or series membership
-    if host_note:
+    if host_or_series:
         structured_record["host"] = extract_host_values(
-            host_note, syntax_era, is_component_part
+            host_or_series, syntax_era, is_component_part
         )
 
     structured_record["is_component_part"] = is_component_part
@@ -385,7 +398,7 @@ def extract_host_values(
     extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
 
     # Try to split part title from numbering
-    #if ". " in remainder:
+    # if ". " in remainder:
     #    remainder_split = remainder.split(". ")
     #
     #    probably_part_indexes = [
@@ -406,17 +419,17 @@ def extract_host_values(
     #        probably_part = None
     #
     ## Extract part number if present
-    #if probably_part:
+    # if probably_part:
     #    part_number, part_remainder = extract_part_number(probably_part)
     #
-    #else:
+    # else:
     part_number, remainder = extract_part_number(remainder)
 
     publisher, remainder = extract_other_contributors(remainder)
 
     # Extract title and subtitle
     title, _subtitle, remainder = extract_title_and_subtitle(
-        remainder, syntax_era, False
+        remainder, syntax_era, False, is_component_part
     )
 
     if part_remainder:
@@ -446,35 +459,62 @@ def extract_host_values(
     return host
 
 
+def extract_early_host_or_series(remainder: str, extent: str, is_component_part: bool):
+    # ". " coulmay be followed by either subtitle or series/host publication
+    # Perhaps we can assume there is a publication title if is_component_part == Ttue?
+    
+    # Protect initials for the next step....
+    remainder = re.sub(r"\b([A-Z])\.\s+(?=[A-Z])", r"\1<INIT>", remainder)
+
+    parts = re.split(r"(?<=\.|\])\s+", remainder)
+
+    # Reintroduce initals...
+    parts = [p.replace("<INIT>", ". ") for p in parts]
+
+    if len(parts) > 1:
+        if not extent:
+            # This is likely a newspaper article
+            host_or_series = parts[-1]
+            remainder = ". ".join(part.strip(".") for part in parts[:-1])
+            is_component_part = True
+        else:
+            remainder = ". ".join(part.strip(".") for part in parts)
+            host_or_series = None
+
+    else:
+        remainder = parts[0]
+        host_or_series = None
+
+    return host_or_series, remainder, is_component_part
 
 
-def extract_dash_style_host_note(
+def extract_dash_style_host_or_series(
     remainder: str, syntax_era: str
 ) -> tuple[str | None, str]:
 
     DASH_HOST_RE = re.compile(r"(?<=\.|\])\s-\s")
 
-    if syntax_era == "dash_style":
-        matches = list(DASH_HOST_RE.finditer(remainder))
+    matches = list(DASH_HOST_RE.finditer(remainder))
 
-        if matches:
-            match = matches[-1]
+    if matches:
+        match = matches[-1]
 
-            host_note = remainder[match.end():].strip()
-            remainder = remainder[:match.start()].strip()
+        host_note = remainder[match.end() :].strip().lstrip("(").rstrip(")")
+        remainder = remainder[: match.start()].strip()
 
-            return host_note, remainder
+        return host_note, remainder
 
     return None, remainder
 
-def extract_other_contributors(remainder: str) -> tuple[str,str]:
+
+def extract_other_contributors(remainder: str) -> tuple[str, str]:
     # If the the title is followed by a " / ", signalling the contributor is next
     if " / " in remainder:
         counters["various"].update(["STRUCTURE\t Title / Author"])
         remainder, contributors = remainder.split(" / ", 1)
         return contributors, remainder
     else:
-        return  None, remainder
+        return None, remainder
 
 
 def extract_part_number(remainder: str) -> str:
@@ -528,7 +568,7 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
     parts = remainder.split(". ")
 
     for i in range(len(parts) - 1, 0, -1):
-        candidate = ". ".join(parts[i:])
+        candidate = parts[i]
 
         if match := PLACE_YEAR_RE.fullmatch(candidate):
             place = match["place"]
@@ -605,7 +645,7 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
 
 
 def extract_title_and_subtitle(
-    remainder: dict, syntax_era, is_main_entity_note: bool
+    remainder: dict, syntax_era, is_main_entity_note: bool, is_component_part: bool
 ) -> tuple[dict, dict, dict]:
     """Extract title and subtitle from the remainder of the note.
     Returns a tuple of (title, subtitle, remainder).
@@ -615,7 +655,7 @@ def extract_title_and_subtitle(
     remainder = strip_trailing_separator(remainder)
 
     # This record is ISBD-like
-    if ". -" in remainder:
+    if syntax_era in DASH_ERAS and ". -" in remainder:
         title_and_contributor_area, remainder = remainder.split(". -", 1)
 
         # If the title is directly followed by a ". -", signalling other publication information is next
@@ -630,39 +670,29 @@ def extract_title_and_subtitle(
             )
             title = title_and_contributor_area
 
-    # Another way to get the title
-    else:
-        counters["various"].update(["STRUCTURE\tOther structure"])
-        if syntax_era != "early":
-            title = remainder
-            remainder = None
-        else:
-            x = int(remainder.count(". ") * 0.3) or 1
-            if is_main_entity_note and ". " in remainder:
-                parts = remainder.rsplit(". ", x)
-                title = parts[0]
-                remainder = ". ".join(parts[1:])
-            else:
-                title = remainder
-                remainder = ""
+    # Early syntax style: title. subtitle
+    elif syntax_era == "early":
+        parts = re.split(
+            r"(?<!\b[A-Z])\.\s+",
+            remainder,
+        )
 
-            if len(title.strip()) == 1:
-                moretitle, remainder = (
-                    remainder.split(".", 1) if "." in remainder else (remainder, "")
-                )
-                title += "." + moretitle
-            #elif remainder_is_pages:
-            #    title, pre_remainder = (
-            #        title.rsplit(". ", 1) if ". " in title else (title, "")
-            #    )
-            #    if not pre_remainder:
-            #        title, posttitle = title.rsplit(" ", 1)
-            #        pre_remainder = posttitle.strip()
-            #    remainder = pre_remainder + ". " + remainder
+        if len(parts) < 2:
+            title = remainder
+            remainder = ""
+        else:
+            title = parts[0]
+            subtitle = ". ".join(part for part in parts[1:])
+            remainder = ""
 
     # Divide title into title and subtitle
-    if " : " in title:
-        title, subtitle = title.split(" : ", 1)
+    elif syntax_era in ["isbd", "isbd_transition"] and " : " in remainder:
+        title, subtitle = remainder.split(" : ", 1)
+        remainder = ""
+
+    else:
+        title = remainder
+        remainder = ""
 
     title = title.strip().removesuffix(".").removesuffix(",")
     subtitle = subtitle.strip().strip(".")
@@ -670,34 +700,34 @@ def extract_title_and_subtitle(
     return title, subtitle, remainder
 
 
-def extract_partof_from_parenthesis(note, syntax_era) -> tuple[dict]:
+def extract_partof_from_parenthesis(remainder, syntax_era) -> tuple[dict]:
     """Extract partOf information, i.e. information about the host publication, from balanced parentheses present in the note.
     If the description comes from an SHB volume where parentheses were used for host publication,
     return the note with the parentheses removed, and the extracted part-of information.
     """
 
-    end = note.rfind(")")
+    end = remainder.rfind(")")
     if (end == -1) or syntax_era not in PARENTHESIS_ERAS:
-        return note, None
+        return remainder, None
 
     counters["various"].update(["STRUCTURE\tAuthor, title . (publication)"])
 
     depth = 0
 
     for i in range(end, -1, -1):
-        if note[i] == ")":
+        if remainder[i] == ")":
             depth += 1
-        elif note[i] == "(":
+        elif remainder[i] == "(":
             depth -= 1
             if depth == 0:
-                host_note = note[i + 1 : end]
-                remainder = (note[:i] + note[end + 1 :]).strip()
+                host_note = remainder[i + 1 : end]
+                remainder = (remainder[:i] + remainder[end + 1 :]).strip()
                 # If it doesn't contain more than one charatcer and at least one is alphabetic, it's probbably not a title
                 if len(host_note) > 1 and any(char.isalpha() for char in host_note):
                     return remainder.strip(), host_note
 
     # Unbalanced parentheses
-    return note, None
+    return remainder, None
 
 
 def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
