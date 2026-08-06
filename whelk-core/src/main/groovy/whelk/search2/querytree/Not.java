@@ -1,11 +1,7 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.ESSettings;
-import whelk.search2.QueryUtil;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -14,18 +10,6 @@ import java.util.function.Function;
 import static whelk.search2.QueryUtil.parenthesize;
 
 public record Not(Node node) implements Node {
-    @Override
-    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        if (node instanceof FilterAlias) {
-            return ExpandedNode.newEmpty();
-        }
-        ExpandedNode expandedChild = node.expand(jsonLd, rdfSubjectTypes);
-        Node expandedRoot = new Not(expandedChild.expandedRoot());
-        Map<Node, Node> nodeMap = new HashMap<>(expandedChild.nodeMap());
-        nodeMap.put(this, expandedRoot);
-        return new ExpandedNode(expandedRoot, nodeMap);
-    }
-
     @Override
     public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
         return Map.of("not", node.toSearchMapping(makeUpLink, makeReplaceLink),

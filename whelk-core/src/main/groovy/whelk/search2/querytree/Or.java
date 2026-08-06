@@ -1,21 +1,23 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.ESSettings;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-
-import static whelk.search2.QueryUtil.shouldWrap;
 
 public non-sealed class Or extends Group {
     private final List<Node> children;
 
     public Or(List<? extends Node> children) {
-        this.children = flattenChildren(children);
+       this(children, true);
+    }
+
+    public Or(List<? extends Node> children, boolean flattenChildren) {
+        this.children = flattenChildren
+                ? flattenChildren(children)
+                : children.stream().map(Node.class::cast).toList();
     }
 
     @Override
@@ -55,8 +57,8 @@ public non-sealed class Or extends Group {
     }
 
     @Override
-    Group newInstance(List<Node> children) {
-        return new Or(children);
+    public Or newInstance(List<Node> children, boolean flattenChildren) {
+        return new Or(children, flattenChildren);
     }
 
     @Override

@@ -172,11 +172,6 @@ public non-sealed class Property extends PathElement {
     }
 
     @Override
-    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
-        return _getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
-    }
-
-    @Override
     public boolean isValid() {
         return true;
     }
@@ -346,38 +341,6 @@ public non-sealed class Property extends PathElement {
                 });
 
         return restrictions;
-    }
-
-    private List<Selector> _getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
-        if (rdfSubjectTypes.isEmpty() || isRdfType()) {
-            return List.of(this);
-        }
-
-        Set<Property> integralRelations = rdfSubjectTypes.stream()
-                .map(t -> QueryUtil.getIntegralRelationsForType(t, jsonLd))
-                .flatMap(List::stream)
-                .collect(Collectors.toSet());
-
-        Predicate<Property> followIntegralRelation = integralProp ->
-                integralProp.range().stream().anyMatch(irRangeType -> this.mayAppearOnType(irRangeType, jsonLd));
-
-        List<List<Property>> altPaths = integralRelations.stream()
-                .filter(followIntegralRelation)
-                .map(ir -> Stream.concat(Stream.of(ir), path().stream()).toList())
-                .collect(Collectors.toList());
-
-        if (rdfSubjectTypes.stream().anyMatch(t -> this.mayAppearOnType(t, jsonLd))) {
-            altPaths.add(List.of(this));
-        }
-
-        if (altPaths.isEmpty() && allowIncompatible) {
-            altPaths.add(List.of(this));
-        }
-
-        return altPaths.stream()
-                .filter(Predicate.not(List::isEmpty))
-                .map(altPath -> altPath.size() > 1 ? new Path(altPath) : altPath.getFirst())
-                .toList();
     }
 
     private List<String> getDomain(JsonLd jsonLd) {
@@ -637,17 +600,9 @@ public non-sealed class Property extends PathElement {
         }
     }
 
-    private static class CompositeProperty extends Property {
+    public static class CompositeProperty extends Property {
         public CompositeProperty(Map<String, Object> definition, JsonLd jsonLd, String name, Key.RecognizedKey key) {
             super(definition, jsonLd, name, key);
-        }
-
-        @Override
-        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
-            return getComponents(jsonLd).stream()
-                    .flatMap(s -> s.getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible).stream())
-                    .distinct()
-                    .toList();
         }
 
         @Override
@@ -655,7 +610,7 @@ public non-sealed class Property extends PathElement {
             return true;
         }
 
-        private List<Selector> getComponents(JsonLd jsonLd) {
+        public List<Selector> getComponents(JsonLd jsonLd) {
             List<Selector> components = new ArrayList<>();
 
             ((List<?>) definition.getOrDefault(PROPERTY_CHAIN_AXIOM, List.of()))
@@ -685,7 +640,7 @@ public non-sealed class Property extends PathElement {
         }
     }
 
-    private static class ShorthandProperty extends Property {
+    public static class ShorthandProperty extends Property {
         private final List<Property> propertyChain;
 
         public ShorthandProperty(Map<String, Object> definition, JsonLd jsonLd, String name, Key.RecognizedKey key) {
@@ -696,11 +651,6 @@ public non-sealed class Property extends PathElement {
         @Override
         public List<Property> path() {
             return propertyChain;
-        }
-
-        @Override
-        public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
-            return new Path(propertyChain).getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
         }
 
         @Override

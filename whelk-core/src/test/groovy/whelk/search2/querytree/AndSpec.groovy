@@ -50,20 +50,4 @@ class AndSpec extends Specification {
         "p1:v1 (p2:v2 OR p3:v3)" | "p1:v1 (p2:v2 OR p4:v4)"       | false
         "type:T1 X p7:v7"        | "X p7:v7"                      | true
     }
-
-    def "expand"() {
-        given:
-        Node tree = QueryTreeBuilder.buildTree(query, disambiguate)
-
-        expect:
-        tree.expand(jsonLd, subjectTypes).toString() == result
-
-        where:
-        query               | subjectTypes | result
-        "p7:v7 p8:v8 p9:v9" | []           | "p7:v7 p8:v8 p9:v9"
-        "p7:v7 p8:v8 p9:v9" | ["T1"]       | "p7:v7 instanceOf.p8:v8 p9:v9"
-        "p7:v7 p8:v8 p9:v9" | ["T2"]       | "hasInstance.p7:v7 p8:v8 p9:v9"
-        "p7:v7 p8:v8 p9:v9" | ["T3"]       | "p7:v7 p8:v8 p9:v9"
-        "p7:v7 p8:v8 p9:v9" | ["T1", "T2"] | "(hasInstance.p7:v7 OR p7:v7) (instanceOf.p8:v8 OR p8:v8) p9:v9"
-    }
 }

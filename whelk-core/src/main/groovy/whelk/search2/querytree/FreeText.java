@@ -3,7 +3,6 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.search2.Query;
 
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +28,6 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
 
     public FreeText(String s) {
         this(new Token.Raw(s));
-    }
-
-    @Override
-    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return ExpandedNode.identity(this);
     }
 
     @Override

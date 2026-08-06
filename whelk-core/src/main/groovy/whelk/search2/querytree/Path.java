@@ -52,49 +52,6 @@ public final class Path implements Selector {
     }
 
     @Override
-    public List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
-        List<Selector> altSelectors = new ArrayList<>();
-        getAltPaths(path(), jsonLd, rdfSubjectTypes, allowIncompatible).forEach(l -> {
-            if (l.size() == 1) {
-                altSelectors.add(l.getFirst());
-            } else if (l.size() > 1) {
-                altSelectors.add(new Path(l));
-            }
-        });
-        return excludeInverseIntegralRoundTrips(altSelectors);
-    }
-
-    private List<List<PathElement>> getAltPaths(List<? extends PathElement> tail, JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
-        if (tail.isEmpty()) {
-            return List.of(List.of());
-        }
-        var next = tail.getFirst();
-        var newTail = tail.subList(1, tail.size());
-        var nextAltSelectors = next.getAltSelectors(jsonLd, rdfSubjectTypes, allowIncompatible);
-        return nextAltSelectors.stream()
-                .flatMap(s -> getAltPaths(newTail, jsonLd, next.range(), allowIncompatible).stream()
-                        .map(altPath -> Stream.concat(s.path().stream(), altPath.stream())))
-                .map(Stream::toList)
-                .toList();
-    }
-
-    private List<Selector> excludeInverseIntegralRoundTrips(List<Selector> altSelectors) {
-        List<Selector> res = new ArrayList<>();
-        for (Selector s : altSelectors) {
-            List<Property.IntegralProperty> integralsInPath = s.path().stream()
-                    .filter(Property.IntegralProperty.class::isInstance)
-                    .map(Property.IntegralProperty.class::cast)
-                    .toList();
-            boolean hasInversePair = integralsInPath.stream()
-                    .anyMatch(integral -> integralsInPath.stream().anyMatch(integral::isInverseOf));
-            if (!hasInversePair) {
-                res.add(s);
-            }
-        }
-        return res;
-    }
-
-    @Override
     public boolean isValid() {
         return path.stream().allMatch(Selector::isValid);
     }

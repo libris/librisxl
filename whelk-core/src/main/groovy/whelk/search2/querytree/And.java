@@ -2,30 +2,22 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-
-import static whelk.search2.QueryUtil.mustWrap;
 
 public non-sealed class And extends Group {
     private final List<Node> children;
 
     public And(List<? extends Node> children) {
-        this.children = flattenChildren(children);
+        this(children, true);
     }
 
-    public And(List<Node> children, boolean flattenChildren) {
-        this.children = flattenChildren ? flattenChildren(children) : children;
-    }
-
-    @Override
-    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        List<String> rdfSubjectTypesInGroup = rdfSubjectType().asList().stream().map(Type::type).toList();
-        return super.expand(jsonLd, rdfSubjectTypesInGroup.isEmpty() ? rdfSubjectTypes : rdfSubjectTypesInGroup);
+    public And(List<? extends Node> children, boolean flattenChildren) {
+        this.children = flattenChildren
+                ? flattenChildren(children)
+                : children.stream().map(Node.class::cast).toList();
     }
 
     @Override
@@ -46,8 +38,8 @@ public non-sealed class And extends Group {
     }
 
     @Override
-    public Group newInstance(List<Node> children) {
-        return new And(children);
+    public And newInstance(List<Node> children, boolean flattenChildren) {
+        return new And(children, flattenChildren);
     }
 
     @Override

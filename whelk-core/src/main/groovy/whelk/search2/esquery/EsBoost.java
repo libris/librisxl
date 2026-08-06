@@ -1,12 +1,9 @@
-package whelk.search2.esquerytree;
-
-import whelk.search2.QueryUtil;
+package whelk.search2.esquery;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class EsBoost {

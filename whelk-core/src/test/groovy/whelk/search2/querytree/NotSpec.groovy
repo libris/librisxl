@@ -9,15 +9,6 @@ import whelk.search2.EsMappings
 class NotSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
-    EsMappings esMappings = TestData.getEsMappings()
-
-    def "expand filter alias"() {
-        given:
-        def filter = QueryTreeBuilder.buildTree("NOT excludeA", disambiguate)
-
-        expect:
-        filter.expand(jsonLd, []) == ExpandedNode.newEmpty()
-    }
 
     def "implies"() {
         given:

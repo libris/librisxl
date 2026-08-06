@@ -2,18 +2,12 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.Operator;
-import whelk.util.Restrictions;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import static java.util.Objects.hash;
 import static whelk.search2.Operator.EQUALS;
@@ -45,13 +39,6 @@ public non-sealed class Condition implements Node {
 
     public Value value() {
         return value;
-    }
-
-    @Override
-    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return selector.isValid()
-                ? expandWithAltSelectors(jsonLd, rdfSubjectTypes)
-                : ExpandedNode.identity(this);
     }
 
     @Override
@@ -119,62 +106,6 @@ public non-sealed class Condition implements Node {
 
     public Type asTypeNode() {
         return new Type((Property.RdfType) selector, (VocabTerm) value);
-    }
-
-    private ExpandedNode expandWithAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        List<Node> withAltSelectors = selector.getAltSelectors(jsonLd, rdfSubjectTypes, true).stream()
-                .map(this::withSelector)
-                .map(s -> s._expand(jsonLd))
-                .toList();
-        Node expanded = withAltSelectors.size() > 1 ? new Or(withAltSelectors) : withAltSelectors.getFirst();
-        return new ExpandedNode(expanded, Map.of(this, expanded));
-    }
-
-    private Node _expand(JsonLd jsonLd) {
-        List<? extends PathElement> path = selector.path();
-
-        List<Node> expanded = Stream.concat(Stream.of(withSelector(path.size() > 1 ? new Path(path) : path.getFirst())), getPrefilledFields(path).stream())
-                .map(s -> s.expandType(jsonLd))
-                .toList();
-
-        return expanded.size() > 1 ? new And(expanded) : expanded.getFirst();
-    }
-
-    private List<Condition> getPrefilledFields(List<? extends PathElement> path) {
-        List<Condition> prefilledFields = new ArrayList<>();
-        List<PathElement> currentPath = new ArrayList<>();
-        for (PathElement pe : path) {
-            currentPath.add(pe);
-            if (pe instanceof Property.RestrictedSubProperty p && !p.hasIndexKey()) {
-                for (Restrictions.HasValue r : p.getObjectRestrictions()) {
-                    var restrictedPath = new Path(Stream.concat(currentPath.stream(), r.onProperty().path().stream()).toList());
-                    prefilledFields.add(new Condition(restrictedPath, EQUALS, r.value()));
-                }
-            }
-        }
-        return prefilledFields;
-    }
-
-    // When querying type, match any subclass by default (TODO: make this optional)
-    private Node expandType(JsonLd jsonLd) {
-        if (!(selector.isType() && value instanceof VocabTerm v)) {
-            return this;
-        }
-
-        String baseType = v.key();
-
-        Set<String> subtypes = jsonLd.getSubClasses(baseType);
-        if (subtypes.isEmpty()) {
-            return this;
-        }
-
-        List<Condition> altFields = Stream.concat(Stream.of(baseType), subtypes.stream())
-                .filter(Predicate.not(jsonLd::isDeprecated))
-                .sorted()
-                .map(t -> withValue(new VocabTerm(t, jsonLd.vocabIndex.get(t))))
-                .toList();
-
-        return new Or(altFields);
     }
 
     private Map<String, Object> _toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {

@@ -1,16 +1,13 @@
 package whelk.search2;
 
 import whelk.Whelk;
-import whelk.search2.esquerytree.EsBoost;
+import whelk.search2.esquery.EsBoost;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.SEARCH_KEY;
@@ -24,7 +21,6 @@ import static whelk.component.ElasticSearch.SystemFields.OUTER_EMBELLISHMENTS;
 import static whelk.component.ElasticSearch.SystemFields.SEARCH_CARD_STR;
 import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG;
 import static whelk.component.ElasticSearch.SystemFields.TOP_STR;
-import static whelk.search2.QueryUtil.matchAny;
 import static whelk.util.Jackson.mapper;
 
 public class ESSettings {

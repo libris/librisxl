@@ -3,6 +3,7 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.*;
+import whelk.search2.esquery.EsQueryTreeBuilder;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -27,6 +28,10 @@ public class QueryTree {
         return tree;
     }
 
+    public Map<String, Object> toEsQuery(ESSettings esSettings) {
+        return EsQueryTreeBuilder.buildFrom(tree, esSettings).dsl();
+    }
+
     public static QueryTree newEmpty() {
         return new QueryTree(new Any.EmptyString());
     }
@@ -35,12 +40,12 @@ public class QueryTree {
         return new ReducedQueryTree(tree.reduce(jsonLd));
     }
 
-    public ExpandedQueryTree expand(JsonLd jsonLd) {
+    public ExpandedTree expand(JsonLd jsonLd) {
         return expand(jsonLd, List.of());
     }
 
-    public ExpandedQueryTree expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return new ExpandedQueryTree(tree.expand(jsonLd, rdfSubjectTypes));
+    public ExpandedTree expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        return new ExpandedTree(QueryTreeExpander.expand(tree, jsonLd, rdfSubjectTypes));
     }
 
     public ReducedQueryTree merge(QueryTree other, JsonLd jsonLd) {
@@ -175,30 +180,15 @@ public class QueryTree {
     }
 
     private static Node _remove(Node tree, Collection<? extends Node> remove) {
-        if (remove.stream().anyMatch(n -> n == tree)) {
-            return null;
-        }
-        if (tree instanceof Group g) {
-            return g.mapFilterAndReinstantiate(c -> _remove(c, remove), Objects::nonNull);
-        }
-        if (tree instanceof Not(Node node)) {
-            var removed = _remove(node, remove);
-            return removed != null ? new Not(removed) : null;
-        }
-        return tree;
+        return remove.stream().anyMatch(n -> n == tree)
+                ? null
+                : Node.withMappedChildren(tree, child -> _remove(child, remove));
     }
 
     private static Node _replace(Node tree, Node replace, Node replacement) {
-        if (tree == replace) {
-            return replacement;
-        }
-        if (tree instanceof Group g) {
-            return g.mapAndReinstantiate(c -> _replace(c, replace, replacement));
-        }
-        if (tree instanceof Not(Node node)) {
-            return new Not(_replace(node, replace, replacement));
-        }
-        return tree;
+        return tree == replace
+                ? replacement
+                : Node.withMappedChildren(tree, child -> _replace(child, replace, replacement));
     }
 
     private static Node _add(Node tree, Node add) {
@@ -235,7 +225,7 @@ public class QueryTree {
 
     private static Node merge(Node a, Node b, JsonLd jsonLd) {
         if (a instanceof Or or) {
-            return or.mapAndReinstantiate(n -> merge(n, b, jsonLd));
+            return Node.withMappedChildren(or, child -> merge(child, b, jsonLd));
         }
 
         RdfSubjectType aRdfSubjectType = a.rdfSubjectType();
@@ -262,7 +252,7 @@ public class QueryTree {
         }
 
         if (bTree instanceof Or or) {
-            return or.mapFilterAndReinstantiate(n -> compatibleSubTree(aSubjectType, n, jsonLd), Objects::nonNull);
+            return Node.withMappedChildren(or, child -> compatibleSubTree(aSubjectType, child, jsonLd));
         }
 
         RdfSubjectType bRdfSubjectType = bTree.rdfSubjectType();
@@ -342,5 +332,40 @@ public class QueryTree {
                 .forEach(nodesToKeep::add);
 
         return (nodesToKeep.size() == 1 ? nodesToKeep.getFirst() : new And(nodesToKeep));
+    }
+
+
+    public static class ExpandedTree extends QueryTree {
+        ExpandedTree(Node tree) {
+            super(tree);
+        }
+
+        @Override
+        public ExpandedTree expand(JsonLd jsonLd) {
+            return this;
+        }
+
+        @Override
+        public ExpandedTree copy() {
+            return new ExpandedTree(tree());
+        }
+
+        public static final class DerivedOr extends Or {
+            private final Condition originalCondition;
+
+            public DerivedOr(List<? extends Node> children, Condition originalCondition) {
+                super(children, false);
+                this.originalCondition = originalCondition;
+            }
+
+            public Condition originalCondition() {
+                return originalCondition;
+            }
+
+            @Override
+            public DerivedOr newInstance(List<Node> children, boolean flattenChildren) {
+                return new DerivedOr(children, originalCondition);
+            }
+        }
     }
 }

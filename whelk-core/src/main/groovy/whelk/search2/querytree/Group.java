@@ -1,42 +1,20 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.ESSettings;
 import whelk.search2.QueryUtil;
 
 import java.util.*;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public sealed abstract class Group implements Node permits And, Or {
-    abstract Group newInstance(List<Node> children);
+    abstract Group newInstance(List<Node> children, boolean flattenChildren);
 
     abstract String delimiter();
 
     abstract String key();
-
-    @Override
-    public ExpandedNode expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        Map<Node, Node> nodeMap = new HashMap<>();
-        List<Node> newChildren = new ArrayList<>();
-        for (Node child : children()) {
-            ExpandedNode expandedChild = child.expand(jsonLd, rdfSubjectTypes);
-            if (!expandedChild.isEmpty()) {
-                newChildren.add(expandedChild.expandedRoot());
-                nodeMap.putAll(expandedChild.nodeMap());
-            }
-        }
-        Node expandedRoot = switch (newChildren.size()) {
-            case 0 -> null;
-            case 1 -> newChildren.getFirst();
-            default -> newInstance(newChildren);
-        };
-        nodeMap.put(this, expandedRoot);
-        return new ExpandedNode(expandedRoot, nodeMap);
-    }
 
     @Override
     public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
@@ -61,19 +39,6 @@ public sealed abstract class Group implements Node permits And, Or {
     @Override
     public int hashCode() {
         return Objects.hash(this.getClass(), new HashSet<>(children()));
-    }
-
-    public Group mapAndReinstantiate(Function<Node, Node> mapper) {
-        return newInstance(children().stream().map(mapper).toList());
-    }
-
-    public Node mapFilterAndReinstantiate(Function<Node, Node> mapper, Predicate<Node> p) {
-        List<Node> newChildren = children().stream().map(mapper).filter(p).toList();
-        return switch (newChildren.size()) {
-            case 0 -> null;
-            case 1 -> newChildren.getFirst();
-            default -> newInstance(newChildren);
-        };
     }
 
     List<Node> flattenChildren(List<? extends Node> children) {
@@ -101,6 +66,6 @@ public sealed abstract class Group implements Node permits And, Or {
                     }
                     reduced.add(child);
                 });
-        return reduced.size() == 1 ? reduced.getFirst() : newInstance(reduced);
+        return reduced.size() == 1 ? reduced.getFirst() : newInstance(reduced, true);
     }
 }

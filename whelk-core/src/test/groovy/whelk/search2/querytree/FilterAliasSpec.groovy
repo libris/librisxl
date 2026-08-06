@@ -8,14 +8,6 @@ class FilterAliasSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
 
-    def "expand"() {
-        given:
-        def alias = QueryTreeBuilder.buildTree("excludeA", disambiguate)
-
-        expect:
-        alias.expand(jsonLd, []).toString() == "NOT p1:A"
-    }
-
     def "invert"() {
         given:
         def alias = QueryTreeBuilder.buildTree("excludeA", disambiguate)

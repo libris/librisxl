@@ -2,11 +2,10 @@ package whelk.search2;
 
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.esquerytree.EsQueryTree2;
+import whelk.search2.esquery.EsQueryTree2;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.EsQuery;
-import whelk.search2.querytree.EsQueryTree;
 import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;

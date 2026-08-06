@@ -336,8 +336,9 @@ class QueryTreeSpec extends Specification {
         "X type:T1"                  | "type:T2 excludeA"                         | "X type:T1 instanceOf.type:T2 excludeA"
         "X type:T1"                  | "type:T1x excludeA"                        | "X type:T1" // T1x is narrower than T1 -> We can't be sure that excludeA applies to T1
         "X type:T1x"                 | "type:T1 excludeA"                         | "X type:T1x excludeA" // If excludeA applies to T1, then it also applies to the narrower T1x
-        "X type:(T1x OR T2x)"        | "type:T1 excludeA"                         | "(type:T1x X excludeA) OR (type:T2x X)" // excludeA only applicable for T1x
-        "X type:(T1x OR T2x)"        | "(type:T1 excludeA) OR (type:T2 includeA)" | "(type:T1x X excludeA) OR (type:T2x X includeA)"
+        "X type:(T1x OR T3x)"        | "type:T1 excludeA"                         | "(type:T1x X excludeA) OR (type:T3x X)" // excludeA only applicable for T1x
+        "X type:(T1x OR T2x)"        | "type:T1 excludeA"                         | "(type:T1x X excludeA) OR (type:T2x X hasInstance.type:T1 excludeA)" // excludeA indirectly applicable to T2x via integral relation
+        "X type:(T1x OR T3x)"        | "(type:T1 excludeA) OR (type:T3 includeA)" | "(type:T1x X excludeA) OR (type:T3x X includeA)" // excludeA only applicable to T1x, includeA only applicable to T3x
         "X type:T1"                  | "type:(T2 OR T3) p7:v7 p8:v8"              | "X type:T1 instanceOf.type:T2 p7:v7 p8:v8"
         "X type:T2"                  | "type:(T1 OR T3) p7:v7 p8:v8"              | "X type:T2 hasInstance.type:T1 p7:v7 p8:v8"
         "X type:T1"                  | "p7:v7"                                    | "X type:T1 p7:v7"

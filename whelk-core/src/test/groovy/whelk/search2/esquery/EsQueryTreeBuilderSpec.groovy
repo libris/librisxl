@@ -1,20 +1,20 @@
-package whelk.search2.esquerytree
+package whelk.search2.esquery
 
 import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.Disambiguate
 import whelk.search2.ESSettings
 import whelk.search2.EsMappings
-import whelk.search2.querytree.ExpandedQueryTree
 import whelk.search2.querytree.QueryTree
+import whelk.search2.querytree.QueryTreeBuilder
 import whelk.search2.querytree.TestData
 
-class EsQueryTree2Spec extends Specification {
+class EsQueryTreeBuilderSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
     JsonLd jsonLd = TestData.getJsonLd()
     EsMappings esMappings = TestData.getEsMappings()
 
-    def "convert to ES query"() {
+    def "mixed query with boosted fields"() {
         given:
         Map boostSettings = [
                 "field_boost": [
@@ -41,12 +41,10 @@ class EsQueryTree2Spec extends Specification {
         ]
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost(boostSettings))
         String q = '(NOT p1:v1 OR p4:v4) something'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [
                                 [
@@ -105,13 +103,57 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
+    def "free-text query using configured boost params"() {
+        given:
+        Map boostSettings = [
+                "field_boost": [
+                        "fields"              : [
+                                [
+                                        "name"        : "fieldA",
+                                        "boost"       : 10
+                                ]
+                        ],
+                        "phrase_boost_divisor": 4,
+                        "analyze_wildcard": true,
+                        "quote_field_suffix": ".exact"
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost(boostSettings))
+        String q = 'x y'
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
+
+        expect:
+        result == [
+                "bool": [
+                        "should": [[
+                                           "query_string": [
+                                                   "default_operator"  : "AND",
+                                                   "query"             : "\"x y\"",
+                                                   "analyze_wildcard"  : true,
+                                                   "quote_field_suffix": ".exact",
+                                                   "fields"            : ["fieldA^2.5", "fieldA.exact^2.5"]
+                                           ]
+                                   ], [
+                                           "simple_query_string": [
+                                                   "default_operator"  : "AND",
+                                                   "query"             : "x y",
+                                                   "analyze_wildcard"  : true,
+                                                   "quote_field_suffix": ".exact",
+                                                   "fields"            : ["fieldA^10.0", "fieldA.exact^10.0"]
+                                           ]
+                                   ]]
+                ]
+        ]
+    }
+
     def "match all if empty"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
-        EsQueryTree2 esQueryTree = new EsQueryTree2(ExpandedQueryTree.newEmpty(), esSettings)
+
+        Map result = QueryTree.newEmpty().toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == Map.of("match_all", Map.of())
+        result == Map.of("match_all", Map.of())
     }
 
     // TODO: PostFilter
@@ -129,7 +171,7 @@ class EsQueryTree2Spec extends Specification {
 //        ]
 //        AppParams appParams = new AppParams(appConfig, jsonLd)
 //        SelectedFacets selectedFacets = new SelectedFacets(qt, appParams.sliceList)
-//        ExpandedQueryTree eqt = qt.expand(jsonLd)
+//        QueryTree.ExpandedTree eqt = qt.expand(jsonLd)
 //        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings, selectedFacets)
 //
 //        expect:
@@ -177,16 +219,14 @@ class EsQueryTree2Spec extends Specification {
 //        ]
 //    }
 
-    def "To ES query: nested (CONDITION)"() {
+    def "nested (CONDITION)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p4:"https://id.kb.se/x"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "nested": [
                         "ignore_unmapped": true,
                         "query": [
@@ -203,16 +243,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: nested (CONDITION, include_in_parent=true)"() {
+    def "nested (CONDITION, include_in_parent=true)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost(["phrase_boost_divisor": 8]))
         String q = 'p15.p4:"https://id.kb.se/x"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool" : [
                         "filter" : [
                                 "term" : [
@@ -223,16 +261,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: nested (CONDITION, multi-token value, include_in_parent=true)"() {
+    def "nested (CONDITION, multi-token value, include_in_parent=true)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p15.p4:(x y)'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
             "nested" : [
                 "ignore_unmapped" : true,
                 "path" : "p15",
@@ -252,7 +288,7 @@ class EsQueryTree2Spec extends Specification {
 //        given:
 //        String q = 'p3.p16:(x y)'
 //        QueryTree qt = new QueryTree(q, disambiguate)
-//        ExpandedQueryTree eqt = qt.expand(jsonLd)
+//        QueryTree.ExpandedTree eqt = qt.expand(jsonLd)
 //        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings)
 //
 //        expect:
@@ -285,16 +321,14 @@ class EsQueryTree2Spec extends Specification {
 //        ]
 //    }
 
-    def "To ES query: group nested (AND)"() {
+    def "group nested (AND)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 p3.p4:"https://id.kb.se/y"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "nested": [
                         "ignore_unmapped" : true,
                         "path" : "p3",
@@ -323,16 +357,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (OR)"() {
+    def "group nested (OR)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p4:"https://id.kb.se/x" OR p3.p4:"https://id.kb.se/y"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "nested": [
                         "path" : "p3",
                         "query": [
@@ -361,16 +393,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (OR, include_in_parent=true)"() {
+    def "group nested (OR, include_in_parent=true)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p15.p4:"https://id.kb.se/x" OR p15.p4:"https://id.kb.se/y"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "should": [[
                                            "bool": [
@@ -393,16 +423,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (OR in AND)"() {
+    def "group nested (OR in AND)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = '(p3.p4:"https://id.kb.se/x" OR p3.p4:"https://id.kb.se/y") (p3.p2:E1 OR p3.p2:E2)'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "nested": [
                         "path" : "p3",
                         "query": [
@@ -455,16 +483,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (AND in OR)"() {
+    def "group nested (AND in OR)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = '(p3.p4:"https://id.kb.se/y" p3.p2:E1) OR p3.p1:a'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "nested": [
                         "path"           : "p3",
                         "query"          : [
@@ -503,16 +529,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (AND, same non-repeatable field)"() {
+    def "group nested (AND, same non-repeatable field)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 p3.p2:E2'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [[
                                          "nested": [
@@ -547,16 +571,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (AND, same non-repeatable field, include_in_parent=true)"() {
+    def "group nested (AND, same non-repeatable field, include_in_parent=true)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p15.p2:E1 p15.p2:E2'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [[
                                          "bool": [
@@ -579,16 +601,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (OR, same repeatable field)"() {
+    def "group nested (OR, same repeatable field)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p4:"https://id.kb.se/x" OR p3.p4:"https://id.kb.se/y"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "nested": [
                         "path" : "p3",
                         "query": [
@@ -617,16 +637,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (OR, non-nested child)"() {
+    def "group nested (OR, non-nested child)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 OR p4:"https://id.kb.se/x"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "should": [[
                                            "nested": [
@@ -655,16 +673,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (OR, non-nested child) 2"() {
+    def "group nested (OR, non-nested child) 2"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 OR p3.p2:E2 OR p4:"https://id.kb.se/x"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "should": [[
                                            "nested": [
@@ -707,16 +723,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (AND, non-nested child)"() {
+    def "group nested (AND, non-nested child)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 p4:"https://id.kb.se/y"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [[
                                          "nested": [
@@ -745,16 +759,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (AND, non-nested child) 2"() {
+    def "group nested (AND, non-nested child) 2"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 p3.p4:"https://id.kb.se/y" p2:E2'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [[
                                          "nested": [
@@ -795,16 +807,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (AND, grouped by non-repeatable field)"() {
+    def "group nested (AND, grouped by non-repeatable field)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 p3.p4:"https://id.kb.se/x" p3.p2:E2 p3.p4:"https://id.kb.se/y"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [[
                                          "nested": [
@@ -863,16 +873,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (AND, grouped by non-repeatable field) 2"() {
+    def "group nested (AND, grouped by non-repeatable field) 2"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 p3.p4:"https://id.kb.se/x" p3.p4:"https://id.kb.se/y" p3.p2:E2 p3.p4:"https://id.kb.se/z"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [[
                                          "nested": [
@@ -940,16 +948,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (AND, non-nested as boundary)"() {
+    def "group nested (AND, non-nested as boundary)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 p1:x p3.p4:"https://id.kb.se/x" p3.p4:"https://id.kb.se/y"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [[
                                          "nested": [
@@ -1002,16 +1008,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: nested (NOT)"() {
+    def "nested (NOT)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'NOT p3:"https://id.kb.se/x"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must_not": [
                                 "nested": [
@@ -1032,16 +1036,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: nested (NOT, include_in_parent=true)"() {
+    def "nested (NOT, include_in_parent=true)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'NOT p15:"https://id.kb.se/x"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must_not": [
                                 "bool": [
@@ -1056,16 +1058,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (NOT in AND, mixed with non-negated)"() {
+    def "group nested (NOT in AND, mixed with non-negated)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 NOT p3.p4:"https://id.kb.se/x"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "nested": [
                         "path" : "p3",
                         "query": [
@@ -1098,16 +1098,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (NOT in AND, mixed with non-negated) 2"() {
+    def "group nested (NOT in AND, mixed with non-negated) 2"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p3.p2:E1 NOT p3.p4:"https://id.kb.se/x" NOT p3.p4:"https://id.kb.se/y" NOT p3.p1:1'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "nested": [
                         "query": [
                                 "bool": [
@@ -1162,16 +1160,14 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: group nested (NOT in AND, all negated)"() {
+    def "group nested (NOT in AND, all negated)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'NOT p3.p2:E1 NOT p3.p4:"https://id.kb.se/x"'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd)
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [[
                                          "bool": [
@@ -1228,7 +1224,7 @@ class EsQueryTree2Spec extends Specification {
 //        ]
 //        AppParams appParams = new AppParams(appConfig, jsonLd)
 //        SelectedFacets selectedFacets = new SelectedFacets(qt, appParams.sliceList)
-//        ExpandedQueryTree eqt = qt.expand(jsonLd)
+//        QueryTree.ExpandedTree eqt = qt.expand(jsonLd)
 //        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings, selectedFacets)
 //
 //        expect:
@@ -1283,7 +1279,7 @@ class EsQueryTree2Spec extends Specification {
 //        ]
 //        AppParams appParams = new AppParams(appConfig, jsonLd)
 //        SelectedFacets selectedFacets = new SelectedFacets(qt, appParams.sliceList)
-//        ExpandedQueryTree eqt = qt.expand(jsonLd)
+//        QueryTree.ExpandedTree eqt = qt.expand(jsonLd)
 //        EsQueryTree esQueryTree = new EsQueryTree(eqt, esSettings, selectedFacets)
 //
 //        expect:
@@ -1333,16 +1329,16 @@ class EsQueryTree2Spec extends Specification {
 //        ]
 //    }
 
-    def "To ES query: CONDITION expanding to OR should result in dis_max query"() {
+    def "CONDITION expanding to OR should result in dis_max query"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'type:T2x p1:x'
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd) // --> 'type:T2x (hasInstance.p1:x OR p1:x)'
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate)
+                .expand(jsonLd)
+                .toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "bool": [
                         "must": [[
                                          "bool": [
@@ -1373,16 +1369,16 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    def "To ES query: Simple text queries on sub-properties of the same composite property should be combined into a single query clause"() {
+    def "simple text queries on sub-properties of the same composite property should be combined into a single query clause"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
         String q = 'p16:(x y)' // p16 is a composite property
-        QueryTree qt = new QueryTree(q, disambiguate)
-        ExpandedQueryTree eqt = qt.expand(jsonLd) // --> 'p18:x OR p17:x'
-        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
+        Map result = new QueryTree(q, disambiguate)
+                .expand(jsonLd)
+                .toEsQuery(esSettings)
 
         expect:
-        esQueryTree.getMainQuery() == [
+        result == [
                 "simple_query_string": [
                         "default_operator": "AND",
                         "query"           : "x y",
@@ -1391,32 +1387,43 @@ class EsQueryTree2Spec extends Specification {
         ]
     }
 
-    // TODO: Should pass
-//    def "To ES query: Simple text queries on sub-properties of the same composite property should be combined into a single query clause 2"() {
-//        given:
-//        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
-//        String q = 'p1:x OR p16:(x y)' // p16 is a composite property
-//        QueryTree qt = new QueryTree(q, disambiguate)
-//        ExpandedQueryTree eqt = qt.expand(jsonLd) // --> 'p18:x OR p17:x'
-//        EsQueryTree2 esQueryTree = new EsQueryTree2(eqt, esSettings)
-//
-//        expect:
-//        esQueryTree.getMainQuery() == [
-//                "bool": [
-//                        "should": [[
-//                                           "simple_query_string": [
-//                                                   "default_operator": "AND",
-//                                                   "query"           : "x",
-//                                                   "fields"          : ["p1"]
-//                                           ]
-//                                   ], [
-//                                           "simple_query_string": [
-//                                                   "default_operator": "AND",
-//                                                   "query"           : "x y",
-//                                                   "fields"          : ["p18", "p17"]
-//                                           ]
-//                                   ]]
-//                ]
-//        ]
-//    }
+    def "simple text queries on sub-properties of the same composite property should be combined into a single query clause 2"() {
+        given:
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
+        String q = 'p1:x OR p16:(x y)' // p16 is a composite property
+        Map result = new QueryTree(q, disambiguate)
+                .expand(jsonLd)
+                .toEsQuery(esSettings)
+
+        expect:
+        result == [
+                "bool": [
+                        "should": [[
+                                           "simple_query_string": [
+                                                   "default_operator": "AND",
+                                                   "query"           : "x",
+                                                   "fields"          : ["p1"]
+                                           ]
+                                   ], [
+                                           "simple_query_string": [
+                                                   "default_operator": "AND",
+                                                   "query"           : "x y",
+                                                   "fields"          : ["p18", "p17"]
+                                           ]
+                                   ]]
+                ]
+        ]
+    }
+
+    def "exists query"() {
+        given:
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))// p16 is a composite property
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
+
+        expect:
+        result == [ "exists" : [ "field" : "p" ] ]
+
+        where:
+        q << ["p:()", "p:*"]
+    }
 }

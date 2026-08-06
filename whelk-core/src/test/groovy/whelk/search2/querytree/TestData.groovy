@@ -36,6 +36,7 @@ class TestData {
                 'rdf:type'        : ['rdf:type'] as Set,
                 'instanceof'      : ['instanceOf'] as Set,
                 'hasinstance'     : ['hasInstance'] as Set,
+                'hasitem'         : ['hasItem'] as Set,
                 'p'               : ['p', 'p1'] as Set,
                 'plabel'          : ['p2', 'p3'] as Set,
                 'pp'              : ['p3', 'p4'] as Set,
@@ -47,7 +48,8 @@ class TestData {
                 'p3p1'            : ['p3p1'] as Set,
                 't1p3p1'          : ['t1p3p1'] as Set,
                 'restrictedp_p1'  : ['restrictedP_p1'] as Set,
-                'restrictedp_p1_2': ['restrictedP_p1_2'] as Set
+                'restrictedp_p1_2': ['restrictedP_p1_2'] as Set,
+                't1type'          : ['t1Type'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -228,6 +230,12 @@ class TestData {
                         'range'   : ['@id': 'T4']
                 ],
                 [
+                        '@id'   : 'hasItem',
+                        '@type' : 'DatatypeProperty',
+                        'domain': [['@id': 'T1']],
+                        'range' : [['@id': 'T4']]
+                ],
+                [
                         '@id'        : 'librissearch:workCategory',
                         'category'   : ['@id': "https://id.kb.se/ns/librissearch/composite"],
                         '@type'      : 'ObjectProperty',
@@ -342,6 +350,12 @@ class TestData {
                                 ['@id': '_:restrictedP'],
                                 ['@id': 'p1']
                         ]]]
+                ],
+                [
+                        '@id'        : 't1Type',
+                        '@type'      : 'ObjectProperty',
+                        'domain'     : ['@id': 'T1'],
+                        'ls:indexKey': '@type'
                 ]
         ]]
         def ctx = [

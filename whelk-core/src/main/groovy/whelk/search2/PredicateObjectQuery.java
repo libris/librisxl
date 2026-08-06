@@ -3,12 +3,10 @@ package whelk.search2;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.esquerytree.EsQueryTree2;
+import whelk.search2.esquery.EsQueryTree2;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.EsQuery;
-import whelk.search2.querytree.EsQueryTree;
-import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
@@ -61,7 +59,7 @@ public class PredicateObjectQuery extends ObjectQuery {
                     .merge(getFullQueryTree(), ld);
         }
 
-        ExpandedQueryTree expanded = queryTree.expand(ld);
+        QueryTree.ExpandedTree expanded = queryTree.expand(ld);
         EsQueryTree2 esQueryTree = new EsQueryTree2(expanded, esSettings);
         Map<String, Object> esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
 

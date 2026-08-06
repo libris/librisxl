@@ -4,12 +4,10 @@ import com.google.common.base.Predicates;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.esquerytree.EsQueryTree2;
+import whelk.search2.esquery.EsQueryTree2;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.EsQuery;
-import whelk.search2.querytree.EsQueryTree;
-import whelk.search2.querytree.ExpandedQueryTree;
 import whelk.search2.querytree.FilterAlias;
 import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Link;
@@ -17,6 +15,7 @@ import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.QueryTreeExpander;
 import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
 import whelk.search2.querytree.Value;
@@ -138,7 +137,7 @@ public class Query {
         }
          */
 
-        ExpandedQueryTree expandedQueryTree = fullQueryTree.expand(ld);
+        QueryTree.ExpandedTree expandedQueryTree = fullQueryTree.expand(ld);
         ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
         if (!queryParams.stats.on) {
             EsQueryTree2 esQueryTree = new EsQueryTree2(expandedQueryTree, currentEsSettings);
@@ -468,47 +467,48 @@ public class Query {
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
-        property.getAltSelectors(ctx.jsonLd, ctx.rdfSubjectTypes, false).forEach(selector -> {
-            String field = selector.esField();
-            if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
-                field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
-            } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
-                field = String.format("%s.%s", field, KEYWORD);
-            } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
-                field = String.format("%s.%s", field, JsonLd.ID_KEY);
-            }
-            if (!ctx.esSettings.mappings().isAggregatable(field)) {
-                return;
-            }
-            Optional<String> nestedStem = selector.getEsNestedStem(ctx.esSettings.mappings());
-            Map<String, Object> aggs = nestedStem.isPresent()
-                    ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
-                    : buildCoreAqqQuery(field, slice, ctx);
-            Map<String, List<Condition>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
-                    ? with(new HashMap<>(ctx.mmSelected), m -> {
-                m.remove(pKey);
-                // FIXME
-                if (slice.parentSlice() != null) {
-                    m.remove(slice.parentSlice().propertyKey());
-                }
-                if (slice.subSlice() != null) {
-                    m.remove(slice.subSlice().propertyKey());
-                }
-                // TODO don't hardcode this if we decide it is what we want
-                if (FIND_CATEGORY.equals(pKey) || IDENTIFY_CATEGORY.equals(pKey)) {
-                    m.remove(NONE_CATEGORY);
-                }
-                //if ("_categoryByCollection.@none".equals(pKey)) {
-                //    m.remove("_categoryByCollection.find");
-                //    m.remove("_categoryByCollection.identify");
-                //}
-            })
-                    : ctx.mmSelected;
-            Map<String, Object> filter = SelectedFacets.buildMultiSelectedTree(mSelected.values())
-                    .expand(ctx.jsonLd, ctx.rdfSubjectTypes)
-                    .toEs(ctx.esSettings);
-            query.put(field, filterWrap(aggs, property.name(), filter));
-        });
+        QueryTreeExpander.expandProperty(property, ctx.jsonLd, ctx.rdfSubjectTypes, false)
+                .forEach(selector -> {
+                    String field = selector.esField();
+                    if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
+                        field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
+                    } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
+                        field = String.format("%s.%s", field, KEYWORD);
+                    } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
+                        field = String.format("%s.%s", field, JsonLd.ID_KEY);
+                    }
+                    if (!ctx.esSettings.mappings().isAggregatable(field)) {
+                        return;
+                    }
+                    Optional<String> nestedStem = selector.getEsNestedStem(ctx.esSettings.mappings());
+                    Map<String, Object> aggs = nestedStem.isPresent()
+                            ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
+                            : buildCoreAqqQuery(field, slice, ctx);
+                    Map<String, List<Condition>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
+                            ? with(new HashMap<>(ctx.mmSelected), m -> {
+                        m.remove(pKey);
+                        // FIXME
+                        if (slice.parentSlice() != null) {
+                            m.remove(slice.parentSlice().propertyKey());
+                        }
+                        if (slice.subSlice() != null) {
+                            m.remove(slice.subSlice().propertyKey());
+                        }
+                        // TODO don't hardcode this if we decide it is what we want
+                        if (FIND_CATEGORY.equals(pKey) || IDENTIFY_CATEGORY.equals(pKey)) {
+                            m.remove(NONE_CATEGORY);
+                        }
+                        //if ("_categoryByCollection.@none".equals(pKey)) {
+                        //    m.remove("_categoryByCollection.find");
+                        //    m.remove("_categoryByCollection.identify");
+                        //}
+                    })
+                            : ctx.mmSelected;
+                    Map<String, Object> filter = SelectedFacets.buildMultiSelectedTree(mSelected.values())
+                            .expand(ctx.jsonLd, ctx.rdfSubjectTypes)
+                            .toEsQuery(ctx.esSettings);
+                    query.put(field, filterWrap(aggs, property.name(), filter));
+                });
     }
 
     private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {

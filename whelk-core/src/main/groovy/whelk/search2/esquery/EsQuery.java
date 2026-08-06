@@ -1,4 +1,4 @@
-package whelk.search2.esquerytree;
+package whelk.search2.esquery;
 
 import whelk.search2.Operator;
 import whelk.search2.Query;
