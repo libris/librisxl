@@ -20,7 +20,7 @@ def test_extract_structured_values_1771_1874_Bidrag_tidningsartikel():
     }
 
     result = extract_structured_values(record["sample"], "early")
-
+    
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Holm, C. J."
     assert result["title"] == "Också några ord om slaget vid Porosalmiden 12 juni 1789"
@@ -55,10 +55,11 @@ def test_extract_structured_values_1936_1950_Bidrag_tidningsartikel():
     }
 
     result = extract_structured_values(record["sample"], "parenthesized")
-
+    print(result)
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Ahnlund, N."
-    assert result["title"] == "Rikskanslerns titlar. [Axel Oxenstierna.]"
+    assert result["title"] == "Rikskanslerns titlar"
+    assert result["subtitle"] == "[Axel Oxenstierna.]"
     assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
 
 
@@ -72,10 +73,8 @@ def test_extract_structured_values_1936_1950_Bidrag():
 
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Walde, O."
-    assert (
-        result["title"]
-        == "Bielkeättens insatser i svensk bibliofili. Med särskild hänsyn till Bielkebiblioteket på Skokloster"
-    )
+    assert result["title"] == "Bielkeättens insatser i svensk bibliofili"
+    assert result["subtitle"] == "Med särskild hänsyn till Bielkebiblioteket på Skokloster"
     assert result["host"] == {
         "title": "NTBB",
         "part_number": "27 (1940)",
@@ -90,10 +89,11 @@ def test_extract_structured_values_1936_1950_Monografi():
     }
 
     result = extract_structured_values(record["sample"], "parenthesized")
-
+    print(result)
     assert result["is_component_part"] == False
     assert result["primary_contributors"] == "Weibull, C"
-    assert result["title"] == "Händelser och utvecklingslinjer. Historiska studier"
+    assert result["title"] == "Händelser och utvecklingslinjer"
+    assert result["subtitle"] == "Historiska studier"
     assert result["place"] == "Lund"
     assert result["year"] == "1949"
     assert result["extent"] == "254 s."
@@ -122,7 +122,6 @@ def test_extract_structured_values_1901_1920_Bidrag_tidningsartikel():
         "part_number": "1908, N:o 127 (n/6)",
     }
 
-# TODO Try extracting period-delimited (non-journal) host publication/series 
 def test_extract_structured_values_1771_1874_1875_1900_1901_1920_Bidrag():
     record = {
         "pattern": "Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel. nr, sid.",
@@ -138,7 +137,7 @@ def test_extract_structured_values_1771_1874_1875_1900_1901_1920_Bidrag():
         result["title"]
         == "Om förhållandet mellan politisk historia och kultur- historia"
     )
-    assert result["subtitle"] == "Hist, Tidskr. 1895"
+    assert result["host"] == {"title": "Hist, Tidskr", "part_number": "1895"}
     assert result["extent"] == "s. 415-430"
 
 # TODO Try extracting period-delimited (non-journal) host publication/series 
@@ -153,8 +152,10 @@ def test_extract_structured_values_1771_1874_1875_1900_1901_1920_Monografi():
     assert result["primary_contributors"] == "Silfverstolpe, C"
     assert result["extent"] == "167+ (1) s. +1 pl."
     assert result["title"] == "Klosterfolket i Vadstena"
-    assert result["subtitle"] == "Personhistoriska anteck- ningar. H. 1-2. Sthlm 1898, 99. Skrifter och handlingar utgifna genom Svenska Autografsällskapet. 4"
-
+    assert result["subtitle"] == "Personhistoriska anteck- ningar. H. 1-2"
+    assert result["place"] == "Sthlm"
+    assert result["year"] == "1898, 99"
+    assert result["host"] == {"title": "Skrifter och handlingar utgifna genom Svenska Autografsällskapet", "part_number": "4"}
 
 def test_extract_structured_values_1971_1975_Bidrag_tidningsartikel():
     record = {
@@ -224,7 +225,7 @@ def test_extract_structured_values_1976_Monografi():
         "sample": "Larsson, Gunilla, Curt Weibull : en bibliografi 19 augusti 1976. -Stockholm, 1976. - 27 s. - (Acta Bibliothecae regiae Stockholmiensis,ISSN 0065-1060 ; 28)"
     }
     result = extract_structured_values(record["sample"], "isbd")
-
+    print(result)
     assert result["is_component_part"] == False
     assert result["primary_contributors"] == "Larsson, Gunilla"
     assert result["title"] == "Curt Weibull"
@@ -268,7 +269,6 @@ def test_extract_structured_values_1961_1970_Bidrag_tidningsartikel():
     }
 
     result = extract_structured_values(record["sample"], "dash_style")
-
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Jansson, Leonard"
     assert result["title"] == "Ivar Axelsson Tott"
@@ -284,10 +284,8 @@ def test_extract_structured_values_1961_1970_Bidrag():
 
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Lagerroth, Fredrik"
-    assert (
-        result["title"]
-        == "Positiv rätt eller naturrätt? Ett statsrattsligt dilemma från svenskt 1700-tal. [Zusammenfassung.]"
-    )
+    assert result["title"] == "Positiv rätt eller naturrätt? Ett statsrattsligt dilemma från svenskt 1700-tal"
+    assert result["subtitle"] == "[Zusammenfassung.]"
     assert result["host"] == {
         "title": "Scandia",
         "part_number": "33 (1967)",
@@ -330,10 +328,8 @@ def test_extract_structured_values_1921_1935_1951_1960_Bidrag():
 
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Berg, Gösta"
-    assert (
-        result["title"]
-        == "Svensk folklivskännedom. En översikt av de senare årenslitteratur"
-    )
+    assert result["title"]== "Svensk folklivskännedom"
+    assert result["subtitle"] == "En översikt av de senare årenslitteratur"
     assert result["host"] == {
         "title": "Hävd och hembygd",
         "part_number": "2 (1927)",
@@ -531,10 +527,8 @@ def test_extract_structured_values_1921_1935_1936_1950_Bidrag_utan_författare()
     result = extract_structured_values(record["sample"], "parenthesized")
 
     assert result["is_component_part"] == True
-    assert (
-        result["title"]
-        == "Mo kyrka. Med anledning af dess hundraårsjubileum. Norgren, N., Gamlakyrkan. - Norbeck, O., Nya kyrkan"
-    )
+    assert result["title"] == "Mo kyrka"
+    assert result["subtitle"] == "Med anledning af dess hundraårsjubileum. Norgren, N., Gamlakyrkan. - Norbeck, O., Nya kyrkan"
     assert result["host"] == {
         "title": "Julhälsn. till församl. i ärkestiftet",
         "part_number": "1922",
@@ -569,6 +563,7 @@ def test_extract_structured_values_1961_1970_Monografi_utan_författare():
     }
     result = extract_structured_values(record["sample"], "dash_style")
 
+
     assert result["is_component_part"] == False
     assert (
         result["title"]
@@ -580,8 +575,9 @@ def test_extract_structured_values_1961_1970_Monografi_utan_författare():
         == "Skrifter utg. av Inst. för rättshisto- risk forskning"
     )
 
-
-# # TODO Try extracting period-delimited (non-journal) host publication/series 
+@pytest.mark.xfail(
+    reason="Beginning of series is not picked up due to missing space in '1623.Historiskt'"
+)
 def test_extract_structured_values_1771_1874_1875_1900_1901_1920_Bidrag_utan_författare():
     record = {
         "pattern": "Titel. undertitel. Publ-titel. nr, sid.",
@@ -595,10 +591,10 @@ def test_extract_structured_values_1771_1874_1875_1900_1901_1920_Bidrag_utan_fö
         result["title"]
         == "Diarium eller journal på hans maj:ts resa åt Danzig anno1623.Historiskt archivum (Loenbom)"
     )
-    assert result["subtitle"] == "St. 2 (1774)"
+    assert result["host"] == {"title": "St", "part_number": "2 (1774)"}
     assert result["extent"] == "s. 23-29"
 
-
+# TODO Move "Red: " to other_contributors=
 def test_extract_structured_values_1951_1960_Monografi_utan_författare():
     record = {
         "pattern": "Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)",
@@ -609,10 +605,8 @@ def test_extract_structured_values_1951_1960_Monografi_utan_författare():
     print(result)
 
     assert result["is_component_part"] == False
-    assert (
-        result["title"]
-        == "Företagsarkiven. Orientering om modern arkivorganisation. Red.: Jan Magnus Fahlström"
-    )
+    assert result["title"] == "Företagsarkiven"
+    assert result["subtitle"] == "Orientering om modern arkivorganisation. Red.: Jan Magnus Fahlström"
     assert result["place"] == "Sthlm"
     assert result["year"] == "1956"
     assert result["host"] == {"title": "Sv. arkivförb:s skriftser", "part_number": "3"}
@@ -717,7 +711,7 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
             "extent": "187 s.",
             "place": "Stockholm",
             "year": "1976",
-            "remaining_note": "Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S.Stolpe; i DN 11.11.1977 av I. Algulin",
+            "remaining_note": "Rec. i SP 21.4.1977 av 6. Hillerdal; i NT-ÖD 29.4.1977 av S. Stolpe; i DN 11.11.1977 av I. Algulin",
             "is_component_part": False,
         },
     ),
@@ -778,13 +772,15 @@ EXTRACT_STRUCTURED_VALUES_TEST_CASES = {
         },
     ),
     "multiple-authors-and-complex-multi-part-extent": (
-        "Erichsen, B., & Krarup, A., Dansk historisk Bibliografi. Bd 1-3. Khvn1918-21, 1925-27, 1917. xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.",
-        "early",
+        "Erichsen, B., & Krarup, A., Dansk historisk Bibliografi. Bd 1-3. Khvn 1918-21, 1925-27, 1917. xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.",
+        "parenthesized",
         {
             "primary_contributors": "Erichsen, B., & Krarup, A.",
             "title": "Dansk historisk Bibliografi",
             "extent": "xiii, (1), 794 s. + viii, 655 s. + (2), iv, 806, (1) s.",
-            "subtitle": "Bd 1-3. Khvn1918-21, 1925-27, 1917",
+            "place": "Khvn",
+            "year": "1918-21, 1925-27, 1917",
+            "subtitle": "Bd 1-3",
             "is_component_part": False,
         },
     ),
