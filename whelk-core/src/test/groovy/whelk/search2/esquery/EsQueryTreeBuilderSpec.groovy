@@ -6,7 +6,6 @@ import whelk.search2.Disambiguate
 import whelk.search2.ESSettings
 import whelk.search2.EsMappings
 import whelk.search2.querytree.QueryTree
-import whelk.search2.querytree.QueryTreeBuilder
 import whelk.search2.querytree.TestData
 
 class EsQueryTreeBuilderSpec extends Specification {
@@ -1425,5 +1424,82 @@ class EsQueryTreeBuilderSpec extends Specification {
 
         where:
         q << ["p:()", "p:*"]
+    }
+
+    def "text query vs term queries"() {
+        given:
+        def mappings = [
+                'properties': [
+                        'p1'                   : ['type': 'long'],
+                        'p2'                   : ['type': 'keyword'],
+                        'p3.@id'               : ['type': 'keyword'],
+                        'date'                 : ['type': 'date'],
+                        'p9'                   : ['type': 'text', 'fields': ['keyword': ['type': 'keyword']]],
+                        'year'                 : ['type': 'text'],
+                        'year_4_digits_keyword': ['type': 'keyword']
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(new EsMappings(List.of(mappings)), new EsBoost([:]))
+        String v = v2 ? "$v1 $connective $v2" : v1
+        String q = "$p:($v)"
+        String esConn = connective == 'AND' ? "must" : "should"
+
+        Map textQuery = [
+            "simple_query_string" : [
+                "default_operator" : (connective),
+                "query" : v2 ? "$v1 $v2" : v1,
+                "fields" : [ esField ]
+            ]
+        ]
+
+        Map termQueries = [
+                "bool": [
+                        (esConn): [[
+                                           "bool": [
+                                                   "filter": [
+                                                           "term": [
+                                                                   (esField): esTerm1
+                                                           ]
+                                                   ]
+                                           ]
+                                   ], [
+                                           "bool": [
+                                                   "filter": [
+                                                           "term": [
+                                                                   (esField): esTerm2
+                                                           ]
+                                                   ]
+                                           ]
+                                   ]]
+                ]
+        ]
+
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
+
+        expect:
+        result == (shouldProduceTermQueries ? termQueries : textQuery)
+
+        where:
+        p      | v1                     | v2                     | connective | esField                 | esTerm1              | esTerm2              | shouldProduceTermQueries
+        'p1'   | '123'                  | '4567'                 | 'AND'      | 'p1'                    | 123                  | 4567                 | true
+        'p1'   | 'x'                    | 'y'                    | 'AND'      | 'p1'                    | null                 | null                 | false
+        'p1'   | '123'                  | '4567'                 | 'OR'       | 'p1'                    | 123                  | 4567                 | true
+        'p1'   | 'x'                    | 'y'                    | 'OR'       | 'p1'                    | null                 | null                 | false
+        'p1'   | '"åäö"'                | null                   | 'AND'      | 'p1'                    | null                 | null                 | false
+        'p2'   | 'E1'                   | 'E2'                   | 'AND'      | 'p2'                    | 'E1'                 | 'E2'                 | true
+        'p2'   | "E1"                   | "E2"                   | 'OR'       | 'p2'                    | "E1"                 | 'E2'                 | true
+        'p3'   | 'x'                    | 'y'                    | 'AND'      | 'p3._str'               | null                 | null                 | false
+        'p3'   | '"https://id.kb.se/x"' | '"https://id.kb.se/y"' | 'AND'      | 'p3.@id'                | 'https://id.kb.se/x' | 'https://id.kb.se/y' | true
+        'p3'   | 'x'                    | 'y'                    | 'OR'       | 'p3._str'               | null                 | null                 | false
+        'p3'   | '"https://id.kb.se/x"' | '"https://id.kb.se/y"' | 'OR'       | 'p3.@id'                | 'https://id.kb.se/x' | 'https://id.kb.se/y' | true
+        'date' | '1999-01'              | '2000-06'              | 'OR'       | 'date'                  | '1999-01||/M'        | '2000-06||/M'        | true
+        'date' | '1999-01'              | '2000-06'              | 'AND'      | 'date'                  | '1999-01||/M'        | '2000-06||/M'        | true
+        'year' | '1999'                 | '2000'                 | 'OR'       | 'year_4_digits_keyword' | '1999'               | '2000'               | true
+        'year' | '1999'                 | '2000'                 | 'AND'      | 'year_4_digits_keyword' | '1999'               | '2000'               | true
+        'year' | '199u'                 | null                   | 'AND'      | 'year'                  | null                 | null                 | false
+        'year' | '19*'                  | null                   | 'AND'      | 'year'                  | null                 | null                 | false
+        'p9'   | '1234556789'           | '987654321'            | 'OR'       | 'p9.keyword'            | '1234556789'         | '987654321'          | true
+        'p9'   | '1234556789'           | '987654321'            | 'AND'      | 'p9.keyword'            | '1234556789'         | '987654321'          | true
+        'p9'   | '123*'                 | null                   | 'AND'      | 'p9'                    | null                 | null                 | false
     }
 }

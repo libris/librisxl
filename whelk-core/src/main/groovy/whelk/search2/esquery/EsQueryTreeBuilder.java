@@ -285,11 +285,11 @@ public class EsQueryTreeBuilder {
     private static EsQuery buildFromFreeTextValue(String field, Operator operator, FreeText ft, ESSettings esSettings, boolean addSearchKey) {
         return switch (operator) {
             case EQUALS, LIKE -> {
-                if (isLikelyTextQuery(field, ft, esSettings.mappings())) {
+                if (isLikelyTextField(field, esSettings.mappings())) {
                     String textField = addSearchKey ? String.format("%s.%s", field, SEARCH_KEY) : field;
                     yield buildFieldedTextQuery(textField, ft, esSettings);
                 } else {
-                    yield buildPerTokenQuery(field, ft, esSettings);
+                    yield buildPerTokenTermQueriesQuery(field, ft, esSettings);
                 }
             }
             case LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN_OR_EQUALS -> {
@@ -329,7 +329,7 @@ public class EsQueryTreeBuilder {
         return idQuery;
     }
 
-    private static EsQuery buildPerTokenQuery(String field, FreeText ft, ESSettings esSettings) {
+    private static EsQuery buildPerTokenTermQueriesQuery(String field, FreeText ft, ESSettings esSettings) {
         EsMappings mappings = esSettings.mappings();
 
         // Known placeholder values (0000, 9999) are excluded from 4-digit fields to prevent them from being treated as valid years in sorting and aggregations.
@@ -339,9 +339,9 @@ public class EsQueryTreeBuilder {
 
         for (Token t : ft.tokens()) {
             String v = t.value();
-            if (mappings.hasFourDigitsKeywordField(field) && isFourDigitsFieldValue.test(v)) {
+            if (mappings.hasFourDigitsKeywordField(field) && t.isDigits() && isFourDigitsFieldValue.test(v)) {
                 perTokenTermQueries.add(new EsQuery.TermQuery(field + FOUR_DIGITS_KEYWORD_SUFFIX, v));
-            } else if (mappings.hasKeywordSubfield(field)) {
+            } else if (mappings.hasKeywordSubfield(field) && !isMaskedOrTruncated(v)) {
                 perTokenTermQueries.add(new EsQuery.TermQuery(String.format("%s.%s", field, KEYWORD), v));
             } else if (mappings.isLongTypeField(field) && t.isDigits()) {
                 perTokenTermQueries.add(new EsQuery.TermQuery(field, Long.parseLong(v)));
@@ -486,7 +486,7 @@ public class EsQueryTreeBuilder {
 
         for (int i = 0; i < tokens.size(); i++) {
             Token token = tokens.get(i);
-            if (!token.isQuoted() && isSimple(token.value()) && !token.value().endsWith(Operator.WILDCARD)) {
+            if (!token.isQuoted() && !isMaskedOrTruncated(token.value())) {
                 currentSimpleSequence.add(token.value());
             } else {
                 if (currentSimpleSequence.size() > 1) {
@@ -515,8 +515,9 @@ public class EsQueryTreeBuilder {
         return new EsQuery.Script(source, params);
     }
 
-    private static boolean isLikelyTextQuery(String field, FreeText ft, EsMappings esMappings) {
-        return !(esMappings.hasKeywordSubfield(field) && ft.isDigits())
+    private static boolean isLikelyTextField(String field, EsMappings esMappings) {
+        return !esMappings.hasKeywordSubfield(field)
+                && !esMappings.hasFourDigitsKeywordField(field)
                 && !esMappings.isDateTypeField(field)
                 && !esMappings.isNestedTypeField(field)
                 && !esMappings.isLongTypeField(field)
@@ -532,5 +533,9 @@ public class EsQueryTreeBuilder {
             return Optional.of(field);
         }
         return esMappings.getNestedTypeFields().stream().filter(field::startsWith).findFirst();
+    }
+
+    private static boolean isMaskedOrTruncated(String s) {
+        return !isSimple(s) || s.endsWith(Operator.WILDCARD);
     }
 }

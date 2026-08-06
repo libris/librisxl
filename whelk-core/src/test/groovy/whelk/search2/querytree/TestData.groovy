@@ -49,7 +49,9 @@ class TestData {
                 't1p3p1'          : ['t1p3p1'] as Set,
                 'restrictedp_p1'  : ['restrictedP_p1'] as Set,
                 'restrictedp_p1_2': ['restrictedP_p1_2'] as Set,
-                't1type'          : ['t1Type'] as Set
+                't1type'          : ['t1Type'] as Set,
+                'date'            : ['date'] as Set,
+                'year'            : ['year'] as Set
         ]
         def classMappings = [
                 't1' : ['T1'] as Set,
@@ -356,6 +358,15 @@ class TestData {
                         '@type'      : 'ObjectProperty',
                         'domain'     : ['@id': 'T1'],
                         'ls:indexKey': '@type'
+                ],
+                [
+                        '@id'  : 'date',
+                        '@type': 'DatatypeProperty',
+                        'range': ['@id': 'xsd:dateTime']
+                ],
+                [
+                        '@id'  : 'year',
+                        '@type': 'DatatypeProperty'
                 ]
         ]]
         def ctx = [
@@ -385,7 +396,8 @@ class TestData {
                         'instanceOf._categoryByCollection.find.@id'          : ['type': 'keyword'],
                         'instanceOf._categoryByCollection.identify.@id'      : ['type': 'keyword'],
                         'instanceOf._categoryByCollection.@none.@id'         : ['type': 'keyword'],
-                        '@reverse.instanceOf._categoryByCollection.@none.@id': ['type': 'keyword']
+                        '@reverse.instanceOf._categoryByCollection.@none.@id': ['type': 'keyword'],
+                        'date'                                               : ['type': 'date']
                 ]
         ]
         // TODO
