@@ -22,6 +22,19 @@ SYNTAX_ERAS = {
     "1976": "isbd",  # -||- ". - " anges före nytt avsnitt (utgivning, omfång, serietillhörighet). -||- . -||- . ISSN anges
 }
 
+NON_TERMINATING_ABBREVIATIONS = [
+    "Co.", # 13
+    "m.fl.", # 116
+    "m. fl.", # 231
+    "m.m.", # 15
+    "m. m.", # 287
+    "o. s. v.", # 2
+    "s.k.",
+    "s. k.",
+    "bl.a.",
+    "bl. a.",
+]
+
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
 DASH_ERAS = ["dash_style", "isbd_transition", "isbd"]
 
@@ -398,32 +411,6 @@ def extract_host_values(
     # Extract extent (pages, leaves)
     extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
 
-    # Try to split part title from numbering
-    # if ". " in remainder:
-    #    remainder_split = remainder.split(". ")
-    #
-    #    probably_part_indexes = [
-    #        i for i, part in enumerate(remainder_split)
-    #        if i > 0 and any(c.isdigit() for c in part)
-    #    ]
-    #
-    #    if probably_part_indexes:
-    #        probably_part = ". ".join(
-    #            remainder_split[i] for i in probably_part_indexes
-    #        )
-    #
-    #        remainder = ". ".join(
-    #            part for i, part in enumerate(remainder_split)
-    #            if i not in probably_part_indexes
-    #        )
-    #    else:
-    #        probably_part = None
-    #
-    ## Extract part number if present
-    # if probably_part:
-    #    part_number, part_remainder = extract_part_number(probably_part)
-    #
-    # else:
     part_number, remainder = extract_part_number(remainder)
 
     publisher, remainder = extract_other_contributors(remainder)
@@ -464,7 +451,7 @@ def extract_early_host_or_series(remainder: str, extent: str, is_component_part:
     # ". " coulmay be followed by either subtitle or series/host publication
     # Perhaps we can assume there is a publication title if is_component_part == Ttue?
     
-    # Protect initials for the next step....
+    # Exclude initials while splitting....
     remainder = re.sub(r"\b([A-Z])\.\s+(?=[A-Z])", r"\1<INIT>", remainder)
 
     parts = re.split(r"(?<=\.|\])\s+", remainder)
@@ -684,7 +671,14 @@ def extract_title_and_subtitle(
     subtitle = ""
     remainder = strip_trailing_separator(remainder)
 
-    # This record is ISBD-like
+    # At this point the remainder should only be containign title information
+    # In publication/series info, we can't quite interpret subtitles the same way
+    if not is_main_entity_note:
+        title = remainder.strip(".")
+        return title, subtitle, remainder
+
+    # This record is ISBD-like 
+    # TODO Check if this is necessary at this point?
     if syntax_era in DASH_ERAS and ". -" in remainder:
         title_and_contributor_area, remainder = remainder.split(". -", 1)
 
@@ -707,13 +701,20 @@ def extract_title_and_subtitle(
 
     # All earlier syntax styles: title. subtitle
     else:
+        # Exclude initials and abbreviations during the splitting steå....
+        for abbr in NON_TERMINATING_ABBREVIATIONS:
+            remainder = remainder.replace(abbr, abbr.replace(".", "<DOT>"))
+
         parts = re.split(
             r"(?<!\b[A-Z])\.\s+",
             remainder,
         )
 
+        # Reintroduce abbreviations...
+        parts = [p.replace("<DOT>", ".") for p in parts]
+
         if len(parts) < 2:
-            title = remainder
+            title = ". ".join(part for part in parts)
             remainder = ""
         else:
             title = parts[0]
