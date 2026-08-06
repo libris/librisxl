@@ -337,9 +337,6 @@ def test_extract_structured_values_1921_1935_1951_1960_Bidrag():
     }
 
 
-@pytest.mark.xfail(
-    reason="Fails because title and place name are glued together 'kulturhistoria.Hfors'"
-)
 def test_extract_structured_values_1921_1935_Monografi():
     record = {
         "pattern": "Efternamn, Förnamn, Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)",
@@ -351,10 +348,8 @@ def test_extract_structured_values_1921_1935_Monografi():
 
     assert result["is_component_part"] == False
     assert result["primary_contributors"] == "Nohrstrom, Holger"
-    assert (
-        result["title"]
-        == "Borgå gymnasiebibliotek och dess föregångare blandFinlands läroverksbibliotek. Ett bidrag till Finlands biblioteks- och kulturhistoria"
-    )
+    assert result["title"] == "Borgå gymnasiebibliotek och dess föregångare blandFinlands läroverksbibliotek"
+    assert result["subtitle"] == "Ett bidrag till Finlands biblioteks- och kulturhistoria"
     assert result["place"] == "Hfors"
     assert result["year"] == "1927"
     assert result["extent"] == "(2), 291 s."
@@ -364,9 +359,7 @@ def test_extract_structured_values_1921_1935_Monografi():
     }
 
 
-@pytest.mark.xfail(
-    reason="Fails because missing colon before 'Ill' excludes 'Ill' from extent"
-)
+
 def test_extract_structured_values_1961_1970_Monografi():
     # TODO Missing colon before "Ill"?
     record = {
@@ -379,14 +372,18 @@ def test_extract_structured_values_1961_1970_Monografi():
 
     assert result["is_component_part"] == False
     assert result["primary_contributors"] == "Clemedson, Carl-Johan"
-    assert result["title"] == "Taxinge socken. Kultur, vegetation, flora."
+    assert result["title"] == "Taxinge socken"
+    assert result["subtitle"] == "Kultur, vegetation, flora"
     assert result["place"] == "Nyköping"
     assert result["year"] == "1970"
     assert result["extent"] == "93 s. Ill."
-    assert result["remaining_note"] == "Sörmländska handlingar. 27"
+    assert result["host"] == {
+        "title": "Sörmländska handlingar",
+        "part_number": "27",
+    }
 
 
-@pytest.mark.xfail(reason="Fails because 'pl.-bl.' is not recognized as extent marker")
+
 def test_extract_structured_values_1951_1960_Monografi():
     # TODO Issue with "pl.-bl."?
     record = {
@@ -404,7 +401,7 @@ def test_extract_structured_values_1951_1960_Monografi():
         == "Handritade kartor över Finland i Uppsala universitetsbibliotek"
     )
     assert result["extent"] == "60 s., 3 pl.-bl."
-    assert result["palce"] == "Uppsala"
+    assert result["place"] == "Uppsala"
     assert result["year"] == "1957"
     assert result["host"] == {
         "title": "Acta Bibliothecae R. Universitatis Upsaliensis",
@@ -540,17 +537,17 @@ def test_extract_structured_values_1921_1935_1936_1950_Bidrag_utan_författare()
 def test_extract_structured_values_1921_1935_1936_1950_Monografi_utan_författare():
     record = {
         "pattern": "Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)",
-        "sample": "Sveriges sjöfart. Sjöfartsväsendet, skeppsbyggeriet och handelsflottan. Enskildring under medverkan av fackmän utg. av Nils Gustaf Nilsson ochGustav Åsbrink med förord av K. A. Fryxell. Sthlm 1919-21. 4:0. xx,666 s.",
+        "sample": "Sveriges sjöfart. Sjöfartsväsendet, skeppsbyggeriet och handelsflottan. Enskildring under medverkan av fackmän utg. av Nils Gustaf Nilsson ochGustav Åsbrink med förord av K. A. Fryxell. Sthlm 1919-21. 4:0. xx,666 s. (4567 a)",
     }
     result = extract_structured_values(record["sample"], "parenthesized")
-
+    print(result)
     assert result["is_component_part"] == False
-    assert (
-        result["title"]
-        == "Sveriges sjöfart. Sjöfartsväsendet, skeppsbyggeriet och handelsflottan. Enskildring under medverkan av fackmän utg. av Nils Gustaf Nilsson ochGustav Åsbrink med förord av K. A. Fryxell"
-    )
-    assert result["remaining_note"] == "Sthlm 1919-21. 4:0"
+    assert result["title"] == "Sveriges sjöfart"
+    assert result["subtitle"] == "Sjöfartsväsendet, skeppsbyggeriet och handelsflottan. Enskildring under medverkan av fackmän utg. av Nils Gustaf Nilsson ochGustav Åsbrink med förord av K. A. Fryxell"
+    assert result["remaining_note"] == "4:0. (4567 a)"
     assert result["extent"] == "xx,666 s."
+    assert result["place"] == "Sthlm"
+    assert result["year"] == "1919-21"
 
 
 @pytest.mark.xfail(

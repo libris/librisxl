@@ -23,12 +23,12 @@ SYNTAX_ERAS = {
 }
 
 NON_TERMINATING_ABBREVIATIONS = [
-    "Co.", # 13
-    "m.fl.", # 116
-    "m. fl.", # 231
-    "m.m.", # 15
-    "m. m.", # 287
-    "o. s. v.", # 2
+    "Co.",  # 13
+    "m.fl.",  # 116
+    "m. fl.",  # 231
+    "m.m.",  # 15
+    "m. m.",  # 287
+    "o. s. v.",  # 2
     "s.k.",
     "s. k.",
     "bl.a.",
@@ -57,7 +57,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
     \s*(?:s|bl|pl)\.?
 
     (?:
-        \s*\+\s*
+        \s*(?:\+|,)\s*
         (?:
             (?:
                 \[\d+\]
@@ -67,10 +67,10 @@ MONOGRAPH_EXTENT_RE = re.compile(
             )
             (?:,\s*)?
         )+
-        \s*(?:s|bl|pl|kartbl)\.?
+        \s*(?:kartbl|pl\.-bl|pl|bl|s)\.?
     )*
 
-    (?:\s*:\s*ill\.?)?
+    (?:\s*:?\s*ill\.?)?
     """,
     re.I | re.X,
 )
@@ -450,7 +450,7 @@ def extract_host_values(
 def extract_early_host_or_series(remainder: str, extent: str, is_component_part: bool):
     # ". " coulmay be followed by either subtitle or series/host publication
     # Perhaps we can assume there is a publication title if is_component_part == Ttue?
-    
+
     # Exclude initials while splitting....
     remainder = re.sub(r"\b([A-Z])\.\s+(?=[A-Z])", r"\1<INIT>", remainder)
 
@@ -480,7 +480,7 @@ def extract_early_host_or_series(remainder: str, extent: str, is_component_part:
             host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
             remainder = ". ".join(part.strip(".") for part in parts[:-2])
 
-        #else:
+        # else:
         #    remainder = ". ".join(part.strip(".") for part in parts)
         #    host_or_series = None
 
@@ -515,6 +515,7 @@ def extract_other_contributors(remainder: str) -> tuple[str, str]:
     if " / " in remainder:
         counters["various"].update(["STRUCTURE\t Title / Author"])
         remainder, contributors = remainder.split(" / ", 1)
+
         return contributors, remainder
     else:
         return None, remainder
@@ -526,7 +527,7 @@ def extract_part_number(remainder: str) -> str:
 
     PART_INFO_RE = re.compile(
         r"""
-        ^(?P<title>.*?\D)?
+        ^(?P<title>.*?\D)
         \s*[,;.-]?\s*
         (?P<part>\d.*)
         $
@@ -534,15 +535,13 @@ def extract_part_number(remainder: str) -> str:
         re.VERBOSE,
     )
 
-    match = PART_INFO_RE.match(remainder)
+    if not (match := PART_INFO_RE.match(remainder)):
+        return None, remainder
 
-    if match:
-        number = match.group("part").rstrip(" ,.;-")
-        remainder = match.group("title").rstrip(" ,.;-")
+    number = match["part"].rstrip(" ,.;-")
+    remainder = match["title"].rstrip(" ,.;-")
 
-        return number, remainder
-
-    return None, remainder
+    return number, remainder
 
 
 def extract_place_year(remainder: str) -> tuple[str, str, str]:
@@ -579,7 +578,7 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
         if match := PLACE_YEAR_RE.fullmatch(candidate):
             place = match["place"]
             year = match["year"]
-            remainder = ". ".join(parts[:i])
+            remainder = ". ".join(parts[:i] + parts[i + 1:])
 
             return place, year, remainder
 
@@ -610,15 +609,15 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
     Returns a tuple of (contributors, remainder)."""
 
     PERSON_START_RE = re.compile(
-    r"""
+        r"""
     (?:
         [A-ZÅÄÖ][a-zåäö]+(?:-[A-ZÅÄÖa-zåäö]+)?   # Arne / Carl-Gösta
         |
         [A-ZÅÄÖ]\.                              # A.
     )
     """,
-    re.X,
-)
+        re.X,
+    )
 
     personnameparts = []
     initial = -1
@@ -677,7 +676,7 @@ def extract_title_and_subtitle(
         title = remainder.strip(".")
         return title, subtitle, remainder
 
-    # This record is ISBD-like 
+    # This record is ISBD-like
     # TODO Check if this is necessary at this point?
     if syntax_era in DASH_ERAS and ". -" in remainder:
         title_and_contributor_area, remainder = remainder.split(". -", 1)
@@ -809,9 +808,6 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
 
         remainder = (left_part + right_part).strip(",;- ").replace("- -", "-")
 
-        if "-" in pages:
-            is_component_part = True
-
     return pages, remainder, is_component_part
 
 
@@ -924,18 +920,29 @@ def link_local_entities(
 
 ### Helper functions ###
 
+
 def normalize_spacing_and_punctuation(text: str) -> str:
     """
     Clean up punctuation and spacing issues common in OCR'd text. Return the cleaned up text.
     """
 
-    text = text.replace("—", "-") # Replace dash with hyphen
-    text = text.replace(" ", " ").replace("  ", " ") # Repalce non-breaking space with regular space
-    text = text.replace("  ", " ") # Repalce double space with single space
-    text = re.sub(r"\.(?=[A-ZÅÄÖ])", ". ", text) # Always have a space between "." and any uppercase letter
-    text = re.sub(r",(?=[A-Za-zÅÄÖåäö])", ", ", text) # Always have a space between "," and any letter
-    text = re.sub(r"([a-zåäö]{2,})(\d)", r"\1 \2", text) # Always have a space between two lowercase letters and a digit
-    text = re.sub(r"(\d)([a-zåäö]{2,})", r"\1 \2", text) # Always have a space between a digit and two lowercase letters
+    text = text.replace("—", "-")  # Replace dash with hyphen
+    text = text.replace(" ", " ").replace(
+        "  ", " "
+    )  # Repalce non-breaking space with regular space
+    text = text.replace("  ", " ")  # Repalce double space with single space
+    text = re.sub(
+        r"\.(?=[A-ZÅÄÖ])", ". ", text
+    )  # Always have a space between "." and any uppercase letter
+    text = re.sub(
+        r",(?=[A-Za-zÅÄÖåäö])", ", ", text
+    )  # Always have a space between "," and any letter
+    text = re.sub(
+        r"([a-zåäö]{2,})(\d)", r"\1 \2", text
+    )  # Always have a space between two lowercase letters and a digit
+    text = re.sub(
+        r"(\d)([a-zåäö]{2,})", r"\1 \2", text
+    )  # Always have a space between a digit and two lowercase letters
 
     return text
 
