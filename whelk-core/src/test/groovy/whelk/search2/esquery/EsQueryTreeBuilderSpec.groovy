@@ -1502,4 +1502,105 @@ class EsQueryTreeBuilderSpec extends Specification {
         'p9'   | '1234556789'           | '987654321'            | 'AND'      | 'p9.keyword'            | '1234556789'         | '987654321'          | true
         'p9'   | '123*'                 | null                   | 'AND'      | 'p9'                    | null                 | null                 | false
     }
+
+    def "range query"() {
+        given:
+        def mappings = [
+                'properties': [
+                        'p1'                 : ['type': 'long'],
+                        'date'               : ['type': 'date'],
+                        'year_4_digits_short': ['type': 'keyword']
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(new EsMappings(List.of(mappings)), new EsBoost([:]))
+
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
+
+        Map gt = [
+                "bool": [
+                        "filter": [
+                                "range": [
+                                        (esField): [
+                                                "gt": esMin
+                                        ]
+                                ]
+                        ]
+                ]
+        ]
+        Map lt = [
+                "bool": [
+                        "filter": [
+                                "range": [
+                                        (esField): [
+                                                "lt": esMax
+                                        ]
+                                ]
+                        ]
+                ]
+        ]
+
+        Map gtlt = ["bool": ["must": [gt, lt]]]
+
+        Map expected = (esMin && esMax)
+                ? gtlt
+                : (esMin ? gt : lt)
+
+        expect:
+        result == expected
+
+        where:
+        q                              | esField               | esMin         | esMax
+        'p1>1'                         | 'p1'                  | 1             | null
+        'p1<2'                         | 'p1'                  | null          | 2
+        'p1>10000 p1<2000000'          | 'p1'                  | 10000         | 2000000
+        'date>2020-02'                 | 'date'                | '2020-02||/M' | null
+        'date<2021-06-15'              | 'date'                | null          | '2021-06-15||/d'
+        'date>2020-02 date<2021-06-15' | 'date'                | '2020-02||/M' | '2021-06-15||/d'
+        'year>1850'                    | 'year_4_digits_short' | 1850          | null
+        'year<1950'                    | 'year_4_digits_short' | null          | 1950
+        'year>1850 year<1950'          | 'year_4_digits_short' | 1850          | 1950
+    }
+
+    def "year range query"() {
+        given:
+        def mappings = [
+                'properties': [
+                        'date'               : ['type': 'date'],
+                        'year_4_digits_short': ['type': 'keyword']
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(new EsMappings(List.of(mappings)), new EsBoost([:]))
+
+
+
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
+
+        Map ranges = [:]
+        if (esMin) {
+            ranges['gte'] = esMin
+        }
+        if (esMax) {
+            ranges['lte'] = esMax
+        }
+
+        expect:
+        result == [
+                "bool": [
+                        "filter": [
+                                "range": [
+                                        (esField): ranges
+                                ]
+                        ]
+                ]
+        ]
+
+        where:
+        q                | esField               | esMin      | esMax
+        'date:1900-'     | 'date'                | '1900||/y' | null
+        'date:-2000'     | 'date'                | null       | '2000||/y'
+        'date:1900-2000' | 'date'                | '1900||/y' | '2000||/y'
+        'year:1899-'     | 'year_4_digits_short' | 1899       | null
+        'year:-1999'     | 'year_4_digits_short' | null       | 1999
+        'year:1899-1999' | 'year_4_digits_short' | 1899       | 1999
+    }
 }
