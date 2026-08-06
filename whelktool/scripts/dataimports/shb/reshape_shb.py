@@ -288,7 +288,8 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
     structured_record = {}
     host_or_series = ""
 
-    note = note.replace("—", "-").replace(" ", " ").replace("  ", " ")
+    # Some inital cleanup of OCR messiness
+    note = normalize_spacing_and_punctuation(note)
 
     # Extract information about reviews and dissertation notes
     tail_note, remainder = extract_reviews_or_diss(note)
@@ -312,17 +313,17 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
     # Extract extent (pages, leaves)
     extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
 
+    if syntax_era == "early":
+        host_or_series, remainder, is_component_part = extract_early_host_or_series(
+            remainder, extent, is_component_part
+        )
+
     # Extract contributors
     primary_contributors, remainder = extract_primary_contributors(remainder)
 
     place, year, remainder = extract_place_year(remainder)
 
     other_contributors, remainder = extract_other_contributors(remainder)
-
-    if syntax_era == "early":
-        host_or_series, remainder, is_component_part = extract_early_host_or_series(
-            remainder, extent, is_component_part
-        )
 
     # Extract title and subtitle
     title, subtitle, remainder = extract_title_and_subtitle(
@@ -471,18 +472,33 @@ def extract_early_host_or_series(remainder: str, extent: str, is_component_part:
     # Reintroduce initals...
     parts = [p.replace("<INIT>", ". ") for p in parts]
 
-    if len(parts) > 1:
-        if not extent:
-            # This is likely a newspaper article
-            host_or_series = parts[-1]
-            remainder = ". ".join(part.strip(".") for part in parts[:-1])
-            is_component_part = True
+    # If there's no extent, it's likely a newspaper article
+    # Title. Newspaper, Number.
+    if len(parts) > 1 and not extent:
+        host_or_series = parts[-1]
+        remainder = ". ".join(part.strip(".") for part in parts[:-1])
+        is_component_part = True
+
+    elif len(parts) > 2:
+        if is_component_part:
+            # Other component parts
+            # Title. Journal. Number.
+            host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
+            remainder = ". ".join(part.strip(".") for part in parts[:-2])
         else:
-            remainder = ". ".join(part.strip(".") for part in parts)
-            host_or_series = None
+            # Monographs
+            # Title. Place year. Series. Number.
+            # Similar structure with series info in the two furthest right positions
+            # However not all monographs are part of series
+            host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
+            remainder = ". ".join(part.strip(".") for part in parts[:-2])
+
+        #else:
+        #    remainder = ". ".join(part.strip(".") for part in parts)
+        #    host_or_series = None
 
     else:
-        remainder = parts[0]
+        remainder = ". ".join(part.strip(".") for part in parts)
         host_or_series = None
 
     return host_or_series, remainder, is_component_part
@@ -547,18 +563,21 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
     Returns a tuple of (place, year, remainder)."""
 
     place, year = None, None
-
     PLACE_YEAR_RE = re.compile(
         r"""
-            \-?\s*
-            (?P<place>
-                (?:\[[^\]]+\]\s*)?
-                [A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]+?
-            )
-            [, ]+
-            (?P<year>\d{4})
-            \.?
-            $
+        \-?\s*
+        (?P<place>
+            (?:\[[^\]]+\]\s*)?
+            [A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]*?
+        )
+        [, ]+
+        (?P<year>
+            \d{4}
+            (?:-\d{2,4})?
+            (?:,\s*(?:\d{4}(?:-\d{2,4})?|\d{2}(?:-\d{2})?))*
+        )
+        \.?
+        $
         """,
         re.X,
     )
@@ -603,28 +622,39 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
     """Extract contributor names from the remainder of the note.
     Returns a tuple of (contributors, remainder)."""
 
+    PERSON_START_RE = re.compile(
+    r"""
+    (?:
+        [A-ZÅÄÖ][a-zåäö]+(?:-[A-ZÅÄÖa-zåäö]+)?   # Arne / Carl-Gösta
+        |
+        [A-ZÅÄÖ]\.                              # A.
+    )
+    """,
+    re.X,
+)
+
     personnameparts = []
     initial = -1
     comma_separated = remainder.split(",")
-    contributors = comma_separated.pop(0).strip()
+    contributor_names = comma_separated.pop(0).strip()
 
-    # A last name containing a period is probably a title
-    if not re.fullmatch(r"[\w\s'-]+", contributors):
-        comma_separated.insert(0, contributors)
-        contributors = ""
-    else:
+    # If the suspected "name" is longer than 40 characters, or contains a ".", it's probably title
+    if len(contributor_names) > 40 or not re.fullmatch(r"[\w\s'-]+", contributor_names):
+        comma_separated.insert(0, contributor_names)
+        contributor_names = ""
+    elif len(contributor_names) < 40:
         if comma_separated:
-            first = comma_separated[0]
+            first_name = comma_separated[0]
 
             if (
-                looks_like_initial(first.strip())
-                or re.fullmatch(r"[\w\s'-.]+", first)
-                and re.fullmatch(r"[\w\s'-]+", contributors)
+                looks_like_initial(first_name.strip())
+                or re.fullmatch(r"[\w\s'-.]+", first_name)
+                and re.fullmatch(r"[\w\s'-]+", contributor_names)
             ):
-                contributors += ", " + comma_separated.pop(0).strip()
+                contributor_names += ", " + comma_separated.pop(0).strip()
             else:
-                comma_separated.insert(0, contributors)
-                contributors = ""
+                comma_separated.insert(0, contributor_names)
+                contributor_names = ""
 
             if (
                 len(comma_separated) > 2
@@ -634,14 +664,14 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
                 surname = comma_separated.pop(0).strip()
                 initials = comma_separated.pop(0).strip()
 
-                contributors += f", {surname}, {initials}"
+                contributor_names += f", {surname}, {initials}"
     # If name contains more than letters and certain punctuation, it's probably not a name
-    if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ\s',.&\-\[\]]+", contributors.strip()):
-        contributors = None
+    if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ\s',.&\-\[\]]+", contributor_names.strip()):
+        contributor_names = None
     else:
         remainder = ",".join(comma_separated).strip()
 
-    return contributors, remainder
+    return contributor_names, remainder
 
 
 def extract_title_and_subtitle(
@@ -670,8 +700,13 @@ def extract_title_and_subtitle(
             )
             title = title_and_contributor_area
 
-    # Early syntax style: title. subtitle
-    elif syntax_era == "early":
+    # Divide title into title and subtitle
+    elif syntax_era in ["isbd", "isbd_transition"] and " : " in remainder:
+        title, subtitle = remainder.split(" : ", 1)
+        remainder = ""
+
+    # All earlier syntax styles: title. subtitle
+    else:
         parts = re.split(
             r"(?<!\b[A-Z])\.\s+",
             remainder,
@@ -684,15 +719,6 @@ def extract_title_and_subtitle(
             title = parts[0]
             subtitle = ". ".join(part for part in parts[1:])
             remainder = ""
-
-    # Divide title into title and subtitle
-    elif syntax_era in ["isbd", "isbd_transition"] and " : " in remainder:
-        title, subtitle = remainder.split(" : ", 1)
-        remainder = ""
-
-    else:
-        title = remainder
-        remainder = ""
 
     title = title.strip().removesuffix(".").removesuffix(",")
     subtitle = subtitle.strip().strip(".")
@@ -896,6 +922,21 @@ def link_local_entities(
 
 
 ### Helper functions ###
+
+def normalize_spacing_and_punctuation(text: str) -> str:
+    """
+    Clean up punctuation and spacing issues common in OCR'd text. Return the cleaned up text.
+    """
+
+    text = text.replace("—", "-") # Replace dash with hyphen
+    text = text.replace(" ", " ").replace("  ", " ") # Repalce non-breaking space with regular space
+    text = text.replace("  ", " ") # Repalce double space with single space
+    text = re.sub(r"\.(?=[A-ZÅÄÖ])", ". ", text) # Always have a space between "." and any uppercase letter
+    text = re.sub(r",(?=[A-Za-zÅÄÖåäö])", ", ", text) # Always have a space between "," and any letter
+    text = re.sub(r"([a-zåäö]{2,})(\d)", r"\1 \2", text) # Always have a space between two lowercase letters and a digit
+    text = re.sub(r"(\d)([a-zåäö]{2,})", r"\1 \2", text) # Always have a space between a digit and two lowercase letters
+
+    return text
 
 
 def valid_issn(issn: str) -> bool:
