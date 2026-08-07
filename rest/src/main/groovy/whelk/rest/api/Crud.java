@@ -988,7 +988,7 @@ public class Crud extends WhelkHttpServlet {
         int code = HttpTools.mapError(e);
         String method = request.getMethod();
         if (method != null) {
-            metrics.failedRequests.labels(method, String.valueOf(code)).inc();
+            RestMetrics.failedRequests.labels(method, String.valueOf(code)).inc();
         }
         if (log.isDebugEnabled()) {
             String requestURI = request.getRequestURI();
