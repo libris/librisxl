@@ -294,14 +294,14 @@ class CrudUtils {
         private static String cleanEtag(String str) {
             String result = stripQuotes(str);
             if (result != null) {
-                result = result.replaceAll("W/", "");
-                result = result.replaceAll("-gzip", "");
+                result = result.replace("W/", "");
+                result = result.replace("-gzip", "");
             }
             return result;
         }
 
         private static String stripQuotes(String str) {
-            return str != null ? str.replaceAll("\"", "") : null;
+            return str != null ? str.replace("\"", "") : null;
         }
     }
 }
