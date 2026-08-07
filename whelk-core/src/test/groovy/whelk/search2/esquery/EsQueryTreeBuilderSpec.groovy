@@ -1159,6 +1159,52 @@ class EsQueryTreeBuilderSpec extends Specification {
         ]
     }
 
+    def "group nested (NOT in AND, non-repeatable field) "() {
+        given:
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
+        String q = 'p3.p2:E1 NOT p3.p2:E2'
+        Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
+
+        expect:
+        result == [
+                "bool": [
+                        "must": [[
+                                         "nested": [
+                                                 "ignore_unmapped": true,
+                                                 "query"          : [
+                                                         "bool": [
+                                                                 "filter": [
+                                                                         "term": [
+                                                                                 "p3.p2": "E1"
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ],
+                                                 "path"           : "p3"
+                                         ]
+                                 ], [
+                                         "bool": [
+                                                 "must_not": [
+                                                         "nested": [
+                                                                 "ignore_unmapped": true,
+                                                                 "query"          : [
+                                                                         "bool": [
+                                                                                 "filter": [
+                                                                                         "term": [
+                                                                                                 "p3.p2": "E2"
+                                                                                         ]
+                                                                                 ]
+                                                                         ]
+                                                                 ],
+                                                                 "path"           : "p3"
+                                                         ]
+                                                 ]
+                                         ]
+                                 ]]
+                ]
+        ]
+    }
+
     def "group nested (NOT in AND, all negated)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))

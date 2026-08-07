@@ -190,31 +190,32 @@ public class EsQueryTreeBuilder {
             currentGroup.clear();
         };
 
+        Predicate<EsQuery.Nested> isCompatibleWithCurrentGroup = n -> {
+            EsQuery.NestedStem stem = n.stem();
+            Set<EsQuery.NestedField> fields = n.fields();
+            Set<EsQuery.NestedField> currentFields = currentGroup.stream()
+                    .map(EsQuery.Nested::fields)
+                    .flatMap(Set::stream)
+                    .collect(Collectors.toSet());
+            return stem.equals(currentNestedStem.get())
+                    && fields.stream().noneMatch(f -> !f.isRepeatable() && currentFields.contains(f));
+        };
+
         for (EsQuery subQuery : must.subQueries()) {
             if (subQuery instanceof EsQuery.Nested nested) {
-                EsQuery.NestedStem stem = nested.stem();
-                Set<EsQuery.NestedField> fields = nested.fields();
-                Set<EsQuery.NestedField> currentFields = currentGroup.stream()
-                        .map(EsQuery.Nested::fields)
-                        .flatMap(Set::stream)
-                        .collect(Collectors.toSet());
-
-                boolean beginNewGroup = !stem.equals(currentNestedStem.get())
-                        || fields.stream().anyMatch(f -> !f.isRepeatable() && currentFields.contains(f));
-
-                if (beginNewGroup) {
+                if (isCompatibleWithCurrentGroup.test(nested)) {
+                    currentGroup.add(nested);
+                } else {
                     // Collect previous group
                     collectNested.run();
                     // Then begin new group
-                    currentNestedStem.set(stem);
-                    currentGroup.add(nested);
-                } else {
+                    currentNestedStem.set(nested.stem());
                     currentGroup.add(nested);
                 }
             } else if (subQuery instanceof EsQuery.MustNot(EsQuery.Nested nested)
                     // A must_not(nested(...)) clause may only join an existing nested group if that group
                     // already contains a "positive" nested clause for the same path.
-                    && nested.stem().equals(currentNestedStem.get())) {
+                    && isCompatibleWithCurrentGroup.test(nested)) {
                 // Move the negation inside the nested query so it can be grouped with the existing nested clauses
                 EsQuery.MustNot nonNested = new EsQuery.MustNot(nested.query());
                 EsQuery.Nested outerNested = new EsQuery.Nested(nonNested, nested.stem(), Set.of());
