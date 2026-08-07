@@ -2981,6 +2981,7 @@ class PostgreSQLComponent {
             while (true) {
                 try(Connection connection = dataSource.getConnection()) {
                     if (connection == null) {
+                        // FIXME: One or more unit tests end up here? Avoid NPE and looping without pause.
                         sleep(100)
                         continue
                     }
