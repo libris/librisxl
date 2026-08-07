@@ -110,8 +110,9 @@ dependencies {
     implementation 'xerces:xercesImpl:2.11.0' //KP
 
     // Logging
-    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     // Caching
     implementation 'org.apache.commons:commons-collections4:4.1'

@@ -3,8 +3,8 @@ package whelk.sru.servlet;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.cxf.staxutils.StaxUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
@@ -34,7 +34,7 @@ import java.util.*;
 // curl "http://localhost:8187/?operation=searchRetrieve&query=isbn=9789130008650"
 // (Elastic must be running)
 public class SruServlet extends WhelkHttpServlet {
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static final List<String> SUPPORTED_VERSIONS = List.of("1.0", "1.1", "1.2");
 

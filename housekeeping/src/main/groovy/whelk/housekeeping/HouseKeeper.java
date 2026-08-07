@@ -1,13 +1,13 @@
 package whelk.housekeeping;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.time.ZonedDateTime;
 
 public abstract class HouseKeeper {
 
-    private static final Logger log = LogManager.getLogger(HouseKeeper.class);
+    private static final Logger log = LoggerFactory.getLogger(HouseKeeper.class);
 
     public abstract String getName();
 

@@ -18,8 +18,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
@@ -79,7 +79,7 @@ public class OaiPmh extends HttpServlet
     // Placed here, because the call to generate this is expensive, and should not be done on every request.
     public static Set<String> workDerivativeTypes;
 
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static Whelk getWhelk(HttpServletResponse res) throws IOException {
         if (s_whelk == null) {
@@ -88,7 +88,7 @@ public class OaiPmh extends HttpServlet
                     try {
                         s_whelk = Whelk.createLoadedCoreWhelk();
                     } catch (Exception e) {
-                        LogManager.getLogger(OaiPmh.class).error("Failed to initialize Whelk", e);
+                        LoggerFactory.getLogger(OaiPmh.class).error("Failed to initialize Whelk", e);
                         res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Whelk unavailable");
                         return null;
                     }

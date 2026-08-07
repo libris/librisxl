@@ -3,7 +3,7 @@ package whelk.search
 import groovy.transform.CompileStatic
 import groovy.transform.PackageScope
 import groovy.transform.TypeCheckingMode
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.component.ElasticSearch

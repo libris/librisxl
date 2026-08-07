@@ -1,8 +1,8 @@
 package whelk;
 
 import io.prometheus.client.exporter.MetricsServlet;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.eclipse.jetty.ee8.nested.ServletConstraint;
 import org.eclipse.jetty.ee8.security.ConstraintAware;
 import org.eclipse.jetty.ee8.security.ConstraintMapping;
@@ -16,7 +16,7 @@ import whelk.apixserver.ApixCatServlet;
 import whelk.apixserver.ApixSearchServlet;
 
 public class ApixServer extends XlServer {
-    private static final Logger log = LogManager.getLogger(ApixServer.class);
+    private static final Logger log = LoggerFactory.getLogger(ApixServer.class);
 
     private static final String USER_PROPERTIES_PATH_PARAMETER = "xl.apix-users.properties";
 

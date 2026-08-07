@@ -1,6 +1,6 @@
 package whelk.reindexer
 
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import whelk.Document
 import whelk.Whelk
 import whelk.util.BlockingThreadPool

@@ -77,8 +77,9 @@ dependencies {
     implementation "io.prometheus:simpleclient:${prometheusVersion}"
 
     // Logging
-    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     // profiling and test
     testImplementation "org.spockframework:spock-core:${spockVersion}"
@@ -86,8 +87,6 @@ dependencies {
     implementation "org.apache.groovy:groovy-json:${groovyVersion}"
     implementation "org.apache.groovy:groovy-sql:${groovyVersion}"
     implementation "org.apache.groovy:groovy:${groovyVersion}"
-    implementation 'org.slf4j:slf4j-api:1.7.32'
-    implementation 'org.slf4j:slf4j-simple:1.7.32'
 }
 
 shadowJar {
@@ -100,10 +99,7 @@ jar {
     dependsOn(shadowJar)
 
     manifest {
-        attributes "Main-Class": mainClassName,
-                // log4j uses multi-release to ship different stack walking implementations for different java
-                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
-                "Multi-Release": true
+        attributes "Main-Class": mainClassName
     }
 
     archiveClassifier = "nonfat"

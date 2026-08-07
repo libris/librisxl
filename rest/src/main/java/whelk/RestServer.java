@@ -2,8 +2,8 @@ package whelk;
 
 import com.thetransactioncompany.cors.CORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.http.UriCompliance;
@@ -28,7 +28,7 @@ import java.util.EnumSet;
 import java.util.Map;
 
 public class RestServer extends XlServer {
-    private final static Logger log = LogManager.getLogger(XlServer.class);
+    private final static Logger log = LoggerFactory.getLogger(XlServer.class);
 
     private static final String REMOTE_SEARCH_PATH = "/_remotesearch";
     private static final String USERDATA_PATH = "/_userdata/*";

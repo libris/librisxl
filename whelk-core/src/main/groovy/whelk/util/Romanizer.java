@@ -1,8 +1,8 @@
 package whelk.util;
 
 import com.ibm.icu.text.Transliterator;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Romanizer {
-    private static final Logger log = LogManager.getLogger(Romanizer.class);
+    private static final Logger log = LoggerFactory.getLogger(Romanizer.class);
 
     /** Languages that use ALA-LOC "Asian Cyrillic - Multi-purpose transliteration for non-Slavic Cyrillic scripts"
      https://github.com/lcnetdev/transliterator/blob/main/scriptshifter/tables/data/index.yml

@@ -1,7 +1,7 @@
 package whelk;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.eclipse.jetty.ee8.servlet.DefaultServlet;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 public abstract class XlServer {
-    private final static Logger log = LogManager.getLogger(XlServer.class);
+    private final static Logger log = LoggerFactory.getLogger(XlServer.class);
 
     public void run() throws Exception {
         var server = createServer();

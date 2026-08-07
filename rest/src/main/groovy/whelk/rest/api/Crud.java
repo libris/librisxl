@@ -1,8 +1,8 @@
 package whelk.rest.api;
 
 import org.apache.hc.core5.http.ContentType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.IdGenerator;
 import whelk.IdType;
@@ -46,7 +46,7 @@ import static whelk.util.http.HttpTools.sendResponse;
  * Handles all GET/PUT/POST/DELETE requests against the backend.
  */
 public class Crud extends WhelkHttpServlet {
-    private static final Logger log = LogManager.getLogger(Crud.class);
+    private static final Logger log = LoggerFactory.getLogger(Crud.class);
     public static final String XL_ACTIVE_SIGEL_HEADER = "XL-Active-Sigel";
     public static final String CONTEXT_PATH = "/context.jsonld";
     public static final String DATA_CONTENT_TYPE = "application/ld+json";

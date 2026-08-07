@@ -1,7 +1,7 @@
 package whelk.search2;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
@@ -26,7 +26,7 @@ import static whelk.JsonLd.WORK_KEY;
 import static whelk.JsonLd.asList;
 
 public class QueryGenerator {
-    private static final Logger log = LogManager.getLogger(QueryGenerator.class);
+    private static final Logger log = LoggerFactory.getLogger(QueryGenerator.class);
 
     private static final List<List<Object>> PATHS = List.of(
             List.of(THING_KEY, "classification", "*"),

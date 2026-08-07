@@ -2,8 +2,8 @@ package whelk.importer;
 
 import groovy.lang.Tuple;
 import io.prometheus.client.Counter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
@@ -47,7 +47,7 @@ import static whelk.util.Jackson.mapper;
 
 class XL
 {
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     public static final String ENC_PRELIMINARY_STATUS = "marc:PartialPreliminaryLevel"; // 5
     public static final String ENC_PREPUBLICATION_STATUS = "marc:PrepublicationLevel";  // 8
     public static final String ENC_ABBREVIVATED_STATUS = "marc:AbbreviatedLevel";  // 3

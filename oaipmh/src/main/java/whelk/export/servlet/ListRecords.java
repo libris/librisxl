@@ -12,8 +12,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 
 import io.prometheus.client.Counter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class ListRecords
 {
@@ -38,7 +38,7 @@ public class ListRecords
             .name("oaipmh_failed_listrecords_requests_total").help("Total failed ListRecords requests.")
             .labelNames("error").register();
 
-    private final static Logger logger = LogManager.getLogger(ListRecords.class);
+    private final static Logger logger = LoggerFactory.getLogger(ListRecords.class);
 
 
     /**

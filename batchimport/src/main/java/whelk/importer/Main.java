@@ -16,9 +16,9 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.MDC;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,7 +37,7 @@ import java.util.List;
 public class Main {
     private static XL s_librisXl = null;
     
-    static Logger LOG = LogManager.getLogger(Main.class);
+    static Logger LOG = LoggerFactory.getLogger(Main.class);
 
     private static boolean verbose = false;
 
@@ -66,8 +66,8 @@ public class Main {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable throwable) {
-                Logger log = LogManager.getLogger(XL.class.getName() + ".unhandled");
-                log.fatal("PANIC ABORT, unhandled exception:\n", throwable);
+                Logger log = LoggerFactory.getLogger(XL.class.getName() + ".unhandled");
+                log.error("PANIC ABORT, unhandled exception:\n", throwable);
                 System.exit(-1);
             }
         });
@@ -229,7 +229,7 @@ public class Main {
         int recordNo = 0;
         for (MarcRecord marcRecord : batch) {
             try {
-                ThreadContext.push(Integer.toString(recordNo++));
+                MDC.put("recordNo", Integer.toString(recordNo++));
                 if (verbose) {
                     dumpDigIds(marcRecord);
                 }
@@ -265,7 +265,7 @@ public class Main {
                 LOG.error("Failed to convert or write the following MARC record:\n" + marcRecord.toString());
                 throw new RuntimeException(e);
             } finally {
-                ThreadContext.pop();
+                MDC.remove("recordNo");
             }
         }
     }

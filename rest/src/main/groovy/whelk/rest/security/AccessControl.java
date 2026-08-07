@@ -1,7 +1,7 @@
 package whelk.rest.security;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.datatool.bulkchange.BulkAccessControl;
@@ -17,7 +17,7 @@ import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
 import static whelk.datatool.bulkchange.BulkJobDocument.SpecType.Merge;
 
 public class AccessControl {
-    private static final Logger log = LogManager.getLogger(AccessControl.class);
+    private static final Logger log = LoggerFactory.getLogger(AccessControl.class);
 
     static final String XLREG_KEY = "registrant";
     static final String GLOBALREG_KEY = "global_registrant";

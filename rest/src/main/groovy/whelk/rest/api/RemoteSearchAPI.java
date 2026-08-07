@@ -3,8 +3,8 @@ package whelk.rest.api;
 import groovy.xml.XmlSlurper;
 import groovy.xml.XmlUtil;
 import groovy.xml.slurpersupport.GPathResult;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
@@ -41,7 +41,7 @@ import java.util.stream.IntStream;
 import static whelk.util.Jackson.mapper;
 
 public class RemoteSearchAPI extends WhelkHttpServlet {
-    private static final Logger log = LogManager.getLogger(RemoteSearchAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteSearchAPI.class);
 
     MarcFrameConverter marcFrameConverter;
     static final URL metaProxyInfoUrl;

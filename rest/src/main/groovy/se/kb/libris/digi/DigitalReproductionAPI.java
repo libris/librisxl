@@ -2,8 +2,8 @@ package se.kb.libris.digi;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Configuration;
 
 import javax.servlet.ServletException;
@@ -80,7 +80,7 @@ EOF
 
  */
 public class DigitalReproductionAPI extends HttpServlet {
-    private static final Logger log = LogManager.getLogger(DigitalReproductionAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(DigitalReproductionAPI.class);
 
     static final String API_LOCATION = "https://libris.kb.se/api/_reproduction"; // Only for setting generationProcess
 

@@ -1,8 +1,8 @@
 package se.kb.libris.digi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.net.URI;
@@ -30,7 +30,7 @@ import static se.kb.libris.digi.Util.isLink;
 import static se.kb.libris.digi.Util.isTruthy;
 
 class XL {
-    private static final Logger log = LogManager.getLogger(XL.class);
+    private static final Logger log = LoggerFactory.getLogger(XL.class);
 
     // Since we are (for now) making HTTP requests to the same servlet container. must be lower that maxConnections / 2
     private static final int MAX_CONCURRENT_REQUESTS = 10;
@@ -179,7 +179,7 @@ class XL {
             throws IOException {
         try {
             semaphore.acquireUninterruptibly();
-            log.debug(request);
+            log.debug("{}", request);
             return client.send(request, responseBodyHandler);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

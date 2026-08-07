@@ -1,8 +1,8 @@
 package whelk.util;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import whelk.Document;
 import whelk.JsonLd;
@@ -167,7 +167,7 @@ public class FresnelUtil {
     private record DerivedLensCacheKey(Object types, LensGroupChain lensGroupChain, List<LensGroupChain> minus) {}
     private record LensCacheKey(Object types, LensGroupChain lensGroupChain) {}
 
-    private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(FresnelUtil.class);
 
     JsonLd jsonLd;
     List<LangCode> fallbackLocales;

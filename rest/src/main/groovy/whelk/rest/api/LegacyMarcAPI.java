@@ -1,7 +1,7 @@
 package whelk.rest.api;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
@@ -27,7 +27,7 @@ import java.util.Vector;
  * The purpose of this API is to fill the vacuum left by "librisXP".
  */
 public class LegacyMarcAPI extends WhelkHttpServlet {
-    private static final Logger log = LogManager.getLogger(LegacyMarcAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(LegacyMarcAPI.class);
 
     private JsonLD2MarcXMLConverter toMarcXmlConverter;
 

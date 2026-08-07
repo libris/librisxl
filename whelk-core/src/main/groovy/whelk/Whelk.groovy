@@ -2,7 +2,7 @@ package whelk
 
 import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import se.kb.libris.Normalizers
 import whelk.component.CachingPostgreSQLComponent
 import whelk.component.DocumentNormalizer

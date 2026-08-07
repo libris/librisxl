@@ -17,8 +17,9 @@ configurations.all {
 dependencies {
 
     // Logging
-    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     // XL dependencies
     implementation(project(':whelk-core'))
@@ -52,10 +53,7 @@ jar {
     manifest {
         attributes 'Implementation-Title':'Libris XL metadata importer',
                 'Implementation-Version': '1.0',
-                'Main-class': application.mainClass,
-                // log4j uses multi-release to ship different stack walking implementations for different java
-                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
-                "Multi-Release": true
+                'Main-class': application.mainClass
     }
 
     archiveClassifier = "nonfat"
