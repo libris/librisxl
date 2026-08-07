@@ -1,7 +1,7 @@
 package whelk.converter
 
 import groovy.transform.InheritConstructors
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 
 import org.apache.jena.iri.IRI
 import org.apache.jena.iri.IRIFactory

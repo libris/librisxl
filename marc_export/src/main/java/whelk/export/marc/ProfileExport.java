@@ -3,8 +3,8 @@ package whelk.export.marc;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import groovy.lang.Tuple2;
 import io.prometheus.client.Summary;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcRecordWriter;
@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 
 public class ProfileExport
 {
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private HashSet<String> workDerivativeTypes = null;
         
     public enum DELETE_REASON

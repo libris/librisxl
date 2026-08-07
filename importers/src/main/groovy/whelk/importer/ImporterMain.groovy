@@ -4,7 +4,7 @@ import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPOutputStream
 import groovy.cli.picocli.CliBuilder
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
 

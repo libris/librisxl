@@ -1,7 +1,7 @@
 package whelk.search2;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -31,7 +31,7 @@ import static whelk.JsonLd.asList;
 import static whelk.util.DocumentUtil.getAtPath;
 
 public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings externalMappings) {
-    private static final Logger logger = LogManager.getLogger(ResourceLookup.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResourceLookup.class);
 
     public static ResourceLookup load(Whelk whelk) {
         return new ResourceLookup(VocabMappings.load(whelk), ExternalMappings.load(whelk));

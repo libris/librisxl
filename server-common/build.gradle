@@ -29,9 +29,9 @@ dependencies {
     implementation "org.apache.httpcomponents.client5:httpclient5:${httpComponentsClientVersion}"
 
     // Logging
-    implementation "org.apache.logging.log4j:log4j-api:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-core:${log4jVersion}"
-    implementation "org.apache.logging.log4j:log4j-slf4j2-impl:${log4jVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     // metrics
     implementation "io.prometheus:simpleclient:${prometheusVersion}"

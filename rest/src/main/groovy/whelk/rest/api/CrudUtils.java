@@ -8,8 +8,8 @@ import org.apache.hc.core5.http.HeaderElement;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicHeaderValueParser;
 import org.apache.hc.core5.http.message.ParserCursor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.util.http.BadRequestException;
 import whelk.util.http.MimeTypes;
 import whelk.util.http.NotFoundException;
@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 class CrudUtils {
-    private static final Logger log = LogManager.getLogger(CrudUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(CrudUtils.class);
     static final MediaType JSON = MediaType.parse(MimeTypes.JSON);
     static final MediaType JSONLD = MediaType.parse(MimeTypes.JSONLD);
     static final MediaType TURTLE = MediaType.parse(MimeTypes.TURTLE);

@@ -5,11 +5,11 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class FeatureFlags {
-    final static Logger log = LogManager.getLogger(FeatureFlags.class);
+    final static Logger log = LoggerFactory.getLogger(FeatureFlags.class);
     
     public enum Flag {
         INDEX_BLANK_WORKS,

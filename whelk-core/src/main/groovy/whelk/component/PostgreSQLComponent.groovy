@@ -5,7 +5,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.metrics.prometheus.PrometheusHistogramMetricsTrackerFactory
 import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import io.prometheus.client.Counter
 import org.postgresql.PGConnection
 import org.postgresql.PGNotification
@@ -2980,6 +2980,11 @@ class PostgreSQLComponent {
         void run() {
             while (true) {
                 try(Connection connection = dataSource.getConnection()) {
+                    if (connection == null) {
+                        sleep(100)
+                        continue
+                    }
+
                     for (NotificationType t : NotificationType.values()) {
                         try (def statement = connection.createStatement()) {
                             statement.execute("LISTEN ${t.id()}")

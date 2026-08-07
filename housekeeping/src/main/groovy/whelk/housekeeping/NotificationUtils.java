@@ -1,7 +1,7 @@
 package whelk.housekeeping;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.mailer.Mailer;
 import org.simplejavamail.email.EmailBuilder;
@@ -24,7 +24,7 @@ import java.util.TreeSet;
 
 public class NotificationUtils {
 
-    private static final Logger log = LogManager.getLogger(NotificationUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(NotificationUtils.class);
 
     private static final String EMAIL_HEADER = "[CXZ]";
     static final String DIVIDER = "-------------------------------------------";

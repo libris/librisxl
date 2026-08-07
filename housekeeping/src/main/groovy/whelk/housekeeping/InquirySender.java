@@ -1,7 +1,7 @@
 package whelk.housekeeping;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -29,7 +29,7 @@ import static whelk.util.Jackson.mapper;
 
 public class InquirySender extends HouseKeeper {
 
-    private static final Logger log = LogManager.getLogger(InquirySender.class);
+    private static final Logger log = LoggerFactory.getLogger(InquirySender.class);
 
     private static final String STATE_KEY = "CXZ inquiry email sender";
     private String status = "OK";

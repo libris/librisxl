@@ -2,8 +2,8 @@ package whelk.sru.servlet;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import groovy.lang.Tuple2;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcFieldComparator;
@@ -93,7 +93,7 @@ import static whelk.util.Jackson.mapper;
  * </p>
  */
 public class XSearchServlet extends WhelkHttpServlet {
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     private final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 

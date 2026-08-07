@@ -1,7 +1,7 @@
 package whelk.component
 
 import com.google.common.base.Preconditions
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import org.apache.hc.core5.http.ClassicHttpResponse
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.classic.methods.HttpDelete

@@ -2,7 +2,7 @@ package whelk.component
 
 import groovy.transform.CompileStatic
 import groovy.transform.Memoized
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import org.apache.commons.codec.binary.Base64
 import se.kb.libris.utils.isbn.ConvertException
 import se.kb.libris.utils.isbn.Isbn

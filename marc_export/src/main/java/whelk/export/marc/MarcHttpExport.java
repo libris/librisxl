@@ -3,8 +3,8 @@ package whelk.export.marc;
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Summary;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
 import se.kb.libris.util.marc.io.MarcRecordWriter;
 import se.kb.libris.util.marc.io.MarcXmlRecordWriter;
@@ -34,7 +34,7 @@ import java.util.UUID;
 public class MarcHttpExport extends CoreWhelkHttpServlet
 {
     private ProfileExport profileExport = null;
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     static final Counter requests = Counter.build()
         .name("marc_export_api_requests_total").help("Total requests to API.")

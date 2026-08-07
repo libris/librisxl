@@ -1,7 +1,7 @@
 package whelk.apixserver;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
 import whelk.Document;
@@ -30,7 +30,7 @@ public class Utils
     static Whelk s_whelk;
     private static final JsonLD2MarcXMLConverter s_toMarcConverter;
     private static final MarcFrameConverter s_toJsonLdConverter;
-    private static final Logger s_logger = LogManager.getLogger(Utils.class);
+    private static final Logger s_logger = LoggerFactory.getLogger(Utils.class);
 
     static
     {

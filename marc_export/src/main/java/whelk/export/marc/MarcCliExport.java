@@ -1,8 +1,8 @@
 package whelk.export.marc;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.export.ExportProfile;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
@@ -42,7 +42,7 @@ public class MarcCliExport
     private final Whelk m_whelk;
     private final Set<String> exportedUris = new TreeSet<>();
 
-    final static Logger log = LogManager.getLogger(MarcCliExport.class);
+    final static Logger log = LoggerFactory.getLogger(MarcCliExport.class);
 
     public MarcCliExport(Whelk whelk)
     {
