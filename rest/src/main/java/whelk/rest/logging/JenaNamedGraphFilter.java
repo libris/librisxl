@@ -4,6 +4,10 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.filter.Filter;
 import ch.qos.logback.core.spi.FilterReply;
 
+/**
+ * JsonLD2RdfXml.groovy passes embellished JSON-LD data to Jena, i.e. with named graphs.
+ * It's ok that Jena drops them.
+ */
 public class JenaNamedGraphFilter extends Filter<ILoggingEvent> {
 
     private static final String SUPPRESSED_MESSAGE =
