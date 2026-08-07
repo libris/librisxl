@@ -236,7 +236,7 @@ class CrudUtils {
         }
     }
 
-    static class ETag {
+    public static class ETag {
         private static final String SEPARATOR = ":";
 
         private String plain = null;
