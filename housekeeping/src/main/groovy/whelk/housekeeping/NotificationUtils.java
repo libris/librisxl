@@ -1,11 +1,13 @@
 package whelk.housekeeping;
 
+import jakarta.mail.Message;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.mailer.Mailer;
 import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.MailerBuilder;
+import org.simplejavamail.recipient.RecipientBuilder;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -126,7 +128,9 @@ public class NotificationUtils {
                                 Integer.parseInt((String) props.get("smtpPort")),
                                 (String) props.get("smtpUser"),
                                 (String) props.get("smtpPassword")
-                        ).buildMailer();
+                        )
+                        .trustingAllHosts(true)
+                        .buildMailer();
             senderAddress = (String) props.get("smtpSender");
         }
 
@@ -135,7 +139,10 @@ public class NotificationUtils {
             subject = subject.substring(0, Math.min(subject.length(), 800));
 
             Email email = EmailBuilder.startingBlank()
-                    .to(recipient)
+                    .withRecipients(new RecipientBuilder()
+                            .withAddress(recipient)
+                            .withType(Message.RecipientType.TO)
+                            .build())
                     .withSubject(subject)
                     .from(senderAddress)
                     .withPlainText(body)
