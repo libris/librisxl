@@ -8,13 +8,13 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
 
-import io.prometheus.client.Counter;
+import io.prometheus.metrics.core.metrics.Counter;
 
 public class ListMetadataFormats
 {
     private final static String IDENTIFIER_PARAM = "identifier";
 
-    private static final Counter failedRequests = Counter.build()
+    private static final Counter failedRequests = Counter.builder()
             .name("oaipmh_failed_listmetadataformats_requests_total").help("Total failed ListMetadataFormats requests.")
             .labelNames("error").register();
 
@@ -51,13 +51,13 @@ public class ListMetadataFormats
                     boolean recordDeleted = resultSet.getBoolean("deleted");
                     if (recordDeleted)
                     {
-                        failedRequests.labels(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
+                        failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
                         ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                         return;
                     }
                 }
                 else {
-                    failedRequests.labels(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
+                    failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST).inc();
                     ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_ID_DOES_NOT_EXIST, "", request, response);
                     return;
                 }

@@ -11,7 +11,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 
-import io.prometheus.client.Counter;
+import io.prometheus.metrics.core.metrics.Counter;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -34,7 +34,7 @@ public class ListRecords
     // that a request never results in an unbounded scan of the database.
     private final static int MAX_PAGES_PER_REQUEST = 100;
 
-    private static final Counter failedRequests = Counter.build()
+    private static final Counter failedRequests = Counter.builder()
             .name("oaipmh_failed_listrecords_requests_total").help("Total failed ListRecords requests.")
             .labelNames("error").register();
 
@@ -64,7 +64,7 @@ public class ListRecords
             ResumptionToken token = ResumptionToken.parse(resumptionTokenParam);
             if (token == null)
             {
-                failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN).inc();
+                failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN).inc();
                 ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_RESUMPTION_TOKEN,
                         "The resumptionToken is invalid or has expired.", request, response);
                 return;
@@ -99,7 +99,7 @@ public class ListRecords
 
             if (metadataPrefix == null)
             {
-                failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
+                failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
                 ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                         "metadataPrefix argument required.", request, response);
                 return;
@@ -115,7 +115,7 @@ public class ListRecords
         SetSpec setSpec = new SetSpec(set);
         if (!setSpec.isValid())
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
+            failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "Not a supported set spec: " + set, request, response);
             return;
@@ -124,7 +124,7 @@ public class ListRecords
         // Was the data ordered in a format we know?
         if (!OaiPmh.supportedFormats.containsKey(metadataPrefix))
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
+            failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT,
                     "Unsupported format: " + metadataPrefix,
                     request, response);
@@ -139,7 +139,7 @@ public class ListRecords
             untilDateTime = Helpers.parseISO8601(until);
         } catch (DateTimeParseException dtpe)
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
+            failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "Allowed time formats are: YYYY-MM-DD and YYYY-MM-DDThh:mm:ssZ.", request, response);
             return;
@@ -210,7 +210,7 @@ public class ListRecords
     {
         if (!resultIterator.hasNext() && !resuming && resultIterator.isExhausted())
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
+            failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
             return;
         }

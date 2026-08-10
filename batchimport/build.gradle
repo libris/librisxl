@@ -23,8 +23,8 @@ dependencies {
 
     // XL dependencies
     implementation(project(':whelk-core'))
-    implementation "io.prometheus:simpleclient:${prometheusVersion}"
-    implementation "io.prometheus:simpleclient_pushgateway:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-core:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-exporter-pushgateway:${prometheusVersion}"
 
     testImplementation "org.spockframework:spock-core:${spockVersion}"
 }

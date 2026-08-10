@@ -6,7 +6,8 @@ import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.metrics.prometheus.PrometheusHistogramMetricsTrackerFactory
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
-import io.prometheus.client.Counter
+import io.prometheus.metrics.core.datapoints.CounterDataPoint
+import io.prometheus.metrics.core.metrics.Counter
 import org.postgresql.PGConnection
 import org.postgresql.PGNotification
 import org.postgresql.PGStatement
@@ -2963,10 +2964,11 @@ class PostgreSQLComponent {
 
     class NotificationListener extends Thread {
         private static final String NAME = 'pg_listener'
-        private static final Counter counter = Counter.build()
+        private static final Counter counter = (Counter) Counter.builder()
                 .name("${NAME}_handled")
                 .labelNames("name")
-                .help("Number of notifications handled.").register()
+                .help("Number of notifications handled.")
+                .register()
 
         DataSource dataSource
         
@@ -3032,7 +3034,7 @@ class PostgreSQLComponent {
                 dependencyCache.handleInvalidateNotification(payload)
             }
             
-            counter.labels(type.id()).inc()
+            ((CounterDataPoint) counter.labelValues(type.id())).inc()
         }
         
         private void onConnected() {

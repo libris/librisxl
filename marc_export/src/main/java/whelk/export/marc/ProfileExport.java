@@ -2,7 +2,8 @@ package whelk.export.marc;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import groovy.lang.Tuple2;
-import io.prometheus.client.Summary;
+import io.prometheus.metrics.core.datapoints.Timer;
+import io.prometheus.metrics.core.metrics.Summary;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import se.kb.libris.export.ExportProfile;
@@ -60,11 +61,11 @@ public class ProfileExport
         SEPARATE // Do not export deleted records, but return a list of them separately
     }
 
-    private static final Summary totalExportCount = Summary.build().name("marc_export_total_document_count")
+    private static final Summary totalExportCount = Summary.builder().name("marc_export_total_document_count")
         .help("Number of documents in export response").register();
-    private static final Summary affectedCount = Summary.build().name("marc_export_affected_document_count")
+    private static final Summary affectedCount = Summary.builder().name("marc_export_affected_document_count")
         .help("Number of affected documents in single document export").register();
-    private static final Summary singleExportLatency = Summary.build().name("marc_export_single_doc_latency_seconds")
+    private static final Summary singleExportLatency = Summary.builder().name("marc_export_single_doc_latency_seconds")
         .help("The time in seconds it takes to export a single 'complete' document")
         .labelNames("collection").register();
     private final JsonLD2MarcXMLConverter m_toMarcXmlConverter;
@@ -165,15 +166,10 @@ public class ProfileExport
                                          String mainEntityType, Connection connection)
             throws IOException, SQLException
     {
-        Summary.Timer requestTimer = singleExportLatency.labels(collection).startTimer();
-        try
+        try (Timer _ = singleExportLatency.labelValues(collection).startTimer())
         {
-            exportAffectedDocuments2(id, collection, created, deleted, from, until, profile, 
+            exportAffectedDocuments2(id, collection, created, deleted, from, until, profile,
                     output, deleteMode, doVirtualDeletions, exportedIDs, deletedNotifications, mainEntityType, connection);
-        }
-        finally
-        {
-            requestTimer.observeDuration();
         }
     }
 

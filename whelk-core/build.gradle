@@ -95,7 +95,7 @@ dependencies {
     implementation "io.github.resilience4j:resilience4j-retry:${resilience4jVersion}"
     implementation "org.apache.groovy:groovy-all:${groovyVersion}"
     implementation 'com.damnhandy:handy-uri-templates:2.0.4'
-    implementation 'com.zaxxer:HikariCP:4.0.3'
+    implementation "com.zaxxer:HikariCP:${hikariVersion}"
     implementation 'commons-codec:commons-codec:1.19.0'
     implementation 'com.ibm.icu:icu4j:71.1'
     api 'commons-io:commons-io:2.20.0'
@@ -118,7 +118,9 @@ dependencies {
     implementation 'org.apache.commons:commons-collections4:4.1'
 
     // metrics
-    implementation "io.prometheus:simpleclient_guava:${prometheusVersion}"
+    implementation "io.prometheus:simpleclient_guava:${prometheusSimpleclientVersion}"
+    implementation "io.prometheus:prometheus-metrics-core:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-simpleclient-bridge:${prometheusVersion}"
 
     // Integration
     api "org.apache.commons:commons-lang3:3.18.0"
