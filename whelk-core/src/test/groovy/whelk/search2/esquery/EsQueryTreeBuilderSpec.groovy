@@ -1649,4 +1649,42 @@ class EsQueryTreeBuilderSpec extends Specification {
         'year:-1999'     | 'year_4_digits_short' | null       | 1999
         'year:1899-1999' | 'year_4_digits_short' | 1899       | 1999
     }
+
+    def "isSimple"() {
+        expect:
+        EsQueryTreeBuilder.isSimple(query) == result
+
+        where:
+        query       | result
+        "Hästar"    | true
+        "Häst*"     | true
+        "H*star"    | false
+        "*star"     | false
+        "Häst?"     | true // don't treat ? as wildcard when last char in word. (e.g. pasted titles)
+        "Häst? abc" | true // don't treat ? as wildcard when last char in word. (e.g. pasted titles)
+        "Häst? Ko?" | true // don't treat ? as wildcard when last char in word. (e.g. pasted titles)
+        "Häst\\?"   | false
+        "H?star"    | false
+        "H?star?"   | false
+        "H*star?"   | false
+        "?ästar"    | false
+        'Это дом'   | true
+        'Это д?м'   | false
+        'վիրված'    | true
+        'վիրվ?ած'   | false
+    }
+
+    def "escape"() {
+        expect:
+        EsQueryTreeBuilder.escapeNonSimpleQueryString(query) == result
+
+        where:
+        query          | result
+        "H*star"       | "H*star"
+        "Häst\\?"      | "Häst?"
+        "*star"        | "*star"
+        "Häs^tak"      | "Häs\\^tak"
+        "hyp-hen -not" | "hyp\\-hen -not"
+        "-not"         | "-not"
+    }
 }

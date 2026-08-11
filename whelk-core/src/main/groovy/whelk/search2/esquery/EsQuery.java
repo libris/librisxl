@@ -2,15 +2,12 @@ package whelk.search2.esquery;
 
 import whelk.search2.Operator;
 import whelk.search2.Query;
-import whelk.search2.QueryUtil;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static whelk.search2.QueryUtil.isSimple;
 
 public sealed interface EsQuery {
     enum MultiMatchType {
@@ -25,12 +22,6 @@ public sealed interface EsQuery {
         String mode();
         String query();
         MultiMatchType multiMatchType();
-
-        static TextQueryMode from(String s) {
-            return isSimple(s)
-                    ? new SimpleQueryString(s)
-                    : new QueryString(QueryUtil.escapeNonSimpleQueryString(s), MultiMatchType.most_fields);
-        }
     }
 
     record QueryString(String query, MultiMatchType multiMatchType) implements TextQueryMode {

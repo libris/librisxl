@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static whelk.JsonLd.ID_KEY;
@@ -44,7 +45,6 @@ import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.EsMappings.KEYWORD;
-import static whelk.search2.QueryUtil.isSimple;
 import static whelk.search2.QueryUtil.quote;
 
 public class EsQueryTreeBuilder {
@@ -403,7 +403,11 @@ public class EsQueryTreeBuilder {
             s = s.replace("-", "");
         }
 
-        EsQuery.TextQuery baseQuery = new EsQuery.TextQuery(EsQuery.TextQueryMode.from(s), fields, ft.connective(), boostSettings);
+        EsQuery.TextQueryMode textQueryMode = isSimple(s)
+                ? new EsQuery.SimpleQueryString(s)
+                : new EsQuery.QueryString(escapeNonSimpleQueryString(s), EsQuery.MultiMatchType.most_fields);
+
+        EsQuery.TextQuery baseQuery = new EsQuery.TextQuery(textQueryMode, fields, ft.connective(), boostSettings);
 
         if (boostSettings.boostPhrase()) {
             return buildWithPhraseBoost(baseQuery, ft.tokens());
@@ -529,11 +533,44 @@ public class EsQueryTreeBuilder {
         return getNestedStem(field, esMappings).isPresent();
     }
 
-    private static Optional<String> getNestedStem(String field, EsMappings esMappings) {
+    public static Optional<String> getNestedStem(String field, EsMappings esMappings) {
         if (esMappings.isNestedTypeField(field)) {
             return Optional.of(field);
         }
         return esMappings.getNestedTypeFields().stream().filter(field::startsWith).findFirst();
+    }
+
+    // leading wildcards e.g. "*foo" are removed by simple_query_string
+    private static final Pattern NON_SIMPLE_QUERY = Pattern.compile("\\\\[?]|([*?])\\S+");
+
+    /**
+     * Can this query string be handled by ES simple_query_string?
+     */
+    public static boolean isSimple(String queryString) {
+        return !NON_SIMPLE_QUERY.matcher(queryString).find();
+    }
+
+    public static String escapeNonSimpleQueryString(String queryString) {
+        // Treat escaped question marks as actual wildcards
+        queryString = queryString.replace("\\?", "?");
+
+        // The following chars are reserved in ES and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
+        // Escape the ones that are not part of our query language.
+        for (char c : List.of('=', '&', '!', '{', '}', '[', ']', '^', ':', '/')) {
+            queryString = queryString.replace("" + c, "\\" + c);
+        }
+
+        // Inside words, treat '-' as regular hyphen instead of "NOT" and escape it
+        queryString = queryString.replaceAll("(^|\\s+)-(\\S+)", "$1#ACTUAL_NOT#$2");
+        queryString = queryString.replace("-", "\\-");
+        queryString = queryString.replace("#ACTUAL_NOT#", "-");
+
+        // Strip un-escapable characters
+        for (char c : List.of('<', '>')) {
+            queryString = queryString.replace("" + c, "");
+        }
+
+        return queryString;
     }
 
     private static boolean isMaskedOrTruncated(String s) {

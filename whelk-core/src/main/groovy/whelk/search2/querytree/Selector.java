@@ -1,13 +1,10 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
-import whelk.search2.EsMappings;
 import whelk.search2.QueryUtil;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public sealed interface Selector permits Path, PathElement {
     String queryKey();
@@ -30,14 +27,6 @@ public sealed interface Selector permits Path, PathElement {
 
     List<String> domain();
     List<String> range();
-
-    default Optional<String> getEsNestedStem(EsMappings esMappings) {
-        String esField = esField();
-        if (esMappings.isNestedTypeField(esField)) {
-            return Optional.of(esField);
-        }
-        return esMappings.getNestedTypeFields().stream().filter(esField::startsWith).findFirst();
-    }
 
     default String formattedQueryKey() {
         var k = queryKey();

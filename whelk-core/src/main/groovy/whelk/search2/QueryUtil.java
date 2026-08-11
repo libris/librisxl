@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -112,28 +111,8 @@ public class QueryUtil {
         return boolWrap(Map.of("must", l));
     }
 
-    public static Map<String, Object> mustNotWrap(Object o) {
-        return boolWrap(Map.of("must_not", o));
-    }
-
-    public static Map<String, Object> shouldWrap(List<?> l) {
-        return boolWrap(Map.of("should", l));
-    }
-
     public static Map<String, Object> boolWrap(Map<?, ?> m) {
         return Map.of("bool", m);
-    }
-
-    public static Map<String, Object> nestedWrap(String nestedPath, Map<String, Object> query) {
-        return Map.of("nested", Map.of(
-                "ignore_unmapped", true, // otherwise can fail when searching multiple indices
-                "path", nestedPath,
-                "query", query
-        ));
-    }
-
-    public static Map<String, Object> matchAny() {
-        return Map.of("match_all", Map.of());
     }
 
     public static Map<String, Object> loadThing(String iri, Whelk whelk) {
@@ -156,38 +135,5 @@ public class QueryUtil {
         return integralRelations.stream()
                 .filter(prop -> prop.domain().stream().anyMatch(d -> jsonLd.isSubClassOf(type, d)))
                 .toList();
-    }
-
-    // leading wildcards e.g. "*foo" are removed by simple_query_string
-    static Pattern NON_SIMPLE_QUERY = Pattern.compile("\\\\[?]|([*?])\\S+");
-
-    /**
-     * Can this query string be handled by ES simple_query_string?
-     */
-    public static boolean isSimple(String queryString) {
-        return !NON_SIMPLE_QUERY.matcher(queryString).find();
-    }
-
-    public static String escapeNonSimpleQueryString(String queryString) {
-        // Treat escaped question marks as actual wildcards
-        queryString = queryString.replace("\\?", "?");
-
-        // The following chars are reserved in ES and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
-        // Escape the ones that are not part of our query language.
-        for (char c : List.of('=', '&', '!', '{', '}', '[', ']', '^', ':', '/')) {
-            queryString = queryString.replace("" + c, "\\" + c);
-        }
-
-        // Inside words, treat '-' as regular hyphen instead of "NOT" and escape it
-        queryString = queryString.replaceAll("(^|\\s+)-(\\S+)", "$1#ACTUAL_NOT#$2");
-        queryString = queryString.replace("-", "\\-");
-        queryString = queryString.replace("#ACTUAL_NOT#", "-");
-
-        // Strip un-escapable characters
-        for (char c : List.of('<', '>')) {
-            queryString = queryString.replace("" + c, "");
-        }
-
-        return queryString;
     }
 }
