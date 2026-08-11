@@ -12,7 +12,6 @@ import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Term;
 import whelk.search2.querytree.Type;
 
@@ -45,7 +44,7 @@ public class ObjectQuery extends Query {
     protected EsQuery doGetEsQuery() {
         JsonLd ld = whelk.getJsonld();
 
-        ReducedQueryTree queryTree = (ReducedQueryTree) getFullQueryTree().add(objectFilter());
+        QueryTree.ReducedTree queryTree = (QueryTree.ReducedTree) getFullQueryTree().add(objectFilter());
 
         List<String> givenSubjectTypes = queryTree.getRdfSubjectTypesList();
 
@@ -73,7 +72,7 @@ public class ObjectQuery extends Query {
                     .map(this::getFullQueryTree)
                     .map(QueryTree::tree)
                     .forEach(altTrees::add);
-            queryTree = new ReducedQueryTree(new Or(altTrees));
+            queryTree = new QueryTree.ReducedTree(new Or(altTrees));
         }
 
         QueryTree.ExpandedTree expanded = queryTree.expand(ld);

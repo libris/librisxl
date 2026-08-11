@@ -1,6 +1,5 @@
 package whelk.search2.querytree;
 
-import whelk.JsonLd;
 import whelk.search2.Query;
 
 import java.util.LinkedHashMap;
@@ -58,16 +57,6 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     @Override
     public Node getInverse() {
         return new Not(this);
-    }
-
-    @Override
-    public Node reduce(JsonLd jsonLd) {
-        return this;
-    }
-
-    @Override
-    public boolean implies(Node node, JsonLd jsonLd) {
-        return implies(node, this::equals);
     }
 
     @Override

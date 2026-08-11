@@ -1,6 +1,5 @@
 package whelk.search2.querytree;
 
-import whelk.JsonLd;
 import whelk.search2.QueryUtil;
 
 import java.util.*;
@@ -51,21 +50,5 @@ public sealed abstract class Group implements Node permits And, Or {
             }
         }
         return flattened;
-    }
-
-    Node reduce(JsonLd jsonLd, BiFunction<Node, Node, Optional<Node>> pick) {
-        List<Node> reduced = new ArrayList<>();
-        children().stream().map(child -> child.reduce(jsonLd))
-                .forEach(child -> {
-                    for (int i = 0; i < reduced.size(); i++) {
-                        Optional<Node> picked = pick.apply(child, reduced.get(i));
-                        if (picked.isPresent()) {
-                            reduced.set(i, picked.get());
-                            return;
-                        }
-                    }
-                    reduced.add(child);
-                });
-        return reduced.size() == 1 ? reduced.getFirst() : newInstance(reduced, true);
     }
 }

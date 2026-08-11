@@ -18,11 +18,6 @@ public final class Type extends Condition {
     }
 
     @Override
-    public boolean implies(Node node, JsonLd jsonLd) {
-        return implies(node, n -> n instanceof Type t && implies(this, t, jsonLd));
-    }
-
-    @Override
     public RdfSubjectType rdfSubjectType() {
         return new RdfSubjectType(this);
     }
@@ -33,9 +28,5 @@ public final class Type extends Condition {
 
     public String type() {
         return type;
-    }
-
-    private static boolean implies(Type a, Type b, JsonLd jsonLd) {
-        return jsonLd.isSubClassOf(a.type(), b.type());
     }
 }

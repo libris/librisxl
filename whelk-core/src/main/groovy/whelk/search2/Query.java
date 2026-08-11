@@ -5,6 +5,7 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.esquery.EsQueryTree2;
+import whelk.search2.esquery.EsQueryTreeBuilder;
 import whelk.search2.querytree.And;
 import whelk.search2.querytree.Condition;
 import whelk.search2.querytree.EsQuery;
@@ -16,7 +17,6 @@ import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.QueryTreeExpander;
-import whelk.search2.querytree.ReducedQueryTree;
 import whelk.search2.querytree.Resource;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
@@ -47,6 +47,7 @@ import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeViewFindUrl;
 import static whelk.search2.QueryUtil.mustWrap;
+import static whelk.search2.querytree.QueryTreeReducer.implies;
 
 public class Query {
     protected final Whelk whelk;
@@ -66,7 +67,7 @@ public class Query {
     private EsQuery esQuery;
     private QueryResult queryResult;
 
-    private ReducedQueryTree fullQueryTree;
+    private QueryTree.ReducedTree fullQueryTree;
 
     static final String WORK_CATEGORY = "librissearch:workCategory";
 
@@ -156,15 +157,15 @@ public class Query {
         return buildEsQueryDsl(mainQuery, Map.of());
     }
 
-    protected ReducedQueryTree getFullQueryTree() {
+    protected QueryTree.ReducedTree getFullQueryTree() {
         if (fullQueryTree == null) {
             fullQueryTree = getFullQueryTree(qTree);
         }
         return fullQueryTree;
     }
 
-    protected ReducedQueryTree getFullQueryTree(QueryTree baseTree) {
-        return (ReducedQueryTree) mergeTrees(baseTree.reduce(whelk.getJsonld()), List.of(rTree, sTree));
+    protected QueryTree.ReducedTree getFullQueryTree(QueryTree baseTree) {
+        return (QueryTree.ReducedTree) mergeTrees(baseTree.reduce(whelk.getJsonld()), List.of(rTree, sTree));
     }
 
     protected List<Map<String, Object>> predicateLinks() {
@@ -480,7 +481,7 @@ public class Query {
                     if (!ctx.esSettings.mappings().isAggregatable(field)) {
                         return;
                     }
-                    Optional<String> nestedStem = selector.getEsNestedStem(ctx.esSettings.mappings());
+                    Optional<String> nestedStem = EsQueryTreeBuilder.getNestedStem(field, ctx.esSettings.mappings());
                     Map<String, Object> aggs = nestedStem.isPresent()
                             ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
                             : buildCoreAqqQuery(field, slice, ctx);
@@ -940,7 +941,7 @@ public class Query {
             for (FilterAlias fa : collectOptionalFilters()) {
                 boolean isSelected = false;
                 // TODO: Check _r too?
-                List<Node> implied = qTree.findTopNodesByCondition(n -> fa.implies(n, jsonLd));
+                List<Node> implied = qTree.findTopNodesByCondition(n -> implies(fa, n, jsonLd));
                 QueryTree alteredTree = switch (implied.size()) {
                     case 0 -> qTree.add(fa);
                     case 1 -> {
@@ -956,7 +957,7 @@ public class Query {
                         }
                     }
                     default -> {
-                        if (new And(implied).implies(fa.getParsed(), jsonLd)) {
+                        if (implies(new And(implied), fa.getParsed(), jsonLd)) {
                             isSelected = true;
                             yield qTree.removeAll(implied);
                         } else {

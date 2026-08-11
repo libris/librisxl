@@ -36,8 +36,8 @@ public class QueryTree {
         return new QueryTree(new Any.EmptyString());
     }
 
-    public ReducedQueryTree reduce(JsonLd jsonLd) {
-        return new ReducedQueryTree(tree.reduce(jsonLd));
+    public ReducedTree reduce(JsonLd jsonLd) {
+        return new ReducedTree(QueryTreeReducer.reduce(tree, jsonLd));
     }
 
     public ExpandedTree expand(JsonLd jsonLd) {
@@ -45,12 +45,13 @@ public class QueryTree {
     }
 
     public ExpandedTree expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        return new ExpandedTree(QueryTreeExpander.expand(tree, jsonLd, rdfSubjectTypes));
+        Node expandedTree = QueryTreeExpander.expand(tree, jsonLd, rdfSubjectTypes);
+        return expandedTree != null ? new ExpandedTree(expandedTree) : ExpandedTree.newEmpty();
     }
 
-    public ReducedQueryTree merge(QueryTree other, JsonLd jsonLd) {
+    public ReducedTree merge(QueryTree other, JsonLd jsonLd) {
         Node mergedTree = isAny() ? other.tree() : (other.isAny() ? tree : merge(tree, other.tree(), jsonLd));
-        return mergedTree != null ? new ReducedQueryTree(mergedTree.reduce(jsonLd)) : ReducedQueryTree.newEmpty();
+        return mergedTree != null ? new ReducedTree(QueryTreeReducer.reduce(mergedTree, jsonLd)) : ReducedTree.newEmpty();
     }
 
     public List<String> getRdfSubjectTypesList() {
@@ -146,7 +147,7 @@ public class QueryTree {
     }
 
     public boolean implies(Node node, JsonLd jsonLd) {
-        return tree.implies(node, jsonLd);
+        return QueryTreeReducer.implies(tree, node, jsonLd);
     }
 
     public String getFreeTextPart() {
@@ -328,16 +329,39 @@ public class QueryTree {
         List<Node> nodesToKeep = new ArrayList<>(a instanceof And and ? and.children() : List.of(a));
 
         (b instanceof And and ? and.children().stream() : Stream.ofNullable(b))
-                .filter(n -> !a.implies(n.getInverse(), jsonLd))
+                .filter(n -> !QueryTreeReducer.implies(a, n.getInverse(), jsonLd))
                 .forEach(nodesToKeep::add);
 
         return (nodesToKeep.size() == 1 ? nodesToKeep.getFirst() : new And(nodesToKeep));
     }
 
+    public static class ReducedTree extends QueryTree {
+        public ReducedTree(Node tree) {
+            super(tree);
+        }
+
+        public static ReducedTree newEmpty() {
+            return new ReducedTree(new Any.EmptyString());
+        }
+
+        @Override
+        public ReducedTree reduce(JsonLd jsonLd) {
+            return this;
+        }
+
+        @Override
+        public ReducedTree copy() {
+            return new ReducedTree(tree());
+        }
+    }
 
     public static class ExpandedTree extends QueryTree {
         ExpandedTree(Node tree) {
             super(tree);
+        }
+
+        public static ExpandedTree newEmpty() {
+            return new ExpandedTree(new Any.EmptyString());
         }
 
         @Override

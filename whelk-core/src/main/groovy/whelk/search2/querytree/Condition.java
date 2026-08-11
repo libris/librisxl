@@ -1,6 +1,5 @@
 package whelk.search2.querytree;
 
-import whelk.JsonLd;
 import whelk.search2.Operator;
 
 import java.util.LinkedHashMap;
@@ -56,16 +55,6 @@ public non-sealed class Condition implements Node {
     @Override
     public Node getInverse() {
         return operator.isRange() ? withOperator(operator.getInverse()) : new Not(this);
-    }
-
-    @Override
-    public Node reduce(JsonLd jsonLd) {
-        return this;
-    }
-
-    @Override
-    public boolean implies(Node node, JsonLd jsonLd) {
-        return implies(node, this::equals);
     }
 
     @Override

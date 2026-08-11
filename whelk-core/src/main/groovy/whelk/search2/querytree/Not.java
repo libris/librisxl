@@ -1,7 +1,5 @@
 package whelk.search2.querytree;
 
-import whelk.JsonLd;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -32,20 +30,6 @@ public record Not(Node node) implements Node {
     @Override
     public Node getInverse() {
         return node;
-    }
-
-    @Override
-    public Node reduce(JsonLd jsonLd) {
-        return this;
-    }
-
-    @Override
-    public boolean implies(Node other, JsonLd jsonLd) {
-        if (node instanceof FilterAlias || other instanceof Not(FilterAlias fa)) {
-            return equals(other);
-        }
-        Node inverse = other.getInverse();
-        return !(inverse instanceof Not) && inverse.implies(node, jsonLd);
     }
 
     @Override

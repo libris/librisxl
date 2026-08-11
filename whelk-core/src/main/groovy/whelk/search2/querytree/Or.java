@@ -1,10 +1,7 @@
 package whelk.search2.querytree;
 
-import whelk.JsonLd;
-
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 public non-sealed class Or extends Group {
@@ -23,11 +20,6 @@ public non-sealed class Or extends Group {
     @Override
     public Node getInverse() {
         return new And(children.stream().map(Node::getInverse).toList());
-    }
-
-    @Override
-    public boolean implies(Node node, JsonLd jsonLd) {
-        return children.stream().allMatch(child -> child.implies(node, jsonLd));
     }
 
     @Override
@@ -74,21 +66,6 @@ public non-sealed class Or extends Group {
     @Override
     public boolean equals(Object o) {
         return o instanceof Or other && new HashSet<>(other.children()).equals(new HashSet<>(children));
-    }
-
-    @Override
-    public Node reduce(JsonLd jsonLd) {
-        return reduce(jsonLd, (a, b) -> pick(a, b, jsonLd));
-    }
-
-    private Optional<Node> pick(Node a, Node b, JsonLd jsonLd) {
-        if (a.implies(b, jsonLd)) {
-            return Optional.of(b);
-        }
-        if (b.implies(a, jsonLd)) {
-            return Optional.of(a);
-        }
-        return Optional.empty();
     }
 }
 

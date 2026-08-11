@@ -1,6 +1,5 @@
 package whelk.search2.querytree;
 
-import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.Disambiguate;
 
@@ -49,16 +48,6 @@ public sealed class FilterAlias implements Node {
     @Override
     public Node getInverse() {
         return getParsed() instanceof Not(FilterAlias fa) ? fa : new Not(this);
-    }
-
-    @Override
-    public Node reduce(JsonLd jsonLd) {
-        return this;
-    }
-
-    @Override
-    public boolean implies(Node node, JsonLd jsonLd) {
-        return implies(node, this::equals) || getParsed().implies(node, jsonLd);
     }
 
     @Override

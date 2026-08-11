@@ -1,7 +1,5 @@
 package whelk.search2.querytree;
 
-import whelk.JsonLd;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -17,16 +15,6 @@ public sealed abstract class Any implements Node, Value permits Any.EmptyGroup, 
     @Override
     public Node getInverse() {
         return new Not(this);
-    }
-
-    @Override
-    public Node reduce(JsonLd jsonLd) {
-        return this;
-    }
-
-    @Override
-    public boolean implies(Node node, JsonLd jsonLd) {
-        return implies(node, this::equals);
     }
 
     @Override
