@@ -100,13 +100,19 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     graph = data["@graph"]
     rec, instance, *remainder = graph
 
+    # Get work and store as a local entity in the instance
+    if remainder:
+        work = remainder[0]
+        assert work["@id"].endswith("#work")
+        del work["@id"]
+        del graph[2]
+    else:
+        work = {"@type": "Work"}
+
+    instance["instanceOf"] = work
+
     # Check which historical syntax group the record belongs to
     syntax_era = identify_syntax_era(instance)
-
-    shb_host_num = instance.pop("part")[0]
-
-    iri: str | None = None
-    source: dict | None = None
 
     # Prep for adding SAO and SAB
     # TODO Add SAB as well
@@ -119,6 +125,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     ### Some initial cleanup ###
     # TODO Review this section - what are we doing and do we want to?
+
     if "bibliography" in rec:
         rec["bibliography"] = [{"@id": it["@id"]} for it in rec["bibliography"]]
     del rec["marc:catalogingSource"]  # "Annan verksamhet"
@@ -126,174 +133,172 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     # Remove category ("componentPart") - new categories will be added after parsing
     instance.pop("category", None)
 
-    ### Store work as a local entity in the instance ###
-    if remainder:
-        work = remainder[0]
-        assert work["@id"].endswith("#work")
-        del work["@id"]
-        del graph[2]
+    # Add a Link to the SHB volume which includes the description
+    shb_host_num = instance.pop("part")[0]
+
+    link_to_shb_volume(instance, rec, shb_host_num, bibliographies)
+
+    ### Enrich the instance ###
+
+    # Only proceed if there is a note
+    if "hasNote" not in instance:
+        anomalies.append(
+            f"SKIPPING Missing hasNote property - no information to parse\t{instance['@id']}\t{instance}"
+        )
+        return None
     else:
-        work = {"@type": "Work"}
+        assert len(instance["hasNote"]) == 1
+        note = instance.pop("hasNote")[0]["label"]
+        if note == "TABORT":
+            return None
 
-    instance["instanceOf"] = work
+    # Parse notes for structured bibliographic data
+    structured_record = parse_note(note, syntax_era)
 
-    ### Try to link local entities ###
-    link_local_entities(instance, rec, shb_host_num, bibliographies)
-
-    ### Parse notes ###
-
-    instance = parse_note(instance, syntax_era)
-
-    ### Add subject headings to the instance ###
-    sao_headings = add_sao_headings(
+    # Get subject headings 
+    structured_record["sao_headings"] = add_sao_headings(
         shb_host_num, start_year, publ_year, subject_mappings
     )
 
-    if sao_headings:
-        work["subject"] = sao_headings
+    # Enrich the instance with the parsed data
 
-    ### Wrap up ###
+    instance = enrich_instance(instance, work, structured_record)
 
     # Count all properties, icnluding nested, in the final instance ###
     counters["properties"].update(walk_keys(instance))
 
     return {"@id": graph[0]["@id"], "@graph": data}
 
+### Functions for enriching the instance
 
-### Functions for parsing the SHB records ###
+def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict:
+    # We can assume all titles are published and printed
+    instance["category"] = [{"@id": "https://id.kb.se/term/saobf/Print"}]
+
+    # Title
+    if structured_record.get("title"):
+        instance["hasTitle"] = {
+            "@type": "Title",
+            "mainTitle": structured_record["title"],
+        }
+
+    if structured_record.get("subtitle"):
+        instance["hasTitle"]["subtitle"] = structured_record["subtitle"]
+
+    # Contributors
+    # TODO Differentiate primary and other
+    if structured_record.get("primary_contributors"):
+        instance["responsibilityStatement"] = structured_record["contributors"]
+    if structured_record.get("other_contributors"):
+        instance["responsibilityStatement"] = structured_record["contributors"]
+
+    # Publication
+    publication = {}
+
+    if structured_record.get("place"):
+        publication["place"] = [
+            {"@type": "Place", "label": structured_record["place"]}
+        ]
+
+    if structured_record.get("year"):
+        publication["year"] = structured_record["year"]
+
+    if publication:
+        instance["publication"] = [
+            {
+                "@type": "PrimaryPublication",
+                **publication,
+            }
+        ]
+
+    # Extent
+    if structured_record.get("extent"):
+        instance["extent"] = [
+            {"@type": "Extent", "label": structured_record["extent"]}
+        ]
+    
+
+    # Information about the host publication or series membership
+    if structured_record.get("host"):
+        part = {
+            "@type": "PhysicalResource",
+            "category": [{"@id": "https://id.kb.se/term/saobf/Print"}],
+        }
+
+        if structured_record["host"].get("title"):
+            part["hasTitle"] = {
+                "@type": "Title",
+                "mainTitle": structured_record["host"]["title"],
+            }
+
+        if structured_record["host"].get("publisher"):
+            part["responsibilityStatement"] = structured_record["host"]["name"]
+
+        if structured_record["host"].get("issn"):
+            part["identifiedBy"] = {
+                "@type": "ISSN",
+                "value": structured_record["host"]["issn"],
+            }
+
+        if structured_record["is_component_part"]:
+            instance["isPartOf"] = [part]
+            instance["category"].append(
+                {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
+            )
+            counters["various"].update(["Component part"])            
+        else:
+            instance["seriesMembership"] = [part]
+            counters["various"].update(["Regular monograph"])
+
+        # Add part-specific information to isntance proeprty "part"
+        part = ""
+        if structured_record["host"].get("part_number"):
+            part = structured_record["host"]["part_number"]
+
+        if structured_record["host"].get("extent"):
+            if part:
+                part = part + ", " + structured_record["host"]["extent"]    
+            else:
+                part = structured_record["host"]["extent"]
+
+        if structured_record["host"].get("remainder"):
+            if part:
+                part = part + ", " + structured_record["host"]["remainder"]
+            else: part = structured_record["host"]["remainder"]
+
+        if part:
+            instance["part"] = part
+
+    ### Store remaining unstructured information as a note on the instance ###
+
+    if structured_record.get("remaining_note"):
+        instance.setdefault("hasNote", []).append(
+            {"@type": "Note", "label": structured_record["remaining_note"]}
+        )
+
+    ### Finally, for backup, store the full original OCR'd note as an instance note ###
+    instance.setdefault("hasNote", []).append(
+        {
+            "@type": "Note",
+            "label": f"Fullständig beskrivning (OCR) ur SHBD: {structured_record["original_note"]}",
+        }
+    )
+
+    ###
+    if structured_record.get("sao_headings"):
+        work["subject"] = structured_record["sao_headings"]
 
 
-def parse_note(instance: dict, syntax_era: str) -> None:
+### Functions for parsing the SHB descriptions ###
+
+def __parse_note(instance: dict, syntax_era: str) -> None:
     """Parse instance, extracting information about the main entity and its host publication or series membership.
     Updates the instance in place with the extracted information."""
-
-    if "hasNote" not in instance:
-        anomalies.append(
-            f"Missing hasNote property - no information to parse\t{instance['@id']}\t{instance}"
-        )
-        return None
-    else:
-        assert len(instance["hasNote"]) == 1
-
-        note = instance.pop("hasNote")[0]["label"]
-
-        if note == "TABORT":
-            return None
-
-        ### Parse note ###
-        structured_record = extract_structured_values(note, syntax_era)
-
-        ### Store extracted information to the instance ###
-
-        # We can assume all titles are published and printed
-        instance["category"] = [{"@id": "https://id.kb.se/term/saobf/Print"}]
-
-        if structured_record.get("title"):
-            instance["hasTitle"] = {
-                "@type": "Title",
-                "mainTitle": structured_record["title"],
-            }
-
-        if structured_record.get("subtitle"):
-            instance["hasTitle"]["subtitle"] = structured_record["subtitle"]
-
-        if structured_record.get("contributors"):
-            instance["responsibilityStatement"] = structured_record["contributors"]
-
-        publication = {}
-        if structured_record.get("place"):
-            publication["place"] = [
-                {"@type": "Place", "label": structured_record["place"]}
-            ]
-
-        if structured_record.get("year"):
-            publication["year"] = structured_record["year"]
-
-        if publication:
-            instance["publication"] = [
-                {
-                    "@type": "PrimaryPublication",
-                    **publication,
-                }
-            ]
-
-        if structured_record.get("extent"):
-            instance["extent"] = [
-                {"@type": "Extent", "label": structured_record["extent"]}
-            ]
-
-        # Store information about the host publication or series membership
-        if structured_record.get("host"):
-            part = {
-                "@type": "PhysicalResource",
-                "category": [{"@id": "https://id.kb.se/term/saobf/Print"}],
-            }
-
-            if structured_record["host"].get("title"):
-                part["hasTitle"] = {
-                    "@type": "Title",
-                    "mainTitle": structured_record["host"]["title"],
-                }
-
-            if structured_record["host"].get("name"):
-                part["responsibilityStatement"] = structured_record["host"]["name"]
-
-            if structured_record["host"].get("subtitle"):
-                part["hasTitle"]["subtitle"] = structured_record["host"]["subtitle"]
-
-            if structured_record["host"].get("issn"):
-                part["identifiedBy"] = {
-                    "@type": "ISSN",
-                    "value": structured_record["host"]["issn"],
-                }
-
-            if structured_record["is_component_part"]:
-                instance["isPartOf"] = [part]
-                instance["category"].append(
-                    {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
-                )
-                counters["various"].update(["Component part"])
-            else:
-                instance["seriesMembership"] = [part]
-                counters["various"].update(["Regular monograph"])
-
-            # Part-specific information
-            if structured_record["host"].get("remainder"):
-                if USE_ANNOT:
-                    part["@annotation"] = {
-                        "comment": structured_record["host"]["remainder"]
-                    }
-                else:
-                    instance["part"] = structured_record["host"]["remainder"]
-
-            if structured_record["host"].get("extent"):
-                if "part" in instance:
-                    instance["part"] = (
-                        instance["part"] + ", " + structured_record["host"]["extent"]
-                    )
-                else:
-                    instance["part"] = structured_record["host"]["extent"]
-
-        ### Store remaining unstructured information as a note on the instance ###
-
-        if structured_record.get("remaining_note"):
-            instance.setdefault("hasNote", []).append(
-                {"@type": "Note", "label": structured_record["remaining_note"]}
-            )
-
-        ### Finally, for backup, store the full original OCR'd note as an instance note ###
-        if note:
-            instance.setdefault("hasNote", []).append(
-                {
-                    "@type": "Note",
-                    "label": f"Fullständig beskrivning (OCR) ur SHBD: {note}",
-                }
-            )
 
     return instance
 
 
-def extract_structured_values(note: dict, syntax_era: str) -> tuple:
+def parse_note(note: dict, syntax_era: str) -> tuple:
     """Extract information about the main entity from the note, including name, title, subtitle, extent, ISSN, and any remaining unstructured information.
     Returns a dictionary containing the extracted values.
     """
@@ -303,6 +308,7 @@ def extract_structured_values(note: dict, syntax_era: str) -> tuple:
 
     # Some inital cleanup of OCR messiness
     note = normalize_spacing_and_punctuation(note)
+    structured_record["original_note"] = note
 
     # Extract information about reviews and dissertation notes
     tail_note, remainder = extract_reviews_or_diss(note)
@@ -403,7 +409,7 @@ def extract_host_values(
     Returns a tuple of (title, subtitle, issn)."""
 
     host = {}
-    title, subtitle, issn, part_remainder, probably_part = None, None, None, None, None
+    title, issn, part_remainder = None, None, None
 
     # Extract ISSN
     issn, remainder = extract_issn(host_note)
@@ -750,7 +756,7 @@ def extract_partof_from_parenthesis(remainder, syntax_era) -> tuple[dict]:
                 remainder = (remainder[:i] + remainder[end + 1 :]).strip()
                 # If it doesn't contain more than one charatcer and at least one is alphabetic, it's probbably not a title
                 if len(host_note) > 1 and any(char.isalpha() for char in host_note):
-                    return remainder.strip(), host_note
+                    return remainder.replace(" .", "").rstrip(" -"), host_note
 
     # Unbalanced parentheses
     return remainder, None
@@ -852,7 +858,7 @@ def add_sao_headings(shb_host_num, start_year, publ_year, subject_mappings) -> l
         #    print(f"{partnum} not in {list(rownummap)} for {years_key}", file=sys.stderr)
 
 
-def link_local_entities(
+def link_to_shb_volume(
     thing: dict, rec: dict, partnum: str, bibliographies: dict
 ) -> None:
     """Moves information about SHB as bibliography, as local and linked entitites, from thing (instance) to record.
