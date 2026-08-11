@@ -176,21 +176,40 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
     instance["category"] = [{"@id": "https://id.kb.se/term/saobf/Print"}]
 
     # Title
+    title = {"@type": "Title"}
     if structured_record.get("title"):
-        instance["hasTitle"] = {
-            "@type": "Title",
-            "mainTitle": structured_record["title"],
-        }
-
+        title["mainTitle"] = structured_record["title"]
     if structured_record.get("subtitle"):
-        instance["hasTitle"]["subtitle"] = structured_record["subtitle"]
+        title["subtitle"] = structured_record["subtitle"]
+    instance["hasTitle"] = title
 
-    # Contributors
-    # TODO Differentiate primary and other
+    # Responsibility statement and contributors
+    responsibility_statement = ""
     if structured_record.get("primary_contributors"):
-        instance["responsibilityStatement"] = structured_record["contributors"]
+        # TODO Add structured contributor property as well?
+        responsibility_statement = structured_record["primary_contributors"]
+        """ "contribution": [
+          {
+            "@type": "PrimaryContribution",
+            "agent": {
+              "@type": "Person",
+              "familyName": "enamn",
+              "givenName": "fnamn"
+            },
+            "role": [
+              {
+                "@id": "https://id.kb.se/relator/author"
+              }
+            ]
+          },"""
     if structured_record.get("other_contributors"):
-        instance["responsibilityStatement"] = structured_record["contributors"]
+        if responsibility_statement:
+            responsibility_statement = responsibility_statement + "; " + structured_record["other_contributors"]
+        else:
+            responsibility_statement = structured_record["other_contributors"]
+
+    if responsibility_statement:
+        instance["responsibilityStatement"] = responsibility_statement
 
     # Publication
     publication = {}
@@ -232,7 +251,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
             }
 
         if structured_record["host"].get("publisher"):
-            part["responsibilityStatement"] = structured_record["host"]["name"]
+            part["responsibilityStatement"] = structured_record["host"]["publisher"]
 
         if structured_record["host"].get("issn"):
             part["identifiedBy"] = {
@@ -377,6 +396,8 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         structured_record["other_contributors"] = other_contributors.strip()
     if title:
         structured_record["title"] = title.strip()
+    else:
+        anomalies.append(f"MISSING TITLE\t{structured_record}")
     if subtitle:
         structured_record["subtitle"] = subtitle.strip()
     if place:
@@ -739,12 +760,13 @@ def extract_partof_from_parenthesis(remainder, syntax_era) -> tuple[dict]:
     """
 
     end = remainder.rfind(")")
-    if (end == -1) or syntax_era not in PARENTHESIS_ERAS:
+    if end == -1 or syntax_era not in PARENTHESIS_ERAS:
         return remainder, None
 
     counters["various"].update(["STRUCTURE\tAuthor, title . (publication)"])
 
     depth = 0
+    start = None
 
     for i in range(end, -1, -1):
         if remainder[i] == ")":
@@ -752,13 +774,17 @@ def extract_partof_from_parenthesis(remainder, syntax_era) -> tuple[dict]:
         elif remainder[i] == "(":
             depth -= 1
             if depth == 0:
-                host_note = remainder[i + 1 : end]
-                remainder = (remainder[:i] + remainder[end + 1 :]).strip()
-                # If it doesn't contain more than one charatcer and at least one is alphabetic, it's probbably not a title
-                if len(host_note) > 1 and any(char.isalpha() for char in host_note):
-                    return remainder.replace(" .", "").rstrip(" -"), host_note
+                start = i
+                break
 
-    # Unbalanced parentheses
+    if start is not None:
+        host_note = remainder[start + 1:end]
+        remainder = (remainder[:start] + remainder[end + 1:]).strip()
+
+        # Only treat as publication/series info if len > one and at least one character alphabetic
+        if len(host_note) > 1 and any(char.isalpha() for char in host_note):
+            return remainder.replace(" .", "").rstrip(" -"), host_note
+
     return remainder, None
 
 
