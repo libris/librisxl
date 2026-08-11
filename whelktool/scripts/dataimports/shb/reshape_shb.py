@@ -155,7 +155,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     # Parse notes for structured bibliographic data
     structured_record = parse_note(note, syntax_era)
 
-    # Get subject headings 
+    # Get subject headings
     structured_record["sao_headings"] = add_sao_headings(
         shb_host_num, start_year, publ_year, subject_mappings
     )
@@ -169,7 +169,9 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     return {"@id": graph[0]["@id"], "@graph": data}
 
+
 ### Functions for enriching the instance
+
 
 def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict:
     # We can assume all titles are published and printed
@@ -204,7 +206,11 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
           },"""
     if structured_record.get("other_contributors"):
         if responsibility_statement:
-            responsibility_statement = responsibility_statement + "; " + structured_record["other_contributors"]
+            responsibility_statement = (
+                responsibility_statement
+                + "; "
+                + structured_record["other_contributors"]
+            )
         else:
             responsibility_statement = structured_record["other_contributors"]
 
@@ -215,9 +221,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
     publication = {}
 
     if structured_record.get("place"):
-        publication["place"] = [
-            {"@type": "Place", "label": structured_record["place"]}
-        ]
+        publication["place"] = [{"@type": "Place", "label": structured_record["place"]}]
 
     if structured_record.get("year"):
         publication["year"] = structured_record["year"]
@@ -232,10 +236,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
 
     # Extent
     if structured_record.get("extent"):
-        instance["extent"] = [
-            {"@type": "Extent", "label": structured_record["extent"]}
-        ]
-    
+        instance["extent"] = [{"@type": "Extent", "label": structured_record["extent"]}]
 
     # Information about the host publication or series membership
     if structured_record.get("host"):
@@ -264,10 +265,8 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
             instance["category"].append(
                 {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
             )
-            counters["various"].update(["Component part"])            
         else:
             instance["seriesMembership"] = [part]
-            counters["various"].update(["Regular monograph"])
 
         # Add part-specific information to isntance proeprty "part"
         part = ""
@@ -276,14 +275,15 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
 
         if structured_record["host"].get("extent"):
             if part:
-                part = part + ", " + structured_record["host"]["extent"]    
+                part = part + ", " + structured_record["host"]["extent"]
             else:
                 part = structured_record["host"]["extent"]
 
         if structured_record["host"].get("remainder"):
             if part:
                 part = part + ", " + structured_record["host"]["remainder"]
-            else: part = structured_record["host"]["remainder"]
+            else:
+                part = structured_record["host"]["remainder"]
 
         if part:
             instance["part"] = part
@@ -295,7 +295,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
             {"@type": "Note", "label": structured_record["remaining_note"]}
         )
 
-    ### Finally, for backup, store the full original OCR'd note as an instance note ###
+    ### Store the full original OCR'd note as an instance note ###
     instance.setdefault("hasNote", []).append(
         {
             "@type": "Note",
@@ -303,12 +303,19 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
         }
     )
 
-    ###
+    ### Add SAB headings
     if structured_record.get("sao_headings"):
         work["subject"] = structured_record["sao_headings"]
+        counters["various"].update(["SAB added"])
+
+    if structured_record["is_component_part"]:
+        counters["various"].update(["Component part"])
+    else:
+        counters["various"].update(["Regular monograph"])
 
 
 ### Functions for parsing the SHB descriptions ###
+
 
 def __parse_note(instance: dict, syntax_era: str) -> None:
     """Parse instance, extracting information about the main entity and its host publication or series membership.
@@ -351,17 +358,17 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     # Extract extent (pages, leaves)
     extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
 
-    if syntax_era == "early":
-        host_or_series, remainder, is_component_part = extract_early_host_or_series(
-            remainder, extent, is_component_part
-        )
+    place, year, remainder = extract_place_year(remainder)
 
     # Extract contributors
     primary_contributors, remainder = extract_primary_contributors(remainder)
 
-    place, year, remainder = extract_place_year(remainder)
-
     other_contributors, remainder = extract_other_contributors(remainder)
+
+    if syntax_era == "early":
+        host_or_series, remainder, is_component_part = extract_early_host_or_series(
+            remainder, extent, is_component_part
+        )
 
     # Extract title and subtitle
     title, subtitle, remainder = extract_title_and_subtitle(
@@ -393,13 +400,13 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     if primary_contributors:
         structured_record["primary_contributors"] = primary_contributors.strip()
     if other_contributors:
-        structured_record["other_contributors"] = other_contributors.strip()
+        structured_record["other_contributors"] = strip_trailing_separators(other_contributors)
     if title:
-        structured_record["title"] = title.strip()
+        structured_record["title"] = strip_trailing_separators(title)
     else:
         anomalies.append(f"MISSING TITLE\t{structured_record}")
     if subtitle:
-        structured_record["subtitle"] = subtitle.strip()
+        structured_record["subtitle"] = strip_trailing_separators(subtitle)
     if place:
         structured_record["place"] = place.strip()
     if year:
@@ -479,12 +486,12 @@ def extract_early_host_or_series(remainder: str, extent: str, is_component_part:
     # Perhaps we can assume there is a publication title if is_component_part == Ttue?
 
     # Exclude initials while splitting....
-    remainder = re.sub(r"\b([A-Z])\.\s+(?=[A-Z])", r"\1<INIT>", remainder)
+    remainder = exclude_abbreviations_before_split(remainder)
 
     parts = re.split(r"(?<=\.|\])\s+", remainder)
 
     # Reintroduce initals...
-    parts = [p.replace("<INIT>", ". ") for p in parts]
+    parts = reinclude_abbreviations_after_split(parts)
 
     # If there's no extent, it's likely a newspaper article
     # Title. Newspaper, Number.
@@ -492,6 +499,7 @@ def extract_early_host_or_series(remainder: str, extent: str, is_component_part:
         host_or_series = parts[-1]
         remainder = ". ".join(part.strip(".") for part in parts[:-1])
         is_component_part = True
+        return host_or_series, remainder, is_component_part
 
     elif len(parts) > 2:
         if is_component_part:
@@ -499,23 +507,27 @@ def extract_early_host_or_series(remainder: str, extent: str, is_component_part:
             # Title. Journal. Number.
             host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
             remainder = ". ".join(part.strip(".") for part in parts[:-2])
+
+            return host_or_series, remainder, is_component_part
+
         else:
             # Monographs
             # Title. Place year. Series. Number.
             # Similar structure with series info in the two furthest right positions
             # However not all monographs are part of series
             host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
-            remainder = ". ".join(part.strip(".") for part in parts[:-2])
 
-        # else:
-        #    remainder = ". ".join(part.strip(".") for part in parts)
-        #    host_or_series = None
+            # Only treat as publication/series info it contains at least 2 alphabetic characters
+            alpha_chars = [char for char in host_or_series if char.isalpha()]
+            if len(alpha_chars) > 1:
+                remainder = ". ".join(part.strip(".") for part in parts[:-2])
 
-    else:
-        remainder = ". ".join(part.strip(".") for part in parts)
-        host_or_series = None
+                return host_or_series, remainder, is_component_part
 
-    return host_or_series, remainder, is_component_part
+    # Or else
+    remainder = ". ".join(part.strip(".") for part in parts)
+
+    return None, remainder, is_component_part
 
 
 def extract_dash_style_host_or_series(
@@ -529,10 +541,10 @@ def extract_dash_style_host_or_series(
     if matches:
         match = matches[-1]
 
-        host_note = remainder[match.end() :].strip().lstrip("(").rstrip(")")
+        host_or_series = remainder[match.end() :].strip().lstrip("(").rstrip(")")
         remainder = remainder[: match.start()].strip()
 
-        return host_note, remainder
+        return host_or_series, remainder
 
     return None, remainder
 
@@ -595,9 +607,10 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
         re.X,
     )
 
-    remainder = strip_trailing_separator(remainder)
+    remainder = strip_trailing_separators(remainder)
 
-    parts = remainder.split(". ")
+    # Split by period followed by space and thereafter dash or capital letter
+    parts = re.split(r"(?<=\.) -?\s?(?=[A-ZÅÄÖÉÜ\[\(])", remainder)
 
     for i in range(len(parts) - 1, 0, -1):
         candidate = parts[i]
@@ -605,7 +618,9 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
         if match := PLACE_YEAR_RE.fullmatch(candidate):
             place = match["place"]
             year = match["year"]
-            remainder = ". ".join(parts[:i] + parts[i + 1:])
+            left_parts = ". ".join([part.rstrip(". ") for part in parts[:i]])
+            right_parts = ". ".join([part.lstrip(". ") for part in parts[i + 1 :]])
+            remainder = f"{left_parts}. {right_parts}".strip()
 
             return place, year, remainder
 
@@ -695,7 +710,7 @@ def extract_title_and_subtitle(
     """
 
     subtitle = ""
-    remainder = strip_trailing_separator(remainder)
+    remainder = strip_trailing_separators(remainder)
 
     # At this point the remainder should only be containign title information
     # In publication/series info, we can't quite interpret subtitles the same way
@@ -728,8 +743,7 @@ def extract_title_and_subtitle(
     # All earlier syntax styles: title. subtitle
     else:
         # Exclude initials and abbreviations during the splitting steå....
-        for abbr in NON_TERMINATING_ABBREVIATIONS:
-            remainder = remainder.replace(abbr, abbr.replace(".", "<DOT>"))
+        remainder = exclude_abbreviations_before_split(remainder)
 
         parts = re.split(
             r"(?<!\b[A-Z])\.\s+",
@@ -737,7 +751,7 @@ def extract_title_and_subtitle(
         )
 
         # Reintroduce abbreviations...
-        parts = [p.replace("<DOT>", ".") for p in parts]
+        parts = reinclude_abbreviations_after_split(parts)
 
         if len(parts) < 2:
             title = ". ".join(part for part in parts)
@@ -746,9 +760,6 @@ def extract_title_and_subtitle(
             title = parts[0]
             subtitle = ". ".join(part for part in parts[1:])
             remainder = ""
-
-    title = title.strip().removesuffix(".").removesuffix(",")
-    subtitle = subtitle.strip().strip(".")
 
     return title, subtitle, remainder
 
@@ -778,12 +789,13 @@ def extract_partof_from_parenthesis(remainder, syntax_era) -> tuple[dict]:
                 break
 
     if start is not None:
-        host_note = remainder[start + 1:end]
-        remainder = (remainder[:start] + remainder[end + 1:]).strip()
+        host_or_series = remainder[start + 1 : end]
+        remainder = (remainder[:start] + remainder[end + 1 :]).strip()
 
-        # Only treat as publication/series info if len > one and at least one character alphabetic
-        if len(host_note) > 1 and any(char.isalpha() for char in host_note):
-            return remainder.replace(" .", "").rstrip(" -"), host_note
+        # Only treat as publication/series info it contains at least 2 alphabetic characters
+        alpha_chars = [char for char in host_or_series if char.isalpha()]
+        if len(alpha_chars) > 1:
+            return remainder.replace(" .", "").rstrip(" -"), host_or_series
 
     return remainder, None
 
@@ -962,16 +974,21 @@ def normalize_spacing_and_punctuation(text: str) -> str:
     text = text.replace(" ", " ").replace(
         "  ", " "
     )  # Repalce non-breaking space with regular space
+
     text = text.replace("  ", " ")  # Repalce double space with single space
+
     text = re.sub(
         r"\.(?=[A-ZÅÄÖ])", ". ", text
     )  # Always have a space between "." and any uppercase letter
+
     text = re.sub(
         r",(?=[A-Za-zÅÄÖåäö])", ", ", text
     )  # Always have a space between "," and any letter
+
     text = re.sub(
         r"([a-zåäö]{2,})(\d)", r"\1 \2", text
     )  # Always have a space between two lowercase letters and a digit
+
     text = re.sub(
         r"(\d)([a-zåäö]{2,})", r"\1 \2", text
     )  # Always have a space between a digit and two lowercase letters
@@ -1059,13 +1076,32 @@ def looks_like_initial(s: str) -> bool:
     return s[0].isupper() and s.endswith(".") and (len(s) == 2 or s[-2].isupper())
 
 
-def strip_trailing_separator(text):
+def strip_trailing_separators(text: str) -> str:
     text = text.strip()
 
-    while text.endswith(". -"):
-        text = text[:-3].rstrip()
+    while len(text) > 1 and text[-1] in ".,;:–—-":
+        if text.endswith("..."):
+            break
+        text = text[:-1].rstrip()
 
     return text
+
+
+def exclude_abbreviations_before_split(remainder: str) -> str:
+    # Common abbreviations
+    for abbr in NON_TERMINATING_ABBREVIATIONS:
+        remainder = remainder.replace(abbr, abbr.replace(".", "<DOT>"))
+
+    # Initials
+    remainder = re.sub(r"\b([A-Z])\.\s+(?=[A-Z])", r"\1<DOT> ", remainder)
+
+    return remainder
+
+
+def reinclude_abbreviations_after_split(parts: list) -> str:
+    # Reintroduce initials and abbreviations
+    parts = [p.replace("<DOT>", ".") for p in parts]
+    return parts
 
 
 def make_subject_mappings(subject_mapping_sheets: list[str]) -> dict:
