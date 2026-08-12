@@ -9,30 +9,40 @@ from rapidfuzz import fuzz
 
 
 def prepare(entity: dict, match_counts: dict, report) -> dict:
+    # Strip ":" to avoid search syntax bug
 
-    instance = entity["@graph"]["@graph"][1]
+    prepped = {}
+
+    instance = entity["@graph"][1]
+    prepped["@id"] = instance["@id"]
     has_title = instance.get("hasTitle", {})
-    full_title = (
+    prepped["full_title"] = (
         f"{has_title.get('mainTitle', '')} {has_title.get('subtitle', '')}".replace(
-            ":", ""
-        )
+        ":", ""
+    ).replace("(", "").replace(")", "")
+
     )
-    responsibility_statement = instance.get("responsibilityStatement", "").replace(
+    if instance.get("responsibilityStatement"):
+        prepped["responsibility_statement"] = instance.get("responsibilityStatement", "").replace(
         ":", ""
     )
 
-    if has_title and responsibility_statement:
-        prepped = {
-            "@id": instance["@id"],
-            "full_title": normalize(full_title),
-            "responsibility_statement": responsibility_statement,
-            "part_of_issn": instance.get("partOf", {})
-            .get("identifiedBy", {})
-            .get("value", ""),
-            "issn_from_note": instance.get("issn_from_note", ""),
-        }
-        return prepped
-    else:
+    if instance.get("partOf") or instance.get("seriesMembership"):
+        if instance.get("partOf"):
+            host_or_series = instance["partOf"]
+        elif instance.get("seriesMembership"):
+            host_or_series = instance["seriesMembership"]
+
+        host_or_series_title = host_or_series[0].get("hasTitle", {}).get("mainTitle")
+        host_or_series_issn = host_or_series[0].get("identifiedBy", {}).get("value")
+
+        if host_or_series_title:
+            prepped["host_or_series_title"] = host_or_series_title
+        if host_or_series_issn:
+            prepped["host_or_series_issn"] = host_or_series_issn
+
+    # Don't try to match if the instance has only one property
+    if not has_title or len(prepped) < 2:
         if "insufficient" in match_counts:
             match_counts["insufficient"] += 1
         else:
@@ -40,6 +50,9 @@ def prepare(entity: dict, match_counts: dict, report) -> dict:
         report.write(
             f"{instance['@id']}\tTitle or contributor missing\t{json.dumps(instance, ensure_ascii=False)}\n"
         )
+        return None
+
+    return prepped
 
 
 def compare(shbd: dict, match_record: dict):
@@ -82,9 +95,15 @@ def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
     """
     headers = {"Accept": "application/ld+json"}
 
-    
     # Match on full title and contributor
-    query_string = f"instanceType:PhysicalResource title:({shbd_prepepd['full_title']}) contributor:({shbd_prepepd['responsibility_statement']}*) {shbd_prepepd['part_of_issn']} {shbd_prepepd['issn_from_note']}"
+    query_string = f"instanceType:PhysicalResource title:({shbd_prepepd.get('full_title')})"
+
+    if shbd_prepepd.get('responsibility_statement'):
+        query_string = f"{query_string} contributor:({shbd_prepepd.get('responsibility_statement')}*)"
+    if shbd_prepepd.get('host_or_series_title'):
+        query_string = f"{query_string} {shbd_prepepd.get('host_or_series_title')}"
+    if shbd_prepepd.get('host_or_series_issn'):
+        query_string = f"{query_string} {shbd_prepepd.get('host_or_series_issn')}"
 
     params = {
         "_q": query_string,
@@ -106,17 +125,18 @@ def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
     else:
         match_counts[number_of_matches] = 1
 
-    id_with_matches = {
+    if matches: 
+        id_with_matches = {
             shbd_prepepd["@id"]: [item["@id"] for item in res.json()["items"]]
         }
-    
-    if number_of_matches == 1:
-        perfect_matches.append(id_with_matches)
 
-    match_file.write(
-        f"{shbd_prepepd['@id']}\t{number_of_matches}\t{query_string}\t{json.dumps(id_with_matches)}\n"
-    )
-    return matches
+        if number_of_matches == 1:
+            perfect_matches.append(id_with_matches)
+
+        match_file.write(
+            f"{shbd_prepepd['@id']}\t{number_of_matches}\t{query_string}\t{json.dumps(id_with_matches)}\n"
+        )
+        return matches
 
 
 ### Main action ###
