@@ -242,13 +242,29 @@ def test_extract_partof_from_parenthesis(record, era, expected):
             "Antikvariska studier. 4. Sthlm 1950, s. 221-287.",
             ("s. 221-287", "Antikvariska studier. 4. Sthlm 1950.", True),
             id="simple-component-extent",
+        ),
+        pytest.param(
+            "Så minns vi storgatan. hej och hå. 1998.",
+            ("", "Så minns vi storgatan. hej och hå. 1998.", False),
+            id="extent_like_in_title_1",
+        ),
+        pytest.param(
+            "Vi bland blommorna. 30 s.",
+            ("30 s.", "Vi bland blommorna.", False),
+            id="extent_like_in_title_2",
+        ),
+        pytest.param(
+            "Hej hej. 40 s, 17 bl. : ill.",
+            ("40 s, 17 bl. : ill.", "Hej hej.", False),
+            id="multiple_extents_with_ill",
         )
     ],
 )
-def test_extract_extent(note, expected):
-    actual = extract_extent(note, False)
 
-    assert actual == expected, f"\nInput record:\n{note}"
+def test_extract_extent(note, expected):
+    actual = extract_extent(note, False, True)
+
+    assert actual == expected, f"\nInput: {note} -> Actual: {actual}"
 
 
 ### End-to-end parsing ###

@@ -72,7 +72,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
 
     (?:\s*:?\s*ill\.?)?
     """,
-    re.IGNORECASE | re.VERBOSE,
+    re.I | re.X,
 )
 
 counters = {
@@ -113,8 +113,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     # Check which historical syntax group the record belongs to
     syntax_era = identify_syntax_era(instance)
 
-    # Prep for adding SAO and SAB
-    # TODO Add SAB as well
+    # Prep for adding SAO
     if "marc:primaryProvisionActivity" in instance and "publication" in instance:
         publ = instance["publication"][0]
         start_year = publ.get("startYear")
@@ -158,6 +157,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     structured_record["sao_headings"] = add_sao_headings(
         shb_host_num, start_year, publ_year, subject_mappings
     )
+    # TODO Add SAB as well?
 
     # Enrich the instance with the parsed data
 
@@ -305,10 +305,10 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
         }
     )
 
-    ### Add SAB headings
+    ### Add SAO headings
     if structured_record.get("sao_headings"):
         work["subject"] = structured_record["sao_headings"]
-        counters["various"].update(["SAB added"])
+        counters["various"].update(["SAO added"])
 
     if structured_record["is_component_part"]:
         counters["various"].update(["Component part"])
@@ -360,7 +360,7 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         )
 
     # Extract extent (pages, leaves)
-    extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
+    extent, remainder, is_component_part = extract_extent(remainder, is_component_part, is_main_entity_note = True)
 
     place, year, remainder = extract_place_year(remainder)
 
@@ -449,7 +449,7 @@ def extract_host_values(
     issn, remainder = extract_issn(host_note)
 
     # Extract extent (pages, leaves)
-    extent, remainder, is_component_part = extract_extent(remainder, is_component_part)
+    extent, remainder, is_component_part = extract_extent(remainder, is_component_part, is_main_entity_note = False)
 
     part_number, remainder = extract_part_number(remainder)
 
@@ -816,32 +816,46 @@ def extract_partof_from_parenthesis(remainder, syntax_era) -> tuple[dict]:
     return remainder, None
 
 
-def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
+def extract_extent(remainder: str, is_component_part: bool, is_main_entity_note: bool) -> tuple[str]:
     """Extract extent information (pages, leaves) from the note, if present.
     Returns a tuple of (extent, remainder, is_component_part)."""
 
     pages = ""
+    probable_title_author_area = ""
+    probable_publication_area = ""
 
-    if not EXTENT_MARKER_RE.search(remainder):
+    # Exclude initials while splitting....
+    temp_remainder = exclude_abbreviations_before_split(remainder)
+
+    # Try to minimize the risk of confusing title with extent
+    if is_main_entity_note and ". " in temp_remainder:
+        probable_title_author_area, probable_publication_area = remainder.split(". ", 1)
+    else:
+        probable_publication_area = remainder
+
+    # Reintroduce initals...
+    probable_title_author_area, probable_publication_area = reinclude_abbreviations_after_split([probable_title_author_area, probable_publication_area])
+    
+    if not EXTENT_MARKER_RE.search(probable_publication_area):
         return "", remainder, is_component_part
 
     else:
         # s. NN(-NN) - probably a component part
         if page_match := COMPONENT_EXTENT.search(
-            remainder,
+            probable_publication_area,
         ):
             counters["extents"].update(["Part extent (e.g. 's. 23-31')"])
             is_component_part = True
 
         # NN s. - probably a monograph
-        elif page_match := MONOGRAPH_EXTENT_RE.search(remainder):
+        elif page_match := MONOGRAPH_EXTENT_RE.search(probable_publication_area):
             counters["extents"].update(["Monographic extent"])
         else:
             page_match = None
 
     if page_match:
-        left_part = remainder[: page_match.start()].rstrip(" ,")
-        right_part = remainder[page_match.end() :]
+        left_part = probable_publication_area[: page_match.start()].rstrip(" ,")
+        right_part = probable_publication_area[page_match.end() :]
 
         pages = page_match.group(0)
 
@@ -866,7 +880,12 @@ def extract_extent(remainder: str, is_component_part: bool) -> tuple[str]:
                 right_part = pages + " " + right_part
                 pages = ""
 
-        remainder = (left_part + right_part).strip(",;- ").replace("- -", "-")
+        probable_publication_area = (left_part + right_part).strip(",;- ").replace("- -", "-")
+        
+        if probable_title_author_area:
+            remainder = f"{probable_title_author_area}. {probable_publication_area}".strip()
+        else:
+            remainder = probable_publication_area.strip()
 
     return pages, remainder, is_component_part
 
