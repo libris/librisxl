@@ -14,8 +14,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Group, Not {
-    Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink);
-
     String toQueryString(boolean topLevel);
 
     Node getInverse();

@@ -4,8 +4,6 @@ import whelk.search2.QueryUtil;
 
 import java.util.*;
 
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public sealed abstract class Group implements Node permits And, Or {
@@ -13,15 +11,7 @@ public sealed abstract class Group implements Node permits And, Or {
 
     abstract String delimiter();
 
-    abstract String key();
-
-    @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
-        var m = new LinkedHashMap<String, Object>();
-        m.put(key(), children().stream().map(c -> c.toSearchMapping(makeUpLink, makeReplaceLink)).toList());
-        m.put("up", makeUpLink.apply(this));
-        return m;
-    }
+    public abstract String key();
 
     @Override
     public String toQueryString(boolean topLevel) {

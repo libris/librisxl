@@ -9,7 +9,6 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static whelk.search2.QueryUtil.makeViewFindUrl;
 import static whelk.search2.querytree.QueryTreeBuilder.buildTree;
 
 public class QueryTree {
@@ -60,10 +59,7 @@ public class QueryTree {
     }
 
     public Map<String, Object> toSearchMapping(QueryParams queryParams, String apiParam) {
-        return tree.toSearchMapping(
-                n -> Map.of(JsonLd.ID_KEY, makeViewFindUrl(remove(n).toQueryString(), queryParams, apiParam)),
-                (n, n2) -> Map.of(JsonLd.ID_KEY, makeViewFindUrl(remove(n).add(n2).toQueryString(), queryParams, apiParam))
-        );
+        return SearchMapping.buildFrom(this, queryParams, apiParam);
     }
 
     public QueryTree remove(Node node) {
@@ -140,7 +136,7 @@ public class QueryTree {
             default -> List.of(tree);
         };
     }
-    
+
     public String getFreeTextPart() {
         return findSimpleFreeText().map(FreeText::queryForm).orElse("");
     }

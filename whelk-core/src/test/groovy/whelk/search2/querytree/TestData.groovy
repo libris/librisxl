@@ -97,7 +97,10 @@ class TestData {
                 ['@id': 'p2', '@type': 'ObjectProperty', 'librisQueryCode': 'P2'],
                 ['@id': 'p3', '@type': 'ObjectProperty'],
                 ['@id': 'p4', '@type': 'ObjectProperty'],
-                ['@id': 'p5', '@type': 'ObjectProperty'],
+                [
+                        '@id'     : 'p5', '@type': 'ObjectProperty',
+                        'category': ['@id': "https://id.kb.se/ns/librissearch/preferLike"]
+                ],
                 [
                         '@id'               : 'p6',
                         '@type'             : 'ObjectProperty',

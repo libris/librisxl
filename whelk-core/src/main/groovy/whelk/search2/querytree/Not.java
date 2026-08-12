@@ -1,19 +1,10 @@
 package whelk.search2.querytree;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static whelk.search2.QueryUtil.parenthesize;
 
 public record Not(Node node) implements Node {
-    @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
-        return Map.of("not", node.toSearchMapping(makeUpLink, makeReplaceLink),
-                "up", makeUpLink.apply(this));
-    }
-
     @Override
     public String toQueryString(boolean topLevel) {
         String s = node instanceof FreeText ft && ft.isMultiToken()

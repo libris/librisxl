@@ -2,19 +2,14 @@ package whelk.search2.querytree;
 
 import whelk.search2.Query;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static whelk.search2.Query.Connective.AND;
 import static whelk.search2.Query.Connective.OR;
 import static whelk.search2.QueryUtil.parenthesize;
-import static whelk.search2.Operator.EQUALS;
 
 public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.Connective connective) implements Node, Value {
     public FreeText(Property.TextQuery textQuery, Token token) {
@@ -27,15 +22,6 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
 
     public FreeText(String s) {
         this(new Token.Raw(s));
-    }
-
-    @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("property", textQuery != null ? textQuery.definition() : Map.of());
-        m.put(EQUALS.termKey, queryForm());
-        m.put("up", makeUpLink.apply(this));
-        return m;
     }
 
     @Override

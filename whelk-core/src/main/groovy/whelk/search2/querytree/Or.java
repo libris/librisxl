@@ -59,7 +59,7 @@ public non-sealed class Or extends Group {
     }
 
     @Override
-    String key() {
+    public String key() {
         return "or";
     }
 

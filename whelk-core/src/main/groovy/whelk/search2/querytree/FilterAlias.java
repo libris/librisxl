@@ -3,10 +3,7 @@ package whelk.search2.querytree;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.Disambiguate;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static whelk.JsonLd.Rdfs.RESOURCE;
 import static whelk.JsonLd.TYPE_KEY;
@@ -22,17 +19,6 @@ public sealed class FilterAlias implements Node {
         this.raw = raw;
         this.alias = alias;
         this.prefLabelByLang = prefLabelByLang;
-    }
-
-    @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
-        var m = new LinkedHashMap<String, Object>();
-        LinkedHashMap<String, Object> description = new LinkedHashMap<>(description());
-        description.put("parsedFilter", getParsed().toSearchMapping(makeUpLink, makeReplaceLink));
-        m.put("object", description);
-        m.put("value", alias());
-        m.put("up", makeUpLink.apply(this));
-        return m;
     }
 
     @Override

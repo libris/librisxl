@@ -1,17 +1,8 @@
 package whelk.search2.querytree;
 
-import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public sealed abstract class Any implements Node, Value permits Any.EmptyGroup, Any.EmptyString, Any.Wildcard {
-    @Override
-    public Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink) {
-        // TODO
-        return Map.of();
-    }
-
     @Override
     public Node getInverse() {
         return new Not(this);
