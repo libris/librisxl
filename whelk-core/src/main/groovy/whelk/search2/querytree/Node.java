@@ -1,6 +1,9 @@
 package whelk.search2.querytree;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -8,6 +11,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Group, Not {
     Map<String, Object> toSearchMapping(Function<Node, Map<String, String>> makeUpLink, BiFunction<Node, Node, Map<String, String>> makeReplaceLink);
@@ -18,10 +22,6 @@ public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Grou
 
     RdfSubjectType rdfSubjectType();
 
-    default Stream<Node> allDescendants() {
-        return QueryTree.allDescendants(this);
-    }
-
     default List<Node> children() {
         return Collections.emptyList();
     }
@@ -31,8 +31,32 @@ public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Grou
         return mapper.apply(rebuilt);
     }
 
+    static Stream<Node> allDescendants(Node node) {
+        return StreamSupport.stream(_allDescendants(node).spliterator(), false);
+    }
+
     static Node withMappedChildren(Node node, UnaryOperator<Node> mapper) {
         return withMappedChildren(node, mapper, true);
+    }
+
+    static Node remove(Node tree, Collection<? extends Node> remove) {
+        return remove.stream().anyMatch(n -> n == tree)
+                ? null
+                : withMappedChildren(tree, child -> remove(child, remove));
+    }
+
+    static Node replace(Node tree, Node replace, Node replacement) {
+        return tree == replace
+                ? replacement
+                : withMappedChildren(tree, child -> replace(child, replace, replacement));
+    }
+
+    static Node add(Node tree, Node add) {
+        return switch (tree) {
+            case Any ignored -> add;
+            case And and -> new And(Stream.concat(and.children().stream(), Stream.of(add)).distinct().toList());
+            default -> tree.equals(add) ? tree : new And(List.of(tree, add));
+        };
     }
 
     private static Node withMappedChildren(Node node, UnaryOperator<Node> mapper, boolean flatten) {
@@ -54,5 +78,29 @@ public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Grou
             }
             default -> node;
         };
+    }
+
+    private static Iterable<Node> _allDescendants(Node node) {
+        Iterator<Node> i = new Iterator<>() {
+            List<Node> nodes;
+
+            @Override
+            public boolean hasNext() {
+                if (nodes == null) {
+                    nodes = new LinkedList<>();
+                    nodes.add(node);
+                }
+                return !nodes.isEmpty();
+            }
+
+            @Override
+            public Node next() {
+                Node next = nodes.removeFirst();
+                nodes.addAll(next.children());
+                return next;
+            }
+        };
+
+        return () -> node != null ? i : Collections.emptyIterator();
     }
 }

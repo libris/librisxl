@@ -67,7 +67,7 @@ public class Query {
     private EsQuery esQuery;
     private QueryResult queryResult;
 
-    private QueryTree.ReducedTree fullQueryTree;
+    private QueryTree.MergedTree fullQueryTree;
 
     static final String WORK_CATEGORY = "librissearch:workCategory";
 
@@ -157,15 +157,15 @@ public class Query {
         return buildEsQueryDsl(mainQuery, Map.of());
     }
 
-    protected QueryTree.ReducedTree getFullQueryTree() {
+    protected QueryTree.MergedTree getFullQueryTree() {
         if (fullQueryTree == null) {
             fullQueryTree = getFullQueryTree(qTree);
         }
         return fullQueryTree;
     }
 
-    protected QueryTree.ReducedTree getFullQueryTree(QueryTree baseTree) {
-        return (QueryTree.ReducedTree) mergeTrees(baseTree.reduce(whelk.getJsonld()), List.of(rTree, sTree));
+    protected QueryTree.MergedTree getFullQueryTree(QueryTree baseTree) {
+        return mergeTrees(baseTree.reduce(whelk.getJsonld()), List.of(rTree, sTree));
     }
 
     protected List<Map<String, Object>> predicateLinks() {
@@ -347,22 +347,26 @@ public class Query {
         return esQuery;
     }
 
-    private QueryTree mergeTrees(QueryTree baseTree, List<QueryTree> other) {
-        var baseTreeRdfSubjectType = baseTree.getRdfSubjectType();
-        if (baseTreeRdfSubjectType.isNoType()) {
-            for (QueryTree o : other) {
-                var otherRdfSubjectType = o.getRdfSubjectType();
-                if (!otherRdfSubjectType.isNoType()) {
-                    baseTree = baseTree.add(otherRdfSubjectType.asNode());
-                    break;
-                }
-            }
-        }
+    private QueryTree.MergedTree mergeTrees(QueryTree baseTree, List<QueryTree> other) {
+        baseTree = establishSubjectTypeContext(baseTree, other);
         QueryTree merged = baseTree;
         for (QueryTree o : other) {
             merged = merged.merge(o, whelk.getJsonld());
         }
-        return merged;
+        return (QueryTree.MergedTree) merged;
+    }
+
+    private QueryTree establishSubjectTypeContext(QueryTree baseTree, List<QueryTree> other) {
+        if (!baseTree.getRdfSubjectType().isNoType()) {
+            return baseTree;
+        }
+
+        return other.stream()
+                .map(QueryTree::getRdfSubjectType)
+                .filter(type -> !type.isNoType())
+                .findFirst()
+                .map(type -> baseTree.add(type.asNode()))
+                .orElse(baseTree);
     }
 
     private SelectedFacets getSelectedFacets() {

@@ -8,7 +8,6 @@ import whelk.search2.esquery.EsQueryTreeBuilder;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static whelk.search2.QueryUtil.makeViewFindUrl;
 import static whelk.search2.querytree.QueryTreeBuilder.buildTree;
@@ -45,13 +44,11 @@ public class QueryTree {
     }
 
     public ExpandedTree expand(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        Node expandedTree = QueryTreeExpander.expand(tree, jsonLd, rdfSubjectTypes);
-        return expandedTree != null ? new ExpandedTree(expandedTree) : ExpandedTree.newEmpty();
+        return new ExpandedTree(QueryTreeExpander.expand(tree, jsonLd, rdfSubjectTypes));
     }
 
-    public ReducedTree merge(QueryTree other, JsonLd jsonLd) {
-        Node mergedTree = isAny() ? other.tree() : (other.isAny() ? tree : merge(tree, other.tree(), jsonLd));
-        return mergedTree != null ? new ReducedTree(QueryTreeReducer.reduce(mergedTree, jsonLd)) : ReducedTree.newEmpty();
+    public MergedTree merge(QueryTree other, JsonLd jsonLd) {
+        return new MergedTree(QueryTreeMerger.mergeAndReduce(tree, other.tree(), jsonLd));
     }
 
     public List<String> getRdfSubjectTypesList() {
@@ -106,16 +103,14 @@ public class QueryTree {
     }
 
     public Stream<Node> allDescendants() {
-        return allDescendants(tree);
-    }
-
-    public static Stream<Node> allDescendants(Node tree) {
-        return StreamSupport.stream(_allDescendants(tree).spliterator(), false);
+        return Node.allDescendants(tree);
     }
 
     public List<Link> collectLinks() {
         return allDescendants()
-                .flatMap(n -> n instanceof FilterAlias fa ? allDescendants(fa.getParsed()) : Stream.of(n))
+                .flatMap(n -> n instanceof FilterAlias fa
+                        ? Node.allDescendants(fa.getParsed())
+                        : Stream.of(n))
                 .map(n -> n instanceof Condition c && c.value() instanceof Link l ? l : null)
                 .filter(Objects::nonNull)
                 .toList();
@@ -145,11 +140,7 @@ public class QueryTree {
             default -> List.of(tree);
         };
     }
-
-    public boolean implies(Node node, JsonLd jsonLd) {
-        return QueryTreeReducer.implies(tree, node, jsonLd);
-    }
-
+    
     public String getFreeTextPart() {
         return findSimpleFreeText().map(FreeText::queryForm).orElse("");
     }
@@ -168,180 +159,21 @@ public class QueryTree {
     }
 
     private void _remove(Collection<? extends Node> remove) {
-        var modified =  _remove(tree, remove);
+        var modified =  Node.remove(tree, remove);
         this.tree = modified == null ? new Any.EmptyString() : modified;
     }
 
     private void _replace(Node replace, Node replacement) {
-        this.tree = _replace(tree, replace, replacement);
+        this.tree = Node.replace(tree, replace, replacement);
     }
 
     private void _add(Node add) {
-        this.tree = _add(tree, add);
-    }
-
-    private static Node _remove(Node tree, Collection<? extends Node> remove) {
-        return remove.stream().anyMatch(n -> n == tree)
-                ? null
-                : Node.withMappedChildren(tree, child -> _remove(child, remove));
-    }
-
-    private static Node _replace(Node tree, Node replace, Node replacement) {
-        return tree == replace
-                ? replacement
-                : Node.withMappedChildren(tree, child -> _replace(child, replace, replacement));
-    }
-
-    private static Node _add(Node tree, Node add) {
-        return switch (tree) {
-            case Any ignored -> add;
-            case And and -> new And(Stream.concat(and.children().stream(), Stream.of(add)).distinct().toList());
-            default -> tree.equals(add) ? tree : new And(List.of(tree, add));
-        };
-    }
-
-    private static Iterable<Node> _allDescendants(Node node) {
-        Iterator<Node> i = new Iterator<>() {
-            List<Node> nodes;
-
-            @Override
-            public boolean hasNext() {
-                if (nodes == null) {
-                    nodes = new LinkedList<>();
-                    nodes.add(node);
-                }
-                return !nodes.isEmpty();
-            }
-
-            @Override
-            public Node next() {
-                Node next = nodes.removeFirst();
-                nodes.addAll(next.children());
-                return next;
-            }
-        };
-
-        return () -> node != null ? i : Collections.emptyIterator();
-    }
-
-    private static Node merge(Node a, Node b, JsonLd jsonLd) {
-        if (a instanceof Or or) {
-            return Node.withMappedChildren(or, child -> merge(child, b, jsonLd));
-        }
-
-        RdfSubjectType aRdfSubjectType = a.rdfSubjectType();
-
-        if (aRdfSubjectType.isNoType()) {
-            // No type conflict, just merge as is
-            return doMerge(a, b, jsonLd);
-        }
-
-        if (aRdfSubjectType.isMultiType()) {
-            // type:(T1 OR T2) X --> (type:T1 X) OR (type:T2 X)
-            var groupedByType = groupByType(a, aRdfSubjectType);
-            var merged = merge(groupedByType, b, jsonLd);
-            // If nothing was merged return the original more compact form,
-            return merged.equals(groupedByType) ? a : merged;
-        }
-
-        return doMerge(a, compatibleSubTree(aRdfSubjectType.singleType().type(), b, jsonLd), jsonLd);
-    }
-
-    private static Node compatibleSubTree(String aSubjectType, Node bTree, JsonLd jsonLd) {
-        if (bTree == null) {
-            return null;
-        }
-
-        if (bTree instanceof Or or) {
-            return Node.withMappedChildren(or, child -> compatibleSubTree(aSubjectType, child, jsonLd));
-        }
-
-        RdfSubjectType bRdfSubjectType = bTree.rdfSubjectType();
-
-        if (bRdfSubjectType.isNoType()) {
-            return compatibleByDomain(aSubjectType, bTree, jsonLd);
-        }
-
-        if (bRdfSubjectType.isMultiType()) {
-            return compatibleSubTree(aSubjectType, groupByTypeAndCompatible(bTree, bRdfSubjectType, jsonLd), jsonLd);
-        }
-
-        Type bSubjectType = bRdfSubjectType.singleType();
-
-        if (jsonLd.isSubClassOf(aSubjectType, bSubjectType.type())) {
-            // Explicit b type given and compatible with a type -> assume that the entire b expression is compatible with a.
-            return noTypeTree(bTree, bRdfSubjectType.asNode());
-        }
-
-        Optional<Property> aToBIntegralRelation = QueryUtil.getIntegralRelationsForType(aSubjectType, jsonLd)
-                .stream()
-                .filter(p -> p.range().stream()
-                        .anyMatch(r -> jsonLd.isSubClassOf(bSubjectType.type(), r)))
-                .findFirst();
-        if (aToBIntegralRelation.isPresent()) {
-            // Also compatible types, indirectly via integral relation
-            Property relation = aToBIntegralRelation.get();
-            Condition integralType = bSubjectType.withSelector(new Path(List.of(relation, bSubjectType.rdfTypeProperty())));
-            return _replace(bTree, bSubjectType, integralType);
-        }
-
-        // b type incompatible with a type
-        return null;
-    }
-
-    private static Or groupByType(Node n, RdfSubjectType nRdfSubjectType) {
-        Node noTypeTree = noTypeTree(n, nRdfSubjectType.asNode());
-        return new Or(nRdfSubjectType.asList().stream().map(t -> new And(List.of(t, noTypeTree))).toList());
-    }
-
-    // FIXME: Naming
-    private static Or groupByTypeAndCompatible(Node n, RdfSubjectType nRdfSubjectType, JsonLd jsonLd) {
-        List<Node> grouped = new ArrayList<>();
-        Node noTypeTree = noTypeTree(n, nRdfSubjectType.asNode());
-        for (Type t : nRdfSubjectType.asList()) {
-            var compatibleInGroup = compatibleByDomain(t.type(), noTypeTree, jsonLd);
-            grouped.add(compatibleInGroup == null ? t : new And(List.of(t, compatibleInGroup)));
-        }
-        return new Or(grouped);
-    }
-
-    private static Node noTypeTree(Node tree, Node typeNode) {
-        return _remove(tree, List.of(typeNode));
-    }
-
-    private static Node compatibleByDomain(String rdfSubjectType, Node tree, JsonLd jsonLd) {
-        Predicate<Condition> isCompatibleByDomain = c -> c.selector().appearsOnType(rdfSubjectType, jsonLd)
-                || c.selector().indirectlyAppearsOnType(rdfSubjectType, jsonLd);
-
-        Predicate<Node> isIncompatible = node -> switch (node) {
-            case Condition c -> !isCompatibleByDomain.test(c);
-            case Not(Condition c) -> !isCompatibleByDomain.test(c);
-            case FilterAlias ignored -> false; // TODO?
-            default -> false;
-        };
-
-        List<Node> incompatibleNodes = allDescendants(tree).filter(isIncompatible).toList();
-
-        return _remove(tree, incompatibleNodes);
-    }
-
-    private static Node doMerge(Node a, Node b, JsonLd jsonLd) {
-        List<Node> nodesToKeep = new ArrayList<>(a instanceof And and ? and.children() : List.of(a));
-
-        (b instanceof And and ? and.children().stream() : Stream.ofNullable(b))
-                .filter(n -> !QueryTreeReducer.implies(a, n.getInverse(), jsonLd))
-                .forEach(nodesToKeep::add);
-
-        return (nodesToKeep.size() == 1 ? nodesToKeep.getFirst() : new And(nodesToKeep));
+        this.tree = Node.add(tree, add);
     }
 
     public static class ReducedTree extends QueryTree {
         public ReducedTree(Node tree) {
             super(tree);
-        }
-
-        public static ReducedTree newEmpty() {
-            return new ReducedTree(new Any.EmptyString());
         }
 
         @Override
@@ -358,10 +190,6 @@ public class QueryTree {
     public static class ExpandedTree extends QueryTree {
         ExpandedTree(Node tree) {
             super(tree);
-        }
-
-        public static ExpandedTree newEmpty() {
-            return new ExpandedTree(new Any.EmptyString());
         }
 
         @Override
@@ -390,6 +218,17 @@ public class QueryTree {
             public DerivedOr newInstance(List<Node> children, boolean flattenChildren) {
                 return new DerivedOr(children, originalCondition);
             }
+        }
+    }
+
+    public static class MergedTree extends QueryTree {
+        public MergedTree(Node tree) {
+            super(tree);
+        }
+
+        @Override
+        public MergedTree copy() {
+            return new MergedTree(tree());
         }
     }
 }
