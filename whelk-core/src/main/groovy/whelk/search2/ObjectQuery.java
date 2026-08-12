@@ -11,6 +11,7 @@ import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
+import whelk.search2.querytree.QueryStringBuilder;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.Term;
 import whelk.search2.querytree.Type;
@@ -107,7 +108,7 @@ public class ObjectQuery extends Query {
             int count = counts.get(p.name());
 
             if (count > 0) {
-                var q = new Condition(p, p.isPreferLike() ? Operator.LIKE : Operator.EQUALS, object).toQueryString(true);
+                var q = new Condition(p, p.isPreferLike() ? Operator.LIKE : Operator.EQUALS, object).toQueryString();
                 result.add(Map.of(
                         "totalItems", count,
                         "view", Map.of(JsonLd.ID_KEY, makeFindUrl(Map.of(QUERY, q))),

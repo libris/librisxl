@@ -10,6 +10,7 @@ import whelk.search2.querytree.FreeText;
 import whelk.search2.querytree.Key;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Path;
+import whelk.search2.querytree.QueryStringBuilder;
 import whelk.search2.querytree.Token;
 import whelk.util.DocumentUtil;
 import whelk.util.FresnelUtil;
@@ -139,7 +140,7 @@ public class QueryGenerator {
 
     private static void insert(Node query, Map<String, Object> node) {
         try {
-            var url = QueryUtil.makeViewFindUrl(query.toQueryString(true), new QueryParams(Collections.emptyMap()));
+            var url = QueryUtil.makeViewFindUrl(query.toQueryString(), new QueryParams(Collections.emptyMap()));
             node.put("_find", Map.of(
                     JsonLd.TYPE_KEY, "_Query",
                     JsonLd.ID_KEY, url

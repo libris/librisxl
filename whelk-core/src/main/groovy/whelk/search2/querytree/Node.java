@@ -5,17 +5,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Group, Not {
-    String toQueryString(boolean topLevel);
-
     Node getInverse();
 
     RdfSubjectType rdfSubjectType();
@@ -27,6 +23,10 @@ public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Grou
     default Node deepMap(Function<Node, Node> mapper) {
         Node rebuilt = withMappedChildren(this, child -> child.deepMap(mapper), false);
         return mapper.apply(rebuilt);
+    }
+
+    default String toQueryString() {
+        return QueryStringBuilder.buildFrom(this, true);
     }
 
     static Stream<Node> allDescendants(Node node) {

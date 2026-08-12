@@ -8,8 +8,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static whelk.search2.Query.Connective.AND;
-import static whelk.search2.Query.Connective.OR;
-import static whelk.search2.QueryUtil.parenthesize;
 
 public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.Connective connective) implements Node, Value {
     public FreeText(Property.TextQuery textQuery, Token token) {
@@ -25,19 +23,8 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     @Override
-    public String toQueryString(boolean topLevel) {
-        String s = joinTokens();
-        return isMultiToken() && !topLevel && connective == OR ? parenthesize(s) : s;
-    }
-
-    @Override
     public String queryForm() {
         return joinTokens();
-    }
-
-    @Override
-    public String toString() {
-        return toQueryString(true);
     }
 
     @Override
@@ -58,6 +45,11 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     @Override
     public boolean isRangeOpCompatible() {
         return tokens.size() == 1 && tokens.getFirst().isDigits();
+    }
+
+    @Override
+    public String toString() {
+        return toQueryString();
     }
 
     @Override

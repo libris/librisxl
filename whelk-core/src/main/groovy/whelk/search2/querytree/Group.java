@@ -1,33 +1,25 @@
 package whelk.search2.querytree;
 
-import whelk.search2.QueryUtil;
-
-import java.util.*;
-
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 
 public sealed abstract class Group implements Node permits And, Or {
     abstract Group newInstance(List<Node> children, boolean flattenChildren);
 
-    abstract String delimiter();
+    public abstract String delimiter();
 
     public abstract String key();
 
     @Override
-    public String toQueryString(boolean topLevel) {
-        String s = children().stream().map(n -> n.toQueryString(false))
-                .collect(Collectors.joining(delimiter()));
-        return topLevel ? s : QueryUtil.parenthesize(s);
+    public int hashCode() {
+        return Objects.hash(this.getClass(), new HashSet<>(children()));
     }
 
     @Override
     public String toString() {
-        return toQueryString(true);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.getClass(), new HashSet<>(children()));
+        return toQueryString();
     }
 
     List<Node> flattenChildren(List<? extends Node> children) {

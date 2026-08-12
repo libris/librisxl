@@ -2,16 +2,8 @@ package whelk.search2.querytree;
 
 import whelk.search2.Operator;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import static java.util.Objects.hash;
 import static whelk.search2.Operator.EQUALS;
-import static whelk.search2.Operator.LIKE;
-import static whelk.search2.QueryUtil.parenthesize;
 
 public non-sealed class Condition implements Node {
     private final Selector selector;
@@ -41,13 +33,6 @@ public non-sealed class Condition implements Node {
     }
 
     @Override
-    public String toQueryString(boolean topLevel) {
-        var k = selector.formattedQueryKey();
-        var v = value.isMultiToken() ? parenthesize(value.queryForm()) : value.queryForm();
-        return operator.format(k, v);
-    }
-
-    @Override
     public Node getInverse() {
         return operator.isRange() ? withOperator(operator.getInverse()) : new Not(this);
     }
@@ -59,7 +44,7 @@ public non-sealed class Condition implements Node {
 
     @Override
     public String toString() {
-        return toQueryString(true);
+        return toQueryString();
     }
 
     @Override

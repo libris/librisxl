@@ -54,7 +54,7 @@ public non-sealed class Or extends Group {
     }
 
     @Override
-    String delimiter() {
+    public String delimiter() {
         return " OR ";
     }
 

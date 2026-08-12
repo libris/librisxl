@@ -22,16 +22,6 @@ public sealed class FilterAlias implements Node {
     }
 
     @Override
-    public String toQueryString(boolean topLevel) {
-        return alias();
-    }
-
-    @Override
-    public String toString() {
-        return alias();
-    }
-
-    @Override
     public Node getInverse() {
         return getParsed() instanceof Not(FilterAlias fa) ? fa : new Not(this);
     }
@@ -39,6 +29,11 @@ public sealed class FilterAlias implements Node {
     @Override
     public RdfSubjectType rdfSubjectType() {
         return parsed.rdfSubjectType();
+    }
+
+    @Override
+    public String toString() {
+        return toQueryString();
     }
 
     @Override

@@ -23,12 +23,12 @@ public sealed abstract class Any implements Node, Value permits Any.EmptyGroup, 
         return Objects.hashCode(Any.class);
     }
 
-    public static final class EmptyString extends Any {
-        @Override
-        public String toQueryString(boolean topLevel) {
-            return "";
-        }
+    @Override
+    public String toString() {
+        return toQueryString();
+    }
 
+    public static final class EmptyString extends Any {
         @Override
         public String queryForm() {
             return "";
@@ -37,22 +37,12 @@ public sealed abstract class Any implements Node, Value permits Any.EmptyGroup, 
 
     public static final class EmptyGroup extends Any {
         @Override
-        public String toQueryString(boolean topLevel) {
-            return "()";
-        }
-
-        @Override
         public String queryForm() {
             return "()";
         }
     }
 
     public static final class Wildcard extends Any {
-        @Override
-        public String toQueryString(boolean topLevel) {
-            return "*";
-        }
-
         @Override
         public String queryForm() {
             return "*";

@@ -142,7 +142,7 @@ public class QueryTree {
     }
 
     public String toQueryString() {
-        return tree.toQueryString(true);
+        return tree.toQueryString();
     }
 
     @Override
