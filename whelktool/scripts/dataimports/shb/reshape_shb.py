@@ -642,7 +642,7 @@ def extract_reviews_or_diss(note: str) -> tuple[str, str]:
     Returns a tuple of (review_note, remainder)."""
 
     match = re.search(
-        r"\bRec\.\s+i\b|\bSummary:\s*|\s*-\s*Diss\b|\s*-\s*Oiss\b",
+        r"Rec\.\s+i\b|\bSummary:\s*|\s*-\s*Diss\b|\s*-\s*Oiss\b",
         note,
     )
 
@@ -827,7 +827,7 @@ def extract_extent(remainder: str, is_component_part: bool, is_main_entity_note:
     # Exclude initials while splitting....
     temp_remainder = exclude_abbreviations_before_split(remainder)
 
-    # Try to minimize the risk of confusing title with extent
+    # Exclude everything left of first period to avoid confusion with main title words that look like Roman numerals ("vi").
     if is_main_entity_note and ". " in temp_remainder:
         probable_title_author_area, probable_publication_area = remainder.split(". ", 1)
     else:
@@ -881,7 +881,7 @@ def extract_extent(remainder: str, is_component_part: bool, is_main_entity_note:
                 pages = ""
 
         probable_publication_area = (left_part + right_part).strip(",;- ").replace("- -", "-")
-        
+
         if probable_title_author_area:
             remainder = f"{probable_title_author_area}. {probable_publication_area}".strip()
         else:
