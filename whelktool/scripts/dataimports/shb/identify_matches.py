@@ -112,31 +112,35 @@ def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
         "limit": 50,
     }
 
-    res = requests.get(f"{base_url}/find?", params=params, headers=headers)
-    res.raise_for_status()
-    time.sleep(0.001)
+    try:
+        res = requests.get(f"{base_url}/find?", params=params, headers=headers)
+        res.raise_for_status()
 
-    matches = res.json()["items"]
+        time.sleep(0.001)
 
-    number_of_matches = len(matches)
+        matches = res.json()["items"]
 
-    if number_of_matches in match_counts:
-        match_counts[number_of_matches] += 1
-    else:
-        match_counts[number_of_matches] = 1
+        number_of_matches = len(matches)
 
-    if matches: 
-        id_with_matches = {
-            shbd_prepepd["@id"]: [item["@id"] for item in res.json()["items"]]
-        }
+        if number_of_matches in match_counts:
+            match_counts[number_of_matches] += 1
+        else:
+            match_counts[number_of_matches] = 1
 
-        if number_of_matches == 1:
-            perfect_matches.append(id_with_matches)
+        if matches: 
+            id_with_matches = {
+                shbd_prepepd["@id"]: [item["@id"] for item in res.json()["items"]]
+            }
 
-        match_file.write(
-            f"{shbd_prepepd['@id']}\t{number_of_matches}\t{query_string}\t{json.dumps(id_with_matches)}\n"
-        )
-        return matches
+            if number_of_matches == 1:
+                perfect_matches.append(id_with_matches)
+
+            match_file.write(
+                f"{shbd_prepepd['@id']}\t{number_of_matches}\t{query_string}\t{json.dumps(id_with_matches)}\n"
+            )
+            return matches
+    except requests.exceptions.HTTPError as he:
+        print(he, query_string)
 
 
 ### Main action ###
