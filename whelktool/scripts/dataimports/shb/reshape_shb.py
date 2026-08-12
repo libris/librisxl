@@ -72,13 +72,12 @@ MONOGRAPH_EXTENT_RE = re.compile(
 
     (?:\s*:?\s*ill\.?)?
     """,
-    re.I | re.X,
+    re.IGNORECASE | re.VERBOSE,
 )
 
 counters = {
     "properties": Counter(),
     "subjects": Counter(),
-    "place_year": Counter(),
     "extents": Counter(),
     "various": Counter(),
 }
@@ -162,12 +161,15 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     # Enrich the instance with the parsed data
 
-    instance = enrich_instance(instance, work, structured_record)
+    instance, work = enrich_instance(instance, work, structured_record)
+    instance["instanceOf"] = work
 
     # Count all properties, icnluding nested, in the final instance ###
     counters["properties"].update(walk_keys(instance))
 
-    return {"@id": graph[0]["@id"], "@graph": data}
+    converted_data = {"@graph": [rec, instance]}
+
+    return converted_data
 
 
 ### Functions for enriching the instance
@@ -313,6 +315,8 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
     else:
         counters["various"].update(["Regular monograph"])
 
+    return instance, work
+
 
 ### Functions for parsing the SHB descriptions ###
 
@@ -400,7 +404,9 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     if primary_contributors:
         structured_record["primary_contributors"] = primary_contributors.strip()
     if other_contributors:
-        structured_record["other_contributors"] = strip_trailing_separators(other_contributors)
+        structured_record["other_contributors"] = strip_trailing_separators(
+            other_contributors
+        )
     if title:
         structured_record["title"] = strip_trailing_separators(title)
     else:
@@ -610,7 +616,7 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
     remainder = strip_trailing_separators(remainder)
 
     # Split by period followed by space and thereafter dash or capital letter
-    parts = re.split(r"(?<=\.) -?\s?(?=[A-ZÅÄÖÉÜ\[\(])", remainder)
+    parts = re.split(r"(?<=\.) -?\s?", remainder)
 
     for i in range(len(parts) - 1, 0, -1):
         candidate = parts[i]
@@ -618,8 +624,12 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
         if match := PLACE_YEAR_RE.fullmatch(candidate):
             place = match["place"]
             year = match["year"]
-            left_parts = ". ".join([part.rstrip(". ") for part in parts[:i]])
-            right_parts = ". ".join([part.lstrip(". ") for part in parts[i + 1 :]])
+            left_parts = ". ".join(
+                [strip_trailing_separators(part) for part in parts[:i]]
+            )
+            right_parts = ". ".join(
+                [strip_trailing_separators(part) for part in parts[i + 1 :]]
+            )
             remainder = f"{left_parts}. {right_parts}".strip()
 
             return place, year, remainder
@@ -660,7 +670,6 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
     """,
         re.X,
     )
-
     personnameparts = []
     initial = -1
     comma_separated = remainder.split(",")
@@ -698,6 +707,13 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
         contributor_names = None
     else:
         remainder = ",".join(comma_separated).strip()
+
+    # There needs to be a remainder to get the title from
+    # It could be that the "," separating name from title has been misread as "." by the OCR
+    if not remainder:
+        name_parts = contributor_names.split(". ")
+        contributor_names = ". ".join(name_parts[:-1])
+        remainder = name_parts[-1]
 
     return contributor_names, remainder
 
@@ -970,28 +986,32 @@ def normalize_spacing_and_punctuation(text: str) -> str:
     Clean up punctuation and spacing issues common in OCR'd text. Return the cleaned up text.
     """
 
-    text = text.replace("—", "-")  # Replace dash with hyphen
-    text = text.replace(" ", " ").replace(
-        "  ", " "
-    )  # Repalce non-breaking space with regular space
+    # Remove punctuation at the very beginning of the note
+    text = text.lstrip(". ")
 
-    text = text.replace("  ", " ")  # Repalce double space with single space
+    # Replace dash with hyphen
+    text = text.replace("—", "-")
 
-    text = re.sub(
-        r"\.(?=[A-ZÅÄÖ])", ". ", text
-    )  # Always have a space between "." and any uppercase letter
+    # Repalce non-breaking space with regular space
+    text = text.replace(" ", " ").replace("  ", " ")
 
-    text = re.sub(
-        r",(?=[A-Za-zÅÄÖåäö])", ", ", text
-    )  # Always have a space between "," and any letter
+    # Repalce double space with single space
+    text = text.replace("  ", " ")
 
-    text = re.sub(
-        r"([a-zåäö]{2,})(\d)", r"\1 \2", text
-    )  # Always have a space between two lowercase letters and a digit
+    # Repalce unidiomatic comma-followed-by-period with ","
+    text = text.replace(",.", ",").replace(", .", ",").replace(", . .", ",")
 
-    text = re.sub(
-        r"(\d)([a-zåäö]{2,})", r"\1 \2", text
-    )  # Always have a space between a digit and two lowercase letters
+    # Always have a space between "." and any uppercase letter
+    text = re.sub(r"\.(?=[A-ZÅÄÖ])", ". ", text)
+
+    # Always have a space between "," and any letter
+    text = re.sub(r",(?=[A-Za-zÅÄÖåäö])", ", ", text)
+
+    # Always have a space between two lowercase letters and a digit
+    text = re.sub(r"([a-zåäö]{2,})(\d)", r"\1 \2", text)
+
+    # Always have a space between a digit and two lowercase letters
+    text = re.sub(r"(\d)([a-zåäö]{2,})", r"\1 \2", text)
 
     return text
 
@@ -1200,45 +1220,34 @@ def write_reports(
     report_file.write("# Egenskaper\n\n")
     report_file.write("| Egenskap | Antal |\n")
     report_file.write("|----------|-------:|\n")
+    report_file.writelines(
+        f"| {prop} | {count} |\n"
+        for prop, count in counters["properties"].most_common()
+    )
 
-    for prop, count in counters["properties"].most_common():
-        report_file.write(f"| {prop} | {count} |\n")
-
-    report_file.write("\n\n")
-
-    report_file.write("# Kuriositeter\n\n")
+    report_file.write("\n\n# Kuriositeter\n\n")
     report_file.write("| Kuriositet | Antal |\n")
     report_file.write("|----------|-------:|\n")
+    report_file.writelines(
+        f"| {curiosity} | {count} |\n"
+        for curiosity, count in counters["various"].most_common()
+    )
 
-    for curiosity, count in counters["various"].most_common():
-        report_file.write(f"| {curiosity} | {count} |\n")
-
-    report_file.write("\n\n")
-
-    report_file.write("# Omfång\n\n")
+    report_file.write("\n\n# Omfång\n\n")
     report_file.write("| Omfång | Antal |\n")
     report_file.write("|----------|-------:|\n")
+    report_file.writelines(
+        f"| {extent} | {count} |\n"
+        for extent, count in counters["extents"].most_common()
+    )
 
-    for extent, count in counters["extents"].most_common():
-        report_file.write(f"| {extent} | {count} |\n")
-
-    report_file.write("\n\n")
-
-    report_file.write("# Publikation\n\n")
-    report_file.write("| Plats, år | Antal |\n")
-    report_file.write("|----------|-------:|\n")
-
-    for place_year, count in counters["place_year"].most_common():
-        report_file.write(f"| {place_year} | {count} |\n")
-
-    report_file.write("\n\n")
-
-    report_file.write("# Ämnesord\n\n")
+    report_file.write("\n\n# Ämnesord\n\n")
     report_file.write("| Ämne | Antal |\n")
     report_file.write("|----------|-------:|\n")
-
-    for subject, count in counters["subjects"].most_common():
-        report_file.write(f"| {subject} | {count} |\n")
+    report_file.writelines(
+        f"| {subject} | {count} |\n"
+        for subject, count in counters["subjects"].most_common()
+    )
 
     print(*anomalies, sep="\n", file=anomalies_file)
 
