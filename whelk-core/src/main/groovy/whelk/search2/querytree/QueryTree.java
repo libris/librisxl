@@ -4,6 +4,14 @@ import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.*;
 import whelk.search2.esquery.EsQueryTreeBuilder;
+import whelk.search2.querytree.node.And;
+import whelk.search2.querytree.value.Any;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.value.FreeText;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Or;
+import whelk.search2.querytree.value.Link;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -15,11 +23,11 @@ public class QueryTree {
     private Node tree;
 
     public QueryTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
-        this.tree = queryString == null ? new Any.EmptyString() : buildTree(queryString, disambiguate);
+        this.tree = buildTree(queryString, disambiguate);
     }
 
     public QueryTree(Node tree) {
-        this.tree = tree == null ? new Any.EmptyString() : tree;
+        this.tree = tree == null ? any() : tree;
     }
 
     public Node tree() {
@@ -31,7 +39,7 @@ public class QueryTree {
     }
 
     public static QueryTree newEmpty() {
-        return new QueryTree(new Any.EmptyString());
+        return new QueryTree(any());
     }
 
     public ReducedTree reduce(JsonLd jsonLd) {
@@ -81,17 +89,13 @@ public class QueryTree {
     }
 
     public QueryTree replaceSimpleFreeText(String replacement) {
-        return findSimpleFreeText()
-                .map(ft -> replace(ft, new FreeText(replacement)))
+        return findSimpleFreeTextQueryNode()
+                .map(c -> replace(c, c.withValue(new FreeText(replacement))))
                 .orElse(this);
     }
 
-    public boolean isEmpty() {
-        return tree instanceof Any.EmptyGroup || tree instanceof Any.EmptyString;
-    }
-
     public boolean isAny() {
-        return tree instanceof Any;
+        return tree instanceof Condition c && c.isAnyQuery();
     }
 
     public Stream<Node> allDescendants() {
@@ -108,9 +112,11 @@ public class QueryTree {
                 .toList();
     }
 
-    public Optional<FreeText> findSimpleFreeText() {
-        return findTopNodeByCondition(node -> node instanceof FreeText ft && ft.connective() == Query.Connective.AND)
-                .map(FreeText.class::cast);
+    public Optional<Condition> findSimpleFreeTextQueryNode() {
+        return findTopNodeByCondition(node -> node instanceof Condition c
+                && c.isTextQuery()
+                && c.freeTextValue().connective() == Query.Connective.AND)
+                .map(Condition.class::cast);
     }
 
     public List<Node> findTopNodesByCondition(Predicate<Node> condition) {
@@ -134,7 +140,10 @@ public class QueryTree {
     }
 
     public String getFreeTextPart() {
-        return findSimpleFreeText().map(FreeText::queryForm).orElse("");
+        return findSimpleFreeTextQueryNode()
+                .map(Condition::freeTextValue)
+                .map(FreeText::queryForm)
+                .orElse("");
     }
 
     public String toQueryString() {
@@ -152,7 +161,7 @@ public class QueryTree {
 
     private void _remove(Collection<? extends Node> remove) {
         var modified =  Node.remove(tree, remove);
-        this.tree = modified == null ? new Any.EmptyString() : modified;
+        this.tree = modified == null ? any() : modified;
     }
 
     private void _replace(Node replace, Node replacement) {
@@ -161,6 +170,10 @@ public class QueryTree {
 
     private void _add(Node add) {
         this.tree = Node.add(tree, add);
+    }
+
+    private static Condition any() {
+        return new Any.EmptyString().asNode();
     }
 
     public static class ReducedTree extends QueryTree {

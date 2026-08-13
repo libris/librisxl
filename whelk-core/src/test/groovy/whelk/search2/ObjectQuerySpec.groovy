@@ -3,8 +3,8 @@ package whelk.search2
 import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.esquery.EsBoost
-import whelk.search2.querytree.Link
-import whelk.search2.querytree.Property
+import whelk.search2.querytree.value.Link
+import whelk.search2.querytree.selector.Property
 import whelk.search2.querytree.TestData
 
 class ObjectQuerySpec extends Specification {

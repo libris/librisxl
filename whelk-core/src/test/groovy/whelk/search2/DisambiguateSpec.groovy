@@ -3,18 +3,18 @@ package whelk.search2
 import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search.QueryDateTime
-import whelk.search2.querytree.Any
-import whelk.search2.querytree.DateTime
-import whelk.search2.querytree.InvalidValue
-import whelk.search2.querytree.Key
-import whelk.search2.querytree.Link
+import whelk.search2.querytree.value.Any
+import whelk.search2.querytree.value.DateTime
+import whelk.search2.querytree.value.InvalidValue
+import whelk.search2.querytree.selector.Key
+import whelk.search2.querytree.value.Link
 
-import whelk.search2.querytree.Path
-import whelk.search2.querytree.Property
+import whelk.search2.querytree.selector.Path
+import whelk.search2.querytree.selector.Property
 import whelk.search2.querytree.TestData
-import whelk.search2.querytree.Token
-import whelk.search2.querytree.VocabTerm
-import whelk.search2.querytree.YearRange
+import whelk.search2.querytree.value.Token
+import whelk.search2.querytree.value.VocabTerm
+import whelk.search2.querytree.value.YearRange
 
 class DisambiguateSpec extends Specification {
     static Disambiguate disambiguate = TestData.getDisambiguate()

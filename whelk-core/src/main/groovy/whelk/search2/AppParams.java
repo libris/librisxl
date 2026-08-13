@@ -2,8 +2,8 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.search2.querytree.FilterAlias;
-import whelk.search2.querytree.Property;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.selector.Property;
 
 import java.util.Collection;
 import java.util.Collections;

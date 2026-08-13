@@ -7,6 +7,19 @@ import whelk.search2.Query;
 import whelk.search2.parse.Ast;
 import whelk.search2.parse.Lex;
 import whelk.search2.parse.Parse;
+import whelk.search2.querytree.node.And;
+import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.selector.Selector;
+import whelk.search2.querytree.value.Any;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.value.FreeText;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Or;
+import whelk.search2.querytree.value.InvalidValue;
+import whelk.search2.querytree.value.Resource;
+import whelk.search2.querytree.value.Token;
+import whelk.search2.querytree.value.Value;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,10 +33,10 @@ import java.util.function.Predicate;
 
 public class QueryTreeBuilder {
     public static Node buildTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
-        if (queryString.isEmpty()) {
-            return new Any.EmptyString();
+        if (queryString == null || queryString.isEmpty()) {
+            return new Any.EmptyString().asNode();
         } else if (queryString.equals(Operator.WILDCARD)) {
-            return new Any.Wildcard();
+            return new Any.Wildcard().asNode();
         }
         return buildTree(getAst(queryString).tree, disambiguate, null, null, queryString);
     }
@@ -47,12 +60,10 @@ public class QueryTreeBuilder {
         if (group.operands().isEmpty()) {
             return selector != null
                     ? new Condition(selector, operator, new Any.EmptyGroup())
-                    : new Any.EmptyGroup();
+                    : new Any.EmptyGroup().asNode();
         }
 
         record MergedFreeText(List<Token> tokens, int insertAt) {}
-
-        Property.TextQuery textQuery = disambiguate.getTextQueryProperty();
 
         List<Node> children = new ArrayList<>();
         Map<Selector, MergedFreeText> mergedFreeTextBySelector = new HashMap<>();
@@ -68,16 +79,16 @@ public class QueryTreeBuilder {
             int idx = i;
             Ast.Node operand = group.operands().get(i);
             Node builtNode = buildTree(operand, disambiguate, selector, operator, q);
-            switch (builtNode) {
-                case FreeText ft when isMergeCompatible.test(ft) ->
-                        mergedFreeTextBySelector.computeIfAbsent(textQuery, k -> new MergedFreeText(new ArrayList<>(), idx))
-                                .tokens()
-                                .addAll(ft.tokens());
-                case Condition c when c.selector().equals(selector) && c.value() instanceof FreeText ft && isMergeCompatible.test(ft) ->
-                        mergedFreeTextBySelector.computeIfAbsent(c.selector(), k -> new MergedFreeText(new ArrayList<>(), idx))
-                                .tokens()
-                                .addAll(ft.tokens());
-                default -> children.add(builtNode);
+            if (builtNode instanceof Condition c
+                    && c.value() instanceof FreeText ft
+                    && (c.selector().equals(selector) || c.isTextQuery())
+                    && isMergeCompatible.test(ft)
+            ) {
+                mergedFreeTextBySelector.computeIfAbsent(c.selector(), _ -> new MergedFreeText(new ArrayList<>(), idx))
+                        .tokens()
+                        .addAll(ft.tokens());
+            } else {
+                children.add(builtNode);
             }
         }
 
@@ -87,9 +98,9 @@ public class QueryTreeBuilder {
                     Selector s = e.getKey();
                     List<Token> tokens = e.getValue().tokens();
                     int insertAt = e.getValue().insertAt();
-                    FreeText ft = new FreeText(textQuery, tokens, connective);
-                    Node n = s.equals(textQuery) ? ft : new Condition(s, operator, ft);
-                    children.add(Math.min(insertAt, children.size()), n);
+                    FreeText ft = new FreeText(tokens, connective);
+                    Condition c = new Condition(s, Operator.EQUALS, ft);
+                    children.add(Math.min(insertAt, children.size()), c);
                 });
 
         if (children.size() == 1) {
@@ -120,20 +131,20 @@ public class QueryTreeBuilder {
             return af;
         }
 
-        return new FreeText(disambiguate.getTextQueryProperty(), getToken(symbol));
+        return buildFreeTextQuery(new FreeText(getToken(symbol)), disambiguate.getTextQueryProperty());
     }
 
     private static Node buildFromCode(Ast.Code c, Disambiguate disambiguate, Selector selector, String q) throws InvalidQueryException {
         if (selector != null) {
             // Nested selectors are not allowed, return the inner code segment as free text
-            return new Condition(selector, c.operator(), asFreeText(c, q, disambiguate.getTextQueryProperty()));
+            return new Condition(selector, c.operator(), asFreeText(c, q));
         }
         selector = disambiguate.mapQueryKey(getToken(c.code()));
         return selector.isValid()
                 ? buildTree(c.operand(), disambiguate, selector, c.operator(), q)
                 : LegacyCodes.isQueryCode(c)
                     ? LegacyCodes.build(c, disambiguate)
-                    : asFreeText(c, q, disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
+                    : buildFreeTextQuery(asFreeText(c, q), disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
     }
 
     private static Condition buildCondition(Selector selector, Operator operator, Ast.Leaf leaf, Disambiguate disambiguate) {
@@ -149,17 +160,21 @@ public class QueryTreeBuilder {
         return condition.isTypeNode() ? condition.asTypeNode() : condition;
     }
 
+    private static Condition buildFreeTextQuery(FreeText ft, Property.TextQuery textQueryProp) {
+        return new Condition(textQueryProp, Operator.EQUALS, ft);
+    }
+
     private static Token getToken(Lex.Symbol symbol) {
         return symbol.name() == Lex.TokenName.QUOTED_STRING
                 ? new Token.Quoted(symbol.value(), symbol.offset() + 1)
                 : new Token.Raw(symbol.value(), symbol.offset());
     }
 
-    private static FreeText asFreeText(Ast.Code c, String q, Property.TextQuery textQuery) {
+    private static FreeText asFreeText(Ast.Code c, String q) {
         int from = c.code().offset();
         int to = findSegmentEndIdx(c, q);
         String s = q.substring(from, to);
-        return new FreeText(textQuery, new Token.Raw(s, from));
+        return new FreeText(new Token.Raw(s, from));
     }
 
     private static int findSegmentEndIdx(Ast.Code c, String q) {

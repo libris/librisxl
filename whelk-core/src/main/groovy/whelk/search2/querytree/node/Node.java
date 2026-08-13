@@ -1,4 +1,6 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.node;
+
+import whelk.search2.querytree.QueryStringBuilder;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -11,7 +13,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Group, Not {
+public sealed interface Node permits Condition, FilterAlias, Group, Not {
     Node getInverse();
 
     default List<Node> children() {
@@ -49,7 +51,7 @@ public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Grou
 
     static Node add(Node tree, Node add) {
         return switch (tree) {
-            case Any ignored -> add;
+            case Condition c when c.isAnyQuery() -> add;
             case And and -> new And(Stream.concat(and.children().stream(), Stream.of(add)).distinct().toList());
             default -> tree.equals(add) ? tree : new And(List.of(tree, add));
         };

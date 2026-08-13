@@ -3,7 +3,7 @@ package whelk.search2;
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.esquery.EsBoost;
-import whelk.search2.querytree.FilterAlias;
+import whelk.search2.querytree.node.FilterAlias;
 
 import java.util.Arrays;
 import java.util.Collections;

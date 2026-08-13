@@ -1,13 +1,12 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.value;
+
+import whelk.search2.Operator;
+import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.node.Condition;
 
 import java.util.Objects;
 
-public sealed abstract class Any implements Node, Value permits Any.EmptyGroup, Any.EmptyString, Any.Wildcard {
-    @Override
-    public Node getInverse() {
-        return new Not(this);
-    }
-
+public sealed abstract class Any implements Value permits Any.EmptyGroup, Any.EmptyString, Any.Wildcard {
     @Override
     public boolean equals(Object obj) {
         return obj instanceof Any;
@@ -18,9 +17,8 @@ public sealed abstract class Any implements Node, Value permits Any.EmptyGroup, 
         return Objects.hashCode(Any.class);
     }
 
-    @Override
-    public String toString() {
-        return toQueryString();
+    public Condition asNode() {
+        return new Condition(new Property.AnyQuery(), Operator.EQUALS, this);
     }
 
     public static final class EmptyString extends Any {

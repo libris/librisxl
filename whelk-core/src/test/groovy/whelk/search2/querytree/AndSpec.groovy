@@ -1,8 +1,8 @@
 package whelk.search2.querytree
 
 import spock.lang.Specification
-import whelk.JsonLd
 import whelk.search2.Disambiguate
+import whelk.search2.querytree.node.And
 
 class AndSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()

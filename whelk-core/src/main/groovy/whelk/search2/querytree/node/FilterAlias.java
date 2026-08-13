@@ -1,7 +1,8 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.node;
 
 import whelk.exception.InvalidQueryException;
 import whelk.search2.Disambiguate;
+import whelk.search2.querytree.QueryTreeBuilder;
 
 import java.util.Map;
 

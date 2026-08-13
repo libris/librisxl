@@ -6,21 +6,21 @@ import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.esquery.EsQueryTree2;
 import whelk.search2.esquery.EsQueryTreeBuilder;
-import whelk.search2.querytree.And;
-import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.node.And;
+import whelk.search2.querytree.node.Condition;
 import whelk.search2.querytree.EsQuery;
-import whelk.search2.querytree.FilterAlias;
-import whelk.search2.querytree.FreeText;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.Or;
-import whelk.search2.querytree.Property;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.value.FreeText;
+import whelk.search2.querytree.value.Link;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Or;
+import whelk.search2.querytree.selector.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.QueryTreeExpander;
 import whelk.search2.querytree.RdfSubjectType;
-import whelk.search2.querytree.Resource;
-import whelk.search2.querytree.Value;
-import whelk.search2.querytree.YearRange;
+import whelk.search2.querytree.value.Resource;
+import whelk.search2.querytree.value.Value;
+import whelk.search2.querytree.value.YearRange;
 import whelk.util.FresnelUtil;
 
 import java.util.ArrayList;
@@ -297,7 +297,7 @@ public class Query {
         List<Map<String, Object>> mappings = new ArrayList<>();
 
         BiConsumer<QueryTree, String> addMapping = (tree, urlParam) -> {
-            if (!tree.isEmpty()) {
+            if (!tree.isAny()) {
                 var mapping = new LinkedHashMap<>(tree.toSearchMapping(queryParams, urlParam));
                 mapping.put("variable", urlParam);
                 linkLoader.queue(tree.collectLinks());
@@ -918,7 +918,7 @@ public class Query {
         private Map<String, Object> getRangeTemplate(Property property) {
             List<Condition> selected = getSelectedFacets().getSelected(property.name());
             String queryKey = property.formattedQueryKey();
-            FreeText placeholderNode = new FreeText(String.format("{?%s}", queryKey));
+            Condition placeholderNode = new FreeText(String.format("{?%s}", queryKey)).asNode();
             String templateQueryString = qTree.removeAll(selected)
                     .add(placeholderNode)
                     .toQueryString();

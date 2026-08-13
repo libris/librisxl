@@ -5,7 +5,7 @@ import com.google.common.net.UrlEscapers;
 
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.search2.querytree.Property;
+import whelk.search2.querytree.selector.Property;
 import whelk.search2.querytree.QueryTree;
 
 import java.net.URLDecoder;

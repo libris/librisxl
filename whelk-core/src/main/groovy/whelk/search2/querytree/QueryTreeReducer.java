@@ -1,6 +1,13 @@
 package whelk.search2.querytree;
 
 import whelk.JsonLd;
+import whelk.search2.querytree.node.And;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.node.Group;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Not;
+import whelk.search2.querytree.node.Or;
 
 import java.util.ArrayList;
 import java.util.List;

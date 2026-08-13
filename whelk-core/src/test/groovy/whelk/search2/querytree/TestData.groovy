@@ -4,6 +4,7 @@ import whelk.JsonLd
 import whelk.search2.Disambiguate
 import whelk.search2.EsMappings
 import whelk.search2.ResourceLookup
+import whelk.search2.querytree.node.FilterAlias
 
 import java.util.stream.Stream
 

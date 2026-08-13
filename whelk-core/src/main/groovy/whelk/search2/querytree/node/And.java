@@ -1,8 +1,7 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.node;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.function.Predicate;
 
 public non-sealed class And extends Group {
     private final List<Node> children;

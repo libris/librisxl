@@ -1,4 +1,4 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.selector;
 
 import whelk.JsonLd;
 import whelk.search2.QueryUtil;

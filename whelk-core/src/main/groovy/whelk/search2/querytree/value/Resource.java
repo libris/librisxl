@@ -1,4 +1,4 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.value;
 
 import java.util.Map;
 

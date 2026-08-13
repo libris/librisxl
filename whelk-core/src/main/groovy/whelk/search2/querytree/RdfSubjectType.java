@@ -1,5 +1,10 @@
 package whelk.search2.querytree;
 
+import whelk.search2.querytree.node.And;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Or;
+
 import java.util.List;
 import java.util.stream.Stream;
 

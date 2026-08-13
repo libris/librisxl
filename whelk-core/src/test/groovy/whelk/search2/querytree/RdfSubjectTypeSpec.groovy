@@ -2,6 +2,7 @@ package whelk.search2.querytree
 
 import spock.lang.Specification
 import whelk.search2.Disambiguate
+import whelk.search2.querytree.node.Node
 
 class RdfSubjectTypeSpec extends Specification {
     static Disambiguate disambiguate = TestData.getDisambiguate()

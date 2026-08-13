@@ -3,6 +3,9 @@ package whelk.search2.querytree
 import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.Disambiguate
+import whelk.search2.querytree.node.Condition
+import whelk.search2.querytree.node.Node
+import whelk.search2.querytree.selector.Selector
 
 class QueryTreeExpanderSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()

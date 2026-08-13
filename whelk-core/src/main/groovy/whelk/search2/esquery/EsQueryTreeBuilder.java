@@ -5,24 +5,23 @@ import whelk.search2.ESSettings;
 import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryUtil;
-import whelk.search2.querytree.And;
-import whelk.search2.querytree.Any;
-import whelk.search2.querytree.Condition;
-import whelk.search2.querytree.DateTime;
-import whelk.search2.querytree.FilterAlias;
-import whelk.search2.querytree.FreeText;
-import whelk.search2.querytree.InvalidValue;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.Not;
-import whelk.search2.querytree.Or;
-import whelk.search2.querytree.Property;
+import whelk.search2.querytree.node.And;
+import whelk.search2.querytree.value.Any;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.value.DateTime;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.value.FreeText;
+import whelk.search2.querytree.value.InvalidValue;
+import whelk.search2.querytree.value.Link;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Not;
+import whelk.search2.querytree.node.Or;
 import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.Term;
-import whelk.search2.querytree.Token;
-import whelk.search2.querytree.Value;
-import whelk.search2.querytree.VocabTerm;
-import whelk.search2.querytree.YearRange;
+import whelk.search2.querytree.value.Term;
+import whelk.search2.querytree.value.Token;
+import whelk.search2.querytree.value.Value;
+import whelk.search2.querytree.value.VocabTerm;
+import whelk.search2.querytree.value.YearRange;
 import whelk.util.Unicode;
 
 import java.util.ArrayList;
@@ -54,9 +53,7 @@ public class EsQueryTreeBuilder {
 
     public static EsQuery buildFrom(Node queryTreeNode, ESSettings settings) {
         return switch (queryTreeNode) {
-            case Any ignored -> new EsQuery.MatchAll();
             case Condition c -> buildFromCondition(c, settings);
-            case FreeText ft -> buildFromFreeText(ft, settings.boost());
             case FilterAlias fa -> buildFrom(fa.getParsed(), settings);
             case And and -> buildFromAnd(and, settings);
             case Or or -> buildFromOr(or, settings);
@@ -235,8 +232,11 @@ public class EsQueryTreeBuilder {
     }
 
     private static EsQuery buildFromCondition(Condition c, ESSettings esSettings) {
-        if (c.selector() instanceof Property.TextQuery) {
-            buildFromFreeText((FreeText) c.value(), esSettings.boost());
+        if (c.isAnyQuery()) {
+            return new EsQuery.MatchAll();
+        }
+        if (c.isTextQuery()) {
+            return buildFromFreeText(c.freeTextValue(), esSettings.boost());
         }
 
         String f = c.selector().esField();
@@ -311,7 +311,7 @@ public class EsQueryTreeBuilder {
         String idField = String.format("%s.%s", field, ID_KEY);
         EsQuery.TermQuery idQuery = new EsQuery.TermQuery(idField, link.jsonForm());
 
-        if (operator == Operator.LIKE && "".equals(link.getNeedle())) {
+        if (operator == Operator.LIKE && !"".equals(link.getNeedle())) {
             String needle = Arrays.stream(link.getNeedle().split("\\s"))
                     .map(QueryUtil::quote)
                     .collect(Collectors.joining(" "));

@@ -1,4 +1,4 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.node;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 public sealed abstract class Group implements Node permits And, Or {
-    abstract Group newInstance(List<Node> children, boolean flattenChildren);
+    public abstract Group newInstance(List<Node> children, boolean flattenChildren);
 
     public abstract String delimiter();
 

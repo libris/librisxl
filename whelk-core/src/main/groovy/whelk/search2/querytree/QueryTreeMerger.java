@@ -2,6 +2,14 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.QueryUtil;
+import whelk.search2.querytree.node.And;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Not;
+import whelk.search2.querytree.node.Or;
+import whelk.search2.querytree.selector.Path;
+import whelk.search2.querytree.selector.Property;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,14 +19,19 @@ import java.util.stream.Stream;
 
 public class QueryTreeMerger {
     public static Node mergeAndReduce(Node aTree, Node bTree, JsonLd jsonLd) {
-        Node merged = aTree instanceof Any
-                ? bTree
-                : (bTree instanceof Any ? aTree : merge(aTree, bTree, jsonLd));
+        Node merged = merge(aTree, bTree, jsonLd);
         // Reduce to avoid duplicates
         return QueryTreeReducer.reduce(merged, jsonLd);
     }
 
     private static Node merge(Node a, Node b, JsonLd jsonLd) {
+        if (a instanceof Condition c && c.isAnyQuery()) {
+            return b;
+        }
+        if (b instanceof Condition c && c.isAnyQuery()) {
+            return a;
+        }
+
         if (a instanceof Or or) {
             return Node.withMappedChildren(or, child -> merge(child, b, jsonLd));
         }

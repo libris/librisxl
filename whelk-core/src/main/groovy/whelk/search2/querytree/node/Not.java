@@ -1,4 +1,4 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.node;
 
 import java.util.List;
 

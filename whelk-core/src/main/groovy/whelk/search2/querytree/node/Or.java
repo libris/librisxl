@@ -1,8 +1,7 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.node;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Stream;
 
 public non-sealed class Or extends Group {
     private final List<Node> children;

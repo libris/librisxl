@@ -1,4 +1,4 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.value;
 
 public sealed interface Value permits Any, DateTime, FreeText, Resource, Term, YearRange {
     // As represented in query string

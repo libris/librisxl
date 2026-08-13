@@ -1,16 +1,14 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.selector;
 
 import whelk.JsonLd;
 import whelk.search2.QueryUtil;
+import whelk.search2.querytree.value.Token;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;

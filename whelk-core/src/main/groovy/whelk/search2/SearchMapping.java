@@ -1,19 +1,17 @@
 package whelk.search2;
 
 import whelk.JsonLd;
-import whelk.search2.querytree.Any;
-import whelk.search2.querytree.Condition;
-import whelk.search2.querytree.FilterAlias;
-import whelk.search2.querytree.FreeText;
-import whelk.search2.querytree.Group;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.Not;
-import whelk.search2.querytree.Property;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.node.Group;
+import whelk.search2.querytree.value.Link;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Not;
+import whelk.search2.querytree.selector.Property;
 import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.Resource;
-import whelk.search2.querytree.Selector;
-import whelk.search2.querytree.Value;
+import whelk.search2.querytree.value.Resource;
+import whelk.search2.querytree.selector.Selector;
+import whelk.search2.querytree.value.Value;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,10 +27,8 @@ public class SearchMapping {
 
     private static Map<String, Object> buildFrom(Node node, QueryTree queryTree, QueryParams queryParams, String apiParam) {
         return switch (node) {
-            case Any ignored -> Map.of(); // TODO
             case Condition c -> buildFromCondition(c, queryTree, queryParams, apiParam);
             case FilterAlias fa -> buildFromFilterAlias(fa, queryTree, queryParams, apiParam);
-            case FreeText ft -> buildFromFreeText(ft, queryTree, queryParams, apiParam);
             case Group g -> buildFromGroup(g, queryTree, queryParams, apiParam);
             case Not n -> buildFromNot(n, queryTree, queryParams, apiParam);
         };
@@ -56,8 +52,10 @@ public class SearchMapping {
             m.put("toLike", makeReplaceLink(condition, condition.withOperator(LIKE), queryTree, queryParams, apiParam));
         }
 
-        m.put("_key", s.queryKey());
-        m.put("_value", v.queryForm());
+        if (!(s instanceof Property.TextQuery || s instanceof Property.AnyQuery)) {
+            m.put("_key", s.queryKey());
+            m.put("_value", v.queryForm());
+        }
 
         return m;
     }
@@ -69,14 +67,6 @@ public class SearchMapping {
         m.put("object", description);
         m.put("value", fa.alias());
         m.put("up", makeUpLink(fa, queryTree, queryParams, apiParam));
-        return m;
-    }
-
-    private static Map<String, Object> buildFromFreeText(FreeText ft, QueryTree queryTree, QueryParams queryParams, String apiParam) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("property", ft.textQuery() != null ? ft.textQuery().definition() : Map.of());
-        m.put(EQUALS.termKey, ft.queryForm());
-        m.put("up", makeUpLink(ft, queryTree, queryParams, apiParam));
         return m;
     }
 

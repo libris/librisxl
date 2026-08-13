@@ -4,12 +4,12 @@ import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.esquery.EsQueryTree2;
-import whelk.search2.querytree.And;
-import whelk.search2.querytree.Condition;
+import whelk.search2.querytree.node.And;
+import whelk.search2.querytree.node.Condition;
 import whelk.search2.querytree.EsQuery;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.Or;
-import whelk.search2.querytree.Property;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Or;
+import whelk.search2.querytree.selector.Property;
 import whelk.search2.querytree.QueryTree;
 
 import java.util.ArrayList;

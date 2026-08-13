@@ -1,7 +1,16 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.node;
 
 import whelk.JsonLd;
 import whelk.search2.Operator;
+import whelk.search2.querytree.value.FreeText;
+import whelk.search2.querytree.selector.Key;
+import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.selector.Selector;
+import whelk.search2.querytree.value.Token;
+import whelk.search2.querytree.value.Value;
+import whelk.search2.querytree.value.VocabTerm;
+
+import java.util.Objects;
 
 import static java.util.Objects.hash;
 import static whelk.search2.Operator.EQUALS;
@@ -45,7 +54,10 @@ public non-sealed class Condition implements Node {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof Condition other && hashCode() == other.hashCode();
+        return o instanceof Condition other
+                && Objects.equals(selector, other.selector())
+                && Objects.equals(operator, other.operator())
+                && Objects.equals(value, other.value());
     }
 
     @Override
@@ -65,12 +77,27 @@ public non-sealed class Condition implements Node {
         return new Condition(selector, operator, v);
     }
 
+    public boolean isTextQuery() {
+        return selector instanceof Property.TextQuery;
+    }
+
+    public boolean isAnyQuery() {
+        return selector instanceof Property.AnyQuery;
+    }
+
     public boolean isTypeNode() {
         return selector instanceof Property.RdfType && operator.equals(EQUALS) && value instanceof VocabTerm;
     }
 
     public Type asTypeNode() {
         return new Type((Property.RdfType) selector, (VocabTerm) value);
+    }
+
+    public FreeText freeTextValue() {
+        if (value instanceof FreeText ft) {
+            return ft;
+        }
+        throw new IllegalStateException("Value is not FreeText");
     }
 
     public final static class Type extends Condition {

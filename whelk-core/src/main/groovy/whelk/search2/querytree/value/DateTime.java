@@ -1,4 +1,4 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.value;
 
 import whelk.search.QueryDateTime;
 import whelk.search2.QueryUtil;

@@ -1,18 +1,20 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.selector;
 
 import whelk.JsonLd;
 import whelk.component.ElasticSearch;
 import whelk.search2.QueryUtil;
+import whelk.search2.querytree.value.Link;
+import whelk.search2.querytree.value.Term;
+import whelk.search2.querytree.value.Token;
+import whelk.search2.querytree.value.VocabTerm;
 import whelk.util.DocumentUtil;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,7 +56,7 @@ public non-sealed class Property extends PathElement {
             "hasInstance", String.format("%s.instanceOf", JsonLd.REVERSE_KEY)
     );
 
-    protected Property(Map<String, Object> definition, JsonLd jsonLd, String name, Key.RecognizedKey queryKey) {
+    private Property(Map<String, Object> definition, JsonLd jsonLd, String name, Key.RecognizedKey queryKey) {
         this.definition = definition;
         this.domain = getDomain(jsonLd);
         this.range = getRange(jsonLd);
@@ -69,8 +71,15 @@ public non-sealed class Property extends PathElement {
         }
     }
 
-    protected Property(String name, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+    private Property(String name, JsonLd jsonLd, Key.RecognizedKey queryKey) {
         this(jsonLd.vocabIndex.get(name), jsonLd, name, queryKey);
+    }
+
+    private Property(String name) {
+        this.name = name;
+        this.definition = Map.of();
+        this.domain = List.of();
+        this.range = List.of();
     }
 
     public static Property getProperty(String propertyKey, JsonLd jsonLd) {
@@ -292,7 +301,6 @@ public non-sealed class Property extends PathElement {
         return Objects.hash(toString());
     }
 
-
     private static Restrictions.HasValue buildObjectTypeRestriction(List<Map<String, Object>> rdfsRange, JsonLd jsonLd) {
         boolean isUnambiguousRange = rdfsRange.size() == 1 && JsonLd.isLink(rdfsRange.getFirst());
         if (isUnambiguousRange) {
@@ -451,12 +459,22 @@ public non-sealed class Property extends PathElement {
     }
 
     public static final class TextQuery extends Property {
+        public TextQuery() {
+            super("textQuery");
+        }
+
         public TextQuery(JsonLd jsonLd) {
             this(jsonLd, null);
         }
 
         public TextQuery(JsonLd jsonLd, Key.RecognizedKey key) {
             super("textQuery", jsonLd, key);
+        }
+    }
+
+    public static final class AnyQuery extends Property {
+        public AnyQuery() {
+            super("anyQuery");
         }
     }
 

@@ -1,6 +1,9 @@
-package whelk.search2.querytree;
+package whelk.search2.querytree.value;
 
+import whelk.search2.Operator;
 import whelk.search2.Query;
+import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.node.Condition;
 
 import java.util.List;
 
@@ -9,13 +12,9 @@ import java.util.stream.Collectors;
 
 import static whelk.search2.Query.Connective.AND;
 
-public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.Connective connective) implements Node, Value {
-    public FreeText(Property.TextQuery textQuery, Token token) {
-        this(textQuery, List.of(token), AND);
-    }
-
+public record FreeText(List<Token> tokens, Query.Connective connective) implements Value {
     public FreeText(Token token) {
-        this(null, token);
+        this(List.of(token), AND);
     }
 
     public FreeText(String s) {
@@ -25,11 +24,6 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     @Override
     public String queryForm() {
         return joinTokens();
-    }
-
-    @Override
-    public Node getInverse() {
-        return new Not(this);
     }
 
     @Override
@@ -43,18 +37,13 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     @Override
-    public String toString() {
-        return toQueryString();
-    }
-
-    @Override
     public boolean equals(Object obj) {
-        return obj instanceof FreeText ft && ft.toString().equals(toString());
+        return obj instanceof FreeText ft && ft.queryForm().equals(queryForm());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(toString());
+        return Objects.hashCode(queryForm());
     }
 
     public String toEsString() {
@@ -62,11 +51,11 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     public FreeText withTokens(List<Token> tokens) {
-        return new FreeText(textQuery, tokens, connective);
+        return new FreeText(tokens, connective);
     }
 
-    public boolean isDigits() {
-        return tokens.stream().allMatch(Token::isDigits);
+    public Condition asNode() {
+        return new Condition(new Property.TextQuery(), Operator.EQUALS, this);
     }
 
     private String joinTokens() {

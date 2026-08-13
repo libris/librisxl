@@ -2,6 +2,18 @@ package whelk.search2.querytree;
 
 import whelk.JsonLd;
 import whelk.search2.QueryUtil;
+import whelk.search2.querytree.node.And;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Not;
+import whelk.search2.querytree.node.Or;
+import whelk.search2.querytree.selector.Key;
+import whelk.search2.querytree.selector.Path;
+import whelk.search2.querytree.selector.PathElement;
+import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.selector.Selector;
+import whelk.search2.querytree.value.VocabTerm;
 import whelk.util.Restrictions;
 
 import java.util.ArrayList;
@@ -22,17 +34,16 @@ public class QueryTreeExpander {
             case Or or -> expandOr(or, jsonLd, rdfSubjectTypes);
             case Not not -> expandNot(not, jsonLd, rdfSubjectTypes);
             case FilterAlias fa -> expand(fa.getParsed(), jsonLd, rdfSubjectTypes);
-            default -> queryTreeNode;
         };
     }
 
     private static Node expandCondition(Condition condition, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        if (condition.selector().isValid()) {
-            return expandSelector(condition, jsonLd, rdfSubjectTypes)
-                    .deepMap(QueryTreeExpander::expandRestrictions)
-                    .deepMap(n -> expandType(n, jsonLd));
+        if (condition.isTextQuery() || condition.isAnyQuery() || !condition.selector().isValid()) {
+            return condition;
         }
-        return condition;
+        return expandSelector(condition, jsonLd, rdfSubjectTypes)
+                .deepMap(QueryTreeExpander::expandRestrictions)
+                .deepMap(n -> expandType(n, jsonLd));
     }
 
     private static Node expandOr(Or or, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
