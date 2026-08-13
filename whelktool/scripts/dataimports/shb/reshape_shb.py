@@ -364,6 +364,14 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
 
     place, year, remainder = extract_place_year(remainder)
 
+    # If there is not already a host note, check remaining parentheses for information about series/publichation membership
+    if remainder and not host_or_series:
+        remainder, host_or_series = extract_partof_from_parenthesis(
+            remainder, syntax_era
+        )
+        # TODO Possibly look at interpreting the two rightmost remainder.split(".") as series/publication for the pre-parenthesis era
+        # See tests for syntax and examples
+
     # Extract contributors
     primary_contributors, remainder = extract_primary_contributors(remainder)
 
@@ -378,14 +386,6 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     title, subtitle, remainder = extract_title_and_subtitle(
         remainder, syntax_era, True, is_component_part
     )
-
-    # If there is not already a host note, check remaining parentheses for information about series/publichation membership
-    if remainder and not host_or_series:
-        remainder, host_or_series = extract_partof_from_parenthesis(
-            remainder, syntax_era
-        )
-        # TODO Possibly look at interpreting the two rightmost remainder.split(".") as series/publication for the pre-parenthesis era
-        # See tests for syntax and examples
 
     remaining_note = (
         ". ".join(
@@ -1031,6 +1031,16 @@ def normalize_spacing_and_punctuation(text: str) -> str:
 
     # Always have a space between a digit and two lowercase letters
     text = re.sub(r"(\d)([a-zåäö]{2,})", r"\1 \2", text)
+   
+    # \\ Double backslashes, aka one backslash escaped with another, seem to be a common misreading of brackets
+    # Get the opening and closing
+    text = re.sub(r"\\([a-zåäöA-ZÅÄÖ]+)\\", r"[\1]", text)
+    
+    # Pragmatically and empirically assume the rest are closing
+    text = re.sub(r"\\", r"]", text)
+
+    # Remove all occurences of "=", which appear be OCR dust rather than syntax
+    text = text.replace("=", "")
 
     return text
 
