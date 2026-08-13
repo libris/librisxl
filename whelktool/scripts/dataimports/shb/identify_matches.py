@@ -16,16 +16,16 @@ def prepare(entity: dict, match_counts: dict, report) -> dict:
     instance = entity["@graph"][1]
     prepped["@id"] = instance["@id"]
     has_title = instance.get("hasTitle", {})
-    prepped["full_title"] = (
-        f"{has_title.get('mainTitle', '')} {has_title.get('subtitle', '')}".replace(
-        ":", ""
-    ).replace("(", "").replace(")", "")
 
+    # Replace characters that might cause "400 Client Error: Bad Request for url:"
+    prepped["full_title"] = (
+        f"{has_title.get('mainTitle', '')} {has_title.get('subtitle', '')}"
     )
+
     if instance.get("responsibilityStatement"):
-        prepped["responsibility_statement"] = instance.get("responsibilityStatement", "").replace(
-        ":", ""
-    )
+        prepped["responsibility_statement"] = instance.get(
+            "responsibilityStatement", ""
+        ).replace(":", "")
 
     if instance.get("partOf") or instance.get("seriesMembership"):
         if instance.get("partOf"):
@@ -96,18 +96,20 @@ def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
     headers = {"Accept": "application/ld+json"}
 
     # Match on full title and contributor
-    query_string = f"instanceType:PhysicalResource title:({shbd_prepepd.get('full_title')})"
+    query_string = (
+        f"instanceType:PhysicalResource title:({remove_problematic_punctuation(shbd_prepepd.get('full_title'))})"
+    )
 
-    if shbd_prepepd.get('responsibility_statement'):
-        query_string = f"{query_string} contributor:({shbd_prepepd.get('responsibility_statement')}*)"
-    if shbd_prepepd.get('host_or_series_title'):
-        query_string = f"{query_string} {shbd_prepepd.get('host_or_series_title')}"
-    if shbd_prepepd.get('host_or_series_issn'):
-        query_string = f"{query_string} {shbd_prepepd.get('host_or_series_issn')}"
+    if shbd_prepepd.get("responsibility_statement"):
+        query_string = f"{query_string} contributor:({remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*)"
+    if shbd_prepepd.get("host_or_series_title"):
+        query_string = f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('host_or_series_title'))}"
+    if shbd_prepepd.get("host_or_series_issn"):
+        query_string = f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('host_or_series_issn'))}"
 
     params = {
         "_q": query_string,
-        "_lens": "cards",
+        "_lens": "chips",
         "_stats": "false",  # Not needed
         "limit": 50,
     }
@@ -127,7 +129,7 @@ def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
         else:
             match_counts[number_of_matches] = 1
 
-        if matches: 
+        if matches:
             id_with_matches = {
                 shbd_prepepd["@id"]: [item["@id"] for item in res.json()["items"]]
             }
@@ -140,7 +142,14 @@ def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
             )
             return matches
     except requests.exceptions.HTTPError as he:
-        print(he, query_string)
+        report.write(f"{he}\t{query_string}\n")
+
+
+def remove_problematic_punctuation(text: str) -> str:
+    # Remove punctuation that might cause a 400 Client Error
+    text = text.replace("(", "").replace(")", "").replace('"', "").replace("'", "")
+
+    return text
 
 
 ### Main action ###
