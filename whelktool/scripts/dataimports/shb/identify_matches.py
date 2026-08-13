@@ -8,64 +8,116 @@ import doctest
 from rapidfuzz import fuzz
 
 
-def prepare(entity: dict, match_counts: dict, report) -> dict:
+def prepare(instance: dict) -> dict:
     # Strip ":" to avoid search syntax bug
 
-    prepped = {}
+    prepped = {
+        "@id": "",
+        "full_title": "",
+        "responsibility_statement": "",
+        "place": "",
+        "year": "",
+        "host_or_series_title": "",
+        "host_or_series_issn": "",
+    }
 
-    instance = entity["@graph"][1]
     prepped["@id"] = instance["@id"]
-    has_title = instance.get("hasTitle", {})
 
-    # Replace characters that might cause "400 Client Error: Bad Request for url:"
-    prepped["full_title"] = (
-        f"{has_title.get('mainTitle', '')} {has_title.get('subtitle', '')}"
-    )
+    if has_title := instance.get("hasTitle", []):
+        prepped["full_title"] = (
+            f"{has_title[0].get('mainTitle', '')} {has_title[0].get('subtitle', '')}"
+        )
+    else:
+        report.write(
+            f"{instance['@id']}\tNo title\t{json.dumps(instance, ensure_ascii=False)}\n"
+        )
+        return None
 
-    if instance.get("responsibilityStatement"):
-        prepped["responsibility_statement"] = instance.get(
-            "responsibilityStatement", ""
-        ).replace(":", "")
+    prepped["responsibility_statement"] = instance.get("responsibilityStatement", "")
 
-    if instance.get("isPartOf") or instance.get("seriesMembership"):
-        if instance.get("isPartOf"):
-            host_or_series = instance["isPartOf"]
-        elif instance.get("seriesMembership"):
-            host_or_series = instance["seriesMembership"]
+    prepped["extent"] = instance.get("extent", "")
+    prepped["part"] = instance.get("part", "")
 
-        host_or_series_title = host_or_series[0].get("hasTitle", {}).get("mainTitle")
-        host_or_series_issn = host_or_series[0].get("identifiedBy", {}).get("value")
+    if publication := instance.get("publication"):
+        prepped["place"] = publication[0].get("place", [])[0].get("label", "")
+        prepped["year"] = publication[0].get("year", "")
+        prepped["part"] = instance.get("part", "")
 
-        if host_or_series_title:
-            prepped["host_or_series_title"] = host_or_series_title
-        if host_or_series_issn:
-            prepped["host_or_series_issn"] = host_or_series_issn
+    if instance.get("isPartOf"):
+        host_or_series = instance["isPartOf"]
+    elif instance.get("seriesMembership"):
+        host_or_series = instance["seriesMembership"]
+    else:
+        host_or_series = []
+
+    if host_or_series:
+        prepped["host_or_series_title"] = (
+            host_or_series[0].get("hasTitle", {}).get("mainTitle", "")
+        )
+        prepped["host_or_series_issn"] = (
+            host_or_series[0].get("identifiedBy", {}).get("value", "")
+        )
 
     # Don't try to match if the instance has only one property
-    if not has_title or len(prepped) < 2:
-        if "insufficient" in match_counts:
-            match_counts["insufficient"] += 1
-        else:
-            match_counts["insufficient"] = 1
+    if len(prepped) < 2:
         report.write(
-            f"{instance['@id']}\tTitle or contributor missing\t{json.dumps(instance, ensure_ascii=False)}\n"
+            f"{instance['@id']}\tNot enough properties to match on\t{json.dumps(instance, ensure_ascii=False)}\n"
         )
         return None
 
     return prepped
 
 
-def compare(shbd: dict, match_record: dict):
+def analyze_matches(prepped_shb, matches: list) -> tuple[dict, float]:
 
-    title_score = fuzz.ratio(shbd["title"], match_record["title"]) / 100
+    scores_and_matches = []
 
-    author_score = fuzz.ratio(shbd["name"], match_record["name"]) / 100
+    for match in matches:
+        prepped_match = prepare(match["@reverse"]["instanceOf"][0])
 
-    # year_score = 1.0 if shbd["year"] == match_record["year"] else 0.0
+        score = compare(prepped_shb, prepped_match)
 
-    overall_score = 0.6 * title_score + 0.3 * author_score + 0.1  # * year_score
+        scores_and_matches.append({"score": score, "match": match})
+
+    best = get_best_match(scores_and_matches)
+
+    if best:
+        return best["score"], best["match"]
+    else:
+        return None
+
+
+def compare(prepped_shb: dict, prepped_match: dict):
+    title_score = 0
+    author_score = 0
+    year_score = 0
+    host_or_series_issn_score = 0
+    host_or_series_title_score = 0
+
+    title_score = fuzz.ratio(prepped_shb["full_title"], prepped_match["full_title"]) / 100
+
+    author_score = fuzz.ratio(prepped_shb["responsibility_statement"], prepped_match["responsibility_statement"]) / 100
+
+    year_score = 1.0 if prepped_shb["year"] == prepped_match["year"] else 0.0
+
+    host_or_series_issn_score = 1.0 if prepped_shb["host_or_series_issn"] == prepped_match["host_or_series_issn"] else 0.0
+
+    host_or_series_title_score = fuzz.ratio(prepped_shb["host_or_series_title"], prepped_match["host_or_series_title"]) / 100
+
+    overall_score = 0.6 * title_score + 0.3 * author_score + 0.3 * year_score + 0.3 * host_or_series_issn_score + 0.3 * host_or_series_title_score
 
     return overall_score
+
+def get_best_match(matches):
+
+    highest_score = max(m["score"] for m in matches)
+    winners = [m for m in matches if m["score"] == highest_score]
+
+    if len(winners) > 1:
+        report.write(f"Unable to identify best match: {len(winners)} matches have high score {highest_score}")
+        return None
+
+    return winners[0]
 
 
 def normalize(value: str):
@@ -96,12 +148,12 @@ def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
     headers = {"Accept": "application/ld+json"}
 
     # Match on full title and contributor
-    query_string = (
-        f"instanceType:PhysicalResource title:({remove_problematic_punctuation(shbd_prepepd.get('full_title'))})"
-    )
+    query_string = f"instanceType:PhysicalResource title:({remove_problematic_punctuation(shbd_prepepd.get('full_title'))})"
 
     if shbd_prepepd.get("responsibility_statement"):
         query_string = f"{query_string} contributor:({remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*)"
+    if shbd_prepepd.get("year"):
+        query_string = f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('year'))}"
     if shbd_prepepd.get("host_or_series_title"):
         query_string = f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('host_or_series_title'))}"
     if shbd_prepepd.get("host_or_series_issn"):
@@ -109,7 +161,7 @@ def find_matches(shbd_prepepd: dict, perfect_matches, match_counts: dict):
 
     params = {
         "_q": query_string,
-        "_lens": "chips",
+        "_lens": "cards",
         "_stats": "false",  # Not needed
         "limit": 50,
     }
@@ -197,21 +249,17 @@ if __name__ == "__main__":
                     )
                     print(match_counts)
 
-            shbd_prepepd = prepare(json.loads(line), match_counts, report)
+            instance = json.loads(line)["@graph"][1]
+
+            shbd_prepepd = prepare(instance)
 
             if shbd_prepepd:
                 matches = find_matches(shbd_prepepd, perfect_matches, match_counts)
 
-            # for libris_prepped in libris_prepepd_list:
-            #    score = compare(libris_prepped, shbd_prepepd)
-            #    if score > 0.9:
-            #        matches[shbd_instance['@id']] = libris_prepped['@id']
-            #
-            # if len(matches) == 1:
-            #    good_matches.append(good_matches)
-            # elif len(matches) > 1:
-            #    print(f"Too many matches for {shbd_instance['@id']}: {matches}")
-            # else:
-            #    print(f"No matches for {shbd_instance['@id']}: {matches}")
+            if matches:
+                best_match, score = analyze_matches(shbd_prepepd, matches)
+
+            if match_counts == 1 and score > 0.8:
+                report.write(" Good match!")
 
     print(f"\nTotal matches:\n{match_counts}")
