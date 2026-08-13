@@ -27,9 +27,9 @@ def prepare(entity: dict, match_counts: dict, report) -> dict:
             "responsibilityStatement", ""
         ).replace(":", "")
 
-    if instance.get("partOf") or instance.get("seriesMembership"):
-        if instance.get("partOf"):
-            host_or_series = instance["partOf"]
+    if instance.get("isPartOf") or instance.get("seriesMembership"):
+        if instance.get("isPartOf"):
+            host_or_series = instance["isPartOf"]
         elif instance.get("seriesMembership"):
             host_or_series = instance["seriesMembership"]
 
