@@ -1039,8 +1039,8 @@ def normalize_spacing_and_punctuation(text: str) -> str:
     # Pragmatically and empirically assume the rest are closing
     text = re.sub(r"\\", r"]", text)
 
-    # Remove all occurences of "=", which appear be OCR dust rather than syntax
-    text = text.replace("=", "")
+    # Remove all occurences of characters, which appear be OCR dust rather than syntax
+    text = text.replace("=", "").replace(">", "")
 
     return text
 
