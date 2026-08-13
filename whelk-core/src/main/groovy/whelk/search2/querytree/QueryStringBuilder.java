@@ -6,7 +6,7 @@ import static whelk.search2.Query.Connective.OR;
 import static whelk.search2.QueryUtil.parenthesize;
 
 public class QueryStringBuilder {
-    public static String buildFrom(Node tree, boolean topLevel) {
+    public static String buildString(Node tree, boolean topLevel) {
         return switch (tree) {
             case Any any -> any.queryForm();
             case Condition condition -> buildFromCondition(condition);
@@ -36,7 +36,7 @@ public class QueryStringBuilder {
 
     private static String buildFromGroup(Group group, boolean topLevel) {
         String s = group.children().stream()
-                .map(child -> buildFrom(child, false))
+                .map(child -> buildString(child, false))
                 .collect(Collectors.joining(group.delimiter()));
         return topLevel ? s : parenthesize(s);
     }
@@ -44,7 +44,7 @@ public class QueryStringBuilder {
     private static String buildFromNot(Not not) {
         String s = not.node() instanceof FreeText ft && ft.isMultiToken()
                 ? parenthesize(buildFromFreeText(ft, true))
-                : buildFrom(not.node(), false);
+                : buildString(not.node(), false);
         return "NOT " + s;
     }
 }

@@ -24,7 +24,7 @@ public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Grou
     }
 
     default String toQueryString() {
-        return QueryStringBuilder.buildFrom(this, true);
+        return QueryStringBuilder.buildString(this, true);
     }
 
     static Stream<Node> allDescendants(Node node) {
