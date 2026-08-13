@@ -9,11 +9,6 @@ public sealed abstract class Any implements Node, Value permits Any.EmptyGroup, 
     }
 
     @Override
-    public RdfSubjectType rdfSubjectType() {
-        return RdfSubjectType.noType();
-    }
-
-    @Override
     public boolean equals(Object obj) {
         return obj instanceof Any;
     }

@@ -43,15 +43,6 @@ public non-sealed class And extends Group {
     }
 
     @Override
-    public RdfSubjectType rdfSubjectType() {
-        return children().stream()
-                .map(Node::rdfSubjectType)
-                .filter(Predicate.not(RdfSubjectType::isNoType))
-                .findFirst()
-                .orElse(RdfSubjectType.noType());
-    }
-
-    @Override
     public boolean equals(Object o) {
         return o instanceof And other && new HashSet<>(other.children()).equals(new HashSet<>(children));
     }

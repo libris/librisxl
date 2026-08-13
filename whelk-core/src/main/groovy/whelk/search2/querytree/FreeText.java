@@ -33,11 +33,6 @@ public record FreeText(Property.TextQuery textQuery, List<Token> tokens, Query.C
     }
 
     @Override
-    public RdfSubjectType rdfSubjectType() {
-        return RdfSubjectType.noType();
-    }
-
-    @Override
     public boolean isMultiToken() {
         return tokens.size() > 1;
     }

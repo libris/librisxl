@@ -50,12 +50,8 @@ public class QueryTree {
         return new MergedTree(QueryTreeMerger.mergeAndReduce(tree, other.tree(), jsonLd));
     }
 
-    public List<String> getRdfSubjectTypesList() {
-        return getRdfSubjectType().asList().stream().map(Type::type).toList();
-    }
-
     public RdfSubjectType getRdfSubjectType() {
-        return tree.rdfSubjectType();
+        return RdfSubjectType.extractFrom(tree);
     }
 
     public Map<String, Object> toSearchMapping(QueryParams queryParams, String apiParam) {

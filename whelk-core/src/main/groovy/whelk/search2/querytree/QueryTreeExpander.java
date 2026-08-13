@@ -40,8 +40,12 @@ public class QueryTreeExpander {
     }
 
     private static Node expandAnd(And and, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
-        List<String> innerTypes = and.rdfSubjectType().asList().stream().map(Type::type).toList();
-        Collection<String> rulingTypes = innerTypes.isEmpty() ? rdfSubjectTypes : innerTypes;
+        List<String> innerTypes = RdfSubjectType.extractFrom(and).typeNames();
+
+        Collection<String> rulingTypes = innerTypes.isEmpty()
+                ? rdfSubjectTypes
+                : innerTypes;
+
         return Node.withMappedChildren(and, child -> expand(child, jsonLd, rulingTypes));
     }
 

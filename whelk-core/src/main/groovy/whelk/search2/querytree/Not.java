@@ -9,11 +9,6 @@ public record Not(Node node) implements Node {
     }
 
     @Override
-    public RdfSubjectType rdfSubjectType() {
-        return RdfSubjectType.noType();
-    }
-
-    @Override
     public List<Node> children() {
         return List.of(node);
     }

@@ -27,11 +27,6 @@ public sealed class FilterAlias implements Node {
     }
 
     @Override
-    public RdfSubjectType rdfSubjectType() {
-        return parsed.rdfSubjectType();
-    }
-
-    @Override
     public String toString() {
         return toQueryString();
     }

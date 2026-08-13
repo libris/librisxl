@@ -11,7 +11,6 @@ import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.Type;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,7 +52,7 @@ public class PredicateObjectQuery extends ObjectQuery {
                 altTrees.add(predicateObjectFilter(noDomain));
             }
             predicatesByInferredSubjectType.forEach((type, preds) ->
-                altTrees.add(new And(List.of(new Type(type, ld), predicateObjectFilter(preds))))
+                altTrees.add(new And(List.of(new Condition.Type(type, ld), predicateObjectFilter(preds))))
             );
             queryTree = new QueryTree(altTrees.size() == 1 ? altTrees.getFirst() : new Or(altTrees))
                     .merge(getFullQueryTree(), ld);
@@ -67,7 +66,8 @@ public class PredicateObjectQuery extends ObjectQuery {
             return new EsQuery(esQueryDsl, Collections.emptyList());
         }
 
-        Set<String> subjectTypes = Stream.concat(queryTree.getRdfSubjectTypesList().stream(), predicatesByInferredSubjectType.keySet().stream())
+        Set<String> subjectTypes = Stream.concat(queryTree.getRdfSubjectType().typeNames().stream(),
+                        predicatesByInferredSubjectType.keySet().stream())
                 .collect(Collectors.toSet());
         var aggQuery = getEsAggQuery(subjectTypes);
         esQueryDsl.put("aggs", aggQuery);

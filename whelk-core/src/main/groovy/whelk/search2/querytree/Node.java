@@ -14,8 +14,6 @@ import java.util.stream.StreamSupport;
 public sealed interface Node permits Any, Condition, FilterAlias, FreeText, Group, Not {
     Node getInverse();
 
-    RdfSubjectType rdfSubjectType();
-
     default List<Node> children() {
         return Collections.emptyList();
     }

@@ -1,5 +1,6 @@
 package whelk.search2.querytree;
 
+import whelk.JsonLd;
 import whelk.search2.Operator;
 
 import static java.util.Objects.hash;
@@ -38,11 +39,6 @@ public non-sealed class Condition implements Node {
     }
 
     @Override
-    public RdfSubjectType rdfSubjectType() {
-        return RdfSubjectType.noType();
-    }
-
-    @Override
     public String toString() {
         return toQueryString();
     }
@@ -75,5 +71,28 @@ public non-sealed class Condition implements Node {
 
     public Type asTypeNode() {
         return new Type((Property.RdfType) selector, (VocabTerm) value);
+    }
+
+    public final static class Type extends Condition {
+        private final Property.RdfType rdfTypeProperty;
+        private final String type;
+
+        public Type(Property.RdfType rdfTypeProperty, VocabTerm value) {
+            super(rdfTypeProperty, Operator.EQUALS, value);
+            this.rdfTypeProperty = rdfTypeProperty;
+            this.type = value.jsonForm();
+        }
+
+        public Type(String raw, JsonLd jsonld) {
+            this(new Property.RdfType(jsonld), new VocabTerm(raw, jsonld.vocabIndex.get(raw)));
+        }
+
+        public Property.RdfType rdfTypeProperty() {
+            return rdfTypeProperty;
+        }
+
+        public String type() {
+            return type;
+        }
     }
 }

@@ -17,6 +17,7 @@ import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.QueryTreeExpander;
+import whelk.search2.querytree.RdfSubjectType;
 import whelk.search2.querytree.Resource;
 import whelk.search2.querytree.Value;
 import whelk.search2.querytree.YearRange;
@@ -128,7 +129,11 @@ public class Query {
         JsonLd ld = whelk.getJsonld();
         var fullQueryTree = getFullQueryTree();
 
-        var indexNames = fullQueryTree.getRdfSubjectTypesList().stream().map(whelk.elastic::getIndexForType).toList();
+        var indexNames = fullQueryTree.getRdfSubjectType()
+                .typeNames()
+                .stream()
+                .map(whelk.elastic::getIndexForType)
+                .toList();
         /* TODO?
         // remove type condition that exactly matches subindex content
         if (indexNames.size() == 1 && !indexNames.getFirst().equals(whelk.elastic.getBaseIndex())) {
@@ -148,7 +153,7 @@ public class Query {
 
         EsQueryTree2 esQueryTree = new EsQueryTree2(expandedQueryTree, currentEsSettings, getSelectedFacets());
         var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
-        esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectTypesList()));
+        esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectType().typeNames()));
 
         return new EsQuery(esQueryDsl, indexNames);
     }
@@ -357,15 +362,15 @@ public class Query {
     }
 
     private QueryTree establishSubjectTypeContext(QueryTree baseTree, List<QueryTree> other) {
-        if (!baseTree.getRdfSubjectType().isNoType()) {
+        if (baseTree.getRdfSubjectType().hasType()) {
             return baseTree;
         }
 
         return other.stream()
                 .map(QueryTree::getRdfSubjectType)
-                .filter(type -> !type.isNoType())
+                .filter(RdfSubjectType::hasType)
                 .findFirst()
-                .map(type -> baseTree.add(type.asNode()))
+                .map(type -> baseTree.add(type.typeNode()))
                 .orElse(baseTree);
     }
 

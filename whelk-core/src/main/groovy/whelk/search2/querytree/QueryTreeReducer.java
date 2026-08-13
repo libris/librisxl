@@ -70,7 +70,7 @@ public class QueryTreeReducer {
             case Or or -> orImplies(or, b, jsonLd);
             case Not not -> notImplies(not, b, jsonLd);
             case FilterAlias alias -> filterAliasImplies(alias, b, jsonLd);
-            case Type type -> typeImplies(type, b, jsonLd);
+            case Condition.Type type -> typeImplies(type, b, jsonLd);
             default -> matches(b, a::equals);
         };
     }
@@ -98,8 +98,9 @@ public class QueryTreeReducer {
         return matches(b, alias::equals) || implies(alias.getParsed(), b, jsonLd);
     }
 
-    private static boolean typeImplies(Type type, Node b, JsonLd jsonLd) {
-        return matches(b, node -> node instanceof Type other && jsonLd.isSubClassOf(type.type(), other.type()));
+    private static boolean typeImplies(Condition.Type type, Node b, JsonLd jsonLd) {
+        return matches(b, node -> node instanceof Condition.Type other
+                && jsonLd.isSubClassOf(type.type(), other.type()));
     }
 
     private static boolean matches(Node node, Predicate<Node> predicate) {

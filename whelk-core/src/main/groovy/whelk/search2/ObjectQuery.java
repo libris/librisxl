@@ -11,10 +11,8 @@ import whelk.search2.querytree.Link;
 import whelk.search2.querytree.Node;
 import whelk.search2.querytree.Or;
 import whelk.search2.querytree.Property;
-import whelk.search2.querytree.QueryStringBuilder;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.Term;
-import whelk.search2.querytree.Type;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,13 +45,15 @@ public class ObjectQuery extends Query {
 
         QueryTree.ReducedTree queryTree = (QueryTree.ReducedTree) getFullQueryTree().add(objectFilter());
 
-        List<String> givenSubjectTypes = queryTree.getRdfSubjectTypesList();
+        List<String> givenSubjectTypes = queryTree.getRdfSubjectType().typeNames();
 
         Set<String> inferredSubjectTypes = new HashSet<>();
         Map<Property, List<String>> predicateToSubjectTypes = new HashMap<>();
 
         for (Property p : curatedPredicates) {
-            List<String> subjects = queryTree.getRdfSubjectTypesList().stream()
+            List<String> subjects = queryTree.getRdfSubjectType()
+                    .typeNames()
+                    .stream()
                     .filter(t -> p.appearsOnType(t, ld) || p.indirectlyAppearsOnType(t, ld))
                     .toList();
             if (!subjects.isEmpty()) {
@@ -68,7 +68,7 @@ public class ObjectQuery extends Query {
             List<Node> altTrees = new ArrayList<>();
             altTrees.add(queryTree.tree());
             inferredSubjectTypes.stream()
-                    .map(t -> new And(List.of(new Type(t, ld), objectFilter())))
+                    .map(t -> new And(List.of(new Condition.Type(t, ld), objectFilter())))
                     .map(QueryTree::new)
                     .map(this::getFullQueryTree)
                     .map(QueryTree::tree)

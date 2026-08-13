@@ -23,18 +23,18 @@ public class QueryTreeMerger {
             return Node.withMappedChildren(or, child -> merge(child, b, jsonLd));
         }
 
-        RdfSubjectType aType = a.rdfSubjectType();
+        RdfSubjectType aRdfSubjectType = RdfSubjectType.extractFrom(a);
 
-        if (aType.isNoType()) {
+        if (!aRdfSubjectType.hasType()) {
             // No type conflict, just merge as is
             return mergeConjunction(a, b, jsonLd);
         }
 
-        if (aType.isMultiType()) {
-            return mergeConstrainedByMultipleTypes(a, aType, b, jsonLd);
+        if (aRdfSubjectType.isMultiType()) {
+            return mergeConstrainedByMultipleTypes(a, aRdfSubjectType, b, jsonLd);
         }
 
-        return mergeConstrainedBySingleType(a, aType.singleType(), b, jsonLd);
+        return mergeConstrainedBySingleType(a, aRdfSubjectType.singleType(), b, jsonLd);
     }
 
     private static Node mergeConjunction(Node a, Node b, JsonLd jsonLd) {
@@ -55,7 +55,7 @@ public class QueryTreeMerger {
         return merged.equals(distributed) ? a : merged;
     }
 
-    private static Node mergeConstrainedBySingleType(Node a, Type aType, Node b, JsonLd jsonLd) {
+    private static Node mergeConstrainedBySingleType(Node a, Condition.Type aType, Node b, JsonLd jsonLd) {
         return mergeConjunction(a, adaptToType(aType.type(), b, jsonLd), jsonLd);
     }
 
@@ -68,9 +68,9 @@ public class QueryTreeMerger {
             return Node.withMappedChildren(or, child -> adaptToType(type, child, jsonLd));
         }
 
-        RdfSubjectType bRdfSubjectType = tree.rdfSubjectType();
+        RdfSubjectType bRdfSubjectType = RdfSubjectType.extractFrom(tree);
 
-        if (bRdfSubjectType.isNoType()) {
+        if (!bRdfSubjectType.hasType()) {
             return retainCompatibleByDomain(type, tree, jsonLd);
         }
 
@@ -79,23 +79,23 @@ public class QueryTreeMerger {
             return adaptToType(type, distributed, jsonLd);
         }
 
-        Type bSubjectType = bRdfSubjectType.singleType();
+        Condition.Type bTypeCondition = bRdfSubjectType.singleType();
 
-        if (jsonLd.isSubClassOf(type, bSubjectType.type())) {
+        if (jsonLd.isSubClassOf(type, bTypeCondition.type())) {
             // Explicit b type given and compatible with a type -> assume that the entire b expression is compatible with a.
-            return removeTypeConstraint(tree, bRdfSubjectType.asNode());
+            return removeTypeConstraint(tree, bRdfSubjectType.typeNode());
         }
 
         Optional<Property> aToBIntegralRelation = QueryUtil.getIntegralRelationsForType(type, jsonLd)
                 .stream()
                 .filter(p -> p.range().stream()
-                        .anyMatch(r -> jsonLd.isSubClassOf(bSubjectType.type(), r)))
+                        .anyMatch(r -> jsonLd.isSubClassOf(bTypeCondition.type(), r)))
                 .findFirst();
         if (aToBIntegralRelation.isPresent()) {
             // Also compatible types, indirectly via integral relation
             Property relation = aToBIntegralRelation.get();
-            Condition integralType = bSubjectType.withSelector(new Path(List.of(relation, bSubjectType.rdfTypeProperty())));
-            return Node.replace(tree, bSubjectType, integralType);
+            Condition integralType = bTypeCondition.withSelector(new Path(List.of(relation, bTypeCondition.rdfTypeProperty())));
+            return Node.replace(tree, bTypeCondition, integralType);
         }
 
         // b type incompatible with a type
@@ -103,14 +103,14 @@ public class QueryTreeMerger {
     }
 
     private static Or distributeByType(Node n, RdfSubjectType nRdfSubjectType) {
-        Node noTypeTree = removeTypeConstraint(n, nRdfSubjectType.asNode());
-        return new Or(nRdfSubjectType.asList().stream().map(t -> new And(List.of(t, noTypeTree))).toList());
+        Node noTypeTree = removeTypeConstraint(n, nRdfSubjectType.typeNode());
+        return new Or(nRdfSubjectType.types().stream().map(t -> new And(List.of(t, noTypeTree))).toList());
     }
 
     private static Or distributeByTypeAndRetainCompatible(Node n, RdfSubjectType nRdfSubjectType, JsonLd jsonLd) {
         List<Node> grouped = new ArrayList<>();
-        Node noTypeTree = removeTypeConstraint(n, nRdfSubjectType.asNode());
-        for (Type t : nRdfSubjectType.asList()) {
+        Node noTypeTree = removeTypeConstraint(n, nRdfSubjectType.typeNode());
+        for (Condition.Type t : nRdfSubjectType.types()) {
             var compatibleInGroup = retainCompatibleByDomain(t.type(), noTypeTree, jsonLd);
             grouped.add(compatibleInGroup == null ? t : new And(List.of(t, compatibleInGroup)));
         }
