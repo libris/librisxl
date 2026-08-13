@@ -2,8 +2,103 @@ import pytest
 from reshape_shb import (
     extract_extent,
     extract_partof_from_parenthesis,
+    normalize_spacing_and_punctuation,
     parse_note,
 )
+
+### Specific functions
+
+# Clean up of punctuation
+def test_normalize_spacing_and_punctuation():
+
+    note = "Wahlbäck, K.,. Finlandsfrågan  i svensk_politik,återgiven. [Resumé.] Utgiven1964av S.Hadenius; i UNT av R\\agnar\\ Mtymelin."
+
+    actual = normalize_spacing_and_punctuation(note)
+
+    assert actual == "Wahlbäck, K., Finlandsfrågan i svensk_politik, återgiven. [Resumé.] Utgiven 1964 av S. Hadenius; i UNT av R[agnar] Mtymelin."
+
+# Part-of from parenthesis
+@pytest.mark.parametrize(
+    "record, era, expected",
+    [
+        pytest.param(
+            "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287.) Stockholm",
+            "parenthesized",
+            (
+                "isborgs slott.  Stockholm",
+                "Antikvariska studier. 4. Sthlm 1950, s. 221-287.",
+            ),
+            id="simple-parenthesized-partof",
+        ),
+        pytest.param(
+            "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.))",
+            "parenthesized",
+            (
+                "isborgs slott.",
+                "Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.)",
+            ),
+            id="nested-parentheses-inside-partof",
+        ),
+        pytest.param(
+            "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))",
+            "parenthesized",
+            (
+                "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))",
+                None,
+            ),
+            id="unbalanced-parentheses-not-extracted",
+        ),
+        pytest.param(
+            "isborgs slott.",
+            "parenthesized",
+            (
+                "isborgs slott.",
+                None,
+            ),
+            id="no-parentheses",
+        ),
+    ],
+)
+def test_extract_partof_from_parenthesis(record, era, expected):
+    actual = extract_partof_from_parenthesis(record, era)
+
+    assert actual == expected, f"\nInput record:\n{record}"
+
+
+# Extent
+@pytest.mark.parametrize(
+    "note, expected",
+    [
+        pytest.param(
+            "Antikvariska studier. 4. Sthlm 1950, s. 221-287.",
+            ("s. 221-287", "Antikvariska studier. 4. Sthlm 1950.", True),
+            id="simple-component-extent",
+        ),
+        pytest.param(
+            "Så minns vi storgatan. hej och hå. 1998.",
+            ("", "Så minns vi storgatan. hej och hå. 1998.", False),
+            id="extent_like_in_title_1",
+        ),
+        pytest.param(
+            "Vi bland blommorna. 30 s.",
+            ("30 s.", "Vi bland blommorna.", False),
+            id="extent_like_in_title_2",
+        ),
+        pytest.param(
+            "Hej hej. 40 s, 17 bl. : ill.",
+            ("40 s, 17 bl. : ill.", "Hej hej.", False),
+            id="multiple_extents_with_ill",
+        )
+    ],
+)
+
+def test_extract_extent(note, expected):
+    actual = extract_extent(note, False, True)
+
+    assert actual == expected, f"\nInput: {note} -> Actual: {actual}"
+
+
+### End-to-end parsing ###
 
 ### Parsing specific cases and edge cases ###
 PARSE_NOTE_TEST_CASES = {
@@ -185,89 +280,6 @@ def test_parse_note(case_name):
 
     assert actual == expected, f"\nInput record:\n{sample}"
 
-
-# Part-of from parenthesis
-@pytest.mark.parametrize(
-    "record, era, expected",
-    [
-        pytest.param(
-            "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287.) Stockholm",
-            "parenthesized",
-            (
-                "isborgs slott.  Stockholm",
-                "Antikvariska studier. 4. Sthlm 1950, s. 221-287.",
-            ),
-            id="simple-parenthesized-partof",
-        ),
-        pytest.param(
-            "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.))",
-            "parenthesized",
-            (
-                "isborgs slott.",
-                "Antikvariska studier. 4. Sthlm 1950, s. 221-287. (VHAAH 71.)",
-            ),
-            id="nested-parentheses-inside-partof",
-        ),
-        pytest.param(
-            "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))",
-            "parenthesized",
-            (
-                "isborgs slott. (Antikvariska studier. 4. Sthlm 1950, s. 221-287. VHAAH 71.))",
-                None,
-            ),
-            id="unbalanced-parentheses-not-extracted",
-        ),
-        pytest.param(
-            "isborgs slott.",
-            "parenthesized",
-            (
-                "isborgs slott.",
-                None,
-            ),
-            id="no-parentheses",
-        ),
-    ],
-)
-def test_extract_partof_from_parenthesis(record, era, expected):
-    actual = extract_partof_from_parenthesis(record, era)
-
-    assert actual == expected, f"\nInput record:\n{record}"
-
-
-# Extent
-@pytest.mark.parametrize(
-    "note, expected",
-    [
-        pytest.param(
-            "Antikvariska studier. 4. Sthlm 1950, s. 221-287.",
-            ("s. 221-287", "Antikvariska studier. 4. Sthlm 1950.", True),
-            id="simple-component-extent",
-        ),
-        pytest.param(
-            "Så minns vi storgatan. hej och hå. 1998.",
-            ("", "Så minns vi storgatan. hej och hå. 1998.", False),
-            id="extent_like_in_title_1",
-        ),
-        pytest.param(
-            "Vi bland blommorna. 30 s.",
-            ("30 s.", "Vi bland blommorna.", False),
-            id="extent_like_in_title_2",
-        ),
-        pytest.param(
-            "Hej hej. 40 s, 17 bl. : ill.",
-            ("40 s, 17 bl. : ill.", "Hej hej.", False),
-            id="multiple_extents_with_ill",
-        )
-    ],
-)
-
-def test_extract_extent(note, expected):
-    actual = extract_extent(note, False, True)
-
-    assert actual == expected, f"\nInput: {note} -> Actual: {actual}"
-
-
-### End-to-end parsing ###
 
 # TODO or not todo?
 # Parse out series/partOf info for older descriptions (no parenthesis or "I:" to go by)
