@@ -7,6 +7,8 @@ import whelk.search2.ESSettings
 import whelk.search2.EsMappings
 import whelk.search2.querytree.QueryTree
 import whelk.search2.querytree.TestData
+import whelk.search2.querytree.node.Condition
+import whelk.search2.querytree.value.Link
 
 class EsQueryTreeBuilderSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()
@@ -1617,8 +1619,6 @@ class EsQueryTreeBuilderSpec extends Specification {
         ]
         ESSettings esSettings = new ESSettings(new EsMappings(List.of(mappings)), new EsBoost([:]))
 
-
-
         Map result = new QueryTree(q, disambiguate).toEsQuery(esSettings)
 
         Map ranges = [:]
@@ -1648,6 +1648,110 @@ class EsQueryTreeBuilderSpec extends Specification {
         'year:1899-'     | 'year_4_digits_short' | 1899       | null
         'year:-1999'     | 'year_4_digits_short' | null       | 1999
         'year:1899-1999' | 'year_4_digits_short' | 1899       | 1999
+    }
+
+    def "like query"() {
+        given:
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
+        String q = 'p4~"https://id.kb.se/X"'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ((Link) ((Condition) qt.tree()).value()).setSearchNeedle("a b c")
+        Map<String, Object> result = qt.toEsQuery(esSettings)
+
+        expect:
+        result == [
+                "bool": [
+                        "should": [[
+                                           "constant_score": [
+                                                   "filter": [
+                                                           "bool": [
+                                                                   "filter": [
+                                                                           "term": [
+                                                                                   "p4.@id": "https://id.kb.se/X"
+                                                                           ]
+                                                                   ]
+                                                           ]
+                                                   ],
+                                                   "boost" : 50000.0
+                                           ]
+                                   ], [
+                                           "bool": [
+                                                   "must": [[
+                                                                    "simple_query_string": [
+                                                                            "default_operator": "AND",
+                                                                            "query"           : "\"a\" \"b\" \"c\"",
+                                                                            "fields"          : ["p4._str"]
+                                                                    ]
+                                                            ], [
+                                                                    "bool": [
+                                                                            "must_not": [
+                                                                                    "bool": [
+                                                                                            "filter": [
+                                                                                                    "term": [
+                                                                                                            "p4.@id": "https://id.kb.se/X"
+                                                                                                    ]
+                                                                                            ]
+                                                                                    ]
+                                                                            ]
+                                                                    ]
+                                                            ]]
+                                           ]
+                                   ]]
+                ]
+        ]
+    }
+
+    def "nested like query"() {
+        given:
+        ESSettings esSettings = new ESSettings(esMappings, new EsBoost([:]))
+        String q = 'p3~"https://id.kb.se/X"'
+        QueryTree qt = new QueryTree(q, disambiguate)
+        ((Link) ((Condition) qt.tree()).value()).setSearchNeedle("a b c")
+        Map<String, Object> result = qt.toEsQuery(esSettings)
+
+        expect:
+        result == [
+                "nested": [
+                        "ignore_unmapped": true,
+                        "path"           : "p3",
+                        "query"          : [
+                                "bool": [
+                                        "should": [[
+                                                           "constant_score": [
+                                                                   "filter": [
+                                                                           "bool": [
+                                                                                   "filter": [
+                                                                                           "term": [
+                                                                                                   "p3.@id": "https://id.kb.se/X"
+                                                                                           ]
+                                                                                   ]
+                                                                           ]
+                                                                   ],
+                                                                   "boost" : 50000.0
+                                                           ]
+                                                   ], [
+                                                           "bool": [
+                                                                   "must": [[
+                                                                                    "simple_query_string": [
+                                                                                            "default_operator": "AND",
+                                                                                            "query"           : "\"a\" \"b\" \"c\"",
+                                                                                            "fields"          : ["p3._str"]
+                                                                                    ]
+                                                                            ], [
+                                                                                    "bool": [
+                                                                                            "must_not": [
+                                                                                                    "exists": [
+                                                                                                            "field": "p3.@id"
+                                                                                                    ]
+                                                                                            ]
+                                                                                    ]
+                                                                            ]]
+                                                           ]
+                                                   ]]
+                                ]
+                        ]
+                ]
+        ]
     }
 
     def "isSimple"() {

@@ -308,26 +308,31 @@ public class EsQueryTreeBuilder {
     }
 
     private static EsQuery buildFromLinkValue(String field, Operator operator, Link link, ESSettings esSettings) {
+        return operator == Operator.LIKE && !"".equals(link.getNeedle())
+                ? buildWithNeedle(field, link, esSettings.mappings())
+                : new EsQuery.TermQuery(String.format("%s.%s", field, ID_KEY), link.jsonForm());
+    }
+
+    private static EsQuery buildWithNeedle(String field, Link link, EsMappings esMappings) {
+        String needle = Arrays.stream(link.getNeedle().split("\\s"))
+                .map(QueryUtil::quote)
+                .collect(Collectors.joining(" "));
+
         String idField = String.format("%s.%s", field, ID_KEY);
-        EsQuery.TermQuery idQuery = new EsQuery.TermQuery(idField, link.jsonForm());
+        String strField = String.format("%s.%s", field, SEARCH_KEY);
 
-        if (operator == Operator.LIKE && !"".equals(link.getNeedle())) {
-            String needle = Arrays.stream(link.getNeedle().split("\\s"))
-                    .map(QueryUtil::quote)
-                    .collect(Collectors.joining(" "));
-            String strField = String.format("%s.%s", field, SEARCH_KEY);
+        EsQuery idQuery = new EsQuery.TermQuery(idField, link.jsonForm());
+        EsQuery textQuery = EsQuery.TextQuery.simpleUnboostedQuery(needle, strField);
 
-            EsQuery textQuery = EsQuery.TextQuery.simpleUnboostedQuery(needle, strField);
-            EsQuery notLinked = isNested(field, esSettings.mappings())
-                    ? new EsQuery.MustNot(new EsQuery.Exists(idField))
-                    : new EsQuery.MustNot(idQuery);
-            EsQuery.Must blankQuery = new EsQuery.Must(List.of(textQuery, notLinked));
-            EsQuery.Should linkedOrBlank = new EsQuery.Should(List.of(idQuery, blankQuery));
-            float linkedBeforeBlank = 50_000f;
-            return new EsQuery.ConstantScore(linkedOrBlank, linkedBeforeBlank);
-        }
+        EsQuery notLinked = isNested(field, esMappings)
+                ? new EsQuery.MustNot(new EsQuery.Exists(idField))
+                : new EsQuery.MustNot(idQuery);
+        EsQuery.Must blankQuery = new EsQuery.Must(List.of(textQuery, notLinked));
 
-        return idQuery;
+        float linkedBeforeBlank = 50_000f;
+        EsQuery boostedIdQuery = new EsQuery.ConstantScore(idQuery, linkedBeforeBlank);
+
+        return new EsQuery.Should(List.of(boostedIdQuery, blankQuery));
     }
 
     private static EsQuery buildPerTokenTermQueriesQuery(String field, FreeText ft, ESSettings esSettings) {
