@@ -185,7 +185,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
         title["mainTitle"] = structured_record["title"]
     if structured_record.get("subtitle"):
         title["subtitle"] = structured_record["subtitle"]
-    instance["hasTitle"] = title
+    instance["hasTitle"] = [title]
 
     # Responsibility statement and contributors
     responsibility_statement = ""
@@ -248,19 +248,19 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
         }
 
         if structured_record["host"].get("title"):
-            part["hasTitle"] = {
+            part["hasTitle"] = [{
                 "@type": "Title",
                 "mainTitle": structured_record["host"]["title"],
-            }
+            }]
 
         if structured_record["host"].get("publisher"):
             part["responsibilityStatement"] = structured_record["host"]["publisher"]
 
         if structured_record["host"].get("issn"):
-            part["identifiedBy"] = {
+            part["identifiedBy"] = [{
                 "@type": "ISSN",
                 "value": structured_record["host"]["issn"],
-            }
+            }]
 
         if structured_record["is_component_part"]:
             instance["isPartOf"] = [part]
@@ -321,13 +321,6 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
 ### Functions for parsing the SHB descriptions ###
 
 
-def __parse_note(instance: dict, syntax_era: str) -> None:
-    """Parse instance, extracting information about the main entity and its host publication or series membership.
-    Updates the instance in place with the extracted information."""
-
-    return instance
-
-
 def parse_note(note: dict, syntax_era: str) -> tuple:
     """Extract information about the main entity from the note, including name, title, subtitle, extent, ISSN, and any remaining unstructured information.
     Returns a dictionary containing the extracted values.
@@ -341,7 +334,9 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     structured_record["original_note"] = note
 
     # Extract information about reviews and dissertation notes
-    tail_note, remainder = extract_reviews_or_diss(note)
+    review_or_diss_note, remainder = extract_reviews_or_diss(note)
+
+    also_in_note, remainder = extract_reviews_or_diss(remainder)
 
     # Distinguish part/article from publication/series
     if syntax_era in ["isbd", "isbd_transition"] and " - I:" in remainder:
@@ -391,8 +386,8 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         ". ".join(
             part
             for part in (
-                remainder,
-                tail_note,
+                remainder, also_in_note,
+                review_or_diss_note,
             )
             if part
         )
@@ -648,12 +643,30 @@ def extract_reviews_or_diss(note: str) -> tuple[str, str]:
 
     if match:
         remainder = note[: match.start()].rstrip("- ")
-        tail_note = note[match.start() :].replace("- Oiss", "- Diss").lstrip("- ")
+        review_or_diss_note = note[match.start() :].replace("- Oiss", "- Diss").lstrip("- ")
     else:
         remainder = note
-        tail_note = None
+        review_or_diss_note = None
 
-    return tail_note, remainder
+    return review_or_diss_note, remainder
+
+def extract_also_in(note: str) -> tuple[str, str]:
+    """Extract "Also published in..." information from the note, if present.
+    Returns a tuple of (also_in_note, remainder)."""
+
+    match = re.search(
+        r"Även utg\.\s*i\b|Även publ\.\s*i\b|Även i\s+i\b|",
+        note,
+    )
+
+    if match:
+        remainder = note[: match.start()].rstrip("- ")
+        also_in_note = note[match.start() :].lstrip("- ")
+    else:
+        remainder = note
+        also_in_note = None
+
+    return also_in_note, remainder
 
 
 def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
