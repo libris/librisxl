@@ -240,7 +240,7 @@ def prepare_record(instance: dict) -> dict:
         return prepped
     
     except KeyError as ke:
-        report.write(ke, "\t", instance)
+        report.write(f"{ke}t{instance}")
         return prepped
 
 
