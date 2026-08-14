@@ -17,7 +17,7 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
     query_string = f"type:PhysicalResource title:({remove_problematic_punctuation(shbd_prepepd.get('full_title'))})"
 
     if shbd_prepepd.get("responsibility_statement"):
-        # TODO Possibly complement with contributor if needed - after bug preventing search across instance and work fields is fixed
+        # TODO Possibly complement responsibilityStatement with contributor if needed - after bug preventing search across instance and work fields is fixed
         query_string = f"{query_string} responsibilityStatement:({remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*)"
     if shbd_prepepd.get("year"):
         query_string = (
@@ -73,6 +73,7 @@ def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, 
     scores_and_matches = []
 
     for match in matches:
+
         prepped_match = prepare_record(match)
 
         score = get_match_score(prepped_shb, prepped_match)
@@ -171,71 +172,76 @@ def get_best_match(scores_and_matches):
 
 # Prepare records for matching #
 def prepare_record(instance: dict) -> dict:
-    prepped = {
-        "@id": instance["@id"],
-        "full_title": "",
-        "responsibility_statement": "",
-        "place": "",
-        "year": "",
-        "host_or_series_title": "",
-        "host_or_series_issn": "",
-    }
+    try:
+        prepped = {
+            "@id": instance["@id"],
+            "full_title": "",
+            "responsibility_statement": "",
+            "place": "",
+            "year": "",
+            "host_or_series_title": "",
+            "host_or_series_issn": "",
+        }
 
-    if has_title := instance.get("hasTitle", []):
-        prepped["full_title"] = (
-            f"{has_title[0].get('mainTitle', '')} {has_title[0].get('subtitle', '')}"
-        )
-    else:
-        report.write(
-            f"{instance['@id']}\tNo title\t{json.dumps(instance, ensure_ascii=False)}\n"
-        )
-        return None
+        if has_title := instance.get("hasTitle", []):
+            prepped["full_title"] = (
+                f"{has_title[0].get('mainTitle', '')} {has_title[0].get('subtitle', '')}"
+            )
+        else:
+            report.write(
+                f"{instance['@id']}\tNo title\t{json.dumps(instance, ensure_ascii=False)}\n"
+            )
+            return None
 
-    prepped["responsibility_statement"] = instance.get("responsibilityStatement", "")
+        prepped["responsibility_statement"] = instance.get("responsibilityStatement", "")
 
-    prepped["extent"] = instance.get("extent", "")
+        prepped["extent"] = instance.get("extent", "")
 
-    if publication := instance.get("publication"):
-        if place := publication[0].get("place"):
-            prepped["place"] = place[0].get("label", "")
-        if year := publication[0].get("year", ""):
-            prepped["year"] = year
+        if publication := instance.get("publication"):
+            if place := publication[0].get("place"):
+                prepped["place"] = place[0].get("label", "")
+            if year := publication[0].get("year", ""):
+                prepped["year"] = year
 
-    if instance.get("isPartOf"):
-        host_or_series = instance["isPartOf"][0]
-        prepped["part"] = instance.get("part", "")
+        if instance.get("isPartOf"):
+            host_or_series = instance["isPartOf"][0]
+            prepped["part"] = instance.get("part", "")
 
-    elif series := instance.get("seriesMembership"):
-        host_or_series = series[0].get("inSeries")
-        if part := series[0].get("seriesEnumeration"):
-            prepped["part"] = part
-    else:
-        host_or_series = []
+        elif series := instance.get("seriesMembership"):
+            host_or_series = series[0].get("inSeries")
+            if part := series[0].get("seriesEnumeration"):
+                prepped["part"] = part
+        else:
+            host_or_series = []
 
-    # Get title from instance or work
-    if host_or_series:
-        if host_has_issn := host_or_series.get("identifiedBy", []):
-            prepped["host_or_series_issn"] = host_has_issn[0].get("value", "")
+        # Get title from instance or work
+        if host_or_series:
+            if host_has_issn := host_or_series.get("identifiedBy", []):
+                prepped["host_or_series_issn"] = host_has_issn[0].get("value", "")
 
-        title = None
-        if has_title := host_or_series.get("hasTitle"):
-            title = has_title[0].get("mainTitle")
+            title = None
+            if has_title := host_or_series.get("hasTitle"):
+                title = has_title[0].get("mainTitle")
 
-        elif instance_of := host_or_series.get("instanceOf", {}):
-            has_title = instance_of.get("hasTitle", [{}])
-            title = has_title[0].get("mainTitle")
+            elif instance_of := host_or_series.get("instanceOf", {}):
+                has_title = instance_of.get("hasTitle", [{}])
+                title = has_title[0].get("mainTitle")
 
-        if title:
-            prepped["host_or_series_title"] = title
+            if title:
+                prepped["host_or_series_title"] = title
 
-    # Don't try to match if the instance has only one property
-    if len(prepped) < 2:
-        report.write(
-            f"{instance['@id']}\tNot enough properties to match on\t{json.dumps(instance, ensure_ascii=False)}\n"
-        )
-        return None
+        # Don't try to match if the instance has only one property
+        if len(prepped) < 2:
+            report.write(
+                f"{instance['@id']}\tNot enough properties to match on\t{json.dumps(instance, ensure_ascii=False)}\n"
+            )
+            return None
 
-    return prepped
+        return prepped
+    
+    except KeyError as ke:
+        report.write(ke, "\t", instance)
+        return prepped
 
 
 def normalize_text(value: str):

@@ -281,26 +281,27 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
 
         # Part of host publication
         else:
+            part_statement = ""
             instance["isPartOf"] = [part]
             instance["category"].append(
                 {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
             )
             if structured_record["host"].get("part_number"):
-                part = structured_record["host"]["part_number"]
+                part_statement = structured_record["host"]["part_number"]
                     
             if structured_record["host"].get("extent"):
-                if part:
-                    part = part + ", " + structured_record["host"]["extent"]
+                if part_statement:
+                    part_statement = part_statement + ", " + structured_record["host"]["extent"]
                 else:
-                    part = structured_record["host"]["extent"]
+                    part_statement = structured_record["host"]["extent"]
 
             if structured_record["host"].get("remainder"):
-                if part:
-                    part = part + ", " + structured_record["host"]["remainder"]
+                if part_statement:
+                    part_statement = part_statement + ", " + structured_record["host"]["remainder"]
                 else:
                     part = structured_record["host"]["remainder"]
-        if part:
-            instance["part"] = part
+            if part_statement:
+                instance["part"] = part_statement
 
     ### Store remaining unstructured information as a note on the instance ###
 
