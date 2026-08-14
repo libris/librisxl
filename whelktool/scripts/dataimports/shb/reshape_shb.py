@@ -248,45 +248,57 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
         }
 
         if structured_record["host"].get("title"):
-            part["hasTitle"] = [{
-                "@type": "Title",
-                "mainTitle": structured_record["host"]["title"],
-            }]
+            part["hasTitle"] = [
+                {
+                    "@type": "Title",
+                    "mainTitle": structured_record["host"]["title"],
+                }
+            ]
 
         if structured_record["host"].get("publisher"):
             part["responsibilityStatement"] = structured_record["host"]["publisher"]
 
         if structured_record["host"].get("issn"):
-            part["identifiedBy"] = [{
-                "@type": "ISSN",
-                "value": structured_record["host"]["issn"],
-            }]
+            part["identifiedBy"] = [
+                {
+                    "@type": "ISSN",
+                    "value": structured_record["host"]["issn"],
+                }
+            ]
 
-        if structured_record["is_component_part"]:
+        # Part of series
+        if not structured_record["is_component_part"]:
+            if structured_record["host"].get("remainder"):
+                part["seriesStatement"] = structured_record["host"].get("remainder")
+
+            series = {}
+            series["inSeries"] = part
+
+            if structured_record["host"].get("part_number"):
+                series["seriesEnumeration"] = structured_record["host"].get("part_number")
+
+            instance["seriesMembership"] = [series]
+
+        # Part of host publication
+        else:
             instance["isPartOf"] = [part]
             instance["category"].append(
                 {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
             )
-        else:
-            instance["seriesMembership"] = [part]
+            if structured_record["host"].get("part_number"):
+                part = structured_record["host"]["part_number"]
+                    
+            if structured_record["host"].get("extent"):
+                if part:
+                    part = part + ", " + structured_record["host"]["extent"]
+                else:
+                    part = structured_record["host"]["extent"]
 
-        # Add part-specific information to isntance proeprty "part"
-        part = ""
-        if structured_record["host"].get("part_number"):
-            part = structured_record["host"]["part_number"]
-
-        if structured_record["host"].get("extent"):
-            if part:
-                part = part + ", " + structured_record["host"]["extent"]
-            else:
-                part = structured_record["host"]["extent"]
-
-        if structured_record["host"].get("remainder"):
-            if part:
-                part = part + ", " + structured_record["host"]["remainder"]
-            else:
-                part = structured_record["host"]["remainder"]
-
+            if structured_record["host"].get("remainder"):
+                if part:
+                    part = part + ", " + structured_record["host"]["remainder"]
+                else:
+                    part = structured_record["host"]["remainder"]
         if part:
             instance["part"] = part
 
@@ -355,7 +367,9 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         )
 
     # Extract extent (pages, leaves)
-    extent, remainder, is_component_part = extract_extent(remainder, is_component_part, is_main_entity_note = True)
+    extent, remainder, is_component_part = extract_extent(
+        remainder, is_component_part, is_main_entity_note=True
+    )
 
     place, year, remainder = extract_place_year(remainder)
 
@@ -386,7 +400,8 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         ". ".join(
             part
             for part in (
-                remainder, also_in_note,
+                remainder,
+                also_in_note,
                 review_or_diss_note,
             )
             if part
@@ -444,7 +459,9 @@ def extract_host_values(
     issn, remainder = extract_issn(host_note)
 
     # Extract extent (pages, leaves)
-    extent, remainder, is_component_part = extract_extent(remainder, is_component_part, is_main_entity_note = False)
+    extent, remainder, is_component_part = extract_extent(
+        remainder, is_component_part, is_main_entity_note=False
+    )
 
     part_number, remainder = extract_part_number(remainder)
 
@@ -643,12 +660,15 @@ def extract_reviews_or_diss(note: str) -> tuple[str, str]:
 
     if match:
         remainder = note[: match.start()].rstrip("- ")
-        review_or_diss_note = note[match.start() :].replace("- Oiss", "- Diss").lstrip("- ")
+        review_or_diss_note = (
+            note[match.start() :].replace("- Oiss", "- Diss").lstrip("- ")
+        )
     else:
         remainder = note
         review_or_diss_note = None
 
     return review_or_diss_note, remainder
+
 
 def extract_also_in(note: str) -> tuple[str, str]:
     """Extract "Also published in..." information from the note, if present.
@@ -829,7 +849,9 @@ def extract_partof_from_parenthesis(remainder, syntax_era) -> tuple[dict]:
     return remainder, None
 
 
-def extract_extent(remainder: str, is_component_part: bool, is_main_entity_note: bool) -> tuple[str]:
+def extract_extent(
+    remainder: str, is_component_part: bool, is_main_entity_note: bool
+) -> tuple[str]:
     """Extract extent information (pages, leaves) from the note, if present.
     Returns a tuple of (extent, remainder, is_component_part)."""
 
@@ -847,8 +869,12 @@ def extract_extent(remainder: str, is_component_part: bool, is_main_entity_note:
         probable_publication_area = remainder
 
     # Reintroduce initals...
-    probable_title_author_area, probable_publication_area = reinclude_abbreviations_after_split([probable_title_author_area, probable_publication_area])
-    
+    probable_title_author_area, probable_publication_area = (
+        reinclude_abbreviations_after_split(
+            [probable_title_author_area, probable_publication_area]
+        )
+    )
+
     if not EXTENT_MARKER_RE.search(probable_publication_area):
         return "", remainder, is_component_part
 
@@ -893,10 +919,14 @@ def extract_extent(remainder: str, is_component_part: bool, is_main_entity_note:
                 right_part = pages + " " + right_part
                 pages = ""
 
-        probable_publication_area = (left_part + right_part).strip(",;- ").replace("- -", "-")
+        probable_publication_area = (
+            (left_part + right_part).strip(",;- ").replace("- -", "-")
+        )
 
         if probable_title_author_area:
-            remainder = f"{probable_title_author_area}. {probable_publication_area}".strip()
+            remainder = (
+                f"{probable_title_author_area}. {probable_publication_area}".strip()
+            )
         else:
             remainder = probable_publication_area.strip()
 
@@ -1044,11 +1074,11 @@ def normalize_spacing_and_punctuation(text: str) -> str:
 
     # Always have a space between a digit and two lowercase letters
     text = re.sub(r"(\d)([a-zåäö]{2,})", r"\1 \2", text)
-   
+
     # \\ Double backslashes, aka one backslash escaped with another, seem to be a common misreading of brackets
     # Get the opening and closing
     text = re.sub(r"\\([a-zåäöA-ZÅÄÖ]+)\\", r"[\1]", text)
-    
+
     # Pragmatically and empirically assume the rest are closing
     text = re.sub(r"\\", r"]", text)
 

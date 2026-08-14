@@ -55,14 +55,14 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
             id_with_matches = {
                 shbd_prepepd["@id"]: [item["@id"] for item in res.json()["items"]]
             }
+        else:
+            id_with_matches = {}
 
-            if number_of_matches == 1:
-                perfect_matches.append(id_with_matches)
+        search_result_file.write(
+            f"{shbd_prepepd['@id']}\t{number_of_matches}\t{query_string}\t{json.dumps(id_with_matches)}\n"
+        )
+        return matches
 
-            search_result_file.write(
-                f"{shbd_prepepd['@id']}\t{number_of_matches}\t{query_string}\t{json.dumps(id_with_matches)}\n"
-            )
-            return matches
     except requests.exceptions.HTTPError as he:
         report.write(f"{he}\t{query_string}\n")
 
@@ -77,7 +77,16 @@ def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, 
 
         score = get_match_score(prepped_shb, prepped_match)
 
-        scores_and_matches.append({"score": score, "id": match["@id"], "record": match})
+        if len(matches) == 1:
+            score += 0.5
+
+        scores_and_matches.append(
+            {
+                "score": score,
+                "id": match["@id"],
+                "properties_compared": {"shb": prepped_shb, "libris": prepped_match},
+            }
+        )
 
     best_match = get_best_match(scores_and_matches)
 
@@ -86,10 +95,7 @@ def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, 
         "all_matches": scores_and_matches,
     }
 
-    if best_match:
-        return best_match["score"], best_match["id"]
-    else:
-        return None
+    return match_map
 
 
 def get_match_score(prepped_shb: dict, prepped_match: dict):
@@ -140,7 +146,7 @@ def get_match_score(prepped_shb: dict, prepped_match: dict):
 
     overall_score = (
         0.6 * title_score
-        + 0.3 * author_score
+        + 0.6 * author_score
         + 0.3 * year_score
         + 0.3 * host_or_series_issn_score
         + 0.3 * host_or_series_title_score
@@ -165,8 +171,6 @@ def get_best_match(scores_and_matches):
 
 # Prepare records for matching #
 def prepare_record(instance: dict) -> dict:
-    # Strip ":" to avoid search syntax bug
-
     prepped = {
         "@id": instance["@id"],
         "full_title": "",
@@ -190,29 +194,39 @@ def prepare_record(instance: dict) -> dict:
     prepped["responsibility_statement"] = instance.get("responsibilityStatement", "")
 
     prepped["extent"] = instance.get("extent", "")
-    prepped["part"] = instance.get("part", "")
 
     if publication := instance.get("publication"):
         if place := publication[0].get("place"):
-            prepped["place"] =place[0].get("label", "")
+            prepped["place"] = place[0].get("label", "")
         if year := publication[0].get("year", ""):
             prepped["year"] = year
-        if part := publication[0].get("part"):
-            prepped["part"] = part
 
     if instance.get("isPartOf"):
-        host_or_series = instance["isPartOf"]
-    elif instance.get("seriesMembership"):
-        host_or_series = instance["seriesMembership"]
+        host_or_series = instance["isPartOf"][0]
+        prepped["part"] = instance.get("part", "")
+
+    elif series := instance.get("seriesMembership"):
+        host_or_series = series[0].get("inSeries")
+        if part := series[0].get("seriesEnumeration"):
+            prepped["part"] = part
     else:
         host_or_series = []
 
+    # Get title from instance or work
     if host_or_series:
-        if host_has_title := host_or_series[0].get("hasTitle", []):
-            prepped["host_or_series_title"] = host_has_title[0].get("mainTitle", "")
-        if host_has_issn :=  host_or_series[0].get("identifiedBy", []):
+        if host_has_issn := host_or_series.get("identifiedBy", []):
             prepped["host_or_series_issn"] = host_has_issn[0].get("value", "")
-        
+
+        title = None
+        if has_title := host_or_series.get("hasTitle"):
+            title = has_title[0].get("mainTitle")
+
+        elif instance_of := host_or_series.get("instanceOf", {}):
+            has_title = instance_of.get("hasTitle", [{}])
+            title = has_title[0].get("mainTitle")
+
+        if title:
+            prepped["host_or_series_title"] = title
 
     # Don't try to match if the instance has only one property
     if len(prepped) < 2:
@@ -287,9 +301,7 @@ if __name__ == "__main__":
     ) as match_map_file, open(
         args.report, "w", encoding="utf-8"
     ) as report:
-        search_result_file.write(
-            "id\tnumber_of_matches\tquery_string\tperfect_matches\n"
-        )
+        search_result_file.write("id\tnumber_of_matches\tquery_string\tmatches\n")
 
         for idx, line in enumerate(source_file):
 
@@ -312,11 +324,8 @@ if __name__ == "__main__":
                 matches = find_matches(shbd_prepepd, match_counts)
 
             if matches:
-                best_match, score = analyze_matches(shbd_prepepd, matches, match_map)
+                analyze_matches(shbd_prepepd, matches, match_map)
 
-            if match_counts == 1 and score > 0.8:
-                report.write(" Good match!")
-
-    json.dump(match_map, match_map_file, ensure_ascii=False)
+        json.dump(match_map, match_map_file, ensure_ascii=False)
 
     print(f"\nTotal matches:\n{match_counts}")
