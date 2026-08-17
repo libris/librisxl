@@ -18,7 +18,7 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
 
     if shbd_prepepd.get("responsibility_statement"):
         # TODO Possibly complement responsibilityStatement with contributor if needed - after bug preventing search across instance and work fields is fixed
-        query_string = f"{query_string} responsibilityStatement:({remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*)"
+        query_string = f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*"
     if shbd_prepepd.get("year"):
         query_string = (
             f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('year'))}"
