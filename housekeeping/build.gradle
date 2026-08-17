@@ -50,7 +50,7 @@ dependencies {
     implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
 
     // Email
-    implementation "org.simplejavamail:simple-java-mail:8.2.0"
+    implementation "org.simplejavamail:simple-java-mail:9.2.0"
 
     // Cron
     implementation "it.sauronsoftware.cron4j:cron4j:2.2.5"
