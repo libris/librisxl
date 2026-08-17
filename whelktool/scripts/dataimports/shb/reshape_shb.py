@@ -301,7 +301,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
                 else:
                     part = structured_record["host"]["remainder"]
             if part_statement:
-                instance["part"] = part_statement
+                instance["part"] = [part_statement]
 
     ### Store remaining unstructured information as a note on the instance ###
 
