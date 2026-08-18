@@ -23,7 +23,7 @@ SYNTAX_ERAS = {
 }
 
 NON_TERMINATING_ABBREVIATIONS = [
-    "Co.",  # 13
+    "co.",  # 13
     "m.fl.",  # 116
     "m. fl.",  # 231
     "m.m.",  # 15
@@ -33,15 +33,24 @@ NON_TERMINATING_ABBREVIATIONS = [
     "s. k.",
     "bl.a.",
     "bl. a.",
+    "ill.",
+    "illustr.",
+    "portr.",
+    "o.",
+    "s.",
+    "bl.",
+    "pl.",
+    "kartbl.",
+    "pl.-bl."
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
 DASH_ERAS = ["dash_style", "isbd_transition", "isbd"]
 
 ### Extreme regex ###
-EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl)\.", re.I)
+EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl)<DOT>", re.I)
 COMPONENT_EXTENT = re.compile(
-    r"\b((?:s|bl|pl)\.?)\s*(\d+)(?:-(\d+))?(?:\s*:?\s+(ill\.?))?"
+    r"\b((?:s|bl|pl)(<DOT>)?)\s*(\d+)(?:-(\d+))?(?:\s*:?\s+(ill(<DOT>)?))?"
 )
 MONOGRAPH_EXTENT_RE = re.compile(
     r"""
@@ -54,7 +63,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
         )
         (?:\s*(?:,|\+)\s*)?
     )+
-    \s*(?:s|bl|pl)\.?
+    \s*(?:s|bl|pl)(<DOT>)?
 
     (?:
         \s*(?:\+|,)\s*
@@ -67,10 +76,10 @@ MONOGRAPH_EXTENT_RE = re.compile(
             )
             (?:,\s*)?
         )+
-        \s*(?:kartbl|pl\.-bl|pl|bl|s)\.?
+        \s*(?:kartbl|pl<DOT>-bl|pl|bl|s)(<DOT>)?
     )*
 
-    (?:\s*:?\s*ill\.?)?
+    (?:\s*:?\s*ill(<DOT>)?)?
     """,
     re.I | re.X,
 )
@@ -275,7 +284,9 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
             series["inSeries"] = part
 
             if structured_record["host"].get("part_number"):
-                series["seriesEnumeration"] = structured_record["host"].get("part_number")
+                series["seriesEnumeration"] = structured_record["host"].get(
+                    "part_number"
+                )
 
             instance["seriesMembership"] = [series]
 
@@ -288,16 +299,20 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
             )
             if structured_record["host"].get("part_number"):
                 part_statement = structured_record["host"]["part_number"]
-                    
+
             if structured_record["host"].get("extent"):
                 if part_statement:
-                    part_statement = part_statement + ", " + structured_record["host"]["extent"]
+                    part_statement = (
+                        part_statement + ", " + structured_record["host"]["extent"]
+                    )
                 else:
                     part_statement = structured_record["host"]["extent"]
 
             if structured_record["host"].get("remainder"):
                 if part_statement:
-                    part_statement = part_statement + ", " + structured_record["host"]["remainder"]
+                    part_statement = (
+                        part_statement + ", " + structured_record["host"]["remainder"]
+                    )
                 else:
                     part = structured_record["host"]["remainder"]
             if part_statement:
@@ -344,12 +359,13 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
 
     # Some inital cleanup of OCR messiness
     note = normalize_spacing_and_punctuation(note)
+    note = normalize_special_cases(note)
     structured_record["original_note"] = note
 
     # Extract information about reviews and dissertation notes
-    review_or_diss_note, remainder = extract_reviews_or_diss(note)
+    review_or_diss_note, remainder = extract_review_diss_or_content_note(note)
 
-    also_in_note, remainder = extract_reviews_or_diss(remainder)
+    also_in_note, remainder = extract_also_in(remainder)
 
     # Distinguish part/article from publication/series
     if syntax_era in ["isbd", "isbd_transition"] and " - I:" in remainder:
@@ -439,7 +455,7 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
 
     # Parse and store information about host publication or series membership
     if host_or_series:
-        structured_record["host"] = extract_host_values(
+        structured_record["host"] = extract_host_or_series_values(
             host_or_series, syntax_era, is_component_part
         )
 
@@ -447,7 +463,7 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     return structured_record
 
 
-def extract_host_values(
+def extract_host_or_series_values(
     host_note: str, syntax_era, is_component_part
 ) -> tuple[str, str, str]:
     """Extract information about the host publication or series membership from the host note.
@@ -536,9 +552,12 @@ def extract_early_host_or_series(remainder: str, extent: str, is_component_part:
             # However not all monographs are part of series
             host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
 
-            # Only treat as publication/series info it contains at least 2 alphabetic characters
+            # Only treat as publication/series info it contains
+            # At least 2 alphabetic characters (series title)
+            # At least one numeric character (part number)
             alpha_chars = [char for char in host_or_series if char.isalpha()]
-            if len(alpha_chars) > 1:
+            num_chars = [char for char in host_or_series if char.isnumeric()]
+            if len(alpha_chars) > 1 and len(num_chars) > 0:
                 remainder = ". ".join(part.strip(".") for part in parts[:-2])
 
                 return host_or_series, remainder, is_component_part
@@ -650,12 +669,12 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
     return None, None, remainder
 
 
-def extract_reviews_or_diss(note: str) -> tuple[str, str]:
+def extract_review_diss_or_content_note(note: str) -> tuple[str, str]:
     """Extract review information from the note, if present.
     Returns a tuple of (review_note, remainder)."""
 
     match = re.search(
-        r"Rec\.\s+i\b|\bSummary:\s*|\s*-\s*Diss\b|\s*-\s*Oiss\b",
+        r"Rec\.\s+i\b|\bSummary:\s*|\s*-\s*Diss\b|\s*-\s*Oiss\b|Innehåller b",
         note,
     )
 
@@ -676,7 +695,7 @@ def extract_also_in(note: str) -> tuple[str, str]:
     Returns a tuple of (also_in_note, remainder)."""
 
     match = re.search(
-        r"Även utg\.\s*i\b|Även publ\.\s*i\b|Även i\s+i\b|",
+        r"Även utg\.\s*i\b|Även publ\.\s*i\b|Även i\s+i\b",
         note,
     )
 
@@ -696,16 +715,29 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
 
     PERSON_START_RE = re.compile(
         r"""
-    (?:
-        [A-ZÅÄÖ][a-zåäö]+(?:-[A-ZÅÄÖa-zåäö]+)?   # Arne / Carl-Gösta
-        |
-        [A-ZÅÄÖ]\.                              # A.
-    )
-    """,
+        (?:
+            [A-ZÅÄÖ][a-zåäö]+(?:-[A-ZÅÄÖa-zåäö]+)?   # Arne / Carl-Gösta
+            |
+            [A-ZÅÄÖ]\.                              # A.
+        )
+        """,
         re.X,
     )
-    personnameparts = []
-    initial = -1
+
+    # First - look at whatevers to the left of the first period (excluding initials).
+    # If there is only one comma there - it's not a full name. Let's assume there is no author.
+    #  (Author last name, Author firstname, Title) vs (Title part, Title part.)
+
+    # Exclude initials and abbreviations before splitting
+    temp_remainder = exclude_abbreviations_before_split(remainder)
+    parts = re.split(
+        r"(?<!\b[A-Z])\.\s+",
+        temp_remainder,
+    )
+    if parts[0].count(",") < 2:
+        counters["various"].update(["Work without primary contributor"])
+        return None, remainder
+
     comma_separated = remainder.split(",")
     contributor_names = comma_separated.pop(0).strip()
 
@@ -856,25 +888,18 @@ def extract_extent(
     """Extract extent information (pages, leaves) from the note, if present.
     Returns a tuple of (extent, remainder, is_component_part)."""
 
-    pages = ""
+    extent = ""
     probable_title_author_area = ""
     probable_publication_area = ""
 
-    # Exclude initials while splitting....
+    # Protect abbreviations by replacing . with <DOT>ß
     temp_remainder = exclude_abbreviations_before_split(remainder)
 
     # Exclude everything left of first period to avoid confusion with main title words that look like Roman numerals ("vi").
     if is_main_entity_note and ". " in temp_remainder:
-        probable_title_author_area, probable_publication_area = remainder.split(". ", 1)
+        probable_title_author_area, probable_publication_area = temp_remainder.split(". ", 1)
     else:
-        probable_publication_area = remainder
-
-    # Reintroduce initals...
-    probable_title_author_area, probable_publication_area = (
-        reinclude_abbreviations_after_split(
-            [probable_title_author_area, probable_publication_area]
-        )
-    )
+        probable_publication_area = temp_remainder
 
     if not EXTENT_MARKER_RE.search(probable_publication_area):
         return "", remainder, is_component_part
@@ -897,29 +922,39 @@ def extract_extent(
         left_part = probable_publication_area[: page_match.start()].rstrip(" ,")
         right_part = probable_publication_area[page_match.end() :]
 
-        pages = page_match.group(0)
+        extent = page_match.group(0)
 
         # A matched extent may incorrectly start with a publication year,
         # e.g. "Sthlm 1947, 28 s.". Move the year back to the imprint.
-        year_before_extent = re.match(r"(^1[7-9]\d{2})(?:,|$)", pages)
+        year_before_extent = re.match(r"(^1[7-9]\d{2})(?:,|$)", extent)
         if year_before_extent:
             left_part = f"{left_part} {year_before_extent.group(0)}".rstrip()
-            pages = pages[year_before_extent.end() :].lstrip(",; ")
-            if pages == "s." or pages == "s":
-                left_part = left_part + " " + pages
-                pages = ""
+            extent = extent[year_before_extent.end() :].lstrip(",; ")
+            if extent == "s." or extent == "s":
+                left_part = left_part + " " + extent
+                extent = ""
 
         # A year immediately after the extent probably belongs to the imprint,
         # e.g. "155 s. 1955." -> extent "155 s.", imprint "1955."
-        year_after_extent = re.search(r"\s+1[7-9]\d{2}\.?$", pages)
+        year_after_extent = re.search(r"\s+1[7-9]\d{2}\.?$", extent)
         if year_after_extent:
             year = year_after_extent.group(0).strip()
-            pages = pages[: year_after_extent.start()].rstrip()
+            extent = extent[: year_after_extent.start()].rstrip()
             right_part = f"{year} " + right_part
-            if pages == "s." or pages == "s":
-                right_part = pages + " " + right_part
-                pages = ""
+            if extent == "s." or extent == "s":
+                right_part = extent + " " + right_part
+                extent = ""
 
+        # Pick up special illustration info 
+        EXTRA_EXTENT_INFO_RE = r"(?:\[Med\b.*?(?:i texten\.)?\]|\bMed\b.*?(?:i texten\.)?\.)"
+        extra_match = re.search(EXTRA_EXTENT_INFO_RE, right_part)
+
+        if extra_match:
+            extra_extent_info = extra_match.group()
+            right_part = right_part[:extra_match.start()] + right_part[extra_match.end():]
+            extent = extent.replace("<DOT>", "").strip() + ". " + extra_extent_info
+
+        # Put everything back together
         probable_publication_area = (
             (left_part + right_part).strip(",;- ").replace("- -", "-")
         )
@@ -931,7 +966,8 @@ def extract_extent(
         else:
             remainder = probable_publication_area.strip()
 
-    return pages, remainder, is_component_part
+    extent, remainder = reinclude_abbreviations_after_split([extent, remainder])
+    return extent, remainder, is_component_part
 
 
 def extract_issn(note: str) -> str:
@@ -1042,6 +1078,17 @@ def link_to_shb_volume(
 
 
 ### Helper functions ###
+
+
+def normalize_special_cases(text: str) -> str:
+    """
+    Clean up recurring anomalies in OCR'd text. Return the cleaned up text.
+    """
+
+    # Book formats quarto and octavo
+    text = text.replace("4:0", "4:o").replace("8:0", "8:o")
+
+    return text
 
 
 def normalize_spacing_and_punctuation(text: str) -> str:
@@ -1183,8 +1230,12 @@ def strip_trailing_separators(text: str) -> str:
 def exclude_abbreviations_before_split(remainder: str) -> str:
     # Common abbreviations
     for abbr in NON_TERMINATING_ABBREVIATIONS:
-        remainder = remainder.replace(abbr, abbr.replace(".", "<DOT>"))
-
+        remainder = re.sub(
+            rf'(?<![^\W\d_]){re.escape(abbr)}',
+            lambda m: m.group().replace(".", "<DOT>"),
+            remainder,
+            flags=re.IGNORECASE
+        )
     # Initials
     remainder = re.sub(r"\b([A-Z])\.\s+(?=[A-Z])", r"\1<DOT> ", remainder)
 

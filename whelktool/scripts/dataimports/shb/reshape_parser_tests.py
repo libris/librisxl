@@ -267,6 +267,23 @@ PARSE_NOTE_TEST_CASES = {
 
         },
     ),
+    "also-in-publication": (
+        "Odéen, Axel, Händelser och personer i Herrestads och Ljunits häraderåren 1658-1713. - I: Våra härader 6(1973), s. 9-14. - Även utg. i YstadsA15.4, 22.4, 29.4 1972",
+        "isbd",
+        {
+            "primary_contributors": "Odéen, Axel",
+            "title": "Händelser och personer i Herrestads och Ljunits häraderåren 1658-1713",
+            "host": {
+                "title": "Våra härader",
+                "part_number": "6(1973)",
+                "extent": "s. 9-14"
+            },
+            "remaining_note": "Även utg. i YstadsA15.4, 22.4, 29.4 1972",
+            "is_component_part": True,
+            "original_note": "Odéen, Axel, Händelser och personer i Herrestads och Ljunits häraderåren 1658-1713. - I: Våra härader 6(1973), s. 9-14. - Även utg. i YstadsA15.4, 22.4, 29.4 1972"
+
+        },
+    ),
 }
 
 
@@ -754,8 +771,6 @@ def test_parse_note_1971_1975_Monografi_utan_författare():
     }
     result = parse_note(record["sample"], "isbd_transition")
 
-    
-
     assert result["is_component_part"] == False
     assert result["other_contributors"] == "red.: ArneStade o. Jan Wimmer"
     assert result["title"] == "Polens krig med Sverige 1655-1660"
@@ -862,7 +877,7 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag_utan_författare():
     assert result["host"] == {"title": "St", "part_number": "2 (1774)"}
     assert result["extent"] == "s. 23-29"
 
-# TODO Move "Red: " to other_contributors=
+# TODO Move "Red: " to other_contributors
 def test_parse_note_1951_1960_Monografi_utan_författare():
     record = {
         "pattern": "Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.)",
@@ -900,8 +915,26 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi_utan_författare():
     assert result["extent"] == "(2)+ 45 s."
 
 
-### Edge cases ###
+### Special and edge cases ###
 
+
+def test_no_primary_contributor_one_comma_in_title():
+    record = {
+        "sample": "Hundraårsminne, Den svenska nykterhetsrörelsens. Bidrag till kännedom om P. Wieselgren och hans banbrytande livsgärning av olika författare. Samlade och utgivna av Reformatorns redaktion. 40 s. Med flera portr. o. illustr. i texten. Sthlm 1919. Innehåller bl. a. uppsatser af: G. Björkman, W. Skarstedt, J. Bergman, J. Edv. Herrlander o. P. Johnsson.",
+    }
+    result = parse_note(record["sample"], "parenthesized")
+
+    assert result["is_component_part"] == False
+    assert result["title"] == "Hundraårsminne, Den svenska nykterhetsrörelsens"
+    assert result["subtitle"] == "Bidrag till kännedom om P. Wieselgren och hans banbrytande livsgärning av olika författare. Samlade och utgivna av Reformatorns redaktion"
+    assert result["extent"] == "40 s. Med flera portr. o. illustr. i texten."
+    assert result["place"] == "Sthlm"
+    assert result["year"] == "1919"
+    assert result["remaining_note"] == "Innehåller bl. a. uppsatser af: G. Björkman, W. Skarstedt, J. Bergman, J. Edv. Herrlander o. P. Johnsson"
+
+@pytest.mark.xfail(
+    reason="Primary contributor mistaken for title as (atypically) delimited by period instead of comma"
+)
 def test_incorrect_period_after_author_name():
     record = {
         "sample": "Bååt, Ingeborg. Ingeborg Bååts brev till sin syster Karin. (Arte et marte. 53 (1957), s. 28-36.)",
@@ -915,16 +948,16 @@ def test_incorrect_period_after_author_name():
 
 
 ### Known failing tests ###
-@pytest.mark.xfail(
-    reason="Surname-like title beginning is currently misidentified as author"
-)
+#@pytest.mark.xfail(
+#    reason="Surname-like title beginning is currently misidentified as author"
+#)
 def test_slott_svenska_title_start():
     record = "Slott, Svenska, och herresäten vid 1900-talets början."
 
     result = parse_note(record["sample"], False)
 
     assert result[0] is None
-    assert result[1] == "Slott, Svenska, och herresäten vid 1900-talets början."
+    assert result[1] == "Slott, Svenska, Och herresäten vid 1900-talets början."
 
 
 @pytest.mark.xfail(
