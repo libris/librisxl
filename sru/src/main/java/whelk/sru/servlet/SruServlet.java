@@ -210,15 +210,22 @@ public class SruServlet extends WhelkHttpServlet {
                 writer.writeCharacters("info:srw/schema/1/"+recordsschema);
                 writer.writeEndElement(); // recordSchema
 
-        	    	writer.flush();
+        	writer.flush();
 
                 out.write("<recordData>".getBytes("UTF-8"));
 
+                Vector<MarcRecord> marcRecords = MarcExport.compileVirtualMarcRecord(marcExportProfile, embellished, whelk, converter);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                MarcXmlRecordWriter stringOutput = new MarcXmlRecordWriter(baos, "UTF-8", false);
+                for (MarcRecord mr : marcRecords) {
+                    stringOutput.writeRecord(mr);
+                }
+
                 if ( transformer == null ) {
-                	StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
+                	StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(baos.toString())), writer);
                 } else {
                        try {
-                           transformer.transform(new StreamSource(new StringReader(convertedText)), new StreamResult(out));
+                           transformer.transform(new StreamSource(new StringReader(baos.toString())), new StreamResult(out));
                        }
                        catch (TransformerException e) {
                            logger.info(e.getMessage());

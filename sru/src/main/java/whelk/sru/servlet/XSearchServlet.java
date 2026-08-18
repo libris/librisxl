@@ -37,6 +37,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
@@ -94,8 +95,6 @@ public class XSearchServlet extends WhelkHttpServlet {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     private Formats formats = null;
-
-    private static final String appId = "https://libris.kb.se/xsearch";
 
     private static final String appId = "https://libris.kb.se/xsearch";
 
@@ -203,7 +202,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map(ORDER::get)
                 .orElse(null);
 
-        String callback = format == Format.JSON
+        String callback = format == Formats.Format.JSON
                 ? getOptionalSingleNonEmpty(Params.CALLBACK, parameters).orElse(null)
                 : null;
         if (callback != null
@@ -235,7 +234,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 
             switch (format) {
                 case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, formatLevelFull);
-                case JSON -> sendJson(res, items, start, to, totalItems);
+                case JSON -> sendJson(res, items, start, to, totalItems, callback);
                 case MODS -> sendTransformedMarc(res, Formats.Format.MODS, items, start, to, totalItems, includeHoldings, formatLevelFull);
                 case DC -> sendTransformedMarc(res, Formats.Format.DC, items, start, to, totalItems, false, false);
                 case REF_WORKS -> sendTransformedMarc(res, Formats.Format.REF_WORKS, items, start, to, totalItems, includeHoldings, formatLevelFull);
@@ -369,7 +368,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                              boolean formatLevelFull) throws IOException, XMLStreamException, TransformerException {
 
         res.setCharacterEncoding("UTF-8");
-        res.setContentType(xslt.contentType);
+        res.setContentType(formats.transformers.get(format).contentType());
 
         ByteArrayOutputStream o = new ByteArrayOutputStream();
         writeMarcXml(o, items, from, to, totalItems, includeHoldings, formatLevelFull);
