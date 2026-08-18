@@ -83,8 +83,8 @@ dependencies {
     implementation 'xml-apis:xml-apis:1.4.01'
 
     // metrics
-    implementation "io.prometheus:simpleclient:${prometheusVersion}"
-    implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-core:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-exporter-servlet-javax:${prometheusVersion}"
 
     // Logging
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"

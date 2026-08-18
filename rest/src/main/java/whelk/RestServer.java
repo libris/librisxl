@@ -1,7 +1,7 @@
 package whelk;
 
 import com.thetransactioncompany.cors.CORSFilter;
-import io.prometheus.client.exporter.MetricsServlet;
+import io.prometheus.metrics.exporter.servlet.javax.PrometheusMetricsServlet;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
@@ -86,7 +86,7 @@ public class RestServer extends XlServer {
         context.addServlet(MarcframeData.class, "/sys/marcframe.json");
 
         // TODO load-on-startup ?
-        context.addServlet(MetricsServlet.class, "/metrics");
+        context.addServlet(PrometheusMetricsServlet.class, "/metrics");
 
         context.addServlet(RemoteSearchAPI.class, REMOTE_SEARCH_PATH);
         context.addServlet(UserDataAPI.class, USERDATA_PATH);

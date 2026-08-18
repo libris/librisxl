@@ -263,7 +263,7 @@ public class Crud extends WhelkHttpServlet {
     private static void sendNotFound(HttpServletRequest request, HttpServletResponse response) {
         String method = request.getMethod();
         if (method != null) {
-            metrics.failedRequests.labels(method, String.valueOf(HttpServletResponse.SC_NOT_FOUND)).inc();
+            metrics.failedRequests.labelValues(method, String.valueOf(HttpServletResponse.SC_NOT_FOUND)).inc();
         }
         HttpTools.sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.");
     }
@@ -988,7 +988,7 @@ public class Crud extends WhelkHttpServlet {
         int code = HttpTools.mapError(e);
         String method = request.getMethod();
         if (method != null) {
-            RestMetrics.failedRequests.labels(method, String.valueOf(code)).inc();
+            RestMetrics.failedRequests.labelValues(method, String.valueOf(code)).inc();
         }
         if (log.isDebugEnabled()) {
             String requestURI = request.getRequestURI();

@@ -1,8 +1,8 @@
 package whelk.importer;
 
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.Counter;
-import io.prometheus.client.exporter.PushGateway;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.exporter.pushgateway.PushGateway;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
@@ -45,16 +45,16 @@ public class Main {
 
     // Metrics
     private final static String METRICS_PUSHGATEWAY = "metrics.libris.kb.se:9091";
-    private final static CollectorRegistry registry = new CollectorRegistry();
-    private final static Counter importedBibRecords = Counter.build()
+    private final static PrometheusRegistry registry = new PrometheusRegistry();
+    private final static Counter importedBibRecords = Counter.builder()
             .name("batchimport_imported_bibliographic_records_count")
             .help("The total number of bibliographic records imported.")
             .register(registry);
-    private final static Counter importedHoldRecords = Counter.build()
+    private final static Counter importedHoldRecords = Counter.builder()
             .name("batchimport_imported_holding_records_count")
             .help("The total number of holding records imported.")
             .register(registry);
-    private final static Counter encounteredMulBibs = Counter.build()
+    private final static Counter encounteredMulBibs = Counter.builder()
             .name("batchimport_encountered_mulbibs")
             .help("The total number of incoming records with more than one duplicate already in the system.")
             .register(registry);
@@ -120,8 +120,12 @@ public class Main {
         }
 
         try {
-            PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
-            pg.pushAdd(registry, "batch_import");
+            PushGateway pg = PushGateway.builder()
+                    .address(METRICS_PUSHGATEWAY)
+                    .job("batch_import")
+                    .registry(registry)
+                    .build();
+            pg.pushAdd();
         } catch (Throwable e) {
             LOG.warn("Metrics server connection failed. No metrics will be generated.");
         }

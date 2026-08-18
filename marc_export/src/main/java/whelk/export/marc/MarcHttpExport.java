@@ -1,8 +1,9 @@
 package whelk.export.marc;
 
-import io.prometheus.client.Counter;
-import io.prometheus.client.Gauge;
-import io.prometheus.client.Summary;
+import io.prometheus.metrics.core.datapoints.Timer;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Gauge;
+import io.prometheus.metrics.core.metrics.Summary;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordWriter;
@@ -36,19 +37,19 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
     private ProfileExport profileExport = null;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    static final Counter requests = Counter.build()
+    static final Counter requests = Counter.builder()
         .name("marc_export_api_requests_total").help("Total requests to API.")
         .register();
 
-    static final Counter failedRequests = Counter.build()
+    static final Counter failedRequests = Counter.builder()
         .name("marc_export_api_failed_requests_total").help("Total failed requests to API.")
         .labelNames("reason", "status").register();
 
-    static final Gauge ongoingRequests = Gauge.build()
-        .name("marc_export_api_ongoing_requests_total").help("Total ongoing API requests.")
+    static final Gauge ongoingRequests = Gauge.builder()
+        .name("marc_export_api_ongoing_requests").help("Total ongoing API requests.")
         .register();
 
-    static final Summary requestsLatency = Summary.build()
+    static final Summary requestsLatency = Summary.builder()
         .name("marc_export_api_requests_latency_seconds")
         .help("API request latency in seconds.")
         .register();
@@ -67,16 +68,14 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
     {
         requests.inc();
         ongoingRequests.inc();
-        Summary.Timer requestTimer = requestsLatency.startTimer();
 
-        try
+        try (Timer _ = requestsLatency.startTimer())
         {
             doPost2(req, res);
         }
         finally
         {
             ongoingRequests.dec();
-            requestTimer.observeDuration();
         }
     }
 
@@ -89,7 +88,7 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
         String queryString = req.getQueryString();
         if (queryString == null)
         {
-            failedRequests.labels("Missing required params",
+            failedRequests.labelValues("Missing required params",
                     Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
             res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing required parameters \"from\" and \"until\".");
             return;
@@ -105,7 +104,7 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
         if (parameterMap.get("from") == null || ! isValidZonedDateTime(parameterMap.get("from")) ||
                 parameterMap.get("until") == null || ! isValidZonedDateTime(parameterMap.get("until")))
         {
-            failedRequests.labels("Missing required params",
+            failedRequests.labelValues("Missing required params",
                     Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
             res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Valid \"from\" and \"until\" parameters are required, for example like so: 2018-09-10T00:00:00Z");
             return;
@@ -154,8 +153,8 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
                         break;
                     default:
                         logger.error("Failed to handle request {} due to invalid option for 'deleted'", requestId);
-                        failedRequests.labels("Invalid option for 'deleted'",
-                                Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
+                failedRequests.labelValues("Invalid option for 'deleted'",
+                        Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
                         res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Valid options for \"deleted\" are \"ignore\", \"export\" or \"append\"");
                         return;
                 }
@@ -195,7 +194,7 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
         catch (SQLException | WhelkRuntimeException e)
         {
             logger.error("Failed to handle export request {}: {}", requestId, e);
-            failedRequests.labels("Export failed",
+            failedRequests.labelValues("Export failed",
                     Integer.toString(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)).inc();
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }

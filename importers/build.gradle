@@ -73,9 +73,6 @@ dependencies {
     // Integration
     implementation 'mysql:mysql-connector-java:8.0.17'
 
-    // metrics
-    implementation "io.prometheus:simpleclient:${prometheusVersion}"
-
     // Logging
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"

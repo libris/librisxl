@@ -30,8 +30,8 @@ dependencies {
     implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     // metrics
-    implementation "io.prometheus:simpleclient:${prometheusVersion}"
-    implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-core:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-exporter-servlet-javax:${prometheusVersion}"
 }
 
 shadowJar {

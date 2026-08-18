@@ -1,7 +1,7 @@
 package whelk.importer;
 
 import groovy.lang.Tuple;
-import io.prometheus.client.Counter;
+import io.prometheus.metrics.core.metrics.Counter;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import se.kb.libris.util.marc.Datafield;

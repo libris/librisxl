@@ -1,6 +1,6 @@
 package whelk;
 
-import io.prometheus.client.exporter.MetricsServlet;
+import io.prometheus.metrics.exporter.servlet.javax.PrometheusMetricsServlet;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.eclipse.jetty.ee8.nested.ServletConstraint;
@@ -57,7 +57,7 @@ public class ApixServer extends XlServer {
             throw new RuntimeException("Not a ConstraintAware SecurityHandler");
         }
 
-        context.addServlet(MetricsServlet.class, "/metrics");
+        context.addServlet(PrometheusMetricsServlet.class, "/metrics");
         context.addServlet(ApixCatServlet.class, "/apix/0.1/cat/*");
         context.addServlet(ApixSearchServlet.class, "/apix/0.1/cat/libris/search");
 

@@ -13,6 +13,7 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.util.Timeout
+import io.prometheus.metrics.core.datapoints.Timer
 import whelk.Document
 import whelk.converter.JsonLdToTrigSerializer
 import whelk.exception.UnexpectedHttpStatusException
@@ -60,19 +61,17 @@ class Virtuoso {
 
     private void updateNamedGraph(Method method, Document doc) {
         ClassicHttpRequest request = buildRequest(method, doc)
-        try {
-            Metrics.clientTimer.labels(Virtuoso.class.getSimpleName(), method.toString()).time {
-                String credentials = "${this.sparqlUser}:${this.sparqlPass}".bytes.encodeBase64().toString()
-                request.setHeader("Authorization", "Basic " + credentials)
-                httpClient.execute(request) { response ->
-                    handleResponse(response, method, doc)
-                    return null
-                }
+        try (Timer _ = Metrics.clientTimer.labelValues(Virtuoso.class.getSimpleName(), method.toString()).startTimer()) {
+            String credentials = "${this.sparqlUser}:${this.sparqlPass}".bytes.encodeBase64().toString()
+            request.setHeader("Authorization", "Basic " + credentials)
+            httpClient.execute(request) { response ->
+                handleResponse(response, method, doc)
+                return null
             }
         }
         catch(Exception e) {
             if (!(e instanceof UnexpectedHttpStatusException)) {
-                Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method.toString(), "${e.getMessage()}").inc()
+                Metrics.clientCounter.labelValues(Virtuoso.class.getSimpleName(), method.toString(), "${e.getMessage()}").inc()
             }
             throw e
         }
@@ -101,7 +100,7 @@ class Virtuoso {
     private void handleResponse(ClassicHttpResponse response, Method method, Document doc) {
         int statusCode = response.getCode()
         String reasonPhrase = response.getReasonPhrase()
-        Metrics.clientCounter.labels(Virtuoso.class.getSimpleName(), method.toString(), "$statusCode").inc()
+        Metrics.clientCounter.labelValues(Virtuoso.class.getSimpleName(), method.toString(), "$statusCode").inc()
 
         if ((statusCode >= 200 && statusCode < 300) || (method == DELETE && statusCode == 404)) {
             if (log.isDebugEnabled()) {
