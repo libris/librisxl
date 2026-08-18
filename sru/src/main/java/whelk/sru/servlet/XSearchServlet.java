@@ -1,9 +1,8 @@
 package whelk.sru.servlet;
 
 import groovy.lang.Tuple2;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import se.kb.libris.util.marc.MarcRecord;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import se.kb.libris.util.marc.Datafield;
 import se.kb.libris.util.marc.Field;
 import se.kb.libris.util.marc.MarcFieldComparator;

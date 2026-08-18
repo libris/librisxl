@@ -41,12 +41,25 @@ public class SruServlet extends WhelkHttpServlet {
     ESSettings esSettings;
     private Formats formats = null;
 
+    AppParams appParams;
+
+    String explain = loadResource("explain.xml");
+    ExportProfile marcExportProfile;
+
     @Override
     protected void init(Whelk whelk) {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
 	formats = new Formats();
+        appParams = new AppParams(appId, whelk);
+        Properties marcProperties = new Properties();
+        marcExportProfile = new ExportProfile(marcProperties);
+        try {
+            marcProperties.load(new StringReader(loadResource("websok.properties")));
+        } catch (IOException e) {
+            logger.error("Could not read MARC profile from jar resources.", e);
+        }
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -73,8 +86,8 @@ public class SruServlet extends WhelkHttpServlet {
         String format;  
 
         try {
-            String CqlQueryString = parameters.get("query")[0];
-            format = parameters.get("recordSchema")[0];
+            String CqlQueryString = getParameter(parameters, "query");
+            format = getParameter(parameters, "recordSchema");
             String XlQueryString = Translation.translateCqlToXlQuery(CqlQueryString);
 
             // This part is a little weird
@@ -187,6 +200,40 @@ public class SruServlet extends WhelkHttpServlet {
             out.close();
         } catch (XMLStreamException e) {
             logger.error("Couldn't build SRU response.", e);
+        }
+    }
+
+    private static void sendXml(HttpServletResponse res, int status, String xml, String version) throws IOException {
+        if (!"1.2".equals(version)) {
+            xml = xml.replace("<version>1.2</version>", "<version>" + version + "</version>");
+            xml = xml.replace("<zs:version>1.2</zs:version>", "<zs:version>" + version + "</zs:version>");
+        }
+
+        res.setStatus(status);
+        var writer = new PrintWriter(new BufferedOutputStream(res.getOutputStream()));
+        writer.print(xml);
+        writer.flush();
+        writer.close();
+    }
+
+    private static String getParameter(Map<String, String[]> parameters, String name) {
+        if (!parameters.containsKey(name)) {
+            return null;
+        }
+        var parameter = parameters.get(name);
+        if (parameter.length != 1) {
+            return null;
+        }
+        return parameter[0];
+    }
+
+    private static String loadResource(String name) {
+        var path = "sru/" + name;
+        try (InputStream scriptStream = SruServlet.class.getClassLoader().getResourceAsStream(path)) {
+            assert scriptStream != null;
+            return IOUtils.toString(new InputStreamReader(scriptStream));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
