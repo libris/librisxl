@@ -20,14 +20,19 @@ import whelk.search2.ResourceLookup;
 import whelk.sru.cql.Translation;
 import whelk.util.MarcExport;
 import whelk.util.http.WhelkHttpServlet;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.Transformer;
 import java.io.*;
+import java.io.InputStreamReader;
 import java.util.*;
 
 // Test locally like so:
@@ -44,6 +49,8 @@ public class SruServlet extends WhelkHttpServlet {
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     ResourceLookup resourceLookup;
     ESSettings esSettings;
+    private Formats formats = null;
+
     AppParams appParams;
 
     String explain = loadResource("explain.xml");
@@ -54,11 +61,10 @@ public class SruServlet extends WhelkHttpServlet {
         converter = new JsonLD2MarcXMLConverter(whelk.getMarcFrameConverter());
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
+      	formats = new Formats();
         appParams = new AppParams(appId, whelk);
-
         Properties marcProperties = new Properties();
         marcExportProfile = new ExportProfile(marcProperties);
-
         try {
             marcProperties.load(new StringReader(loadResource("websok.properties")));
         } catch (IOException e) {
@@ -118,8 +124,11 @@ public class SruServlet extends WhelkHttpServlet {
         }
 
         Map<String, Object> results;
+        String format;  
+
         try {
             String CqlQueryString = getParameter(parameters, "query");
+            format = getParameter(parameters, "recordSchema");
             String XlQueryString = Translation.translateCqlToXlQuery(CqlQueryString);
 
             // This part is a little weird
@@ -136,6 +145,23 @@ public class SruServlet extends WhelkHttpServlet {
         } catch (InvalidQueryException | ParseCancellationException e) {
             logger.info("Bad query: \"" + parameters.get("query")[0] + "\" -> " + e.getMessage());
             sendXml(res, 400, loadResource("syntax-error.xml"), version);
+            return;
+        }
+
+        Transformer transformer = null;
+        String recordsschema = "";
+
+        try {
+            switch (Formats.FORMATS.getOrDefault(format, Formats.Format.MARC_XML)) {
+                case MARC_XML -> { transformer = null; recordsschema = "marcxml-v1.1"; }
+                case MODS -> { transformer = formats.transformers.get(Formats.Format.MODS).templates().newTransformer(); recordsschema = "mods-v3.0"; }
+                case DC -> { transformer = formats.transformers.get(Formats.Format.DC).templates().newTransformer(); recordsschema = "dc-v1.1"; }
+                case UNSUPPORTED -> { transformer = null; recordsschema = "marcxml-v1.1"; }
+            }
+        }
+        catch (TransformerException e){
+            logger.info(e.getMessage());
+            res.sendError(400);
             return;
         }
 
@@ -181,27 +207,44 @@ public class SruServlet extends WhelkHttpServlet {
                 writer.writeEndElement(); // recordPacking
 
                 writer.writeStartElement("recordSchema");
-                writer.writeCharacters("info:srw/schema/1/marcxml-v1.1");
+                writer.writeCharacters("info:srw/schema/1/"+recordsschema);
                 writer.writeEndElement(); // recordSchema
 
-                writer.writeStartElement("recordData");
+        	writer.flush();
+
+                out.write("<recordData>".getBytes("UTF-8"));
+
                 Vector<MarcRecord> marcRecords = MarcExport.compileVirtualMarcRecord(marcExportProfile, embellished, whelk, converter);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 MarcXmlRecordWriter stringOutput = new MarcXmlRecordWriter(baos, "UTF-8", false);
                 for (MarcRecord mr : marcRecords) {
                     stringOutput.writeRecord(mr);
                 }
-                stringOutput.close();
-                StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(baos.toString())), writer);
-                writer.writeEndElement(); // recordData
+
+                if ( transformer == null ) {
+                	StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(baos.toString())), writer);
+                } else {
+                       try {
+                           transformer.transform(new StreamSource(new StringReader(baos.toString())), new StreamResult(out));
+                       }
+                       catch (TransformerException e) {
+                           logger.info(e.getMessage());
+                           res.sendError(400);
+                           return;
+                       }
+                }
+                out.write("</recordData>".getBytes("UTF-8"));
+                out.flush();
 
                 writer.writeEndElement(); // record
+	    	writer.flush();
             }
 
             writer.writeEndElement(); // records
             writer.writeEndElement(); // searchRetrieveResponse
             writer.writeEndDocument();
 
+            writer.flush();
             writer.close();
             out.flush();
             out.close();
