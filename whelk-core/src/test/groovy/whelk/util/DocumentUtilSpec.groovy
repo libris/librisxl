@@ -200,6 +200,121 @@ class DocumentUtilSpec extends Specification {
         ]
     }
 
+    def "link removes defective nodes"() {
+        given:
+        def data = [
+                a: [key: [:]],                    // empty node
+                b: [key: ['@type': 'Thing']],     // only @type
+                c: [key: [[x: 1], [:], ['@type': 'Thing']]],
+        ]
+
+        DocumentUtil.findKey(data, 'key', DocumentUtil.link(
+                new DocumentUtil.Linker() {
+                    @Override
+                    List<Map> link(Map blankNode, List existingLinks) {
+                        return null
+                    }
+
+                    @Override
+                    List<Map> link(String blank, List existingLinks) {
+                        return null
+                    }
+                }
+        ))
+
+        expect:
+        // a and b are gone entirely: removing the defective node cascades to the emptied parent
+        data == [
+                c: [key: [[x: 1]]],
+        ]
+    }
+
+    def "link single node is given disambiguation node ids"() {
+        given:
+        def data = [key: [x: 1]]
+        def linkerCalls = []
+
+        DocumentUtil.findKey(data, 'key', DocumentUtil.link(
+                new DocumentUtil.Linker() {
+                    @Override
+                    List<Map> link(Map blankNode, List existingLinks) {
+                        linkerCalls << existingLinks
+                        return existingLinks ? [['@id': 'linked']] : null
+                    }
+
+                    @Override
+                    List<Map> link(String blank, List existingLinks) {
+                        return null
+                    }
+                },
+                [['@id': 'disambiguation']]
+        ))
+
+        expect:
+        linkerCalls == [['disambiguation']]
+        data == [key: ['@id': 'linked']]
+    }
+
+    def "link in list falls back to disambiguation nodes"() {
+        given:
+        def data = [key: [[x: 1], ['@id': 'sibling']]]
+        def linkerCalls = []
+
+        DocumentUtil.findKey(data, 'key', DocumentUtil.link(
+                new DocumentUtil.Linker() {
+                    @Override
+                    List<Map> link(Map blankNode, List existingLinks) {
+                        linkerCalls << existingLinks
+                        // fail on sibling ids, succeed on disambiguation ids
+                        return existingLinks == ['disambiguation'] ? [['@id': 'linked']] : null
+                    }
+
+                    @Override
+                    List<Map> link(String blank, List existingLinks) {
+                        return null
+                    }
+                },
+                [['@id': 'disambiguation']]
+        ))
+
+        expect:
+        // first called with sibling links, then with disambiguation node ids
+        linkerCalls == [['sibling'], ['disambiguation']]
+        data == [key: [['@id': 'linked'], ['@id': 'sibling']]]
+    }
+
+    def "path given to visitor cannot be modified"() {
+        when:
+        DocumentUtil.traverse([a: [b: 1]], { value, path ->
+            if (path) {
+                path.add('x')
+            }
+            return NOP
+        })
+
+        then:
+        thrown(UnsupportedOperationException)
+    }
+
+    def "traverse visits every element with its path"() {
+        given:
+        def data = [a: [1, [b: 2]]]
+        def visited = [:]
+        DocumentUtil.traverse(data, { value, path ->
+            visited[path.collect()] = value
+            return NOP
+        })
+
+        expect:
+        visited == [
+                []            : data,
+                ['a']         : [1, [b: 2]],
+                ['a', 0]      : 1,
+                ['a', 1]      : [b: 2],
+                ['a', 1, 'b'] : 2,
+        ]
+    }
+
     // Example enum
     enum E {
         a,
@@ -250,6 +365,49 @@ class DocumentUtilSpec extends Specification {
         ['a', '*', 'b']           | 'default' || [[x: 1], [x: 2], [x: 3], [x: 4], [x: 5], [x: 88], 'str', [x: 99], [x: 6], [x: 7], [x: 8]]
     }
 
+    def "get at path without list index"() {
+        given:
+        def data = [
+                a: [
+                        [b: [c: 1]],
+                        [b: [c: 2]],
+                        [b: 'str'],
+                ]
+        ]
+
+        expect:
+        // with requireListIndex = false, lists are descended into implicitly
+        getAtPath(data, ['a', 'b', 'c'], 'default', false) == [1, 2]
+        // with requireListIndex = true (default), a non-index path element on a list gives defaultTo
+        getAtPath(data, ['a', 'b', 'c'], 'default') == 'default'
+    }
+
+    // Example JsonLdKey
+    enum K implements JsonLdKey {
+        A('a'),
+        B('b')
+
+        private final String key
+
+        K(String key) {
+            this.key = key
+        }
+
+        @Override
+        String key() {
+            return key
+        }
+    }
+
+    def "get at path with JsonLdKey"() {
+        given:
+        def data = [a: [[b: 1], [b: 2]]]
+
+        expect:
+        getAtPath(data, [K.A, 0, K.B]) == 1
+        getAtPath(data, [K.A, '*', K.B]) == [1, 2]
+    }
+
     def "get at empty path"() {
         given:
         def data = [a: [b: 1]]
@@ -264,5 +422,20 @@ class DocumentUtilSpec extends Specification {
 
         expect:
         getAtPath(data, ['c']) == null
+    }
+
+    def "get at path treats falsy scalars as absent"() {
+        expect:
+        // Groovy `if (!item)` truthiness: 0, false, empty string all yield defaultTo.
+        // Reached via the '*' recursion, so falsy leaves are dropped when flattening.
+        getAtPath([a: [0, [x: 1]]], ['a', '*'], 'DEF') == [[x: 1]]
+        getAtPath([a: [false, [x: 1]]], ['a', '*'], 'DEF') == [[x: 1]]
+        getAtPath([a: ['', [x: 1]]], ['a', '*'], 'DEF') == [[x: 1]]
+        getAtPath([a: [0L, 0.0, [x: 1]]], ['a', '*'], 'DEF') == [[x: 1]]
+        // Non-zero scalars are kept
+        getAtPath([a: [0, 5, [x: 1]]], ['a', '*'], 'DEF') == [5, [x: 1]]
+        // The falsy guard only fires at (recursive) call entry, not on a resolved leaf:
+        // here each list element is a non-empty map at entry, so a b:0 leaf is returned as-is.
+        getAtPath([a: [[b: 0], [b: 5]]], ['a', 'b'], 'DEF', false) == [0, 5]
     }
 }

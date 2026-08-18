@@ -1,6 +1,7 @@
 package whelk.search2;
 
 import whelk.JsonLd;
+import whelk.Whelk;
 import whelk.search2.querytree.FilterAlias;
 import whelk.search2.querytree.Property;
 
@@ -25,6 +26,10 @@ public class AppParams {
         this.sliceList = parseSliceList(appConfig, jsonLd);
         this.filterAliases = parseFilterAliases(appConfig);
         this.filters = parseFilters(appConfig);
+    }
+
+    public AppParams(String appId, Whelk whelk) {
+        this(loadConfig(appId, whelk), whelk.getJsonld());
     }
 
     public Map<String, FilterAlias> getFilterByAlias() {
@@ -207,5 +212,12 @@ public class AppParams {
 
     private static List<Map<String, Object>> getAsListOfMap(Map<String, Object> appConfig, String key) {
         return getAsList(appConfig, key).stream().map(QueryUtil::castToStringObjectMap).toList();
+    }
+
+    private static Map<String, Object> loadConfig(String appId, Whelk whelk) {
+        var data = whelk.loadData(appId);
+        return data != null
+                ? QueryUtil.castToStringObjectMap(JsonLd.findInData(data, appId))
+                : Map.of();
     }
 }

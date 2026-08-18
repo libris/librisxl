@@ -2,8 +2,8 @@ package whelk.apixserver;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 
 import javax.servlet.http.HttpServlet;
@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class ApixCatServlet extends HttpServlet
 {
-    private static final Logger s_logger = LogManager.getLogger(ApixCatServlet.class);
+    private static final Logger s_logger = LoggerFactory.getLogger(ApixCatServlet.class);
 
     final static int ERROR_PARAM_COUNT = 0xff01;
     final static int ERROR_EXTRA_PARAM = 0xff02;

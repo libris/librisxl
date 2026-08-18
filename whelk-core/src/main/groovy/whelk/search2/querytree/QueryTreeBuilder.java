@@ -131,8 +131,8 @@ public class QueryTreeBuilder {
         selector = disambiguate.mapQueryKey(getToken(c.code()));
         return selector.isValid()
                 ? buildTree(c.operand(), disambiguate, selector, c.operator(), q)
-                : LegacyCodes.isQueryCode(c, selector)
-                    ? LegacyCodes.build(c, disambiguate, selector)
+                : LegacyCodes.isQueryCode(c)
+                    ? LegacyCodes.build(c, disambiguate)
                     : asFreeText(c, q, disambiguate.getTextQueryProperty()); // If the selector isn't valid, treat the whole segment as free text.
     }
 
@@ -250,10 +250,22 @@ public class QueryTreeBuilder {
             MTAG,
 
             /** "Kod för trunkerad sökning på Deweyklassifikation" */
-            DDCT
-        }
+            DDCT;
 
-        static final List<String> CODES = Arrays.stream(LegacyCode.values()).map(LegacyCode::toString).toList();
+            static final List<String> CODES = Arrays.stream(LegacyCode.values()).map(LegacyCode::toString).toList();
+
+            static LegacyCode fromString(String s) {
+                if ("z3950.1021".equals(s)) {
+                    return BIBN;
+                }
+
+                if (CODES.contains(s.toUpperCase())) {
+                    return valueOf(s.toUpperCase());
+                }
+
+                return null;
+            }
+        }
 
         static final String BOOK = "workType:Monograph instanceCategory:\"https://id.kb.se/term/rda/Volume\"";
         static final String NOTATED_MUSIC = "workCategory:\"https://id.kb.se/term/rda/NotatedMusic\"";
@@ -263,16 +275,16 @@ public class QueryTreeBuilder {
         static final String INTEGRATING = "workType:Integrating";
         static final String DIGITAL = "instanceType:DigitalResource";
 
-        static boolean isQueryCode(Ast.Code c, Selector selector) {
+        static boolean isQueryCode(Ast.Code c) {
             if (c.operator() != Operator.EQUALS) {
                 return false;
             }
 
-            return CODES.contains(selector.queryKey().toUpperCase());
+            return LegacyCode.fromString(c.code().value()) != null;
         }
 
-        static Node build(Ast.Code c, Disambiguate disambiguate, Selector selector) throws InvalidQueryException {
-            var code = LegacyCode.valueOf(selector.queryKey().toUpperCase());
+        static Node build(Ast.Code c, Disambiguate disambiguate) throws InvalidQueryException {
+            var code = LegacyCode.fromString(c.code().value());
 
             return switch (c.operand()) {
                 // webbsök treats mat:(barn skol) as barn OR skol
@@ -288,14 +300,14 @@ public class QueryTreeBuilder {
             };
         }
 
-        static Node build(LegacyCode code, Ast.Node n, Disambiguate disambiguate) throws InvalidQueryException {
+        private static Node build(LegacyCode code, Ast.Node n, Disambiguate disambiguate) throws InvalidQueryException {
             if (n instanceof Ast.Leaf leaf) {
                 return build(code, leaf, disambiguate);
             }
             throw new RuntimeException("Could not handle: " + code + ": " + n);
         }
 
-        static Node build(LegacyCode code, Ast.Leaf leaf, Disambiguate disambiguate) throws InvalidQueryException {
+        private static Node build(LegacyCode code, Ast.Leaf leaf, Disambiguate disambiguate) throws InvalidQueryException {
             var value = leaf.value().value();
 
             var mappedQuery = switch(code) {
@@ -317,6 +329,8 @@ public class QueryTreeBuilder {
                          "eresource",
                          "eresources" -> DIGITAL;
 
+                    case "free" -> "freeOnline";
+
                     // TODO? very little use: ebook, barn, skol, bokannat
                     // seen in queries but gives no result: art, kon, kap, sam, foto, dok
 
@@ -331,6 +345,7 @@ public class QueryTreeBuilder {
                     default -> value;
                 };
 
+                // misunderstanding from the old docs? MAT is the code? MTAG is just placeholder in the docs?
                 case MTAG -> switch (value) {
                     case "free" -> "freeOnline"; // the only one seen in logs
                     default -> value;

@@ -43,10 +43,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == false
+        result.changed() == false
     }
 
     def "Change PrimaryContribution familyName"() {
@@ -87,10 +87,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change PrimaryContribution givenName"() {
@@ -131,10 +131,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change PrimaryContribution name"() {
@@ -175,10 +175,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Add PrimaryContribution lifeSpan"() {
@@ -218,10 +218,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == false
+        result.changed() == false
     }
 
     def "Change PrimaryContribution lifeSpan"() {
@@ -262,10 +262,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Add PrimaryContribution date of death"() {
@@ -306,10 +306,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == false
+        result.changed() == false
     }
 
     def "Add PrimaryContribution date of birth"() {
@@ -350,10 +350,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == false
+        result.changed() == false
     }
 
     def "Change PrimaryContribution (org) name change"() {
@@ -388,10 +388,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change PrimaryContribution (org) isPartOf change"() {
@@ -428,10 +428,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change PrimaryContribution (org) isPartOf change subordinateUnit"() {
@@ -468,10 +468,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change PrimaryContribution (org) isPartOf change secondary subordinateUnit"() {
@@ -508,10 +508,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change PrimaryContribution (meeting) place"() {
@@ -546,10 +546,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
+        var result = NotificationRules.primaryContributionChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change intended audience"() {
@@ -576,10 +576,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.intendedAudienceChanged(framedBefore, framedAfter)
+        var result = NotificationRules.intendedAudienceChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change agent subject"() {
@@ -614,10 +614,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+        var result = NotificationRules.subjectChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Add agent subject"() {
@@ -650,10 +650,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+        var result = NotificationRules.subjectChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Remove agent subject"() {
@@ -686,10 +686,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+        var result = NotificationRules.subjectChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Flip agent subject order"() {
@@ -726,10 +726,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+        var result = NotificationRules.subjectChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == false
+        result.changed() == false
     }
 
     def "Change main title"() {
@@ -748,10 +748,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.mainTitleChanged(framedBefore, framedAfter)
+        var result = NotificationRules.mainTitleChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change irrelevant part of main title"() {
@@ -778,25 +778,25 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.mainTitleChanged(framedBefore, framedAfter)
+        var result = NotificationRules.mainTitleChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == false
+        result.changed() == false
     }
 
     def "Minor title changes"() {
         expect:
-        Tuple result = NotificationRules.mainTitleChanged(
+        var result = NotificationRules.mainTitleChanged(
                 new Document(["mainEntity": ["hasTitle": [["@type": "Title", "mainTitle": before]]]]),
                 new Document(["mainEntity": ["hasTitle": [["@type": "Title", "mainTitle": after]]]])
         )
-        Tuple result2 = NotificationRules.keyTitleChanged(
+        var result2 = NotificationRules.keyTitleChanged(
                 new Document(["mainEntity": ["hasTitle": [["@type": "KeyTitle", "mainTitle": before]]]]),
                 new Document(["mainEntity": ["hasTitle": [["@type": "KeyTitle", "mainTitle": after]]]])
         )
 
-        changed == result[0]
-        changed == result2[0]
+        changed == result.changed()
+        changed == result2.changed()
 
         where:
         before      | after       || changed
@@ -830,10 +830,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.keyTitleChanged(framedBefore, framedAfter)
+        var result = NotificationRules.keyTitleChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == false
+        result.changed() == false
     }
 
     def "Change key title"() {
@@ -852,10 +852,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.keyTitleChanged(framedBefore, framedAfter)
+        var result = NotificationRules.keyTitleChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change serial relation"() {
@@ -886,10 +886,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
+        var result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Change continuedBy but not a title"() {
@@ -922,10 +922,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
+        var result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == false
+        result.changed() == false
     }
 
     def "Change serial termination"() {
@@ -952,10 +952,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+        var result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Add serial termination"() {
@@ -981,10 +981,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+        var result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Instance DDC change"() {
@@ -1010,10 +1010,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.DDCChanged(framedBefore, framedAfter)
+        var result = NotificationRules.DDCChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Work DDC change"() {
@@ -1043,10 +1043,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.DDCChanged(framedBefore, framedAfter)
+        var result = NotificationRules.DDCChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Instance SAB class change"() {
@@ -1076,10 +1076,10 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.SABChanged(framedBefore, framedAfter)
+        var result = NotificationRules.SABChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
     }
 
     def "Work SAB class change"() {
@@ -1113,10 +1113,320 @@ class NotificationRulesSpec extends Specification {
                         ]
                 ]
         ])
-        Tuple result = NotificationRules.SABChanged(framedBefore, framedAfter)
+        var result = NotificationRules.SABChanged(framedBefore, framedAfter)
 
         expect:
-        result[0] == true
+        result.changed() == true
+    }
+
+
+    def "agentRecordChanged for Person"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : [
+                        "@type"     : "Person",
+                        "familyName": "aaa",
+                        "givenName" : "bbb",
+                        "name"      : "ccc"
+                ]
+        ])
+        Document after = new Document([
+                "mainEntity" : [
+                        "@type"     : "Person",
+                        "familyName": "ddd",
+                        "givenName" : "bbb",
+                        "name"      : "ccc"
+                ]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "agentRecordChanged for Organization"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : ["@type": "Organization", "name": "aaa"]
+        ])
+        Document after = new Document([
+                "mainEntity" : ["@type": "Organization", "name": "bbb"]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "agentRecordChanged for unchanged Person"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : ["@type": "Person", "name": "aaa"]
+        ])
+        Document after = new Document([
+                "mainEntity" : ["@type": "Person", "name": "aaa"]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == false
+    }
+
+    def "agentRecordChanged for Jurisdiction"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : ["@type": "Jurisdiction", "name": "aaa"]
+        ])
+        Document after = new Document([
+                "mainEntity" : ["@type": "Jurisdiction", "name": "bbb"]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "agentRecordChanged for Family"() {
+        given:
+        Document before = new Document([
+                "mainEntity" : ["@type": "Family", "name": "aaa"]
+        ])
+        Document after = new Document([
+                "mainEntity" : ["@type": "Family", "name": "bbb"]
+        ])
+        var result = NotificationRules.agentRecordChanged(before, after)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Family subject change"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        ["@type": "Family", "name": "aaa"]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        ["@type": "Family", "name": "bbb"]
+                                ]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Jurisdiction subject change"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        ["@type": "Jurisdiction", "name": "aaa"]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "instanceOf" : [
+                                "subject" : [
+                                        ["@type": "Jurisdiction", "name": "bbb"]
+                                ]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.subjectChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Change serial relation via continues"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "continues": [
+                                [
+                                        "@type" : "Instance",
+                                        "hasTitle" : [
+                                                [ "@type" : "Title", "mainTitle" : "aaa" ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "continues": [
+                                [
+                                        "@type" : "Instance",
+                                        "hasTitle" : [
+                                                [ "@type" : "Title", "mainTitle" : "bbb" ]
+                                        ]
+                                ]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Serial relation change ignored for non-Serial"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Monograph",
+                        "continuedBy": [
+                                ["@type": "Instance", "hasTitle": [["@type": "Title", "mainTitle": "aaa"]]]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Monograph",
+                        "continuedBy": [
+                                ["@type": "Instance", "hasTitle": [["@type": "Title", "mainTitle": "bbb"]]]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialRelationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == false
+    }
+
+    def "Remove serial termination"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+        // 'before' is populated (non-null) because it had an endYear
+        result.before() != null
+    }
+
+    def "Serial termination unchanged"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == false
+    }
+
+    def "Serial termination ignored when publication list size differs"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "issuanceType": "Serial",
+                        "publication" : [
+                                ["@type": "PrimaryPublication", "endYear": "2022"],
+                                ["@type": "Publication", "endYear": "2023"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.serialTerminationChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == false
+    }
+
+    def "Remove DDC classification"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                ["@type": "ClassificationDdc", "edition": "full"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                ["@type": "ClassificationDdc", "edition": "abridged"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.DDCChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
+    }
+
+    def "Remove SAB classification"() {
+        given:
+        Document framedBefore = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                ["@type": "Classification", "inScheme": ["code": "kssb"], "code": "aaa"]
+                        ]
+                ]
+        ])
+        Document framedAfter = new Document([
+                "mainEntity" : [
+                        "classification" : [
+                                ["@type": "Classification", "inScheme": ["code": "kssb"], "code": "bbb"]
+                        ]
+                ]
+        ])
+        var result = NotificationRules.SABChanged(framedBefore, framedAfter)
+
+        expect:
+        result.changed() == true
     }
 
 }

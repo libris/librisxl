@@ -16,7 +16,6 @@ public sealed interface Selector permits Path, PathElement {
     List<? extends PathElement> path();
 
     List<Selector> getAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible);
-    Selector withPrependedMetaProperty(JsonLd jsonLd);
 
     boolean isValid();
     boolean isType();
@@ -28,7 +27,6 @@ public sealed interface Selector permits Path, PathElement {
     boolean mayAppearOnType(String type, JsonLd jsonLd);
     boolean appearsOnType(String type, JsonLd jsonLd);
     boolean indirectlyAppearsOnType(String type, JsonLd jsonLd);
-    boolean appearsOnlyOnRecord(JsonLd jsonLd);
 
     Map<String, Object> definition();
 

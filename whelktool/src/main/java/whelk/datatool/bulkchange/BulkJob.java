@@ -1,7 +1,7 @@
 package whelk.datatool.bulkchange;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
@@ -43,7 +43,7 @@ import static whelk.util.Unicode.stripPrefix;
 import static whelk.util.Unicode.stripSuffix;
 
 public class BulkJob implements Runnable {
-    private static final Logger log = LogManager.getLogger(BulkJob.class);
+    private static final Logger log = LoggerFactory.getLogger(BulkJob.class);
 
     public static final String BULK_CONTEXT_PATH = "/_bulk-change";
     public static final String BULK_REPORTS_PATH = BULK_CONTEXT_PATH + "/reports";
@@ -92,7 +92,7 @@ public class BulkJob implements Runnable {
             }
         } catch (Exception e) {
             // TODO
-            log.error(e);
+            log.error("Bulk job failed", e);
             System.err.println(e);
             finish(Failed);
         }

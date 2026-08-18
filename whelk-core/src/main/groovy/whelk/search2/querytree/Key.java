@@ -36,11 +36,6 @@ public sealed abstract class Key extends PathElement permits Key.AmbiguousKey, K
     }
 
     @Override
-    public Selector withPrependedMetaProperty(JsonLd jsonLd) {
-        return this;
-    }
-
-    @Override
     public boolean isType() {
         return token.value().equals(TYPE_KEY);
     }
@@ -72,11 +67,6 @@ public sealed abstract class Key extends PathElement permits Key.AmbiguousKey, K
 
     @Override
     public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
-        return false;
-    }
-
-    @Override
-    public boolean appearsOnlyOnRecord(JsonLd jsonLd) {
         return false;
     }
 

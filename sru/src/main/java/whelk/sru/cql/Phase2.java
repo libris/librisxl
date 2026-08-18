@@ -1,5 +1,7 @@
 package whelk.sru.cql;
 
+import static whelk.search2.parse.Lex.reservedCharsInString;
+
 public class Phase2 {
     public static String flatten(Object ast) {
         switch (ast) {
@@ -14,17 +16,23 @@ public class Phase2 {
                 return flatten(bg);
             }
             case String s -> {
-
-                String str = s;
-                if (str.startsWith("\"") && str.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
-                    str = str.substring(1, str.length()-1);
-
-                return str;
+                return scrubXlQlString(s);
             }
             default -> {
                 return null;
             }
         }
+    }
+
+    private static String scrubXlQlString(String str) {
+        if (str.startsWith("\"") && str.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
+            str = str.substring(1, str.length()-1);
+
+        str = str.replace('\\', ' ');
+        for (Character c : whelk.search2.parse.Lex.reservedCharsInString) {
+            str = str.replace(c, ' ');
+        }
+        return "(" + str.toLowerCase().trim() + ")";
     }
 
     private static String flatten(Phase1.AstScopedClause scopedClause) {
@@ -54,12 +62,10 @@ public class Phase2 {
     private static String flatten(Phase1.AstSearchClause searchClause) {
         // index, term, relation
 
-        String searchTerm = searchClause.term();
-        if (searchTerm.startsWith("\"") && searchTerm.endsWith("\"")) // Quoted strings come out here quoted, which causes issues.
-            searchTerm = searchTerm.substring(1, searchTerm.length()-1);
+        String searchTerm = scrubXlQlString(searchClause.term());
 
         if (searchClause.relation() == null) { // no relation also implies no index. It's just searchTerm alone.
-            return " " + searchTerm;
+            return " (" + searchTerm + ")";
         }
 
         Phase1.AstRelation relation = searchClause.relation();
@@ -68,15 +74,20 @@ public class Phase2 {
             // "any" means we're searching for any of the words in the searchTerm. So 'any "a b"' means (a or b)
             String[] parts = searchTerm.split("\\s+");
             if (parts.length > 1)
-                searchTerm = "(" + String.join(" OR ", parts) + ")";
+                searchTerm = "(" + String.join(") OR (", parts) + ")";
         } else if (relation.comparitor().equals("all")) {
             // "all" means we're searching for all of the words in the searchTerm. So 'all "a b"' means (a and b)
             String[] parts = searchTerm.split("\\s+");
             if (parts.length > 1)
-                searchTerm = "(" + String.join(" AND ", parts) + ")";
+                searchTerm = "(" + String.join(") AND (", parts) + ")";
         }
 
         String index = searchClause.index();
+
+        // A crowd-pleaser, lets interpret these codes (missing the .cpl-prefix) in a neighbourly way.
+        if (index.equals("anywhere") || index.equals("allIndexes") || index.equals("anyIndexes") || index.equals("serverChoice"))
+            index = "cql.anywhere";
+
         boolean indexNeedsQuoting = ! ( index.startsWith("\"") && index.endsWith("\"") );
         if (indexNeedsQuoting)
             index = "\"" + index + "\"";

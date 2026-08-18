@@ -1,8 +1,8 @@
 package whelk.rest.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Whelk;
 import whelk.util.http.HttpTools;
 import whelk.util.http.WhelkHttpServlet;
@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class UserDataAPI extends WhelkHttpServlet {
-    private static final Logger log = LogManager.getLogger(UserDataAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(UserDataAPI.class);
     private static final int POST_MAX_SIZE = 1000000;
     static final String ID_HASH_FUNCTION = "SHA-256";
 

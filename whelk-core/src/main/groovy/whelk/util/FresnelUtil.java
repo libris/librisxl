@@ -1,8 +1,8 @@
 package whelk.util;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import whelk.Document;
 import whelk.JsonLd;
@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.JSONLD_ALT_ID_KEY;
+import static whelk.JsonLd.RECORD_TYPE;
 import static whelk.JsonLd.REVERSE_KEY;
 import static whelk.JsonLd.THING_KEY;
 import static whelk.JsonLd.TYPE_KEY;
@@ -166,7 +167,7 @@ public class FresnelUtil {
     private record DerivedLensCacheKey(Object types, LensGroupChain lensGroupChain, List<LensGroupChain> minus) {}
     private record LensCacheKey(Object types, LensGroupChain lensGroupChain) {}
 
-    private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(FresnelUtil.class);
 
     JsonLd jsonLd;
     List<LangCode> fallbackLocales;
@@ -266,19 +267,30 @@ public class FresnelUtil {
             return lensedThings;
         }
 
-        public void restoreLinks(Map<String, Object> thing, boolean isVirtualRecord) {
-            var id = (String) thing.get(ID_KEY);
-            if (id != null && !JsonLd.isLink(thing)) {
-                if (id.endsWith("#work") && isVirtualRecord) {
-                    // FIXME
-                    preservedLinksMap.getOrDefault(id.replace("#work", "#it"), List.of())
-                            .stream()
-                            .map(lr -> !lr.path().isEmpty() && WORK_KEY.equals(lr.path().getFirst())
-                                    ? new LinkRestoration(lr.path().subList(1, lr.path().size()), lr.key(), lr.links())
-                                    : lr)
-                            .forEach(lr -> lr.restoreTo(thing));
-                } else {
-                    preservedLinksMap.getOrDefault(id, List.of()).forEach(lr -> lr.restoreTo(thing));
+        public void restoreLinks(Map<String, Object> thing) {
+            if (thing.get(ID_KEY) instanceof String id && !JsonLd.isLink(thing)) {
+                var linkRestorations = preservedLinksMap.remove(id);
+                if (linkRestorations != null) {
+                    linkRestorations.forEach(lr -> lr.restoreTo(thing));
+                }
+            }
+        }
+
+        public void restoreLinksByKey(Map<String, Object> thing, String key) {
+            if (thing.get(ID_KEY) instanceof String id && !JsonLd.isLink(thing)) {
+                var linkRestorations = preservedLinksMap.remove(id);
+                if (linkRestorations != null) {
+                    List<LinkRestoration> remaining = new ArrayList<>();
+                    linkRestorations.forEach(lr -> {
+                        if (key.equals(lr.key())) {
+                            lr.restoreTo(thing);
+                        } else {
+                            remaining.add(lr);
+                        }
+                    });
+                    if (!remaining.isEmpty()) {
+                        preservedLinksMap.put(id, remaining);
+                    }
                 }
             }
         }

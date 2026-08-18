@@ -7,14 +7,12 @@ repositories {
 
 sourceSets {
     main {
-        java { srcDirs = [] }
-        groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+        java { srcDirs = ['src/main/java', 'src/main/groovy'] }
     }
     test {
         groovy { srcDir 'src/test/groovy/' }
     }
 }
-
 
 dependencies {
     // XL dependencies
@@ -31,13 +29,13 @@ dependencies {
     implementation "org.apache.httpcomponents.client5:httpclient5:${httpComponentsClientVersion}"
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: "${log4jVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     // metrics
-    implementation "io.prometheus:simpleclient:${prometheusVersion}"
-    implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-core:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-exporter-servlet-javax:${prometheusVersion}"
 
     // Testing
     testImplementation "org.spockframework:spock-core:${spockVersion}"

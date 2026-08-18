@@ -26,21 +26,21 @@ class DisambiguateSpec extends Specification {
 
         where:
         s                   | result
-        'p1'                | new Property('p1', jsonLd)
-        'p1Label'           | new Property('p1', jsonLd)
+        'p1'                | Property.getProperty('p1', jsonLd)
+        'p1Label'           | Property.getProperty('p1', jsonLd)
         'unrecognizedLabel' | new Key.UnrecognizedKey(new Token.Raw('unrecognizedLabel'))
         '@id'               | new Key.RecognizedKey(new Token.Raw('@id'))
         '_str'              | new Key.RecognizedKey(new Token.Raw('_str'))
-        'p'                 | new Property('p', jsonLd)
-        'pLabel'            | new Property('p2', jsonLd)
+        'p'                 | Property.getProperty('p', jsonLd)
+        'pLabel'            | Property.getProperty('p2', jsonLd)
         'pp'                | new Key.AmbiguousKey(new Token.Raw('pp'))
-        'ctx.p'             | new Property('ctxProp', jsonLd)
-        'p3.p4'             | new Path(List.of(new Property('p3', jsonLd), new Property('p4', jsonLd)))
+        'ctx.p'             | Property.getProperty('ctxProp', jsonLd)
+        'p3.p4'             | new Path(List.of(Property.getProperty('p3', jsonLd), Property.getProperty('p4', jsonLd)))
     }
 
     def "try map string to a recognized value type for the associated property"() {
         given:
-        def res = disambiguate.mapValueForProperty(new Property(p, jsonLd), v)
+        def res = disambiguate.mapValueForProperty(Property.getProperty(p, jsonLd), v)
 
         expect:
         res == Optional.ofNullable(result)

@@ -3,8 +3,8 @@ package whelk.housekeeping;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import whelk.Document;
 import whelk.JsonLd;
@@ -41,7 +41,7 @@ import static whelk.datatool.bulkchange.BulkPreviewJob.RECORD_MAX_ITEMS;
 import static whelk.util.Unicode.stripPrefix;
 
 public class BulkChangePreviewAPI extends WhelkHttpServlet {
-    private static final Logger log = LogManager.getLogger(BulkChangePreviewAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(BulkChangePreviewAPI.class);
 
     private static final String BULK_CHANGE_PREVIEW_TYPE = "bulk:Preview";
     private static final String PREVIEW_API_PATH = "/_bulk-change/preview";

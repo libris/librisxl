@@ -1,7 +1,7 @@
 package whelk;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.util.http.HttpTools;
 
 import javax.servlet.http.HttpServletResponse;
@@ -21,7 +21,7 @@ import static whelk.EmmServlet.AS2_CONTENT_TYPE;
 
 public class EmmChangeSet {
     public static final int TARGET_HITS_PER_PAGE = 100;
-    private static final Logger logger = LogManager.getLogger(EmmChangeSet.class);
+    private static final Logger logger = LoggerFactory.getLogger(EmmChangeSet.class);
 
     static void sendChangeSet(Whelk whelk, HttpServletResponse res, String until, String apiBaseUrl) throws IOException {
 
@@ -185,7 +185,7 @@ public class EmmChangeSet {
                 }
             }
         } catch (SQLException se) {
-            logger.error(se);
+            logger.error("Failed to get EMM page", se);
             se.printStackTrace();
             return null;
         }

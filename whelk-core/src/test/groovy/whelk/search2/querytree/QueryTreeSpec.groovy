@@ -10,7 +10,7 @@ class QueryTreeSpec extends Specification {
     static Disambiguate disambiguate = TestData.getDisambiguate()
     static JsonLd jsonLd = TestData.getJsonLd()
 
-    static var p1 = new Property("p1", jsonLd)
+    static var p1 = Property.getProperty("p1", jsonLd)
     static var p1v1 = new Condition(p1, Operator.EQUALS, new FreeText("v1"))
     static var p1v2 = new Condition(p1, Operator.EQUALS, new FreeText("v2"))
 

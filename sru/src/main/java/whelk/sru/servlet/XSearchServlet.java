@@ -1,5 +1,6 @@
 package whelk.sru.servlet;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import groovy.lang.Tuple2;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -51,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -60,6 +62,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,6 +79,7 @@ import static whelk.JsonLd.WORK_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.component.ElasticSearch.SystemFields.SORT_KEY_BY_LANG;
 import static whelk.util.DocumentUtil.getAtPath;
+import static whelk.util.Jackson.mapper;
 
 /**
  * Implementation of Libris legacy xsearch API on XL
@@ -87,9 +91,11 @@ import static whelk.util.DocumentUtil.getAtPath;
  * </p>
  */
 public class XSearchServlet extends WhelkHttpServlet {
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final XMLOutputFactory xmlOutputFactory = XMLOutputFactory.newInstance();
     private Formats formats = null;
+
+    private static final String appId = "https://libris.kb.se/xsearch";
 
     private static final String appId = "https://libris.kb.se/xsearch";
 
@@ -108,20 +114,33 @@ public class XSearchServlet extends WhelkHttpServlet {
     // https://libris.kb.se/help/xsearch_swe.jsp?open=tech
     private static class Params {
         public static final String QUERY = "query";
+        public static final String QUERY_ALIAS = "q"; // synonym for "query"
         public static final String FORMAT = "format";
         public static final String START = "start";
         public static final String N = "n";
         public static final String ORDER = "order";
+        public static final String CALLBACK = "callback"; // JSONP callback (format=json only)
         // TODO
         public static final String FORMAT_LEVEL = "format_level";
         public static final String HOLDINGS = "holdings";
         public static final String DATABASE = "database";
     }
 
+    // JSONP callbacks shouldn't be used at all but is still used. Let's at least
+    // sanitize callback names to prevent XSS. Max length is arbitrary and plenty enough
+    // for the seemingly one and only site still using it with XSearch.
+    // TODO: remove callback support once SMDB doesn't need it anymore
+    private static final Pattern SAFE_CALLBACK = Pattern.compile("[a-zA-Z0-9_.]+");
+    private static final int MAX_CALLBACK_LENGTH = 64;
+
     // match old behaviour
     public static class Errors {
         public static final String EMPTY_QUERY = "empty_query";
         public static final String PARSE = "parse";
+    }
+
+    private record Xslt(Templates templates, String contentType) {
+
     }
 
     JsonLD2MarcXMLConverter converter;
@@ -136,7 +155,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         resourceLookup = ResourceLookup.load(whelk);
         esSettings = new ESSettings(whelk);
         appParams = new AppParams(appId, whelk);
-	formats = new Formats();
+      	formats = new Formats();
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -151,6 +170,7 @@ public class XSearchServlet extends WhelkHttpServlet {
         Map<String, String[]> parameters = req.getParameterMap();
 
         var query = getOptionalSingleNonEmpty(Params.QUERY, parameters)
+                .or(() -> getOptionalSingleNonEmpty(Params.QUERY_ALIAS, parameters))
                 .orElseThrow(() -> new InvalidQueryException(Errors.EMPTY_QUERY));
 
         int start = getOptionalSingleNonEmpty(Params.START, parameters)
@@ -172,9 +192,6 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map("true"::equals).orElse(false)
                 && (format == Formats.Format.MARC_XML || format == Formats.Format.MODS);
 
-        //var include9xx = getOptionalSingleNonEmpty(Params.FORMAT_LEVEL, parameters)
-        //        .map("full"::equals).orElse(false);
-
         boolean formatLevelFull = getOptionalSingleNonEmpty(Params.FORMAT_LEVEL, parameters)
                 .map("full"::equals).orElse(false);
 
@@ -186,14 +203,19 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .map(ORDER::get)
                 .orElse(null);
 
+        String callback = format == Format.JSON
+                ? getOptionalSingleNonEmpty(Params.CALLBACK, parameters).orElse(null)
+                : null;
+        if (callback != null
+                && (callback.length() > MAX_CALLBACK_LENGTH || !SAFE_CALLBACK.matcher(callback).matches())) {
+            throw new InvalidQueryException(Errors.PARSE);
+        }
+
         try {
             // TODO handle onr (record ID) here or in search2?
 
-            //String instanceOnlyQueryString = "(" + query + ") AND type=Instance";
-
             // This part is a little weird
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
-            //String[] q = new String[]{ instanceOnlyQueryString };
             String[] q = new String[]{ query };
             paramsAsIfSearch.put("_q", q);
             paramsAsIfSearch.put("_stats", new String[]{"false"}); // don't need facets
@@ -204,13 +226,12 @@ public class XSearchServlet extends WhelkHttpServlet {
             }
 
             QueryParams qp = new QueryParams(paramsAsIfSearch);
-            //AppParams ap = new AppParams(new HashMap<>(), whelk.getJsonld());
             var results = new Query(qp, appParams, resourceLookup, esSettings, whelk).collectResults();
 
             @SuppressWarnings("unchecked")
             List<Map<?,?>> items = (List<Map<?,?>>) results.get("items");
             int totalItems = (Integer) results.get("totalItems");
-            int to = Math.min(start + n, totalItems);
+            int to = Math.min((start-1) + n, totalItems);
 
             switch (format) {
                 case MARC_XML -> sendMarcXML(res, items, start, to, totalItems, includeHoldings, formatLevelFull);
@@ -221,7 +242,7 @@ public class XSearchServlet extends WhelkHttpServlet {
             }
 
         } catch (InvalidQueryException e) {
-            logger.error("Bad query.", e);
+            logger.error("Bad query: " + query);
             throw new InvalidQueryException(Errors.PARSE);
         } catch (XMLStreamException | TransformerException e) {
             logger.error("Couldn't build xsearch response.", e);
@@ -270,6 +291,8 @@ public class XSearchServlet extends WhelkHttpServlet {
         items.parallelStream()
                 .map(i -> {
                     String systemID = whelk.getStorage().getSystemIdByIri( (String) i.get("@id"));
+                    if (systemID == null)
+                        return null;
                     Document embellished = whelk.loadEmbellished(systemID);
                     var bibXml = (String) converter.convert(embellished.data, embellished.getShortId())
                             .get(JsonLd.NON_JSON_CONTENT_KEY);
@@ -278,10 +301,12 @@ public class XSearchServlet extends WhelkHttpServlet {
 
                     return bibXml;
                 }).forEachOrdered( convertedText -> {
-                    try {
-                        copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
-                    } catch (XMLStreamException e) {
-                        throw new RuntimeException(e);
+                    if (convertedText != null) {
+                        try {
+                            copyRecord(xmlInputFactory.createXMLStreamReader(new StringReader(convertedText)), writer);
+                        } catch (XMLStreamException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 });
 
@@ -341,13 +366,13 @@ public class XSearchServlet extends WhelkHttpServlet {
                              int to,
                              int totalItems,
                              boolean includeHoldings,
-                             boolean include9xx) throws IOException, XMLStreamException, TransformerException {
+                             boolean formatLevelFull) throws IOException, XMLStreamException, TransformerException {
 
         res.setCharacterEncoding("UTF-8");
-        res.setContentType("text/xml");
+        res.setContentType(xslt.contentType);
 
         ByteArrayOutputStream o = new ByteArrayOutputStream();
-        writeMarcXml(o, items, from, to, totalItems, includeHoldings, include9xx);
+        writeMarcXml(o, items, from, to, totalItems, includeHoldings, formatLevelFull);
         ByteArrayInputStream i = new ByteArrayInputStream(o.toByteArray());
 
         Transformer transformer = formats.transformers.get(format).templates().newTransformer();
@@ -425,7 +450,8 @@ public class XSearchServlet extends WhelkHttpServlet {
                           List<Map<?,?>> items,
                           int from,
                           int to,
-                          int totalItems) {
+                          int totalItems,
+                          String callback) {
 
         var result = new LinkedHashMap<String, Object>();
         result.put("from", from);
@@ -435,7 +461,21 @@ public class XSearchServlet extends WhelkHttpServlet {
 
         var response = Map.of("xsearch", result);
 
-        HttpTools.sendResponse(res, response, "application/json;charset=UTF-8");
+        if (callback == null) {
+            HttpTools.sendResponse(res, response, "application/json;charset=UTF-8");
+            return;
+        }
+
+        String json;
+        try {
+            json = mapper.writeValueAsString(response);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        // Normally also set by our nginx but let's be cautious
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        // Legacy XSearch didn't append a ';' at the end so let's not do it here either
+        HttpTools.sendResponse(res, callback + "(" + json + ")", "application/javascript;charset=UTF-8");
     }
 
     private Map<?, ?> toXsearchJson(Map<?, ?> item) {
@@ -479,6 +519,7 @@ public class XSearchServlet extends WhelkHttpServlet {
                 .or(() -> contribution.stream().findFirst())
                 .filter(c -> c.containsKey("agent"))
                 .map(c -> c.get("agent"))
+                .map(agent -> agent instanceof List<?> l ? (l.isEmpty() ? null : l.getFirst()) : agent)
                 .map(format)
                 .ifPresent(t -> result.put("creator", t));
 
@@ -699,7 +740,7 @@ public class XSearchServlet extends WhelkHttpServlet {
 
     @SuppressWarnings("unchecked")
     private static List<Map<?,?>> get(Object o, List<String> path) {
-       return ((List<Map<?,?>>) getAtPath(o, path, Collections.emptyList()));
+       return (List<Map<?,?>>) (List<?>) asList(getAtPath(o, path, Collections.emptyList()));
     }
 
     @SuppressWarnings("unchecked")

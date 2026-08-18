@@ -319,8 +319,7 @@ public class QueryTree {
     }
 
     private static Node compatibleByDomain(String rdfSubjectType, Node tree, JsonLd jsonLd) {
-        Predicate<Condition> isCompatibleByDomain = c -> c.selector().appearsOnlyOnRecord(jsonLd)
-                || c.selector().appearsOnType(rdfSubjectType, jsonLd)
+        Predicate<Condition> isCompatibleByDomain = c -> c.selector().appearsOnType(rdfSubjectType, jsonLd)
                 || c.selector().indirectlyAppearsOnType(rdfSubjectType, jsonLd);
 
         Predicate<Node> isIncompatible = node -> switch (node) {

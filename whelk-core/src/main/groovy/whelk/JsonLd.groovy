@@ -5,8 +5,8 @@ import groovy.transform.Immutable
 import groovy.transform.Memoized
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
@@ -127,7 +127,7 @@ class JsonLd {
 
     public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
 
-    private static Logger log = LogManager.getLogger(JsonLd.class)
+    private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
     public Map<String, Object> context
     public Map displayData
@@ -1575,6 +1575,7 @@ class JsonLd {
 
 
 @Immutable
+@CompileStatic
 class Link {
     String iri
     String relation

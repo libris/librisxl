@@ -10,12 +10,14 @@ public class QueryDateTime {
     public enum Precision {
         YEAR(   "uuuu",                  "uuuu'||/y'"),
         MONTH(  "uuuu-MM",               "uuuu-MM'||/M'"),
+        MONTH2( "uuuuMM",                "uuuu-MM'||/M'"),
         DAY(    "uuuu-MM-dd",            "uuuu-MM-dd'||/d'"),
         DAY2(   "uuuuMMdd",              "uuuu-MM-dd'||/d'"),
         HOUR(   "uuuu-MM-dd'T'HH",       "uuuu-MM-dd'T'HH'||/H'"),
         MINUTE( "uuuu-MM-dd'T'HH:mm",    "uuuu-MM-dd'T'HH:mm'||/m'"),
         SECOND( "uuuu-MM-dd'T'HH:mm:ss", "uuuu-MM-dd'T'HH:mm:ss'||/s'"),
-        WEEK(   "YYYY'-W'ww",            "YYYY'W'ww'1||/w'");
+        WEEK(   "YYYY'-W'ww",            "YYYY'W'ww'1||/w'"),
+        WEEK2(  "YYYY'-V'ww",            "YYYY'W'ww'1||/w'");
 
         final String format;
         final DateTimeFormatter parser;

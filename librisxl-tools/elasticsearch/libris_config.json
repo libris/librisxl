@@ -185,10 +185,6 @@
             },
             "meta": {
                 "properties": {
-                    "encodingLevel": {
-                      "type": "keyword",
-                      "copy_to": "_all"
-                    },
                     "recordStatus": {
                       "type": "keyword",
                       "copy_to": "_all"
@@ -325,7 +321,17 @@
                         "index": true,
                         "type": "keyword"
                     },
-                    "match": "controlNumber",
+                    "match": ["controlNumber", "librissearch:controlNumbers"],
+                    "match_mapping_type": "string"
+                }
+            },
+            {
+                "librissearch_instance_identifier_template": {
+                    "mapping": {
+                        "index": true,
+                        "type": "keyword"
+                    },
+                    "match": "librissearch:instanceIdentifier",
                     "match_mapping_type": "string"
                 }
             },
@@ -350,6 +356,15 @@
             {
                 "issuanceType_template": {
                     "match": ["issuanceType"],
+                    "mapping": {
+                        "type": "keyword",
+                        "copy_to": "_all"
+                    }
+                }
+            },
+            {
+                "encodingLevel_template": {
+                    "match": ["encodingLevel"],
                     "mapping": {
                         "type": "keyword",
                         "copy_to": "_all"
@@ -389,7 +404,15 @@
             },
             {
                 "contribution_template": {
-                    "path_match": ["contribution", "instanceOf.contribution", "@reverse.instanceOf.contribution"],
+                    "path_match": [
+                        "contribution",
+                        "instanceOf.contribution",
+                        "@reverse.instanceOf.contribution",
+                        "hasPart.contribution",
+                        "instanceOf.hasPart.contribution",
+                        "relationship.entity.contribution",
+                        "instanceOf.relationship.entity.contribution"
+                    ],
                     "mapping": {
                         "type": "nested",
                         "include_in_parent": true

@@ -1,14 +1,17 @@
 package whelk
 
+import groovy.transform.CompileStatic
+
 import java.util.stream.Collectors
 
 import static whelk.JsonLd.ID_KEY as ID
 import static whelk.JsonLd.TYPE_KEY as TYPE
 import static whelk.JsonLd.asList
 
+@CompileStatic
 class TypeCategoryNormalizer {
 
-    static Map SCHEMES = [
+    static Map<String, String> SCHEMES = [
       saogf: 'https://id.kb.se/term/saogf',
       barngf: 'https://id.kb.se/term/barngf',
       tgm: 'https://id.kb.se/term/gmgpc/swe',
@@ -31,7 +34,7 @@ class TypeCategoryNormalizer {
     List<String> newWorkTypes = ["Monograph", "Serial", "Collection", "Integrating"]
     List<String> newInstanceTypes = ['PhysicalResource', 'DigitalResource']
 
-    Map remappedLegacyInstanceTypes = [
+    Map<String, Map<String, String>> remappedLegacyInstanceTypes = [
       'SoundRecording': [category: 'https://id.kb.se/term/saobf/SoundStorageMedium', workCategory: 'https://id.kb.se/term/ktg/Audio'],  // 170467
       'VideoRecording': [category: 'https://id.kb.se/term/saobf/VideoStorageMedium', workCategory: 'https://id.kb.se/term/ktg/MovingImage'],  // 20515
       'Map': [workCategory: 'https://id.kb.se/term/rda/CartographicImage'],  // 12686
@@ -61,11 +64,12 @@ class TypeCategoryNormalizer {
 
             type = jsonld.toTermKey(term[ID])
 
-            if (term.intersectionOf) {
+            def intersectionOf = term.intersectionOf
+            if (intersectionOf instanceof List) {
                 if (!isWorkOrInstanceClass(type)) {
                     var expectedbase = false
-                    for (item in term.intersectionOf) {
-                        if (ID in item && isWorkOrInstanceClass(jsonld.toTermKey(item[ID]))) {
+                    for (def item : intersectionOf) {
+                        if (item instanceof Map && ID in item && isWorkOrInstanceClass(jsonld.toTermKey(item[ID]))) {
                             expectedbase = true
                         }
                     }
@@ -73,7 +77,7 @@ class TypeCategoryNormalizer {
                         continue
                     }
                 }
-                catRestriction = term.intersectionOf.find { isCategoryRestriction(it) }
+                catRestriction = intersectionOf.find { isCategoryRestriction(it) }
             } else if (term.equivalentClass || term.isSubClassOf) {
                 if (!isWorkOrInstanceClass(type)) {
                   continue
@@ -105,8 +109,12 @@ class TypeCategoryNormalizer {
         return false
     }
 
-    boolean isCategoryRestriction(Map term) {
-        return term?.onProperty && term?.onProperty[ID] == categoryPropertyId
+    boolean isCategoryRestriction(Object term) {
+        if (term !instanceof Map) {
+          return false
+        }
+        var onProperty = term.onProperty
+        return onProperty instanceof Map && onProperty[ID] == categoryPropertyId
     }
 
     void loadCategories() {
@@ -127,10 +135,12 @@ class TypeCategoryNormalizer {
 
         for (ctg in categories.values()) {
 
-            String id = ctg[ID]
+            var id = (String) ctg[ID]
 
             for (same in asList(ctg['sameAs'])) {
-                sameAsMap[same[ID]] = id
+                if (same instanceof Map) {
+                  sameAsMap[(String) same[ID]] = id
+                }
             }
 
             String scheme = ctg.inScheme?[ID]
@@ -138,10 +148,12 @@ class TypeCategoryNormalizer {
                 scheme = id.split('/[^/]+$')[0]
             }
 
-            def closeMatch = asList(ctg.closeMatch).findResults { if (ID in it) categories[it[ID]] }
-            def exactMatch = asList(ctg.exactMatch).findResults { if (ID in it) categories[it[ID]] }
-            def broadMatch = asList(ctg.broadMatch).findResults { if (ID in it) categories[it[ID]] }
-            def broader = asList(ctg.broader).findResults { if (ID in it) categories[it[ID]] }
+            var getCategory =  { if (it instanceof Map && ID in it) categories[it[ID]] }
+
+            def closeMatch = asList(ctg.closeMatch).findResults(getCategory)
+            def exactMatch = asList(ctg.exactMatch).findResults(getCategory)
+            def broadMatch = asList(ctg.broadMatch).findResults(getCategory)
+            def broader = asList(ctg.broader).findResults(getCategory)
 
             for (match in closeMatch + exactMatch) {
                 String matchId = match[ID]
@@ -165,18 +177,22 @@ class TypeCategoryNormalizer {
             for (broadTerm in exactMatch + closeMatch + broadMatch + broader) {
                 String broadTermScheme = broadTerm.inScheme?[ID]
                 if (!broadTermScheme) {
-                    broadTermScheme = broadTerm[ID].split('/[^/]+$')[0]
+                    var broadId = (String) broadTerm[ID]
+                    broadTermScheme = broadId.split('/[^/]+$')[0]
                 }
 
                 if (broadTermScheme in broaderSchemes) {
                     categoryMatches.get(id, []) << broadTerm[ID]
-                    categoryMatches.get(id).sort().unique()
+                    var matches = categoryMatches.get(id)
+                    if (matches instanceof List) {
+                      categoryMatches[id] = matches.sort().unique()
+                    }
                 }
             }
         }
     }
 
-    List reduceSymbols(List symbols) {
+    List reduceSymbols(List<Map> symbols) {
         symbols = symbols.stream()
                 .map(x -> x.containsKey(ID)
                         ? [(ID): sameAsMap.getOrDefault(x[ID], x[ID])]
@@ -189,14 +205,14 @@ class TypeCategoryNormalizer {
 
         var mostSpecific = [:]
         var blanks = []
-        for (Map x : symbols) {
+        for (var x : symbols) {
             if (ID !in x) {
                 blanks << x
                 continue
             }
             String xId = x[ID]
             var implied = false
-            for (Map y : symbols) {
+            for (var y : symbols) {
                 if (ID !in y) continue
                 String yId = y[ID]
                 if (xId != yId && isImpliedBy(xId, yId)) {
@@ -236,7 +252,7 @@ class TypeCategoryNormalizer {
 
         List bases = categoryMatches[yId]
         for (var base in bases) {
-            if (base !in visited) {
+            if (base instanceof String && base !in visited) {
               if (isImpliedByRecursive(xId, base, visited + new HashSet())) {
                   return true
               }

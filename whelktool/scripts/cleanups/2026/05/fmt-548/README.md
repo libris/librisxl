@@ -1,0 +1,2 @@
+1. Kör notebooken (mot aktuell miljö). Den sparar en färsk id-lista mutual_matches_ids.tsv som används av groovy-skriptet, samt städlistan non_mutual_matches.tsv 
+2. Kör groovy-skriptet på mutual_matches_ids.tsv

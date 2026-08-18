@@ -17,8 +17,8 @@ configurations.all {
 
 sourceSets {
     main {
-        java { srcDirs = [] }
-        groovy { srcDirs = ['src/main/java', 'src/main/groovy'] }
+        java { srcDirs = ['src/main/java', 'src/main/groovy'] }
+        groovy { srcDirs = [] }
     }
     test {
         groovy { srcDir 'src/test/groovy/' }
@@ -41,24 +41,24 @@ dependencies {
     implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
-
-    // metrics
-    implementation "io.prometheus:simpleclient:${prometheusVersion}"
-    implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     // Email
-    implementation group: 'org.simplejavamail', name: 'simple-java-mail', version: '8.2.0'
+    implementation "org.simplejavamail:simple-java-mail:9.2.0"
 
     // Cron
-    implementation group: 'it.sauronsoftware.cron4j', name: 'cron4j', version: '2.2.5'
+    implementation "it.sauronsoftware.cron4j:cron4j:2.2.5"
 
     // Utils
     implementation "com.google.guava:guava:${guavaVersion}"
 
     // Testing
     testImplementation "org.spockframework:spock-core:${spockVersion}"
+    // Required by Spock to mock concrete (non-interface) classes without a no-arg constructor
+    testImplementation "net.bytebuddy:byte-buddy:${byteBuddyVersion}"
+    testImplementation "org.objenesis:objenesis:3.4"
 }
 
 test {
@@ -81,10 +81,7 @@ jar {
     dependsOn(shadowJar)
 
     manifest {
-        attributes "Main-Class": mainClassName,
-                // log4j uses multi-release to ship different stack walking implementations for different java
-                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
-                "Multi-Release": true
+        attributes "Main-Class": mainClassName
     }
 
     archiveClassifier = "nonfat"

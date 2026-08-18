@@ -145,7 +145,6 @@ public non-sealed class Condition implements Node {
 
     private ExpandedNode expandWithAltSelectors(JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
         List<Node> withAltSelectors = selector.getAltSelectors(jsonLd, rdfSubjectTypes, true).stream()
-                .map(s -> s.withPrependedMetaProperty(jsonLd))
                 .map(this::withSelector)
                 .map(s -> s._expand(jsonLd))
                 .toList();
@@ -168,8 +167,8 @@ public non-sealed class Condition implements Node {
         List<PathElement> currentPath = new ArrayList<>();
         for (PathElement pe : path) {
             currentPath.add(pe);
-            if (pe instanceof Property p && p.isRestrictedSubProperty() && !p.hasIndexKey()) {
-                for (Restrictions.HasValue r : p.objectOnPropertyRestrictions()) {
+            if (pe instanceof Property.RestrictedSubProperty p && !p.hasIndexKey()) {
+                for (Restrictions.HasValue r : p.getObjectRestrictions()) {
                     var restrictedPath = new Path(Stream.concat(currentPath.stream(), r.onProperty().path().stream()).toList());
                     prefilledFields.add(new Condition(restrictedPath, EQUALS, r.value()));
                 }
