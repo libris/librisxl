@@ -18,7 +18,7 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
 
     if shbd_prepepd.get("responsibility_statement"):
         # TODO Possibly complement responsibilityStatement with contributor if needed - after bug preventing search across instance and work fields is fixed
-        query_string = f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*"
+        query_string = f"{query_string} responsibilityStatement:({remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*)"
     if shbd_prepepd.get("year"):
         query_string = (
             f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('year'))}"
@@ -64,7 +64,7 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
         return matches
 
     except requests.exceptions.HTTPError as he:
-        report.write(f"{he}\t{query_string}\n")
+        report.write(f"\n{he}\t{query_string}\n")
 
 
 # Analyze search results #
@@ -85,13 +85,14 @@ def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, 
             {
                 "score": score,
                 "id": match["@id"],
-                "properties_compared": {"shb": prepped_shb, "libris": prepped_match},
+                "libris_match_record": {"shb": prepped_shb, "libris": prepped_match},
             }
         )
 
     best_match = get_best_match(scores_and_matches)
 
     match_map[shbd_prepepd["@id"]] = {
+        "shb_match_record": prepped_match,
         "best_match": best_match,
         "all_matches": scores_and_matches,
     }
@@ -163,7 +164,7 @@ def get_best_match(scores_and_matches):
 
     if len(winners) > 1:
         report.write(
-            f"Unable to identify best match: {len(winners)} matches have high score {highest_score}"
+            f"\nUnable to identify best match: {len(winners)} matches have high score {highest_score}"
         )
         return None
 
@@ -189,7 +190,7 @@ def prepare_record(instance: dict) -> dict:
             )
         else:
             report.write(
-                f"{instance['@id']}\tNo title\t{json.dumps(instance, ensure_ascii=False)}\n"
+                f"\n{instance['@id']}\tNo title\t{json.dumps(instance, ensure_ascii=False)}\n"
             )
             return None
 
@@ -233,14 +234,14 @@ def prepare_record(instance: dict) -> dict:
         # Don't try to match if the instance has only one property
         if len(prepped) < 2:
             report.write(
-                f"{instance['@id']}\tNot enough properties to match on\t{json.dumps(instance, ensure_ascii=False)}\n"
+                f"\n{instance['@id']}\tNot enough properties to match on\t{json.dumps(instance, ensure_ascii=False)}\n"
             )
             return None
 
         return prepped
     
     except KeyError as ke:
-        report.write(f"{ke}t{instance}")
+        report.write(f"\nKeyError\t{ke}\t{instance}")
         return prepped
 
 
