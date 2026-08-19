@@ -2,6 +2,7 @@ package whelk.sru.servlet;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.HashMap;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerFactory;
@@ -21,18 +22,22 @@ public class Formats {
         UNSUPPORTED
     }
 
-    protected static final Map<String, Format> FORMATS = Map.of(
-            "marcxml", Format.MARC_XML,
-            "json", Format.JSON,
-            "mods", Format.MODS,
-            "ris", Format.UNSUPPORTED,
-            "dc", Format.DC,
-            "rdfdc", Format.UNSUPPORTED,
-            "bibtex", Format.UNSUPPORTED,
-            "refworks", Format.REF_WORKS,
-            "harvard", Format.UNSUPPORTED,
-            "oxford", Format.UNSUPPORTED
-    );
+    /* hashmap accepts null key */
+    protected static final HashMap<String, Format> FORMATS;
+
+    static {
+        FORMATS = new HashMap<String, Format>();
+        FORMATS.put("marcxml", Format.MARC_XML); 
+        FORMATS.put("json", Format.JSON); 
+        FORMATS.put("mods", Format.MODS); 
+        FORMATS.put("ris", Format.UNSUPPORTED); 
+        FORMATS.put("dc", Format.DC); 
+        FORMATS.put("rdfdc", Format.UNSUPPORTED); 
+        FORMATS.put("bibtex", Format.UNSUPPORTED); 
+        FORMATS.put("refworks", Format.REF_WORKS); 
+        FORMATS.put("harvard", Format.UNSUPPORTED); 
+        FORMATS.put("oxford", Format.UNSUPPORTED); 
+    }
 
     public record Xslt(Templates templates, String contentType) {
 
