@@ -1,7 +1,7 @@
 import pytest
 from reshape_shb import (
     extract_extent,
-    extract_partof_from_parenthesis,
+    extract_parenthesis_delimited_host_or_series,
     normalize_spacing_and_punctuation,
     parse_note,
 )
@@ -60,7 +60,7 @@ def test_normalize_spacing_and_punctuation():
     ],
 )
 def test_extract_partof_from_parenthesis(record, era, expected):
-    actual = extract_partof_from_parenthesis(record, era)
+    actual = extract_parenthesis_delimited_host_or_series(record, era)
 
     assert actual == expected, f"\nInput record:\n{record}"
 
@@ -952,13 +952,16 @@ def test_incorrect_period_after_author_name():
 #    reason="Surname-like title beginning is currently misidentified as author"
 #)
 def test_slott_svenska_title_start():
-    record = "Slott, Svenska, och herresäten vid 1900-talets början."
+    record = {"sample" : "Slott, Svenska, och herresäten vid 1900-talets början. Bd l-5. 4;o. Med många illustr. i texten. Sthlm 1008-14. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, \"Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland."}
 
-    result = parse_note(record["sample"], False)
+    result = parse_note(record["sample"], "early")
 
-    assert result[0] is None
-    assert result[1] == "Slott, Svenska, Och herresäten vid 1900-talets början."
-
+    assert result["is_component_part"] == True
+    assert result["title"] == "Slott, Svenska, och herresäten vid 1900-talets början"
+    assert result["subtitle"] == "Bd 1-5. 4:o. Med många illustr. i texten. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, \"Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna"
+    assert result["place"] == "Sthlm"
+    assert result["year"] == "1008-14"
+    assert result["remaining_note"] == "Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland"
 
 @pytest.mark.xfail(
     reason="If removing a year that has been confused with extent leads to the extent just being 's', give up on extrating the extent."
