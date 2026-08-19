@@ -1,3 +1,9 @@
+/**
+ * Replace local supplementTo with link
+*  Based on ../../2025/10/lxl-4710-link-ispartof-once-more.groovy
+ * See https://kbse.atlassian.net/browse/LXL-4815
+ */
+
 import java.util.concurrent.ConcurrentHashMap
 
 String where = """
@@ -86,8 +92,10 @@ selectBySqlWhere(where) { doc ->
 
     sourceThing.remove("supplementTo")
     def isPartOf = asList(sourceThing["isPartOf"])
-    isPartOf << ["@id": properUri]
-    sourceThing["isPartOf"] = isPartOf
+    if (!isPartOf.any { it['@id'] == properUri }) {
+        isPartOf << ["@id": properUri]
+        sourceThing["isPartOf"] = isPartOf
+    }
 
     modified_flerband.println(doc.doc.getShortId())
     doc.scheduleSave()
@@ -148,5 +156,5 @@ String findMainEntityId(String ctrlNumber) {
 }
 
 static String sanitize(String value) {
-    return value.replaceAll(/\9/, '')
+    return value.replaceAll(/(?U)[\s\p{Cntrl}\p{Cf}]/, '')
 }
