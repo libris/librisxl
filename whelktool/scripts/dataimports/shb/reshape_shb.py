@@ -770,7 +770,10 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
 
     comma_separated = remainder.split(",")
     contributor_names = comma_separated.pop(0).strip()
-    first_character_after_names = comma_separated[1].strip()[0]
+    if comma_separated[1].strip():
+        first_character_after_names = comma_separated[1].strip()[0]
+    else:
+        first_character_after_names = ""
 
     # Look for signs that this is a work without a primary contributor, but with commas in the title
     # The part to the right of the first and family names starts with a lowercase letter (the title has already started)
