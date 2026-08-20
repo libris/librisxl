@@ -463,7 +463,7 @@ public class Query {
 
                                 observation.put("totalItems", count);
                                 observation.put("view", Map.of(JsonLd.ID_KEY, makeViewFindUrl(alteredTree.toQueryString(), queryParams)));
-                                observation.put("object", v instanceof Resource r ? r.description() : v.toString());
+                                observation.put("object", v instanceof Resource r ? r.description() : v.queryForm());
                                 if (connective == Connective.OR) {
                                     observation.put("_selected", isSelected);
                                 } else if (isSelected) {
