@@ -107,14 +107,6 @@ public class QueryUtil {
                 .replace("%7E", "~");
     }
 
-    public static Map<String, Object> mustWrap(Object l) {
-        return boolWrap(Map.of("must", l));
-    }
-
-    public static Map<String, Object> boolWrap(Map<?, ?> m) {
-        return Map.of("bool", m);
-    }
-
     public static Map<String, Object> loadThing(String iri, Whelk whelk) {
         return Optional.ofNullable(whelk.loadData(iri))
                 .map(data -> data.get(JsonLd.GRAPH_KEY))

@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public sealed interface EsQuery {
+public sealed interface ESNode {
     enum MultiMatchType {
         // https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-multi-match-query#multi-match-types
         best_fields,
@@ -47,9 +47,9 @@ public sealed interface EsQuery {
     }
 
     record TextQuery(TextQueryMode query,
-                     List<EsBoost.Field> boostFields,
+                     List<ESBoost.Field> boostFields,
                      Query.Connective connective,
-                     EsBoost.TextQuerySettings settings) implements EsQuery {
+                     ESBoost.TextQuerySettings settings) implements ESNode {
         @Override
         public Map<String, Object> dsl() {
             var q = new HashMap<>();
@@ -88,7 +88,7 @@ public sealed interface EsQuery {
             return Map.of(query.mode(), q);
         }
 
-        public TextQuery withFields(List<EsBoost.Field> newFields) {
+        public TextQuery withFields(List<ESBoost.Field> newFields) {
             return new TextQuery(query, newFields, connective, settings);
         }
 
@@ -98,9 +98,9 @@ public sealed interface EsQuery {
 
         public static TextQuery simpleUnboostedQuery(String query, String field) {
             return new TextQuery(new SimpleQueryString(query),
-                    List.of(EsBoost.Field.unboosted(field)),
+                    List.of(ESBoost.Field.unboosted(field)),
                     Query.Connective.AND,
-                    EsBoost.FieldedQuerySettings.defaultSettings());
+                    ESBoost.FieldedQuerySettings.defaultSettings());
         }
 
         private String formatBoostField(String fieldName, float boost) {
@@ -108,67 +108,72 @@ public sealed interface EsQuery {
         }
     }
 
-    record TermQuery(String field, Object value) implements EsQuery {
+    record TermQuery(String field, Object value) implements ESNode {
         @Override
         public Map<String, Object> dsl() {
             return Map.of("bool", Map.of("filter", Map.of("term", Map.of(field, value))));
         }
     }
 
-    sealed interface Disjunction extends EsQuery {
-        @Override
-        Map<String, Object> dsl();
-
-        List<EsQuery> subQueries();
-        Disjunction withSubQueries(List<EsQuery> subQueries);
+    sealed interface Group extends ESNode permits Disjunction, Must {
+        List<ESNode> subQueries();
+        Group withSubQueries(List<ESNode> subQueries);
     }
 
-    record Should(List<EsQuery> subQueries) implements Disjunction {
+    sealed interface Disjunction extends Group {
+    }
+
+    record Should(List<ESNode> subQueries) implements Disjunction {
         @Override
         public Map<String, Object> dsl() {
-            return Map.of("bool", Map.of("should", subQueries.stream().map(EsQuery::dsl).toList()));
+            return Map.of("bool", Map.of("should", subQueries.stream().map(ESNode::dsl).toList()));
         }
 
         @Override
-        public Should withSubQueries(List<EsQuery> subQueries) {
+        public Should withSubQueries(List<ESNode> subQueries) {
             return new Should(subQueries);
         }
     }
 
-    record DisMax(List<EsQuery> subQueries) implements Disjunction {
+    record DisMax(List<ESNode> subQueries) implements Disjunction {
         @Override
         public Map<String, Object> dsl() {
-            return Map.of("dis_max", Map.of("queries", subQueries.stream().map(EsQuery::dsl).toList()));
+            return Map.of("dis_max", Map.of("queries", subQueries.stream().map(ESNode::dsl).toList()));
         }
 
         @Override
-        public DisMax withSubQueries(List<EsQuery> subQueries) {
+        public DisMax withSubQueries(List<ESNode> subQueries) {
             return new DisMax(subQueries);
         }
     }
 
-    record Must(List<EsQuery> subQueries) implements EsQuery {
+    record Must(List<ESNode> subQueries) implements Group {
         @Override
         public Map<String, Object> dsl() {
-            return Map.of("bool", Map.of("must", subQueries.stream().map(EsQuery::dsl).toList()));
+            return Map.of("bool", Map.of("must", subQueries.stream().map(ESNode::dsl).toList()));
+        }
+
+        @Override
+        public Must withSubQueries(List<ESNode> subQueries) {
+            return new Must(subQueries);
         }
     }
 
-    record MustNot(EsQuery query) implements EsQuery {
+    record MustNot(ESNode query) implements ESNode {
         @Override
         public Map<String, Object> dsl() {
             return Map.of("bool", Map.of("must_not", query.dsl()));
         }
     }
 
-    record Exists(String field) implements EsQuery {
+    record Exists(String field) implements ESNode {
         @Override
         public Map<String, Object> dsl() {
             return Map.of("exists", Map.of("field", field));
         }
     }
 
-    record Nested(EsQuery query, NestedStem stem, Set<NestedField> fields) implements EsQuery {
+    record Nested(ESNode query, NestedStem stem, Set<NestedField> fields) implements ESNode {
         @Override
         public Map<String, Object> dsl() {
             if (fields.size() == 1 && stem.includeInParent()) {
@@ -185,6 +190,10 @@ public sealed interface EsQuery {
                     "query", query.dsl()
             ));
         }
+
+        public Nested withInnerQuery(ESNode innerQuery) {
+            return new Nested(innerQuery, stem, fields);
+        }
     }
 
     record NestedStem(String stem, boolean includeInParent) {
@@ -193,14 +202,14 @@ public sealed interface EsQuery {
     record NestedField(String field, boolean isRepeatable) {
     }
 
-    record MatchAll() implements EsQuery {
+    record MatchAll() implements ESNode {
         @Override
         public Map<String, Object> dsl() {
             return Map.of("match_all", Map.of());
         }
     }
 
-    record MatchNone() implements EsQuery {
+    record MatchNone() implements ESNode {
         // FIXME: Handle queries that are syntactically correct but make no sense and are guaranteed to return no hits
         @Override
         public Map<String, Object> dsl() {
@@ -208,7 +217,7 @@ public sealed interface EsQuery {
         }
     }
 
-    record RangeQuery(String field, Map<Operator, Object> range) implements EsQuery {
+    record RangeQuery(String field, Map<Operator, Object> range) implements ESNode {
         @Override
         public Map<String, Object> dsl() {
             Map<String, Object> m = new HashMap<>();
@@ -225,14 +234,29 @@ public sealed interface EsQuery {
         }
     }
 
-    record ConstantScore(EsQuery query, float score) implements EsQuery {
+    record FunctionScore(List<ESNode.ScoreFunction> functions, String scoreMode, String boostMode) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("function_score",
+                    Map.of("query", new ESNode.MatchAll().dsl(),
+                            "functions", functions.stream().map(ESNode.ScoreFunction::dsl).toList(),
+                            "score_mode", "sum",
+                            "boost_mode", "sum"));
+        }
+
+        public boolean isEmpty() {
+            return functions.isEmpty();
+        }
+    }
+
+    record ConstantScore(ESNode query, float score) implements ESNode {
         @Override
         public Map<String, Object> dsl() {
             return Map.of("constant_score", Map.of("filter", query.dsl(), "boost", score));
         }
     }
 
-    sealed interface ScoreFunction extends EsQuery permits FieldValueFactor, ScriptScore {
+    sealed interface ScoreFunction extends ESNode permits FieldValueFactor, ScriptScore {
         @Override
         Map<String, Object> dsl();
     }
@@ -249,7 +273,7 @@ public sealed interface EsQuery {
         }
     }
 
-    record ScriptScore(EsQuery query, Script script) implements ScoreFunction {
+    record ScriptScore(ESNode query, Script script) implements ScoreFunction {
         public static String key() {
             return "script_score";
         }
@@ -270,6 +294,13 @@ public sealed interface EsQuery {
                 m.put("params", params);
             }
             return m;
+        }
+    }
+
+    record PostFilter(ESNode query) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            return query().dsl();
         }
     }
 }

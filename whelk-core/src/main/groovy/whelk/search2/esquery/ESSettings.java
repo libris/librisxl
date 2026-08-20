@@ -1,7 +1,6 @@
-package whelk.search2;
+package whelk.search2.esquery;
 
 import whelk.Whelk;
-import whelk.search2.esquery.EsBoost;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,15 +25,15 @@ import static whelk.util.Jackson.mapper;
 public class ESSettings {
     private static final String BOOST_SETTINGS_FILE = "libris_search_boost.json";
 
-    private EsMappings mappings;
-    private final EsBoost boost;
+    private ESMappings mappings;
+    private final ESBoost boost;
     private final List<String> sourceExcludes;
 
     private int maxItems;
 
     public ESSettings(Whelk whelk) {
         if (whelk.elastic != null) {
-            this.mappings = new EsMappings(whelk.elastic.getAllMappings());
+            this.mappings = new ESMappings(whelk.elastic.getAllMappings());
             this.maxItems = whelk.elastic.maxResultWindow;
         }
         this.boost = loadBoostSettings();
@@ -42,15 +41,15 @@ public class ESSettings {
     }
 
     // For test only
-    public ESSettings(EsMappings mappings, EsBoost boost) {
+    public ESSettings(ESMappings mappings, ESBoost boost) {
        this(mappings, boost, 1);
     }
 
-    public ESSettings withBoostSettings(EsBoost boost) {
+    public ESSettings withBoostSettings(ESBoost boost) {
         return new ESSettings(mappings, boost, maxItems);
     }
 
-    private ESSettings(EsMappings mappings, EsBoost boost, int maxItems) {
+    private ESSettings(ESMappings mappings, ESBoost boost, int maxItems) {
         this.mappings = mappings;
         this.boost = boost;
         this.maxItems = maxItems;
@@ -61,11 +60,11 @@ public class ESSettings {
         return mappings != null;
     }
 
-    public EsMappings mappings() {
+    public ESMappings mappings() {
         return mappings;
     }
 
-    public EsBoost boost() {
+    public ESBoost boost() {
         return boost;
     }
 
@@ -77,9 +76,9 @@ public class ESSettings {
         return maxItems;
     }
 
-    public EsBoost loadBoostSettings() {
-        Map<?, ?> settings = toMap(EsBoost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
-        return new EsBoost(settings);
+    public ESBoost loadBoostSettings() {
+        Map<?, ?> settings = toMap(ESBoost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
+        return new ESBoost(settings);
     }
 
     private List<String> loadSourceExcludesSettings() {
@@ -99,15 +98,15 @@ public class ESSettings {
                 "*." + SEARCH_KEY
         );
 
-        Map<?, ?> settings = toMap(EsBoost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
+        Map<?, ?> settings = toMap(ESBoost.class.getClassLoader().getResourceAsStream(BOOST_SETTINGS_FILE));
         return Stream.concat(
                 systemSourceExcludes.stream(),
                 getAsStream(settings, "source_excludes").map(String.class::cast)
         ).toList();
     }
 
-    public static EsBoost loadBoostSettings(String json) {
-        return new EsBoost(toMap(json));
+    public static ESBoost loadBoostSettings(String json) {
+        return new ESBoost(toMap(json));
     }
 
 //    public record Boost(FieldBoost fieldBoost, FunctionScore functionScore, ConstantScore constantScore) {

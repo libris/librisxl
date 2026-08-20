@@ -1,4 +1,4 @@
-package whelk.search2;
+package whelk.search2.esquery;
 
 import whelk.util.DocumentUtil;
 
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import static whelk.search.ESQuery.SPELL_CHECK_FIELD;
 import static whelk.util.DocumentUtil.NOP;
 
-public class EsMappings {
+public class ESMappings {
     private final Set<String> keywordSubfieldFields;
 
     private final Set<String> fourDigitsKeywordFields;
@@ -33,10 +33,10 @@ public class EsMappings {
     public static String FOUR_DIGITS_KEYWORD_SUFFIX = "_4_digits_keyword";
     public static String FOUR_DIGITS_SHORT_SUFFIX = "_4_digits_short";
 
-    public EsMappings(List<Map<?, ?>> mappings) {
-        this.keywordSubfieldFields = union(mappings, EsMappings::getKeywordSubfieldFields);
-        this.fourDigitsKeywordFields = union(mappings, EsMappings::getFourDigitsKeywordFields);
-        this.fourDigitsShortFields = union(mappings, EsMappings::getFourDigitsShortFields);
+    public ESMappings(List<Map<?, ?>> mappings) {
+        this.keywordSubfieldFields = union(mappings, ESMappings::getKeywordSubfieldFields);
+        this.fourDigitsKeywordFields = union(mappings, ESMappings::getFourDigitsKeywordFields);
+        this.fourDigitsShortFields = union(mappings, ESMappings::getFourDigitsShortFields);
         this.keywordTypeFields = union(mappings, m -> getFieldsOfType("keyword", m));
         this.dateTypeFields = union(mappings, m -> getFieldsOfType("date", m));
         this.nestedTypeFields = union(mappings, m -> getFieldsOfType("nested", m));

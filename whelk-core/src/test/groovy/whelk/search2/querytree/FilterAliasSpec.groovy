@@ -2,6 +2,7 @@ package whelk.search2.querytree
 
 import spock.lang.Specification
 import whelk.search2.Disambiguate
+import whelk.search2.TestData
 
 class FilterAliasSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()

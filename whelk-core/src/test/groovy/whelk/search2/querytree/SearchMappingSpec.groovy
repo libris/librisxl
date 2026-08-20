@@ -4,6 +4,7 @@ import spock.lang.Specification
 import whelk.search2.Disambiguate
 import whelk.search2.QueryParams
 import whelk.search2.SearchMapping
+import whelk.search2.TestData
 
 class SearchMappingSpec extends Specification {
     Disambiguate disambiguate = TestData.getDisambiguate()

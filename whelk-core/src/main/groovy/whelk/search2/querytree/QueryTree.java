@@ -3,7 +3,9 @@ package whelk.search2.querytree;
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.*;
-import whelk.search2.esquery.EsQueryTreeBuilder;
+import whelk.search2.esquery.ESQueryTree;
+import whelk.search2.esquery.ESQueryTreeBuilder;
+import whelk.search2.esquery.ESSettings;
 import whelk.search2.querytree.node.And;
 import whelk.search2.querytree.value.Any;
 import whelk.search2.querytree.node.Condition;
@@ -34,8 +36,8 @@ public class QueryTree {
         return tree;
     }
 
-    public Map<String, Object> toEsQuery(ESSettings esSettings) {
-        return EsQueryTreeBuilder.buildFrom(tree, esSettings).dsl();
+    public ESQueryTree toEsQuery(ESSettings esSettings) {
+        return new ESQueryTree(ESQueryTreeBuilder.buildFrom(tree, esSettings));
     }
 
     public static QueryTree newEmpty() {

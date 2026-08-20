@@ -2,10 +2,11 @@ package whelk.search2;
 
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.esquery.EsQueryTree2;
+import whelk.search2.esquery.ESQuery;
+import whelk.search2.esquery.ESSettings;
+import whelk.search2.esquery.ESQueryDefinition;
 import whelk.search2.querytree.node.And;
 import whelk.search2.querytree.node.Condition;
-import whelk.search2.querytree.EsQuery;
 import whelk.search2.querytree.value.FreeText;
 import whelk.search2.querytree.value.Link;
 import whelk.search2.querytree.node.Node;
@@ -18,7 +19,6 @@ import whelk.search2.querytree.selector.Selector;
 import whelk.search2.querytree.value.Token;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -68,6 +68,13 @@ public class SuggestQuery extends Query {
     }
 
     @Override
+    protected ESQuery getEsQuery() {
+        Map<String, Object> dsl = prepareEsQuery().dsl();
+        dsl.remove("sort");
+        return new ESQuery(dsl, List.of(), whelk.elastic);
+    }
+
+    @Override
     protected Map<String, Object> getPartialCollectionView() {
         Map<String, Object> view = super.getPartialCollectionView();
 
@@ -109,13 +116,9 @@ public class SuggestQuery extends Query {
         return view;
     }
 
-    @Override
-    protected EsQuery doGetEsQuery() {
-        var queryTree = getFullQueryTree(suggestQueryTree).expand(whelk.getJsonld());
-        var esQueryTree = new EsQueryTree2(queryTree, esSettings);
-        var queryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
-        queryDsl.remove("sort");
-        return new EsQuery(queryDsl, Collections.emptyList());
+    private ESQueryDefinition prepareEsQuery() {
+        QueryTree.MergedTree queryTree = getFullQueryTree(suggestQueryTree);
+        return new ESQueryDefinition(queryTree, esSettings, queryParams, whelk.getJsonld(), null, null);
     }
 
     private List<Selector> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {

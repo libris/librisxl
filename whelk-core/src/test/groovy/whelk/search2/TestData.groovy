@@ -1,9 +1,7 @@
-package whelk.search2.querytree
+package whelk.search2
 
 import whelk.JsonLd
-import whelk.search2.Disambiguate
-import whelk.search2.EsMappings
-import whelk.search2.ResourceLookup
+import whelk.search2.esquery.ESMappings
 import whelk.search2.querytree.node.FilterAlias
 
 import java.util.stream.Stream
@@ -208,6 +206,16 @@ class TestData {
                         'subPropertyOf': [['@id': 'p16']]
                 ],
                 [
+                        '@id'  : 'p19',
+                        '@type': 'ObjectProperty',
+                        'domain': ['@id': 'T1']
+                ],
+                [
+                        '@id'  : 'p20',
+                        '@type': 'ObjectProperty',
+                        'domain': ['@id': 'T3']
+                ],
+                [
                         '@id'  : 'ctxProp',
                         '@type': 'DatatypeProperty',
                         'domain': ['@id': 'T4']
@@ -405,6 +413,6 @@ class TestData {
                 ]
         ]
         // TODO
-        return new EsMappings(List.of(mappings))
+        return new ESMappings(List.of(mappings))
     }
 }

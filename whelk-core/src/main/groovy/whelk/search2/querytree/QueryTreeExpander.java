@@ -41,9 +41,23 @@ public class QueryTreeExpander {
         if (condition.isTextQuery() || condition.isAnyQuery() || !condition.selector().isValid()) {
             return condition;
         }
-        return expandSelector(condition, jsonLd, rdfSubjectTypes)
+
+        Node expanded = expandSelector(condition, jsonLd, rdfSubjectTypes)
                 .deepMap(QueryTreeExpander::expandRestrictions)
                 .deepMap(n -> expandType(n, jsonLd));
+
+        return condition.isFlaggedForPostFilter()
+                ? flagDescendantsForPostFilter(expanded) // Pass on post filter flag to descendants of expanded
+                : expanded;
+    }
+
+    private static Node flagDescendantsForPostFilter(Node node) {
+        return node.deepMap(n -> {
+            if (n instanceof Condition c) {
+                c.flagForPostFilter();
+            }
+            return n;
+        });
     }
 
     private static Node expandOr(Or or, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {

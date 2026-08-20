@@ -5,6 +5,7 @@ import whelk.search2.querytree.node.Condition;
 import whelk.search2.querytree.node.Node;
 import whelk.search2.querytree.node.Or;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.value.Any;
 import whelk.search2.querytree.value.YearRange;
 
 import java.util.Collection;
@@ -85,17 +86,11 @@ public class SelectedFacets {
         return result;
     }
 
-    public static QueryTree buildMultiSelectedTree(Collection<? extends List<? extends Node>> multiSelected) {
-        if (multiSelected.isEmpty()) {
-            return QueryTree.newEmpty();
-        }
-        List<Node> orGrouped = multiSelected.stream()
-                .map(selected -> selected.size() > 1
-                        ? new Or(selected)
-                        : selected.getFirst())
-                .toList();
-
-        return new QueryTree(orGrouped.size() == 1 ? orGrouped.getFirst() : new And(orGrouped));
+    public void flagMultiOrRadioSelectedForPostFilter() {
+       getAllMultiOrRadioSelected().values()
+               .stream()
+               .flatMap(List::stream)
+               .forEach(Condition::flagForPostFilter);
     }
 
     private boolean isAndSelected(String propertyKey) {

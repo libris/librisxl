@@ -11,7 +11,6 @@ import whelk.search2.querytree.value.Link
 
 import whelk.search2.querytree.selector.Path
 import whelk.search2.querytree.selector.Property
-import whelk.search2.querytree.TestData
 import whelk.search2.querytree.value.Token
 import whelk.search2.querytree.value.VocabTerm
 import whelk.search2.querytree.value.YearRange

@@ -2,7 +2,7 @@ package whelk.search2.querytree
 
 import spock.lang.Specification
 import whelk.search2.Disambiguate
-import whelk.search2.ESSettings
+import whelk.search2.TestData
 
 import static whelk.search2.querytree.QueryTreeBuilder.buildTree
 

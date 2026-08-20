@@ -20,6 +20,8 @@ public non-sealed class Condition implements Node {
     private final Operator operator;
     private final Value value;
 
+    private boolean flaggedForPostFilter = false;
+
     public Condition(Selector selector, Operator operator, Value value) {
         this.selector = selector;
         this.operator = operator;
@@ -87,6 +89,14 @@ public non-sealed class Condition implements Node {
 
     public boolean isTypeNode() {
         return selector instanceof Property.RdfType && operator.equals(EQUALS) && value instanceof VocabTerm;
+    }
+
+    public boolean isFlaggedForPostFilter() {
+        return flaggedForPostFilter;
+    }
+
+    public void flagForPostFilter() {
+        this.flaggedForPostFilter = true;
     }
 
     public Type asTypeNode() {

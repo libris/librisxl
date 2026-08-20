@@ -4,11 +4,11 @@ import com.google.common.base.Predicates;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.esquery.EsQueryTree2;
-import whelk.search2.esquery.EsQueryTreeBuilder;
+import whelk.search2.esquery.ESQuery;
+import whelk.search2.esquery.ESQueryDefinition;
+import whelk.search2.esquery.ESSettings;
 import whelk.search2.querytree.node.And;
 import whelk.search2.querytree.node.Condition;
-import whelk.search2.querytree.EsQuery;
 import whelk.search2.querytree.node.FilterAlias;
 import whelk.search2.querytree.value.FreeText;
 import whelk.search2.querytree.value.Link;
@@ -16,7 +16,6 @@ import whelk.search2.querytree.node.Node;
 import whelk.search2.querytree.node.Or;
 import whelk.search2.querytree.selector.Property;
 import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.QueryTreeExpander;
 import whelk.search2.querytree.RdfSubjectType;
 import whelk.search2.querytree.value.Resource;
 import whelk.search2.querytree.value.Value;
@@ -32,7 +31,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -40,14 +38,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static whelk.component.ElasticSearch.SystemFields.ES_ID;
-import static whelk.component.ElasticSearch.flattenedLangMapKey;
-import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
-import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
-import static whelk.search2.EsMappings.KEYWORD;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeViewFindUrl;
-import static whelk.search2.QueryUtil.mustWrap;
 import static whelk.search2.querytree.QueryTreeReducer.implies;
 
 public class Query {
@@ -65,15 +57,11 @@ public class Query {
     private final Stats stats;
     private SelectedFacets selectedFacets;
 
-    private EsQuery esQuery;
     private QueryResult queryResult;
 
     private QueryTree.MergedTree fullQueryTree;
 
     static final String WORK_CATEGORY = "librissearch:workCategory";
-
-    private static final String FIND_CATEGORY = "librissearch:findCategory";
-    private static final String IDENTIFY_CATEGORY = "librissearch:identifyCategory";
     static final String NONE_CATEGORY = "librissearch:noneCategory";
 
     public enum SearchMode {
@@ -87,9 +75,6 @@ public class Query {
         AND,
         OR
     }
-
-    public static final String NESTED_AGG_NAME = "n";
-    public static final String REVERSE_NESTED_AGG_NAME = "r";
 
     public Query(QueryParams queryParams,
                  AppParams appParams,
@@ -125,41 +110,15 @@ public class Query {
         return QueryUtil.makeFindUrl(qTree.toQueryString(), queryParams);
     }
 
-    protected EsQuery doGetEsQuery() {
-        JsonLd ld = whelk.getJsonld();
-        var fullQueryTree = getFullQueryTree();
-
-        var indexNames = fullQueryTree.getRdfSubjectType()
-                .typeNames()
-                .stream()
-                .map(whelk.elastic::getIndexForType)
-                .toList();
-        /* TODO?
-        // remove type condition that exactly matches subindex content
-        if (indexNames.size() == 1 && !indexNames.getFirst().equals(whelk.elastic.getBaseIndex())) {
-            var baseType = whelk.elastic.getBaseTypeForSubIndex(indexNames.getFirst());
-            var removeFromTopLevel = new Type(base, whelk.getJsonld())
-            ...
+    protected QueryResult getQueryResult() {
+        if (queryResult == null) {
+            this.queryResult = new QueryResult(getEsQuery().run(), queryParams.debug);
         }
-         */
-
-        QueryTree.ExpandedTree expandedQueryTree = fullQueryTree.expand(ld);
-        ESSettings currentEsSettings = queryParams.boost != null ? esSettings.withBoostSettings(queryParams.boost) : esSettings;
-        if (!queryParams.stats.on) {
-            EsQueryTree2 esQueryTree = new EsQueryTree2(expandedQueryTree, currentEsSettings);
-            var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery());
-            return new EsQuery(esQueryDsl, indexNames);
-        }
-
-        EsQueryTree2 esQueryTree = new EsQueryTree2(expandedQueryTree, currentEsSettings, getSelectedFacets());
-        var esQueryDsl = buildEsQueryDsl(esQueryTree.getMainQuery(), esQueryTree.getPostFilter());
-        esQueryDsl.put("aggs", getEsAggQuery(getFullQueryTree().getRdfSubjectType().typeNames()));
-
-        return new EsQuery(esQueryDsl, indexNames);
+        return queryResult;
     }
 
-    protected Map<String, Object> buildEsQueryDsl(Map<String, Object> mainQuery) {
-        return buildEsQueryDsl(mainQuery, Map.of());
+    protected ESQuery getEsQuery() {
+        return new ESQuery(prepareEsQuery().dsl(), findIndexNames(), whelk.elastic);
     }
 
     protected QueryTree.MergedTree getFullQueryTree() {
@@ -177,20 +136,7 @@ public class Query {
         return List.of();
     }
 
-    protected QueryResult getQueryResult() {
-        if (queryResult == null) {
-            this.queryResult = new QueryResult(doQuery(getEsQuery()), queryParams.debug);
-        }
-        return queryResult;
-    }
-
-    protected Map<String, Object> getEsAggQuery(Collection<String> rdfSubjectTypes) {
-        return buildAggQuery(appParams.sliceList, whelk.getJsonld(), rdfSubjectTypes, esSettings, getSelectedFacets());
-    }
-
     protected Map<String, Object> getPartialCollectionView() {
-
-
         var view = new LinkedHashMap<String, Object>();
 
         view.put(JsonLd.TYPE_KEY, "PartialCollectionView");
@@ -240,7 +186,7 @@ public class Query {
         view.put("maxItems", esSettings.maxItems());
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_QUERY)) {
-            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQuery().dsl()));
+            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, prepareEsQuery().dsl()));
         }
 
         linkLoader.loadChips();
@@ -248,49 +194,43 @@ public class Query {
         return view;
     }
 
-    private Map<String, Object> buildEsQueryDsl(Map<String, Object> mainQuery, Map<String, Object> postFilter) {
-        var queryDsl = new LinkedHashMap<String, Object>();
-
-        queryDsl.put("query", getEsQuery(mainQuery));
-        if (!postFilter.isEmpty()) {
-            queryDsl.put("post_filter", postFilter);
+    protected SelectedFacets getSelectedFacets() {
+        if (selectedFacets == null) {
+            // TODO: Check selected in _r too?
+            this.selectedFacets = new SelectedFacets(qTree, appParams.sliceList);
         }
-
-        queryDsl.put("size", queryParams.limit);
-        queryDsl.put("from", queryParams.offset);
-        queryDsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
-
-        if (queryParams.spell.suggest && esSettings.mappings().spellFieldExists()) {
-            var spellQuery = Spell.getSpellQuery(qTree);
-            if (spellQuery.isPresent()) {
-                if (queryParams.spell.suggestOnly) {
-                    return Map.of("suggest", spellQuery.get());
-                } else {
-                    queryDsl.put("suggest", spellQuery.get());
-                }
-            }
-        }
-
-        queryDsl.put("track_total_hits", true);
-
-        if (queryParams.debug.contains(QueryParams.Debug.ES_SCORE)) {
-            queryDsl.put("explain", true);
-            // Scores won't be calculated when also using sort unless explicitly asked for
-            queryDsl.put("track_scores", true);
-            queryDsl.put("fields", List.of("*"));
-        }
-
-        if (!esSettings.sourceExcludes().isEmpty()) {
-            queryDsl.put("_source", Map.of("excludes", esSettings.sourceExcludes()));
-        }
-
-        return queryDsl;
+        return selectedFacets;
     }
 
-    private Map<String, Object> getEsQuery(Map<String, Object> mainQuery) {
-        var functionScore = esSettings.boost().functionScore();
-        var constantScore = esSettings.boost().constantScore();
-        return mustWrap(Stream.of(mainQuery, functionScore, constantScore).filter(Predicate.not(Map::isEmpty)).toList());
+    private ESQueryDefinition prepareEsQuery() {
+        JsonLd ld = whelk.getJsonld();
+        QueryTree.MergedTree queryTree = getFullQueryTree();
+
+        ESSettings currentEsSettings = queryParams.boost != null
+                ? esSettings.withBoostSettings(queryParams.boost)
+                : esSettings;
+
+        ESQueryDefinition.AggsDefinition aggsDefinition = queryParams.stats.on
+                ? new ESQueryDefinition.AggsDefinition(appParams.sliceList, getSelectedFacets(), queryTree.getRdfSubjectType().typeNames())
+                : null;
+
+        return new ESQueryDefinition(queryTree, currentEsSettings, queryParams, ld, aggsDefinition, null);
+    }
+
+    private List<String> findIndexNames() {
+        /* TODO?
+        // remove type condition that exactly matches subindex content
+        if (indexNames.size() == 1 && !indexNames.getFirst().equals(whelk.elastic.getBaseIndex())) {
+            var baseType = whelk.elastic.getBaseTypeForSubIndex(indexNames.getFirst());
+            var removeFromTopLevel = new Type(base, whelk.getJsonld())
+            ...
+        }
+         */
+        return getFullQueryTree().getRdfSubjectType()
+                .typeNames()
+                .stream()
+                .map(whelk.elastic::getIndexForType)
+                .toList();
     }
 
     private List<Map<String, Object>> getSearchMapping() {
@@ -310,12 +250,6 @@ public class Query {
         addMapping.accept(sTree, AppParams.DEFAULT_SITE_FILTERS);
 
         return mappings;
-    }
-
-    private Map<?, ?> doQuery(EsQuery esQuery) {
-        return esQuery.dsl() instanceof List<?> l
-                ? whelk.elastic.multiQuery(l, esQuery.indexNames())
-                : whelk.elastic.query((Map<?, ?>) esQuery.dsl(), esQuery.indexNames());
     }
 
     private List<FilterAlias> collectOptionalFilters() {
@@ -345,13 +279,6 @@ public class Query {
         return SearchMode.STANDARD_SEARCH;
     }
 
-    private EsQuery getEsQuery() {
-        if (esQuery == null) {
-            this.esQuery = doGetEsQuery();
-        }
-        return esQuery;
-    }
-
     private QueryTree.MergedTree mergeTrees(QueryTree baseTree, List<QueryTree> other) {
         baseTree = establishSubjectTypeContext(baseTree, other);
         QueryTree merged = baseTree;
@@ -374,39 +301,6 @@ public class Query {
                 .orElse(baseTree);
     }
 
-    private SelectedFacets getSelectedFacets() {
-        if (selectedFacets == null) {
-            // TODO: Check selected in _r too?
-            this.selectedFacets = new SelectedFacets(qTree, appParams.sliceList);
-        }
-        return selectedFacets;
-    }
-
-    private String getSortField(String termPath) {
-        var path = expandLangMapKeys(termPath);
-        if (esSettings.mappings().hasFourDigitsShortField(path)) {
-            return String.format("%s%s", path, FOUR_DIGITS_SHORT_SUFFIX);
-        }
-        else if (esSettings.mappings().hasKeywordSubfield(path)) {
-            return String.format("%s.%s", path, KEYWORD);
-        } else {
-            return termPath;
-        }
-    }
-
-    private String expandLangMapKeys(String field) {
-        var parts = field.split("\\.");
-        if (parts.length > 0) {
-            assert whelk != null;
-            var lastIx = parts.length - 1;
-            if (whelk.getJsonld().langContainerAlias.containsKey(parts[lastIx])) {
-                parts[lastIx] = flattenedLangMapKey(parts[lastIx]);
-                return String.join(".", parts);
-            }
-        }
-        return field;
-    }
-
     private Map<String, Object> applyLens(Map<String, Object> framedThing) {
         Set<String> preserveLinks = Stream.ofNullable(queryParams.object).collect(Collectors.toSet());
 
@@ -420,156 +314,6 @@ public class Query {
     private static Map<String, Object> removeSystemInternalProperties(Map<String, Object> framedThing) {
         framedThing.remove("_id");
         return framedThing;
-    }
-
-    private record AggContext(JsonLd jsonLd,
-                              Map<String, List<Condition>> mmSelected,
-                              Collection<String> rdfSubjectTypes,
-                              ESSettings esSettings,
-                              SelectedFacets selectedFacets) { }
-
-    private static Map<String, Object> buildAggQuery(List<AppParams.Slice> sliceList,
-                                                     JsonLd jsonLd,
-                                                     Collection<String> rdfSubjectTypes,
-                                                     ESSettings esSettings,
-                                                     SelectedFacets selectedFacets) {
-        if (sliceList.isEmpty()) {
-            return Map.of(JsonLd.TYPE_KEY,
-                    Map.of("terms",
-                            Map.of("field", JsonLd.TYPE_KEY)));
-        }
-
-        Map<String, List<Condition>> mmSelected = selectedFacets.getAllMultiOrRadioSelected();
-
-        Map<String, Object> query = new LinkedHashMap<>();
-
-        var ctx = new AggContext(jsonLd, mmSelected, rdfSubjectTypes, esSettings, selectedFacets);
-        for (AppParams.Slice slice : sliceList) {
-            addSliceToAggQuery(query, slice, ctx);
-        }
-
-        return query;
-    }
-
-    private static void addSliceToAggQuery(Map<String, Object> query,
-                                           AppParams.Slice slice,
-                                           AggContext ctx) {
-
-        String pKey = slice.propertyKey();
-
-        if (!ctx.selectedFacets.isSelectable(pKey)) {
-            return;
-        }
-
-        Property property = slice.getProperty();
-
-        if (!slice.getShowIf().isEmpty()
-                && ctx.selectedFacets.isInactive(FIND_CATEGORY)
-                && ctx.selectedFacets.isInactive(IDENTIFY_CATEGORY)
-                && ctx.selectedFacets.isInactive(NONE_CATEGORY)) {
-            // Enable @none facet if find/identify/@none in query
-            // TODO don't hardcode this if we decide it is what we want
-            return;
-        }
-
-        if (property instanceof Property.RestrictedSubProperty && !property.hasIndexKey()) {
-            // TODO: E.g. author (combining contribution.role and contribution.agent)
-            throw new RuntimeException("Can't handle combined fields in aggs query");
-        }
-
-        QueryTreeExpander.expandProperty(property, ctx.jsonLd, ctx.rdfSubjectTypes, false)
-                .forEach(selector -> {
-                    String field = selector.esField();
-                    if (ctx.esSettings.mappings().hasFourDigitsKeywordField(field)) {
-                        field = String.format("%s%s", field, FOUR_DIGITS_KEYWORD_SUFFIX);
-                    } else if (ctx.esSettings.mappings().hasKeywordSubfield(field)) {
-                        field = String.format("%s.%s", field, KEYWORD);
-                    } else if (property.isObjectProperty() && !property.isVocabTerm() && !property.isType()) {
-                        field = String.format("%s.%s", field, JsonLd.ID_KEY);
-                    }
-                    if (!ctx.esSettings.mappings().isAggregatable(field)) {
-                        return;
-                    }
-                    Optional<String> nestedStem = EsQueryTreeBuilder.getNestedStem(field, ctx.esSettings.mappings());
-                    Map<String, Object> aggs = nestedStem.isPresent()
-                            ? buildNestedAggQuery(field, slice, nestedStem.get(), ctx)
-                            : buildCoreAqqQuery(field, slice, ctx);
-                    Map<String, List<Condition>> mSelected = ctx.selectedFacets.isMultiOrRadio(pKey)
-                            ? with(new HashMap<>(ctx.mmSelected), m -> {
-                        m.remove(pKey);
-                        // FIXME
-                        if (slice.parentSlice() != null) {
-                            m.remove(slice.parentSlice().propertyKey());
-                        }
-                        if (slice.subSlice() != null) {
-                            m.remove(slice.subSlice().propertyKey());
-                        }
-                        // TODO don't hardcode this if we decide it is what we want
-                        if (FIND_CATEGORY.equals(pKey) || IDENTIFY_CATEGORY.equals(pKey)) {
-                            m.remove(NONE_CATEGORY);
-                        }
-                        //if ("_categoryByCollection.@none".equals(pKey)) {
-                        //    m.remove("_categoryByCollection.find");
-                        //    m.remove("_categoryByCollection.identify");
-                        //}
-                    })
-                            : ctx.mmSelected;
-                    Map<String, Object> filter = SelectedFacets.buildMultiSelectedTree(mSelected.values())
-                            .expand(ctx.jsonLd, ctx.rdfSubjectTypes)
-                            .toEsQuery(ctx.esSettings);
-                    query.put(field, filterWrap(aggs, property.name(), filter));
-                });
-    }
-
-    private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx) {
-        return buildCoreAqqQuery(field, slice, ctx, false);
-    }
-
-    private static Map<String, Object> buildCoreAqqQuery(String field, AppParams.Slice slice, AggContext ctx, boolean isInsideNested) {
-        var q = Map.of("terms",
-                Map.of("field", field,
-                        "size", slice.size(),
-                        "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
-
-        if (slice.subSlice() != null) {
-            q = new LinkedHashMap<>(q);
-
-            Map<String, Object> query = new LinkedHashMap<>();
-            addSliceToAggQuery(query, slice.subSlice(), ctx);
-            q.put("aggs", query);
-        }
-        else if (slice.shouldCountTopLevelDocs() && isInsideNested) {
-            // count the number of top-level documents instead of the number of nested docs
-            // for example multiple holdings with the same organization (heldBy.isPartOf.@id)
-            // isInsideNested - if the nested field doesn't exist, i.e. this won't be a nested agg
-            // we shouldn't generate the reverse nested either because that will be an invalid query
-            q = new LinkedHashMap<>(q);
-            Map<String, Object> reverse = Map.of(
-                    REVERSE_NESTED_AGG_NAME, Map.of(
-                            "reverse_nested", Collections.emptyMap(),
-                            "aggs", Map.of(
-                                    REVERSE_NESTED_AGG_NAME, Map.of(
-                                            "cardinality", Map.of(
-                                                    "field", ES_ID
-                                            )
-                                    )
-                            )
-                    )
-            );
-            q.put("aggs", reverse);
-        }
-
-        return castToStringObjectMap(q);
-    }
-
-    private static Map<String, Object> buildNestedAggQuery(String field, AppParams.Slice slice, String nestedStem, AggContext ctx) {
-        return Map.of("nested", Map.of("path", nestedStem),
-                "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(field, slice, ctx, true)));
-    }
-
-    private static Map<String, Object> filterWrap(Map<String, Object> aggs, String property, Map<String, Object> filter) {
-        return Map.of("aggs", Map.of(property, aggs),
-                "filter", filter);
     }
 
     private class LinkLoader {

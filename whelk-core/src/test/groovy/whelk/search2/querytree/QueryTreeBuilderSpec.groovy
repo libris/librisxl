@@ -4,6 +4,7 @@ import spock.lang.Specification
 import whelk.JsonLd
 import whelk.search2.Disambiguate
 import whelk.search2.Operator
+import whelk.search2.TestData
 import whelk.search2.querytree.node.And
 import whelk.search2.querytree.node.Condition
 import whelk.search2.querytree.selector.Property

@@ -6,14 +6,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class EsBoost {
+public class ESBoost {
     private final List<Field> freeTextFields;
     private final FreeTextQuerySettings freeTextQuerySettings;
     private final FieldedQuerySettings fieldedQuerySettings; // TODO: Improve relevancy for targeted queries
-    private final FunctionScore functionScore;
-    private final List<EsQuery.ConstantScore> constantScores;
+    private final ESNode.FunctionScore functionScore;
+    private final List<ESNode.ConstantScore> constantScores;
 
-    public EsBoost(Map<?, ?> settings) {
+    public ESBoost(Map<?, ?> settings) {
         this.freeTextFields = loadFreeTextFields(settings);
         this.freeTextQuerySettings = loadFreeTextQuerySettings(settings);
         this.fieldedQuerySettings = loadFieldedQuerySettings(settings); // TODO: Separate freetext vs fielded query settings in config file
@@ -21,16 +21,19 @@ public class EsBoost {
         this.constantScores = loadConstantsScores(settings);
     }
 
-    public Map<String, Object> functionScore() {
-        return functionScore.dsl();
-    }
-
-    public Map<String, Object> constantScore() {
-        List<EsQuery> subQueries = new ArrayList<>(constantScores);
-        // Since the constant clauses are only for scoring, and we don't actually require any of the filters to match,
-        // include a match_all clause to make sure that the overall query never fails due to all constant queries failing.
-        subQueries.add(new EsQuery.MatchAll());
-        return new EsQuery.Should(subQueries).dsl();
+    public List<ESNode> getScoreFunctions() {
+        List<ESNode> functions = new ArrayList<>();
+        if (!functionScore.isEmpty()) {
+            functions.add(functionScore);
+        }
+        if (!constantScores.isEmpty()) {
+            List<ESNode> subQueries = new ArrayList<>(constantScores);
+            // Since the constant clauses are only for scoring, and we don't actually require any of the filters to match,
+            // include a match_all clause to make sure that the overall query never fails due to all constant queries failing.
+            subQueries.add(new ESNode.MatchAll());
+            functions.add(new ESNode.Should(subQueries));
+        }
+        return functions;
     }
 
     public List<Field> freeTextFields() {
@@ -110,19 +113,6 @@ public class EsBoost {
         }
     }
 
-    private record FunctionScore(List<EsQuery.ScoreFunction> functions, String scoreMode, String boostMode) {
-        Map<String, Object> dsl() {
-            if (functions.isEmpty()) {
-                return Map.of();
-            }
-            return Map.of("function_score",
-                    Map.of("query", new EsQuery.MatchAll().dsl(),
-                            "functions", functions.stream().map(EsQuery.ScoreFunction::dsl).toList(),
-                            "score_mode", "sum",
-                            "boost_mode", "sum"));
-        }
-    }
-
     private static List<Field> loadFreeTextFields(Map<?, ?> settings) {
         Map<?, ?> boostSettings = getAsMap(settings, "field_boost");
         return getAsStream(boostSettings, "fields")
@@ -150,32 +140,32 @@ public class EsBoost {
         );
     }
 
-    private static FunctionScore loadFunctionScore(Map<?, ?> settings) {
+    private static ESNode.FunctionScore loadFunctionScore(Map<?, ?> settings) {
         Map<?, ?> functionScoreSettings = getAsMap(settings, "function_score");
-        List<EsQuery.ScoreFunction> scoreFunctions = getAsStream(functionScoreSettings, "functions")
+        List<ESNode.ScoreFunction> scoreFunctions = getAsStream(functionScoreSettings, "functions")
                 .map(Map.class::cast)
-                .map(EsBoost::loadScoreFunction)
+                .map(ESBoost::loadScoreFunction)
                 .filter(Objects::nonNull)
                 .toList();
-        return new FunctionScore(scoreFunctions,
+        return new ESNode.FunctionScore(scoreFunctions,
                 (String) functionScoreSettings.get("score_mode"),
                 (String) functionScoreSettings.get("boost_mode"));
     }
 
-    private static EsQuery.ScoreFunction loadScoreFunction(Map<?, ?> settings) {
-        return EsQuery.FieldValueFactor.key().equals(settings.get("type"))
-                ? new EsQuery.FieldValueFactor(getAsMap(settings, "params"), getAsFloat(settings, "weight"))
+    private static ESNode.ScoreFunction loadScoreFunction(Map<?, ?> settings) {
+        return ESNode.FieldValueFactor.key().equals(settings.get("type"))
+                ? new ESNode.FieldValueFactor(getAsMap(settings, "params"), getAsFloat(settings, "weight"))
                 : null;
     }
 
-    private static List<EsQuery.ConstantScore> loadConstantsScores(Map<?, ?> settings) {
+    private static List<ESNode.ConstantScore> loadConstantsScores(Map<?, ?> settings) {
         return getAsStream(settings, "constant_score")
                 .map(Map.class::cast)
                 .map(m -> {
                     String f = (String) m.get("field");
                     String v = (String) m.get("value");
                     float s = getAsFloat(m, "score");
-                    return new EsQuery.ConstantScore(new EsQuery.TermQuery(f, v), s);
+                    return new ESNode.ConstantScore(new ESNode.TermQuery(f, v), s);
                 })
                 .toList();
     }

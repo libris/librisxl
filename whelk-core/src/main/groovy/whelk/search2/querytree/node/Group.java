@@ -12,6 +12,8 @@ public sealed abstract class Group implements Node permits And, Or {
 
     public abstract String key();
 
+    protected boolean toPostFilter = false;
+
     @Override
     public int hashCode() {
         return Objects.hash(this.getClass(), new HashSet<>(children()));

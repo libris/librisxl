@@ -1,8 +1,6 @@
 package whelk.search2.esquery;
 
 import whelk.search.QueryDateTime;
-import whelk.search2.ESSettings;
-import whelk.search2.EsMappings;
 import whelk.search2.Operator;
 import whelk.search2.QueryUtil;
 import whelk.search2.querytree.node.And;
@@ -41,17 +39,13 @@ import java.util.stream.Collectors;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.SEARCH_KEY;
-import static whelk.search2.EsMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
-import static whelk.search2.EsMappings.FOUR_DIGITS_SHORT_SUFFIX;
-import static whelk.search2.EsMappings.KEYWORD;
+import static whelk.search2.esquery.ESMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
+import static whelk.search2.esquery.ESMappings.FOUR_DIGITS_SHORT_SUFFIX;
+import static whelk.search2.esquery.ESMappings.KEYWORD;
 import static whelk.search2.QueryUtil.quote;
 
-public class EsQueryTreeBuilder {
-    public static EsQuery buildFrom(QueryTree queryTree, ESSettings settings) {
-        return buildFrom(queryTree.tree(), settings);
-    }
-
-    public static EsQuery buildFrom(Node queryTreeNode, ESSettings settings) {
+public class ESQueryTreeBuilder {
+    public static ESNode buildFrom(Node queryTreeNode, ESSettings settings) {
         return switch (queryTreeNode) {
             case Condition c -> buildFromCondition(c, settings);
             case FilterAlias fa -> buildFrom(fa.getParsed(), settings);
@@ -61,123 +55,121 @@ public class EsQueryTreeBuilder {
         };
     }
 
-    private static EsQuery buildFromNot(Not not, ESSettings esSettings) {
-        return new EsQuery.MustNot(buildFrom(not.node(), esSettings));
+    private static ESNode buildFromNot(Not not, ESSettings esSettings) {
+        return new ESNode.MustNot(buildFrom(not.node(), esSettings));
     }
 
-    private static EsQuery buildFromOr(Or or, ESSettings esSettings) {
-        List<EsQuery> subQueries = or.children().stream()
+    private static ESNode buildFromOr(Or or, ESSettings esSettings) {
+        List<ESNode> subQueries = or.children().stream()
                 .map(n -> buildFrom(n, esSettings))
                 .toList();
 
         return or instanceof QueryTree.ExpandedTree.DerivedOr derivedOr
                 ? buildDerivedDisjunction(derivedOr.originalCondition(), subQueries)
-                : factorOutNested(new EsQuery.Should(subQueries));
+                : factorOutNested(new ESNode.Should(subQueries));
     }
 
-    private static EsQuery buildDerivedDisjunction(Condition origCondition, List<EsQuery> subQueries) {
+    private static ESNode buildDerivedDisjunction(Condition origCondition, List<ESNode> subQueries) {
         // TODO: Explaining comments
-        EsQuery.DisMax disMax = new EsQuery.DisMax(subQueries);
-        EsQuery query = factorOutNested(disMax);
+        ESNode.DisMax disMax = new ESNode.DisMax(subQueries);
+        ESNode query = factorOutNested(disMax);
 
         boolean shouldCombineFields = origCondition.selector().isComposite();
 
         if (shouldCombineFields) {
-            return query instanceof EsQuery.Nested(EsQuery.DisMax dm,
-                                                   EsQuery.NestedStem stem,
-                                                   Set<EsQuery.NestedField> fields)
-                    ? new EsQuery.Nested(combineFields(dm), stem, fields)
+            return query instanceof ESNode.Nested nested
+                    ? nested.withInnerQuery(combineFields((ESNode.DisMax) nested.query()))
                     : combineFields(disMax);
         }
 
         return query;
     }
 
-    private static EsQuery factorOutNested(EsQuery.Disjunction dis) {
-        boolean allSubQueriesAreNested = dis.subQueries().stream().allMatch(EsQuery.Nested.class::isInstance);
+    private static ESNode factorOutNested(ESNode.Disjunction dis) {
+        boolean allSubQueriesAreNested = dis.subQueries().stream().allMatch(ESNode.Nested.class::isInstance);
         if (!allSubQueriesAreNested) {
             return dis;
         }
 
-        List<EsQuery.Nested> nestedSubQueries = dis.subQueries().stream()
-                .map(EsQuery.Nested.class::cast)
+        List<ESNode.Nested> nestedSubQueries = dis.subQueries().stream()
+                .map(ESNode.Nested.class::cast)
                 .toList();
 
-        boolean differentStems = nestedSubQueries.stream().map(EsQuery.Nested::stem).distinct().count() > 1;
+        boolean differentStems = nestedSubQueries.stream().map(ESNode.Nested::stem).distinct().count() > 1;
         if (differentStems) {
             return dis;
         }
 
-        List<EsQuery> subQueriesAsNonNested = nestedSubQueries.stream()
-                .map(EsQuery.Nested::query)
+        List<ESNode> subQueriesAsNonNested = nestedSubQueries.stream()
+                .map(ESNode.Nested::query)
                 .toList();
-        EsQuery.NestedStem stem = nestedSubQueries.getFirst().stem();
-        Set<EsQuery.NestedField> nestedFields = nestedSubQueries.stream()
-                .map(EsQuery.Nested::fields)
+        ESNode.NestedStem stem = nestedSubQueries.getFirst().stem();
+        Set<ESNode.NestedField> nestedFields = nestedSubQueries.stream()
+                .map(ESNode.Nested::fields)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
 
-        return new EsQuery.Nested(dis.withSubQueries(subQueriesAsNonNested), stem, nestedFields);
+        return new ESNode.Nested(dis.withSubQueries(subQueriesAsNonNested), stem, nestedFields);
     }
 
-    private static EsQuery combineFields(EsQuery.Disjunction dis) {
-        List<EsQuery> subQueries = combineSimpleTextQueryFields(dis.subQueries());
+    private static ESNode combineFields(ESNode.Disjunction dis) {
+        List<ESNode> subQueries = combineSimpleTextQueryFields(dis.subQueries());
         return subQueries.size() == 1
                 ? subQueries.getFirst()
                 : dis.withSubQueries(subQueries);
     }
 
-    private static List<EsQuery> combineSimpleTextQueryFields(List<EsQuery> subQueries) {
-        List<EsQuery.TextQuery> simpleQueries = subQueries.stream()
-                .filter(subQuery -> subQuery instanceof EsQuery.TextQuery t && t.isSimple())
-                .map(EsQuery.TextQuery.class::cast)
+    private static List<ESNode> combineSimpleTextQueryFields(List<ESNode> subQueries) {
+        List<ESNode.TextQuery> simpleQueries = subQueries.stream()
+                .filter(subQuery -> subQuery instanceof ESNode.TextQuery t && t.isSimple())
+                .map(ESNode.TextQuery.class::cast)
                 .toList();
 
         if (simpleQueries.size() < 2) {
             return subQueries;
         }
 
-        List<EsBoost.Field> mergedFields = simpleQueries.stream()
+        List<ESBoost.Field> mergedFields = simpleQueries.stream()
                 .flatMap(q -> q.boostFields().stream())
                 .toList();
 
-        EsQuery.TextQuery first = simpleQueries.getFirst();
+        ESNode.TextQuery first = simpleQueries.getFirst();
         int firstIdx = subQueries.indexOf(first);
 
-        List<EsQuery> result = new ArrayList<>(subQueries);
+        List<ESNode> result = new ArrayList<>(subQueries);
         result.removeAll(simpleQueries);
         result.add(firstIdx, first.withFields(mergedFields));
 
         return result;
     }
 
-    private static EsQuery buildFromAnd(And and, ESSettings esSettings) {
-        List<EsQuery> subQueries = and.children().stream()
+    private static ESNode buildFromAnd(And and, ESSettings esSettings) {
+        List<ESNode> subQueries = and.children().stream()
                 .map(n -> buildFrom(n, esSettings))
                 .toList();
-        EsQuery.Must must = new EsQuery.Must(subQueries);
+        ESNode.Must must = new ESNode.Must(subQueries);
         return groupNested(must);
     }
 
-    private static EsQuery groupNested(EsQuery.Must must) {
-        List<EsQuery> subQueries = new ArrayList<>();
+    private static ESNode groupNested(ESNode.Must must) {
+        List<ESNode> subQueries = new ArrayList<>();
 
-        AtomicReference<EsQuery.NestedStem> currentNestedStem = new AtomicReference<>();
-        List<EsQuery.Nested> currentGroup = new ArrayList<>();
+        AtomicReference<ESNode.NestedStem> currentNestedStem = new AtomicReference<>();
+        List<ESNode.Nested> currentGroup = new ArrayList<>();
 
         Runnable collectNested = () -> {
             if (currentGroup.size() == 1) {
                 subQueries.add(currentGroup.getFirst());
             }
             else if (currentGroup.size() > 1){
-                List<EsQuery> subQueriesAsNonNested = currentGroup.stream()
-                        .map(EsQuery.Nested::query)
+                List<ESNode> subQueriesAsNonNested = currentGroup.stream()
+                        .map(ESNode.Nested::query)
                         .toList();
-                Set<EsQuery.NestedField> nestedFields = currentGroup.stream()
-                        .map(EsQuery.Nested::fields)
+                Set<ESNode.NestedField> nestedFields = currentGroup.stream()
+                        .map(ESNode.Nested::fields)
                         .flatMap(Collection::stream)
                         .collect(Collectors.toSet());
-                EsQuery.Nested outerNested = new EsQuery.Nested(new EsQuery.Must(subQueriesAsNonNested),
+                ESNode.Nested outerNested = new ESNode.Nested(new ESNode.Must(subQueriesAsNonNested),
                         currentNestedStem.get(),
                         nestedFields);
                 subQueries.add(outerNested);
@@ -187,19 +179,19 @@ public class EsQueryTreeBuilder {
             currentGroup.clear();
         };
 
-        Predicate<EsQuery.Nested> isCompatibleWithCurrentGroup = n -> {
-            EsQuery.NestedStem stem = n.stem();
-            Set<EsQuery.NestedField> fields = n.fields();
-            Set<EsQuery.NestedField> currentFields = currentGroup.stream()
-                    .map(EsQuery.Nested::fields)
+        Predicate<ESNode.Nested> isCompatibleWithCurrentGroup = n -> {
+            ESNode.NestedStem stem = n.stem();
+            Set<ESNode.NestedField> fields = n.fields();
+            Set<ESNode.NestedField> currentFields = currentGroup.stream()
+                    .map(ESNode.Nested::fields)
                     .flatMap(Set::stream)
                     .collect(Collectors.toSet());
             return stem.equals(currentNestedStem.get())
                     && fields.stream().noneMatch(f -> !f.isRepeatable() && currentFields.contains(f));
         };
 
-        for (EsQuery subQuery : must.subQueries()) {
-            if (subQuery instanceof EsQuery.Nested nested) {
+        for (ESNode subQuery : must.subQueries()) {
+            if (subQuery instanceof ESNode.Nested nested) {
                 if (isCompatibleWithCurrentGroup.test(nested)) {
                     currentGroup.add(nested);
                 } else {
@@ -209,13 +201,13 @@ public class EsQueryTreeBuilder {
                     currentNestedStem.set(nested.stem());
                     currentGroup.add(nested);
                 }
-            } else if (subQuery instanceof EsQuery.MustNot(EsQuery.Nested nested)
+            } else if (subQuery instanceof ESNode.MustNot(ESNode.Nested nested)
                     // A must_not(nested(...)) clause may only join an existing nested group if that group
                     // already contains a "positive" nested clause for the same path.
                     && isCompatibleWithCurrentGroup.test(nested)) {
                 // Move the negation inside the nested query so it can be grouped with the existing nested clauses
-                EsQuery.MustNot nonNested = new EsQuery.MustNot(nested.query());
-                EsQuery.Nested outerNested = new EsQuery.Nested(nonNested, nested.stem(), Set.of());
+                ESNode.MustNot nonNested = new ESNode.MustNot(nested.query());
+                ESNode.Nested outerNested = new ESNode.Nested(nonNested, nested.stem(), Set.of());
                 currentGroup.add(outerNested);
             } else {
                 // A non-nested sub-query works as a separator for nested groups
@@ -228,12 +220,12 @@ public class EsQueryTreeBuilder {
 
         return subQueries.size() == 1
                 ? subQueries.getFirst()
-                : new EsQuery.Must(subQueries);
+                : new ESNode.Must(subQueries);
     }
 
-    private static EsQuery buildFromCondition(Condition c, ESSettings esSettings) {
+    private static ESNode buildFromCondition(Condition c, ESSettings esSettings) {
         if (c.isAnyQuery()) {
-            return new EsQuery.MatchAll();
+            return new ESNode.MatchAll();
         }
         if (c.isTextQuery()) {
             return buildFromFreeText(c.freeTextValue(), esSettings.boost());
@@ -243,47 +235,51 @@ public class EsQueryTreeBuilder {
         Operator op = c.operator();
         Value v = c.value();
 
-        EsQuery query = switch (v) {
-            case Any ignored -> new EsQuery.Exists(f);
+        ESNode query = switch (v) {
+            case Any ignored -> new ESNode.Exists(f);
             case DateTime dateTime -> buildFromDateTimeValue(f, op, dateTime, esSettings);
             case FreeText freeText -> buildFromFreeTextValue(f, op, freeText, esSettings, c.selector().isObjectProperty());
-            case InvalidValue ignored -> new EsQuery.MatchNone();
+            case InvalidValue ignored -> new ESNode.MatchNone();
             case Link link -> buildFromLinkValue(f, op, link, esSettings);
-            case VocabTerm vocabTerm -> new EsQuery.TermQuery(f, vocabTerm.jsonForm());
-            case Term term -> new EsQuery.TermQuery(f, term.term());
+            case VocabTerm vocabTerm -> new ESNode.TermQuery(f, vocabTerm.jsonForm());
+            case Term term -> new ESNode.TermQuery(f, term.term());
             case YearRange yearRange -> buildFromYearRangeValue(f, op, yearRange, esSettings);
         };
 
-        EsMappings esMappings = esSettings.mappings();
+        if (c.isFlaggedForPostFilter()) {
+            query = new ESNode.PostFilter(query);
+        }
 
-        return getNestedStem(f, esMappings)
-                .map(stem -> {
-                    boolean includeInParent = esMappings.isNestedIncludeInParentField(stem);
-                    boolean isRepeatable = c.selector().isLdSetContainer();
-                    EsQuery.NestedStem nestedStem = new EsQuery.NestedStem(stem, includeInParent);
-                    EsQuery.NestedField nestedField = new EsQuery.NestedField(f, isRepeatable);
-                    return new EsQuery.Nested(query, nestedStem, Set.of(nestedField));
-                })
-                .map(EsQuery.class::cast)
-                .orElse(query);
+        ESMappings esMappings = esSettings.mappings();
+
+        Optional<String> stem = getNestedStem(f, esMappings);
+        if (stem.isPresent()) {
+            boolean includeInParent = esMappings.isNestedIncludeInParentField(stem.get());
+            boolean isRepeatable = c.selector().isLdSetContainer();
+            ESNode.NestedStem nestedStem = new ESNode.NestedStem(stem.get(), includeInParent);
+            ESNode.NestedField nestedField = new ESNode.NestedField(f, isRepeatable);
+            return new ESNode.Nested(query, nestedStem, Set.of(nestedField));
+        }
+
+        return query;
     }
 
-    private static EsQuery buildFromFreeText(FreeText ft, EsBoost esBoost) {
+    private static ESNode buildFromFreeText(FreeText ft, ESBoost esBoost) {
         return buildTextQuery(ft, esBoost.freeTextFields(), esBoost.freeTextQuerySettings());
     }
 
-    private static EsQuery buildFromDateTimeValue(String field, Operator operator, DateTime dateTime, ESSettings esSettings) {
+    private static ESNode buildFromDateTimeValue(String field, Operator operator, DateTime dateTime, ESSettings esSettings) {
         if (esSettings.mappings().isDateTypeField(field)) {
             return switch (operator) {
-                case EQUALS -> new EsQuery.TermQuery(field, dateTime.dateTime().toElasticDateString());
-                case GREATER_THAN, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN_OR_EQUALS -> new EsQuery.RangeQuery(field, Map.of(operator, dateTime.dateTime().toElasticDateString()));
-                case LIKE -> new EsQuery.MatchNone(); // Makes no sense
+                case EQUALS -> new ESNode.TermQuery(field, dateTime.dateTime().toElasticDateString());
+                case GREATER_THAN, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN_OR_EQUALS -> new ESNode.RangeQuery(field, Map.of(operator, dateTime.dateTime().toElasticDateString()));
+                case LIKE -> new ESNode.MatchNone(); // Makes no sense
             };
         }
         return buildFieldedTextQuery(field, new FreeText(dateTime.toString()), esSettings);
     }
 
-    private static EsQuery buildFromFreeTextValue(String field, Operator operator, FreeText ft, ESSettings esSettings, boolean addSearchKey) {
+    private static ESNode buildFromFreeTextValue(String field, Operator operator, FreeText ft, ESSettings esSettings, boolean addSearchKey) {
         return switch (operator) {
             case EQUALS, LIKE -> {
                 if (isLikelyTextField(field, esSettings.mappings())) {
@@ -299,21 +295,21 @@ public class EsQueryTreeBuilder {
                             ? field + FOUR_DIGITS_SHORT_SUFFIX
                             : field;
                     long limit = Long.parseLong(ft.toEsString());
-                    yield new EsQuery.RangeQuery(digitsField, Map.of(operator, limit));
+                    yield new ESNode.RangeQuery(digitsField, Map.of(operator, limit));
                 } else {
-                    yield new EsQuery.MatchNone();
+                    yield new ESNode.MatchNone();
                 }
             }
         };
     }
 
-    private static EsQuery buildFromLinkValue(String field, Operator operator, Link link, ESSettings esSettings) {
+    private static ESNode buildFromLinkValue(String field, Operator operator, Link link, ESSettings esSettings) {
         return operator == Operator.LIKE && !"".equals(link.getNeedle())
                 ? buildWithNeedle(field, link, esSettings.mappings())
-                : new EsQuery.TermQuery(String.format("%s.%s", field, ID_KEY), link.jsonForm());
+                : new ESNode.TermQuery(String.format("%s.%s", field, ID_KEY), link.jsonForm());
     }
 
-    private static EsQuery buildWithNeedle(String field, Link link, EsMappings esMappings) {
+    private static ESNode buildWithNeedle(String field, Link link, ESMappings esMappings) {
         String needle = Arrays.stream(link.getNeedle().split("\\s"))
                 .map(QueryUtil::quote)
                 .collect(Collectors.joining(" "));
@@ -321,36 +317,36 @@ public class EsQueryTreeBuilder {
         String idField = String.format("%s.%s", field, ID_KEY);
         String strField = String.format("%s.%s", field, SEARCH_KEY);
 
-        EsQuery idQuery = new EsQuery.TermQuery(idField, link.jsonForm());
-        EsQuery textQuery = EsQuery.TextQuery.simpleUnboostedQuery(needle, strField);
+        ESNode idQuery = new ESNode.TermQuery(idField, link.jsonForm());
+        ESNode textQuery = ESNode.TextQuery.simpleUnboostedQuery(needle, strField);
 
-        EsQuery notLinked = isNested(field, esMappings)
-                ? new EsQuery.MustNot(new EsQuery.Exists(idField))
-                : new EsQuery.MustNot(idQuery);
-        EsQuery.Must blankQuery = new EsQuery.Must(List.of(textQuery, notLinked));
+        ESNode notLinked = isNested(field, esMappings)
+                ? new ESNode.MustNot(new ESNode.Exists(idField))
+                : new ESNode.MustNot(idQuery);
+        ESNode.Must blankQuery = new ESNode.Must(List.of(textQuery, notLinked));
 
         float linkedBeforeBlank = 50_000f;
-        EsQuery boostedIdQuery = new EsQuery.ConstantScore(idQuery, linkedBeforeBlank);
+        ESNode boostedIdQuery = new ESNode.ConstantScore(idQuery, linkedBeforeBlank);
 
-        return new EsQuery.Should(List.of(boostedIdQuery, blankQuery));
+        return new ESNode.Should(List.of(boostedIdQuery, blankQuery));
     }
 
-    private static EsQuery buildPerTokenTermQueriesQuery(String field, FreeText ft, ESSettings esSettings) {
-        EsMappings mappings = esSettings.mappings();
+    private static ESNode buildPerTokenTermQueriesQuery(String field, FreeText ft, ESSettings esSettings) {
+        ESMappings mappings = esSettings.mappings();
 
         // Known placeholder values (0000, 9999) are excluded from 4-digit fields to prevent them from being treated as valid years in sorting and aggregations.
         Predicate<String> isFourDigitsFieldValue = s -> s.length() == 4 && !s.equals("0000") && !s.equals("9999");
 
-        List<EsQuery> perTokenTermQueries = new ArrayList<>();
+        List<ESNode> perTokenTermQueries = new ArrayList<>();
 
         for (Token t : ft.tokens()) {
             String v = t.value();
             if (mappings.hasFourDigitsKeywordField(field) && t.isDigits() && isFourDigitsFieldValue.test(v)) {
-                perTokenTermQueries.add(new EsQuery.TermQuery(field + FOUR_DIGITS_KEYWORD_SUFFIX, v));
+                perTokenTermQueries.add(new ESNode.TermQuery(field + FOUR_DIGITS_KEYWORD_SUFFIX, v));
             } else if (mappings.hasKeywordSubfield(field) && !isMaskedOrTruncated(v)) {
-                perTokenTermQueries.add(new EsQuery.TermQuery(String.format("%s.%s", field, KEYWORD), v));
+                perTokenTermQueries.add(new ESNode.TermQuery(String.format("%s.%s", field, KEYWORD), v));
             } else if (mappings.isLongTypeField(field) && t.isDigits()) {
-                perTokenTermQueries.add(new EsQuery.TermQuery(field, Long.parseLong(v)));
+                perTokenTermQueries.add(new ESNode.TermQuery(field, Long.parseLong(v)));
             } else {
                 return buildFieldedTextQuery(field, ft, esSettings);
             }
@@ -361,12 +357,12 @@ public class EsQueryTreeBuilder {
         }
 
         return switch (ft.connective()) {
-            case OR -> new EsQuery.Should(perTokenTermQueries);
-            case AND -> new EsQuery.Must(perTokenTermQueries);
+            case OR -> new ESNode.Should(perTokenTermQueries);
+            case AND -> new ESNode.Must(perTokenTermQueries);
         };
     }
 
-    private static EsQuery buildFromYearRangeValue(String field, Operator operator, YearRange yearRange, ESSettings esSettings) {
+    private static ESNode buildFromYearRangeValue(String field, Operator operator, YearRange yearRange, ESSettings esSettings) {
         if (operator == Operator.EQUALS) {
             if (esSettings.mappings().hasFourDigitsShortField(field)) {
                 return buildFromYearRangeValue(field + FOUR_DIGITS_SHORT_SUFFIX, yearRange, Integer::parseInt);
@@ -377,10 +373,10 @@ public class EsQueryTreeBuilder {
             }
         }
 
-        return new EsQuery.MatchNone(); // Makes no sense
+        return new ESNode.MatchNone(); // Makes no sense
     }
 
-    private static EsQuery buildFromYearRangeValue(String field, YearRange yearRange, Function<String, Object> parseLimit) {
+    private static ESNode buildFromYearRangeValue(String field, YearRange yearRange, Function<String, Object> parseLimit) {
         Map<Operator, Object> rangeMap = new HashMap<>();
 
         if (!yearRange.min().isEmpty()) {
@@ -390,16 +386,16 @@ public class EsQueryTreeBuilder {
             rangeMap.put(Operator.LESS_THAN_OR_EQUALS, parseLimit.apply(yearRange.max()));
         }
 
-        return new EsQuery.RangeQuery(field, rangeMap);
+        return new ESNode.RangeQuery(field, rangeMap);
     }
 
-    private static EsQuery buildFieldedTextQuery(String f, FreeText ft, ESSettings esSettings) {
-        EsBoost.FieldedQuerySettings boostSettings = esSettings.boost().fieldedQuerySettings();
-        EsBoost.Field field = new EsBoost.Field(f, boostSettings.defaultBoostFactor());
+    private static ESNode buildFieldedTextQuery(String f, FreeText ft, ESSettings esSettings) {
+        ESBoost.FieldedQuerySettings boostSettings = esSettings.boost().fieldedQuerySettings();
+        ESBoost.Field field = new ESBoost.Field(f, boostSettings.defaultBoostFactor());
         return buildTextQuery(ft, List.of(field), boostSettings);
     }
 
-    private static EsQuery buildTextQuery(FreeText ft, List<EsBoost.Field> fields, EsBoost.TextQuerySettings boostSettings) {
+    private static ESNode buildTextQuery(FreeText ft, List<ESBoost.Field> fields, ESBoost.TextQuerySettings boostSettings) {
         String s = ft.toEsString();
         s = Unicode.normalizeForSearch(s);
 
@@ -408,11 +404,11 @@ public class EsQueryTreeBuilder {
             s = s.replace("-", "");
         }
 
-        EsQuery.TextQueryMode textQueryMode = isSimple(s)
-                ? new EsQuery.SimpleQueryString(s)
-                : new EsQuery.QueryString(escapeNonSimpleQueryString(s), EsQuery.MultiMatchType.most_fields);
+        ESNode.TextQueryMode textQueryMode = isSimple(s)
+                ? new ESNode.SimpleQueryString(s)
+                : new ESNode.QueryString(escapeNonSimpleQueryString(s), ESNode.MultiMatchType.most_fields);
 
-        EsQuery.TextQuery baseQuery = new EsQuery.TextQuery(textQueryMode, fields, ft.connective(), boostSettings);
+        ESNode.TextQuery baseQuery = new ESNode.TextQuery(textQueryMode, fields, ft.connective(), boostSettings);
 
         if (boostSettings.boostPhrase()) {
             return buildWithPhraseBoost(baseQuery, ft.tokens());
@@ -421,70 +417,70 @@ public class EsQueryTreeBuilder {
         return buildWithNormalizers(baseQuery);
     }
 
-    private static EsQuery buildWithNormalizers(EsQuery.TextQuery query) {
-        List<EsBoost.Field> fields = query.boostFields();
-        List<EsBoost.ScriptScoreNormalizer> normalizers = collectNormalizers(fields);
+    private static ESNode buildWithNormalizers(ESNode.TextQuery query) {
+        List<ESBoost.Field> fields = query.boostFields();
+        List<ESBoost.ScriptScoreNormalizer> normalizers = collectNormalizers(fields);
 
         if (normalizers.isEmpty()) {
             return query;
         }
 
-        List<EsQuery> queries = new ArrayList<>();
+        List<ESNode> queries = new ArrayList<>();
 
         normalizers.forEach(n -> {
             // We don't want the normalizer to apply to all fields
             // So we set the other fields as non-scoring
-            List<EsBoost.Field> adjustedBoosts = fields.stream()
-                    .map(f -> n.equals(f.normalizer()) ? f : EsBoost.Field.nonScoring(f.name()))
+            List<ESBoost.Field> adjustedBoosts = fields.stream()
+                    .map(f -> n.equals(f.normalizer()) ? f : ESBoost.Field.nonScoring(f.name()))
                     .toList();
 
-            EsQuery.TextQuery tq = query.withFields(adjustedBoosts);
-            EsQuery.Script script = getScript(query, n);
+            ESNode.TextQuery tq = query.withFields(adjustedBoosts);
+            ESNode.Script script = getScript(query, n);
 
-            queries.add(new EsQuery.ScriptScore(tq, script));
+            queries.add(new ESNode.ScriptScore(tq, script));
         });
 
         // TODO: Naming, comment
-        List<EsBoost.Field> noBoostForNormalized = fields.stream()
-                .map(f -> f.normalizer() != null ? EsBoost.Field.nonScoring(f.name()) : f)
+        List<ESBoost.Field> noBoostForNormalized = fields.stream()
+                .map(f -> f.normalizer() != null ? ESBoost.Field.nonScoring(f.name()) : f)
                 .toList();
         queries.add(query.withFields(noBoostForNormalized));
 
-        return queries.size() == 1 ? queries.getFirst() : new EsQuery.Should(queries);
+        return queries.size() == 1 ? queries.getFirst() : new ESNode.Should(queries);
     }
 
-    private static EsQuery buildWithPhraseBoost(EsQuery.TextQuery baseQuery, List<Token> tokens) {
+    private static ESNode buildWithPhraseBoost(ESNode.TextQuery baseQuery, List<Token> tokens) {
         List<String> simplePhrases = getSimplePhrases(tokens);
 
         if (simplePhrases.isEmpty()) {
             return buildWithNormalizers(baseQuery);
         }
 
-        EsBoost.TextQuerySettings settings = baseQuery.settings();
+        ESBoost.TextQuerySettings settings = baseQuery.settings();
 
         int divisor = settings.phraseBoostDivisor();
-        List<EsBoost.Field> dividedBoosts = baseQuery.boostFields()
+        List<ESBoost.Field> dividedBoosts = baseQuery.boostFields()
                 .stream()
                 .map(f -> f.withBoost(f.boost() / divisor))
                 .toList();
 
-        List<EsQuery> queries = new ArrayList<>();
+        List<ESNode> queries = new ArrayList<>();
 
         simplePhrases.forEach(s -> {
             // We can't use simple_query_string for phrase query
-            EsQuery.QueryString qs = new EsQuery.QueryString(s, baseQuery.query().multiMatchType());
-            EsQuery.TextQuery q = new EsQuery.TextQuery(qs, dividedBoosts, baseQuery.connective(), settings);
+            ESNode.QueryString qs = new ESNode.QueryString(s, baseQuery.query().multiMatchType());
+            ESNode.TextQuery q = new ESNode.TextQuery(qs, dividedBoosts, baseQuery.connective(), settings);
             queries.add(q);
         });
 
         queries.add(buildWithNormalizers(baseQuery));
 
-        return new EsQuery.Should(queries);
+        return new ESNode.Should(queries);
     }
 
-    private static List<EsBoost.ScriptScoreNormalizer> collectNormalizers(List<EsBoost.Field> fields) {
+    private static List<ESBoost.ScriptScoreNormalizer> collectNormalizers(List<ESBoost.Field> fields) {
         return fields.stream()
-                .map(EsBoost.Field::normalizer)
+                .map(ESBoost.Field::normalizer)
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
@@ -512,7 +508,7 @@ public class EsQueryTreeBuilder {
         return simplePhrases;
     }
 
-    private static EsQuery.Script getScript(EsQuery.TextQuery query, EsBoost.ScriptScoreNormalizer n) {
+    private static ESNode.Script getScript(ESNode.TextQuery query, ESBoost.ScriptScoreNormalizer n) {
         String source = n.applyIf() == null ? n.function() : String.format("%s ? %s : _score", n.applyIf(), n.function());
         Map<String, Object> params = new HashMap<>();
         if ("length_normalizer".equals(n.name())) {
@@ -522,10 +518,10 @@ public class EsQueryTreeBuilder {
             params.put("q_num_tokens", qNumTokens);
             params.put("multiplier", lengthNormMultiplier);
         }
-        return new EsQuery.Script(source, params);
+        return new ESNode.Script(source, params);
     }
 
-    private static boolean isLikelyTextField(String field, EsMappings esMappings) {
+    private static boolean isLikelyTextField(String field, ESMappings esMappings) {
         return !esMappings.hasKeywordSubfield(field)
                 && !esMappings.hasFourDigitsKeywordField(field)
                 && !esMappings.isDateTypeField(field)
@@ -534,11 +530,11 @@ public class EsQueryTreeBuilder {
                 && !esMappings.isKeywordTypeField(field);
     }
 
-    private static boolean isNested(String field, EsMappings esMappings) {
+    private static boolean isNested(String field, ESMappings esMappings) {
         return getNestedStem(field, esMappings).isPresent();
     }
 
-    public static Optional<String> getNestedStem(String field, EsMappings esMappings) {
+    public static Optional<String> getNestedStem(String field, ESMappings esMappings) {
         if (esMappings.isNestedTypeField(field)) {
             return Optional.of(field);
         }
