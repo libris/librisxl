@@ -213,6 +213,7 @@ public class SruServlet extends WhelkHttpServlet {
         	writer.flush();
 
                 out.write("<recordData>".getBytes("UTF-8"));
+                out.flush();
 
                 Vector<MarcRecord> marcRecords = MarcExport.compileVirtualMarcRecord(marcExportProfile, embellished, whelk, converter);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -223,9 +224,11 @@ public class SruServlet extends WhelkHttpServlet {
 
                 if ( transformer == null ) {
                 	StaxUtils.copy(xmlInputFactory.createXMLStreamReader(new StringReader(baos.toString())), writer);
+                        writer.flush();
                 } else {
                        try {
                            transformer.transform(new StreamSource(new StringReader(baos.toString())), new StreamResult(out));
+                           out.flush();
                        }
                        catch (TransformerException e) {
                            logger.info(e.getMessage());
@@ -233,11 +236,11 @@ public class SruServlet extends WhelkHttpServlet {
                            return;
                        }
                 }
+
                 out.write("</recordData>".getBytes("UTF-8"));
                 out.flush();
 
                 writer.writeEndElement(); // record
-	    	writer.flush();
             }
 
             writer.writeEndElement(); // records
@@ -246,7 +249,6 @@ public class SruServlet extends WhelkHttpServlet {
 
             writer.flush();
             writer.close();
-            out.flush();
             out.close();
         } catch (XMLStreamException e) {
             logger.error("Couldn't build SRU response.", e);
