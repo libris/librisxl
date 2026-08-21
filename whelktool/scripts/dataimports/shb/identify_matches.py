@@ -4,6 +4,7 @@ import re
 import requests
 import time
 from rapidfuzz import fuzz
+import traceback
 
 
 # Search in Libris #
@@ -18,7 +19,6 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
         query_string = f"type:PhysicalResource {remove_problematic_punctuation(shbd_prepepd.get('full_title'))}"
     else:
         query_string = f"type:PhysicalResource title:({remove_problematic_punctuation(shbd_prepepd.get('full_title'))})"
-
 
     # Contributors - free text with search code
     if shbd_prepepd.get("responsibility_statement"):
@@ -80,16 +80,17 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
     except requests.exceptions.HTTPError as he:
         report.write(f"\n{he}\t{query_string}\n")
 
+
 # Analyze search results #
-def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, float]:
+def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict, float]:
 
     scores_and_matches = []
 
     for match in matches:
 
-        prepped_match = prepare_record(match)
+        match_prepped = prepare_record(match)
 
-        score = get_match_score(prepped_shb, prepped_match)
+        score = get_match_score(shbd_prepepd, match_prepped)
 
         if len(matches) == 1:
             score += 0.5
@@ -98,11 +99,11 @@ def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, 
             {
                 "score": score,
                 "libris_id": match["@id"],
-                "libris_match_record": prepped_match,
+                "libris_match_record": match_prepped,
             }
         )
 
-    best_match = get_best_match(scores_and_matches)
+    best_match = get_best_match(scores_and_matches, shbd_prepepd["@id"])
 
     match_map[shbd_prepepd["@id"]] = {
         "shb_match_record": shbd_prepepd,
@@ -113,7 +114,7 @@ def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, 
     return match_map
 
 
-def get_match_score(prepped_shb: dict, prepped_match: dict):
+def get_match_score(shb_prepped: dict, match_prepped: dict):
     title_score = 0
     author_score = 0
     year_score = 0
@@ -121,32 +122,32 @@ def get_match_score(prepped_shb: dict, prepped_match: dict):
     host_or_series_title_score = 0
 
     title_score = (
-        fuzz.ratio(prepped_shb["full_title"], prepped_match["full_title"]) / 100
+        fuzz.ratio(shb_prepped["full_title"], match_prepped["full_title"]) / 100
     )
 
     author_score = (
         fuzz.ratio(
-            prepped_shb["responsibility_statement"],
-            prepped_match["responsibility_statement"],
+            shb_prepped["responsibility_statement"],
+            match_prepped["responsibility_statement"],
         )
         / 100
     )
 
-    if prepped_shb["year"] and prepped_match["year"]:
+    if shb_prepped["year"] and match_prepped["year"]:
         year_score = (
             1.0
-            if normalize_numeric(prepped_shb["year"])
-            == normalize_numeric(prepped_match["year"])
+            if normalize_numeric(shb_prepped["year"])
+            == normalize_numeric(match_prepped["year"])
             else -1
         )
     else:
         year_score = -0.5
 
-    if prepped_shb["host_or_series_issn"] and prepped_match["host_or_series_issn"]:
+    if shb_prepped["host_or_series_issn"] and match_prepped["host_or_series_issn"]:
         host_or_series_issn_score = (
             1.0
-            if normalize_numeric(prepped_shb["host_or_series_issn"])
-            == normalize_numeric(prepped_match["host_or_series_issn"])
+            if normalize_numeric(shb_prepped["host_or_series_issn"])
+            == normalize_numeric(match_prepped["host_or_series_issn"])
             else -1
         )
     else:
@@ -154,7 +155,7 @@ def get_match_score(prepped_shb: dict, prepped_match: dict):
 
     host_or_series_title_score = (
         fuzz.ratio(
-            prepped_shb["host_or_series_title"], prepped_match["host_or_series_title"]
+            shb_prepped["host_or_series_title"], match_prepped["host_or_series_title"]
         )
         / 100
     )
@@ -170,18 +171,19 @@ def get_match_score(prepped_shb: dict, prepped_match: dict):
     return overall_score
 
 
-def get_best_match(scores_and_matches):
+def get_best_match(scores_and_matches: list, shb_id: str):
 
     highest_score = max(m["score"] for m in scores_and_matches)
     winners = [m for m in scores_and_matches if m["score"] == highest_score]
 
     if len(winners) > 1:
         report.write(
-            f"\nUnable to identify best match: {len(winners)} matches have high score {highest_score}"
+            f"\n{shbd_prepepd["@id"]}\tUnable to identify best match: {len(winners)} matches have high score {highest_score}\t{[match["libris_id"] for match in winners]}"
         )
         return None
 
     return winners[0]
+
 
 # Prepare records for matching #
 def prepare_record(instance: dict) -> dict:
@@ -206,7 +208,9 @@ def prepare_record(instance: dict) -> dict:
             )
             return None
 
-        prepped["responsibility_statement"] = instance.get("responsibilityStatement", "")
+        prepped["responsibility_statement"] = instance.get(
+            "responsibilityStatement", ""
+        )
 
         prepped["extent"] = instance.get("extent", "")
 
@@ -251,9 +255,9 @@ def prepare_record(instance: dict) -> dict:
             return None
 
         return prepped
-    
+
     except KeyError as ke:
-        report.write(f"\nKeyError\t{ke}\t{instance}")
+        report.write(f"\nKeyError (details below) while processing instance: \t{instance}\t{traceback.format_exc()}")
         return prepped
 
 
@@ -300,9 +304,10 @@ if __name__ == "__main__":
     argp.add_argument("search_result_file")
     argp.add_argument("match_map_file")
     argp.add_argument("report")
-    argp.add_argument("search_codes",
-        choices=['title', 'title_and_contributor', 'none'],
-)
+    argp.add_argument(
+        "search_codes",
+        choices=["title", "title_and_contributor", "none"],
+    )
     args = argp.parse_args()
 
     start = time.time()
