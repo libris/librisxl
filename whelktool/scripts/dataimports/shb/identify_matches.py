@@ -178,7 +178,7 @@ def get_best_match(scores_and_matches: list, shb_id: str):
 
     if len(winners) > 1:
         report.write(
-            f"\n{shbd_prepepd["@id"]}\tUnable to identify best match: {len(winners)} matches have high score {highest_score}\t{[match["libris_id"] for match in winners]}"
+            f"\n{shb_id}\tUnable to identify best match: {len(winners)} matches have high score {highest_score}\t{[match["libris_id"] for match in winners]}"
         )
         return None
 
