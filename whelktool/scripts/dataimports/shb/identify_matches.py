@@ -66,7 +66,6 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
     except requests.exceptions.HTTPError as he:
         report.write(f"\n{he}\t{query_string}\n")
 
-
 # Analyze search results #
 def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, float]:
 
@@ -84,8 +83,8 @@ def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, 
         scores_and_matches.append(
             {
                 "score": score,
-                "id": match["@id"],
-                "libris_match_record": {"shb": prepped_shb, "libris": prepped_match},
+                "libris_id": match["@id"],
+                "libris_match_record": prepped_match,
             }
         )
 
@@ -169,7 +168,6 @@ def get_best_match(scores_and_matches):
         return None
 
     return winners[0]
-
 
 # Prepare records for matching #
 def prepare_record(instance: dict) -> dict:
