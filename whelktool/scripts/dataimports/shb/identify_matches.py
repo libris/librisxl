@@ -13,18 +13,32 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
     """
     headers = {"Accept": "application/ld+json"}
 
-    # Match on full title and contributor
-    query_string = f"type:PhysicalResource title:({remove_problematic_punctuation(shbd_prepepd.get('full_title'))})"
+    # Title - free text with search code
+    if search_codes == "none":
+        query_string = f"type:PhysicalResource {remove_problematic_punctuation(shbd_prepepd.get('full_title'))}"
+    else:
+        query_string = f"type:PhysicalResource title:({remove_problematic_punctuation(shbd_prepepd.get('full_title'))})"
 
+
+    # Contributors - free text with search code
     if shbd_prepepd.get("responsibility_statement"):
-        # TODO Possibly complement responsibilityStatement with contributor if needed - after bug preventing search across instance and work fields is fixed
-        query_string = f"{query_string} responsibilityStatement:({remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*)"
+        if search_codes == "title_and_contributor":
+            # TODO Possibly complement responsibilityStatement with contributor if needed - after bug preventing search across instance and work fields is fixed
+            query_string = f"{query_string} responsibilityStatement:({remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*)"
+        else:
+            query_string = f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('responsibility_statement'))}*"
+
+    # Year - free text
     if shbd_prepepd.get("year"):
         query_string = (
             f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('year'))}"
         )
+
+    # Series title - free text
     if shbd_prepepd.get("host_or_series_title"):
         query_string = f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('host_or_series_title'))}"
+
+    # ISSN - free text
     if shbd_prepepd.get("host_or_series_issn"):
         query_string = f"{query_string} {remove_problematic_punctuation(shbd_prepepd.get('host_or_series_issn'))}"
 
@@ -91,7 +105,7 @@ def analyze_matches(prepped_shb, matches: list, match_map: dict) -> tuple[dict, 
     best_match = get_best_match(scores_and_matches)
 
     match_map[shbd_prepepd["@id"]] = {
-        "shb_match_record": prepped_match,
+        "shb_match_record": shbd_prepepd,
         "best_match": best_match,
         "all_matches": scores_and_matches,
     }
@@ -286,6 +300,9 @@ if __name__ == "__main__":
     argp.add_argument("search_result_file")
     argp.add_argument("match_map_file")
     argp.add_argument("report")
+    argp.add_argument("search_codes",
+        choices=['title', 'title_and_contributor', 'none'],
+)
     args = argp.parse_args()
 
     start = time.time()
@@ -293,6 +310,7 @@ if __name__ == "__main__":
     perfect_matches = []
     match_counts = {}
     match_map = {}
+    search_codes = args.search_codes
 
     env_path = "" if args.env == "prod" else f"-{args.env}"
     base_url = f"http://libris{env_path}.kb.se"
