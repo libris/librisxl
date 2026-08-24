@@ -9,7 +9,7 @@
     <appender name="File" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${xl.logRoot:-./logs}/whelk-oaipmh.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${xl.logRoot:-./logs}/whelk-apix.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <fileNamePattern>${xl.logRoot:-./logs}/whelk-oaipmh.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
