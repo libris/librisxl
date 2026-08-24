@@ -3,6 +3,7 @@ import csv
 import json
 import re
 import sys
+import pandas
 from pathlib import Path
 from collections import Counter
 
@@ -188,7 +189,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
     # We can assume all titles are published and printed
     instance["category"] = [{"@id": "https://id.kb.se/term/saobf/Print"}]
 
-    # Title
+    # Title (list)
     title = {"@type": "Title"}
     if structured_record.get("title"):
         title["mainTitle"] = structured_record["title"]
@@ -196,7 +197,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
         title["subtitle"] = structured_record["subtitle"]
     instance["hasTitle"] = [title]
 
-    # Responsibility statement and contributors
+    # Responsibility statement (string) and contributors (list)
     responsibility_statement = ""
     if structured_record.get("primary_contributors"):
         # TODO Add structured contributor property as well?
@@ -228,7 +229,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
     if responsibility_statement:
         instance["responsibilityStatement"] = responsibility_statement
 
-    # Publication
+    # Publication (list)
     publication = {}
 
     if structured_record.get("place"):
@@ -245,58 +246,93 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
             }
         ]
 
-    # Extent
+    # Extent (list) > label (list)
     if structured_record.get("extent"):
-        instance["extent"] = [{"@type": "Extent", "label": structured_record["extent"]}]
+        instance["extent"] = [
+            {"@type": "Extent", "label": [structured_record["extent"]]}
+        ]
 
     # Information about the host publication or series membership
     if structured_record.get("host"):
-        part = {
-            "@type": "PhysicalResource",
-            "category": [{"@id": "https://id.kb.se/term/saobf/Print"}],
-        }
-
-        if structured_record["host"].get("title"):
-            part["hasTitle"] = [
-                {
-                    "@type": "Title",
-                    "mainTitle": structured_record["host"]["title"],
-                }
-            ]
-
-        if structured_record["host"].get("publisher"):
-            part["responsibilityStatement"] = structured_record["host"]["publisher"]
-
-        if structured_record["host"].get("issn"):
-            part["identifiedBy"] = [
-                {
-                    "@type": "ISSN",
-                    "value": structured_record["host"]["issn"],
-                }
-            ]
-
         # Part of series
         if not structured_record["is_component_part"]:
-            if structured_record["host"].get("remainder"):
-                part["seriesStatement"] = structured_record["host"].get("remainder")
+            series = {
+                "@type": "PhysicalResource",
+                "category": [{"@id": "https://id.kb.se/term/saobf/Print"}],
+            }
 
-            series = {}
-            series["inSeries"] = part
+            # Title (list) - move to series statement ?
+            if structured_record["host"].get("title"):
+                series["instanceOf"] = {
+                    "@type": "Series",
+                    "hasTitle": [
+                        {
+                            "@type": "Title",
+                            "mainTitle": structured_record["host"]["title"],
+                        }
+                    ],
+                }
+
+            # Identified by (list)
+            if structured_record["host"].get("issn"):
+                series["identifiedBy"] = [
+                    {
+                        "@type": "ISSN",
+                        "value": structured_record["host"]["issn"],
+                    }
+                ]
+
+            # Series statement (list)
+            if structured_record["host"].get("publisher"):
+                series["seriesStatement"] = structured_record["host"]["publisher"]
+            if structured_record["host"].get("remainder"):
+                if not series.get("seriesStatement"):
+                    series["seriesStatement"] = structured_record["host"]["remainder"]
+                else:
+                    series["seriesStatement"] = (
+                        series["seriesStatement"].rstrip(". ")
+                        + ". "
+                        + structured_record["host"]["remainder"]
+                    )
+
+            series_membership = {"@type": "SeriesMembership"}
+            series_membership["inSeries"] = series
 
             if structured_record["host"].get("part_number"):
-                series["seriesEnumeration"] = structured_record["host"].get(
+                series_membership["seriesEnumeration"] = structured_record["host"].get(
                     "part_number"
                 )
 
-            instance["seriesMembership"] = [series]
+            instance["seriesMembership"] = [series_membership]
 
         # Part of host publication
         else:
-            part_statement = ""
-            instance["isPartOf"] = [part]
             instance["category"].append(
                 {"@id": "https://id.kb.se/term/saobf/ComponentPart"}
             )
+
+            host = {
+                "@type": "PhysicalResource",
+                "category": [{"@id": "https://id.kb.se/term/saobf/Print"}],
+            }
+
+            # Title (list)
+            if structured_record["host"].get("title"):
+                host["hasTitle"] = [
+                    {
+                        "@type": "Title",
+                        "mainTitle": structured_record["host"]["title"],
+                    }
+                ]
+
+            # Responsibility statement (list)
+            if structured_record["host"].get("publisher"):
+                host["responsibilityStatement"] = structured_record["host"]["publisher"]
+
+            instance["isPartOf"] = [host]
+
+            part_statement = ""
+            
             if structured_record["host"].get("part_number"):
                 part_statement = structured_record["host"]["part_number"]
 
@@ -314,7 +350,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
                         part_statement + ", " + structured_record["host"]["remainder"]
                     )
                 else:
-                    part = structured_record["host"]["remainder"]
+                    part_statement = structured_record["host"]["remainder"]
             if part_statement:
                 instance["part"] = [part_statement]
 
@@ -322,14 +358,14 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
 
     if structured_record.get("remaining_note"):
         instance.setdefault("hasNote", []).append(
-            {"@type": "Note", "label": structured_record["remaining_note"]}
+            {"@type": "Note", "label": [structured_record["remaining_note"]]}
         )
 
     ### Store the full original OCR'd note as an instance note ###
     instance.setdefault("hasNote", []).append(
         {
             "@type": "Note",
-            "label": f"Fullständig beskrivning (OCR) ur SHBD: {structured_record["original_note"]}",
+            "label": [f"Fullständig beskrivning (OCR) ur SHBD: {structured_record["original_note"]}"],
         }
     )
 
@@ -784,7 +820,7 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
             not (
                 first_character_after_names.isupper()
                 or first_character_after_names == "&"
-                or first_character_after_names == "\""
+                or first_character_after_names == '"'
             )
         )
         or (len(contributor_names) > 40)
@@ -1114,7 +1150,12 @@ def normalize_special_cases(text: str) -> str:
     """
 
     # Book formats quarto and octavo
-    text = text.replace("4:0", "4:o").replace("4;o", "4:o").replace("8:0", "8:o").replace("8;o", "8:o")
+    text = (
+        text.replace("4:0", "4:o")
+        .replace("4;o", "4:o")
+        .replace("8:0", "8:o")
+        .replace("8;o", "8:o")
+    )
 
     # "1" misread as "l"
     text = re.sub(r"\bl(-\d+)", r"1\1", text)
@@ -1279,15 +1320,96 @@ def reinclude_abbreviations_after_split(parts: list) -> str:
     return parts
 
 
-def make_subject_mappings(subject_mapping_sheets: list[str]) -> dict:
+def _make_subject_mappings(subject_mapping_sheets: list[str]) -> dict:
     """Load subject mappings from the given CSV files and return a dictionary of mappings."""
     subject_mappings: dict = {}
 
     for sheet_file in subject_mapping_sheets:
         _load_subject_mappings(subject_mappings, Path(sheet_file))
-
+    print(subject_mappings)
     return subject_mappings
 
+
+
+def make_subject_mappings(sheet_file: Path) -> dict:
+    """Load subject mappings from the given Excel files and return a dictionary of mappings."""
+    sao_mappings: dict = {}
+    sab_mappings: dict = {}
+    subject_mappings: dict = {}
+
+    sheets = pandas.read_excel(
+    sheet_file,
+    sheet_name=None,
+    header=None,
+    keep_default_na=False,
+    dtype=str
+
+    )
+
+    for key, sheet in sheets.items():
+        years_key = key.split("-", 1)[-1]
+        assert years_key not in subject_mappings
+
+        rownummap = subject_mappings[years_key] = {}
+
+        for i, row in enumerate(sheet.itertuples(index=False, name=None)):
+            subjects: list[str] = []
+            classifications: list[str] = []
+
+            startnum: str | None = None
+            endnum: str | None = None
+
+            for x in row[::-1]:
+                if not subjects and not x:
+                    continue
+
+                description = row[0]
+                startnum = row[1]
+                endnum = row[2]
+                classes = [row[3], row[4]]
+                subjects = [
+                    x for x in row[5:]
+                    if isinstance(x, str) and x.startswith("https://id.kb.se/term/")
+]
+
+                #if x.startswith("https://id.kb.se/term/"):
+                #    subjects.append(x)
+                #elif isinstance(x, str):
+                #    classifications.append(x)
+                #elif endnum is None:
+                #    endnum = x
+                #elif startnum is None:
+                #    startnum = x
+                #else:
+                #    break
+
+            subjects.reverse()
+
+            if subjects:
+                if not startnum:
+                    anomalies.append(f"Missing startnum in {sheet_file} row {i} {row}")
+                    continue
+
+                assert startnum
+
+                startnum = startnum.strip()
+                if startnum.endswith("a"):
+                    startnum = startnum[:-1]
+
+                if endnum:
+                    endnum = endnum.strip()
+                    if endnum.endswith("a"):
+                        endnum = endnum[:-1]
+
+                    for n in range(int(startnum), int(endnum) + 1):
+                        rownummap[f"{n}"] = {"sao": subjects}
+                        rownummap[f"{n}"] = {"sab": classes}
+                else:
+                    rownummap[f"{startnum}+"] = {"sao": subjects}
+                    rownummap[f"{startnum}+"] = {"sab": classes}
+
+
+    return sao_mappings, sab_mappings
 
 def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
     """Load subject mappings from a single CSV file and update the given subject_mappings dictionary."""
@@ -1416,7 +1538,7 @@ if __name__ == "__main__":
     argp.add_argument("-t", "--test", action="store_true", default=False)
     argp.add_argument("--sample-pretty-with")
     argp.add_argument("infile")
-    argp.add_argument("subject_mapping_sheets")
+    argp.add_argument("sao_sab_mapping_sheet")
     argp.add_argument("outfile")
     argp.add_argument("report_file")
     argp.add_argument("info_and_errors_file")
@@ -1431,7 +1553,8 @@ if __name__ == "__main__":
     print("Getting started!")
 
     # Load subject mappings from CSV files
-    subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
+   # subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
+    subject_files = args.sao_sab_mapping_sheet
     if not subject_files:
         raise FileNotFoundError("No CSV files found")
     subject_mappings = make_subject_mappings(subject_files)
