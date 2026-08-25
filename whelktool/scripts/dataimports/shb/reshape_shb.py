@@ -103,7 +103,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     # Set start_year and publ_year to None
     start_year: str | None = None
-    publ_year: str | None = None
+    end_year: str | None = None
 
     # Get the record and main entity
     graph = data["@graph"]
@@ -127,8 +127,8 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     if "marc:primaryProvisionActivity" in instance and "publication" in instance:
         publ = instance["publication"][0]
         start_year = publ.get("startYear")
-        publ_year = publ.get("endYear") or publ.get("year")
-        if publ_year == instance["marc:primaryProvisionActivity"]["year"]:
+        end_year = publ.get("endYear") or publ.get("year")
+        if end_year == instance["marc:primaryProvisionActivity"]["year"]:
             del instance["marc:primaryProvisionActivity"]
 
     ### Some initial cleanup ###
@@ -163,15 +163,18 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     # Parse notes for structured bibliographic data
     structured_record = parse_note(note, syntax_era)
 
-    # Get subject headings
-    structured_record["sao_headings"] = add_sao_headings(
-        shb_host_num, start_year, publ_year, subject_mappings
+    # Add SAO subject headings and SAB classifications
+    sao_headings, sab_codes = get_mapped_sao_and_sab(
+        shb_host_num, start_year, end_year, subject_mappings
     )
-    # TODO Add SAB as well?
+
+    structured_record["sao_headings"] = sao_headings
+    structured_record["sab_codes"] = sab_codes
 
     # Enrich the instance with the parsed data
 
     instance, work = enrich_instance(instance, work, structured_record)
+
     instance["instanceOf"] = work
 
     # Count all properties, icnluding nested, in the final instance ###
@@ -332,7 +335,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
             instance["isPartOf"] = [host]
 
             part_statement = ""
-            
+
             if structured_record["host"].get("part_number"):
                 part_statement = structured_record["host"]["part_number"]
 
@@ -365,14 +368,35 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
     instance.setdefault("hasNote", []).append(
         {
             "@type": "Note",
-            "label": [f"Fullständig beskrivning (OCR) ur SHBD: {structured_record["original_note"]}"],
+            "label": [
+                f"Fullständig beskrivning (OCR) ur SHBD: {structured_record["original_note"]}"
+            ],
         }
     )
 
     ### Add SAO headings
     if structured_record.get("sao_headings"):
-        work["subject"] = structured_record["sao_headings"]
-        counters["various"].update(["SAO added"])
+        work["subject"] = [{"@id": h} for h in structured_record["sao_headings"]]
+        counters["various"].update(["SAO heading added"])
+
+    ### Add SAB classes
+    if structured_record.get("sab_codes"):
+        sab_entities = []
+        for code in structured_record["sab_codes"]:
+            sab_entities.append(
+                {
+                    "code": code,
+                    "@type": "Classification",
+                    "inScheme": {
+                        "code": "kssb",
+                        "@type": "ConceptScheme",
+                        "sameAs": [{"@id": "https://id.kb.se/term/kssb/8"}],
+                        "version": "8",
+                    },
+                }
+            )
+        work["classification"] = sab_entities
+        counters["various"].update(["SAB classification added"])
 
     if structured_record["is_component_part"]:
         counters["various"].update(["Component part"])
@@ -1051,28 +1075,27 @@ def extract_issn(note: str) -> str:
 ### Functions for enriching the records ###
 
 
-def add_sao_headings(shb_host_num, start_year, publ_year, subject_mappings) -> list:
+def get_mapped_sao_and_sab(
+    shb_host_num, start_year, end_year, subject_mappings
+) -> list:
     """Add subject headings to the work based on the SHB part number and publication years.
     Returns a list of subject references, or None if no subjects found."""
 
-    years_key = f"{start_year}-{publ_year}" if start_year else publ_year
+    # Remove extra characters before matching with SAO/SAB mapping
+    shb_host_num = re.sub(r"[a-z]", "", shb_host_num)
+    shb_host_num = shb_host_num.replace("1/2", "").strip()
+
+    years_key = f"{start_year}-{end_year}" if start_year else end_year
     if rownummap := subject_mappings.get(years_key):
-        if subjectrefs := rownummap.get(shb_host_num):  # TODO: opt + 'a' ...
-            work_subjects = [{"@id": s} for s in subjectrefs]
-            counters["subjects"].update(subjectrefs)
+        sao_headings = rownummap.get(shb_host_num, {}).get("sao")
+        sab_codes = rownummap.get(shb_host_num, {}).get("sab")
 
-            return work_subjects
-    else:
-        counters["subjects"].update(["Missing SHB reference!"])
-        anomalies.append(
-            f"Missing SHB reference\tSHB part num: {shb_host_num} Start year: {start_year} Publ year: {publ_year}"
-        )
+        if not sao_headings and not sab_codes:
+            anomalies.append(
+                f"Neither SAO heading nor SAB class found for \tSHB part num: {shb_host_num}\tStart year: {start_year}\tEnd year: {end_year}"
+            )
 
-        # if USE_ANNOT and iri:
-        #    for s in work_subjects:
-        #        s["@annotation"] = {"source": source}
-        # else:
-        #    print(f"{partnum} not in {list(rownummap)} for {years_key}", file=sys.stderr)
+        return sao_headings, sab_codes
 
 
 def link_to_shb_volume(
@@ -1320,143 +1343,50 @@ def reinclude_abbreviations_after_split(parts: list) -> str:
     return parts
 
 
-def _make_subject_mappings(subject_mapping_sheets: list[str]) -> dict:
-    """Load subject mappings from the given CSV files and return a dictionary of mappings."""
-    subject_mappings: dict = {}
-
-    for sheet_file in subject_mapping_sheets:
-        _load_subject_mappings(subject_mappings, Path(sheet_file))
-    print(subject_mappings)
-    return subject_mappings
-
-
-
-def make_subject_mappings(sheet_file: Path) -> dict:
+def load_subject_mappings(sheet_file: Path) -> dict:
     """Load subject mappings from the given Excel files and return a dictionary of mappings."""
-    sao_mappings: dict = {}
-    sab_mappings: dict = {}
+    
     subject_mappings: dict = {}
 
     sheets = pandas.read_excel(
-    sheet_file,
-    sheet_name=None,
-    header=None,
-    keep_default_na=False,
-    dtype=str
-
+        sheet_file, sheet_name=None, header=None, keep_default_na=False, dtype=str
     )
 
     for key, sheet in sheets.items():
-        years_key = key.split("-", 1)[-1]
-        assert years_key not in subject_mappings
+        assert key not in subject_mappings
 
-        rownummap = subject_mappings[years_key] = {}
+        rownummap = subject_mappings[key] = {}
 
         for i, row in enumerate(sheet.itertuples(index=False, name=None)):
             subjects: list[str] = []
-            classifications: list[str] = []
+            classes: list[str] = []
 
             startnum: str | None = None
             endnum: str | None = None
 
-            for x in row[::-1]:
-                if not subjects and not x:
-                    continue
+            # If the second column is empty, it's an SHB superheading without a mapping
+            # Skip to the next row
+            startnum = row[1]
+            if not startnum:
+                continue
 
-                description = row[0]
-                startnum = row[1]
-                endnum = row[2]
-                classes = [x for x in row[3:5] if x]
-                subjects = [
-                    x for x in row[5:]
-                    if x.startswith("https://id.kb.se/term/")
-]
-
-                #if x.startswith("https://id.kb.se/term/"):
-                #    subjects.append(x)
-                #elif isinstance(x, str):
-                #    classifications.append(x)
-                #elif endnum is None:
-                #    endnum = x
-                #elif startnum is None:
-                #    startnum = x
-                #else:
-                #    break
-
+            endnum = row[2]
+            classes = [x for x in row[3:5] if x]
+            subjects = [x for x in row[5:] if x.startswith("https://id.kb.se/term/")]
+            # Why reverse?
             subjects.reverse()
 
             if subjects or classes:
-                if not startnum:
-                    anomalies.append(f"Missing startnum in {sheet_file} row {i} {row}")
-                    continue
-
-                assert startnum
-
-                startnum = startnum.strip()
-                if startnum.endswith("a"):
-                    startnum = startnum[:-1]
-
+                startnum = startnum.strip().removesuffix("a")
                 if endnum:
-                    endnum = endnum.strip()
-                    if endnum.endswith("a"):
-                        endnum = endnum[:-1]
+                    endnum = endnum.strip().removesuffix("a")
 
                     for n in range(int(startnum), int(endnum) + 1):
                         rownummap[f"{n}"] = {"sao": subjects, "sab": classes}
                 else:
-                    rownummap[f"{startnum}+"] = {"sao": subjects, "sab": classes}
+                    rownummap[f"{startnum}"] = {"sao": subjects, "sab": classes}
 
-
-    return sao_mappings, sab_mappings
-
-def _load_subject_mappings(subject_mappings: dict, sheet_file: Path) -> None:
-    """Load subject mappings from a single CSV file and update the given subject_mappings dictionary."""
-    years_key = sheet_file.with_suffix("").name.split("-", 1)[-1]
-    assert years_key not in subject_mappings
-    rownummap = subject_mappings[years_key] = {}
-
-    with sheet_file.open() as f:
-        for i, row in enumerate(csv.reader(f)):
-            subjects: list[str] = []
-
-            startnum: str | None = None
-            endnum: str | None = None
-
-            for x in row[::-1]:
-                if not subjects and not x:
-                    continue
-
-                if x.startswith("https://id.kb.se/term/"):
-                    subjects.append(x)
-                elif endnum is None:
-                    endnum = x
-                elif startnum is None:
-                    startnum = x
-                else:
-                    break
-
-            subjects.reverse()
-
-            if subjects:
-                if not startnum:
-                    anomalies.append(f"Missing startnum in {sheet_file} row {i} {row}")
-                    continue
-
-                assert startnum
-
-                startnum = startnum.strip()
-                if startnum.endswith("a"):
-                    startnum = startnum[:-1]
-
-                if endnum:
-                    endnum = endnum.strip()
-                    if endnum.endswith("a"):
-                        endnum = endnum[:-1]
-
-                    for n in range(int(startnum), int(endnum) + 1):
-                        rownummap[f"{n}"] = subjects
-                else:
-                    rownummap[f"{startnum}+"] = subjects
+    return subject_mappings
 
 
 def pretty_print_sample(lines, biblios, subject_mappings, context_file):
@@ -1551,11 +1481,11 @@ if __name__ == "__main__":
     print("Getting started!")
 
     # Load subject mappings from CSV files
-   # subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
+    # subject_files = list(Path(args.subject_mapping_sheets).glob("*.csv"))
     subject_files = args.sao_sab_mapping_sheet
     if not subject_files:
         raise FileNotFoundError("No CSV files found")
-    subject_mappings = make_subject_mappings(subject_files)
+    subject_mappings = load_subject_mappings(subject_files)
 
     bibliographies: dict = {}
 
