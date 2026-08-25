@@ -1366,10 +1366,10 @@ def make_subject_mappings(sheet_file: Path) -> dict:
                 description = row[0]
                 startnum = row[1]
                 endnum = row[2]
-                classes = [row[3], row[4]]
+                classes = [x for x in row[3:5] if x]
                 subjects = [
                     x for x in row[5:]
-                    if isinstance(x, str) and x.startswith("https://id.kb.se/term/")
+                    if x.startswith("https://id.kb.se/term/")
 ]
 
                 #if x.startswith("https://id.kb.se/term/"):
@@ -1385,7 +1385,7 @@ def make_subject_mappings(sheet_file: Path) -> dict:
 
             subjects.reverse()
 
-            if subjects:
+            if subjects or classes:
                 if not startnum:
                     anomalies.append(f"Missing startnum in {sheet_file} row {i} {row}")
                     continue
@@ -1402,11 +1402,9 @@ def make_subject_mappings(sheet_file: Path) -> dict:
                         endnum = endnum[:-1]
 
                     for n in range(int(startnum), int(endnum) + 1):
-                        rownummap[f"{n}"] = {"sao": subjects}
-                        rownummap[f"{n}"] = {"sab": classes}
+                        rownummap[f"{n}"] = {"sao": subjects, "sab": classes}
                 else:
-                    rownummap[f"{startnum}+"] = {"sao": subjects}
-                    rownummap[f"{startnum}+"] = {"sab": classes}
+                    rownummap[f"{startnum}+"] = {"sao": subjects, "sab": classes}
 
 
     return sao_mappings, sab_mappings
