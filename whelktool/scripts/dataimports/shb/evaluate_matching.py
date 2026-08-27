@@ -1,10 +1,7 @@
-import argparse
-import json
 from evaluate_matching_test_cases import TEST_CASES
 from identify_matches import prepare_record, get_match_score
 
 THRESHOLD = 0.80
-TEST_CASES_DATA_PATH = "evaluate_matching_data.jsonl"
 
 
 def test_pair(records, shb_id, match_id, expected):
@@ -33,15 +30,8 @@ def test_pair(records, shb_id, match_id, expected):
 
 if __name__ == "__main__":
 
-    argp = argparse.ArgumentParser()
-    records = {}
     false_positives = 0
     false_negatives = 0
-
-    with open(TEST_CASES_DATA_PATH) as source_file:
-        for idx, line in enumerate(source_file):
-            rec = json.loads(line)["@graph"][1]
-            records[rec["@id"]] = rec
 
     print(f"\nEvaluating with threshold {THRESHOLD}")
 
@@ -58,7 +48,7 @@ if __name__ == "__main__":
         shb_prepped = prepare_record(shb)
         libris_prepped = prepare_record(libris)
 
-        score = get_match_score(shb_prepped, libris_prepped)
+        score, individual_scores = get_match_score(shb_prepped, libris_prepped)
 
         actual_match = score >= THRESHOLD
         expected = case["expected_to_match"]
@@ -76,12 +66,17 @@ if __name__ == "__main__":
 
         print(
             f"{result:16} "
-            f"score={score:.3f}  "
+            f"Total score={score:.3f}  "
             f"SHB={shb_id}  "
             f"MATCH={libris_id}  "
             f"{case.get('description', '')}"
         )
 
+        if "FALSE" in result:
+            print(f"Scores by property: {individual_scores}  ")
+            print(f"SHB: {shb_prepped}")
+            print(f"Libris: {libris_prepped}")
+
     print()
     print(f"False positives: {false_positives}")
-    print(f"False negatives: {false_negatives}")
+    print(f"False negatives: {false_negatives}\n")

@@ -909,6 +909,8 @@ def extract_title_and_subtitle(
     Returns a tuple of (title, subtitle, remainder).
     """
 
+    # TODO Don't include "Utg. " in title 
+
     subtitle = ""
     remainder = strip_trailing_separators(remainder)
 
@@ -1207,10 +1209,14 @@ def normalize_spacing_and_punctuation(text: str) -> str:
     text = text.replace(",.", ",").replace(", .", ",").replace(", . .", ",")
 
     # Always have a space between "." and any uppercase letter
-    text = re.sub(r"\.(?=[A-ZÅÄÖ])", ". ", text)
+    text = re.sub(r"\.(?=[A-Za-zÅÄÖåäö])", ". ", text)
 
     # Always have a space between "," and any letter
     text = re.sub(r",(?=[A-Za-zÅÄÖåäö])", ", ", text)
+
+    # Always have a space between any letter and one uppercase letter followed by a lowercase letter
+    # DNAnders - DN Anders, enAnders -> en Anders
+    text = re.sub(r"([A-Za-zÅÄÖåäö])([A-ZÅÄÖ][a-zåäö])", r"\1 \2", text)
 
     # Always have a space between two lowercase letters and a digit
     text = re.sub(r"([a-zåäö]{2,})(\d)", r"\1 \2", text)
