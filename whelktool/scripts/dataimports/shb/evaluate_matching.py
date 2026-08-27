@@ -49,16 +49,19 @@ if __name__ == "__main__":
     print("-" * 60)
 
     for case in TEST_CASES:
-        shb = records[case["shb_id"]]
-        match = records[case["match_id"]]
+        shb = case["shb_rec"]["@graph"][1]
+        libris = case["libris_rec"]["@graph"][1]
+
+        shb_id = shb["@id"]
+        libris_id = libris["@id"]
 
         shb_prepped = prepare_record(shb)
-        match_prepped = prepare_record(match)
+        libris_prepped = prepare_record(libris)
 
-        score = get_match_score(shb_prepped, match_prepped)
+        score = get_match_score(shb_prepped, libris_prepped)
 
         actual_match = score >= THRESHOLD
-        expected = case["expected"]
+        expected = case["expected_to_match"]
 
         if actual_match and not expected:
             result = "FALSE MATCH"
@@ -74,8 +77,8 @@ if __name__ == "__main__":
         print(
             f"{result:16} "
             f"score={score:.3f}  "
-            f"SHB={case["shb_id"]}  "
-            f"MATCH={case["match_id"]}  "
+            f"SHB={shb_id}  "
+            f"MATCH={libris_id}  "
             f"{case.get('description', '')}"
         )
 
