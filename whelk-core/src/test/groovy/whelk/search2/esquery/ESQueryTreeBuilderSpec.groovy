@@ -134,6 +134,7 @@ class ESQueryTreeBuilderSpec extends Specification {
                                                    "query"             : "\"x y\"",
                                                    "analyze_wildcard"  : true,
                                                    "quote_field_suffix": ".exact",
+                                                   "type"              : "most_fields",
                                                    "fields"            : ["fieldA^2.5", "fieldA.exact^2.5"]
                                            ]
                                    ], [
@@ -1244,7 +1245,7 @@ class ESQueryTreeBuilderSpec extends Specification {
         ]
     }
 
-    def "simple text queries on sub-properties of the same composite property should be combined into a single query clause"() {
+    def "composite property: text fields should be combined into a single query clause composite property"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new ESBoost([:]))
         String q = 'p16:(x y)' // p16 is a composite property
@@ -1261,7 +1262,7 @@ class ESQueryTreeBuilderSpec extends Specification {
         ]
     }
 
-    def "simple text queries on sub-properties of the same composite property should be combined into a single query clause 2"() {
+    def "composite property: text fields should be combined into a single query clause (2)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new ESBoost([:]))
         String q = 'p1:x OR p16:(x y)' // p16 is a composite property
@@ -1284,6 +1285,111 @@ class ESQueryTreeBuilderSpec extends Specification {
                                                    "fields"          : ["p18", "p17"]
                                            ]
                                    ]]
+                ]
+        ]
+    }
+
+    def "composite property: text fields should be combined into a single query clause (3)"() {
+        given:
+        Map boostSettings = [
+                "field_boost": [
+                        "default_boost_factor": 400,
+                        "phrase_boost_divisor": 8
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(esMappings, new ESBoost(boostSettings))
+        String q = 'p1:x OR p16:(x y)' // p16 is a composite property
+        Node expandedTree = new QueryTree(q, disambiguate).expand(jsonLd).tree()
+        Map result = ESQueryTreeBuilder.buildFrom(expandedTree, esSettings).dsl()
+
+        expect:
+        result == [
+                "bool": [
+                        "should": [[
+                                           "simple_query_string": [
+                                                   "default_operator": "AND",
+                                                   "query"           : "x",
+                                                   "fields"          : ["p1^400.0"]
+                                           ]
+                                   ], [
+                                           "bool": [
+                                                   "should": [[
+                                                                      "query_string": [
+                                                                              "default_operator": "AND",
+                                                                              "query"           : "\"x y\"",
+                                                                              "type"            : "most_fields",
+                                                                              "fields"          : ["p18^50.0", "p17^50.0"]
+                                                                      ]
+                                                              ], [
+                                                                      "simple_query_string": [
+                                                                              "default_operator": "AND",
+                                                                              "query"           : "x y",
+                                                                              "fields"          : ["p18^400.0", "p17^400.0"]
+                                                                      ]
+                                                              ]]
+                                           ]
+                                   ]]
+                ]
+        ]
+    }
+
+    def "composite property: term queries should be evaluated against every field, term by term"() {
+        given:
+        def mappings = [
+                'properties': [
+                        'p17': ['type': 'keyword'],
+                        'p18': ['type': 'keyword']
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(new ESMappings(List.of(mappings)), new ESBoost([:]))
+        String q = 'p16:(x y)' // p16 is a composite property
+        Node expandedTree = new QueryTree(q, disambiguate).expand(jsonLd).tree()
+        Map result = ESQueryTreeBuilder.buildFrom(expandedTree, esSettings).dsl()
+
+        expect:
+        result == [
+                "bool": [
+                        "must": [[
+                                         "bool": [
+                                                 "should": [[
+                                                                    "bool": [
+                                                                            "filter": [
+                                                                                    "term": [
+                                                                                            "p18": "x"
+                                                                                    ]
+                                                                            ]
+                                                                    ]
+                                                            ], [
+                                                                    "bool": [
+                                                                            "filter": [
+                                                                                    "term": [
+                                                                                            "p17": "x"
+                                                                                    ]
+                                                                            ]
+                                                                    ]
+                                                            ]]
+                                         ]
+                                 ], [
+                                         "bool": [
+                                                 "should": [[
+                                                                    "bool": [
+                                                                            "filter": [
+                                                                                    "term": [
+                                                                                            "p18": "y"
+                                                                                    ]
+                                                                            ]
+                                                                    ]
+                                                            ], [
+                                                                    "bool": [
+                                                                            "filter": [
+                                                                                    "term": [
+                                                                                            "p17": "y"
+                                                                                    ]
+                                                                            ]
+                                                                    ]
+                                                            ]]
+                                         ]
+                                 ]]
                 ]
         ]
     }

@@ -78,7 +78,7 @@ public sealed interface ESNode {
                     });
                 }
 
-                if (query instanceof QueryString qs && boostFields.size() > 1) {
+                if (query instanceof QueryString qs && formattedFields.size() > 1) {
                     q.put("type", qs.multiMatchType().name());
                 }
 
@@ -111,6 +111,7 @@ public sealed interface ESNode {
     record TermQuery(String field, Object value) implements ESNode {
         @Override
         public Map<String, Object> dsl() {
+            // Wrap in filter clause to prevent scoring
             return Map.of("bool", Map.of("filter", Map.of("term", Map.of(field, value))));
         }
     }

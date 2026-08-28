@@ -6,6 +6,7 @@ import whelk.search2.querytree.value.FreeText;
 import whelk.search2.querytree.selector.Key;
 import whelk.search2.querytree.selector.Property;
 import whelk.search2.querytree.selector.Selector;
+import whelk.search2.querytree.value.Link;
 import whelk.search2.querytree.value.Token;
 import whelk.search2.querytree.value.Value;
 import whelk.search2.querytree.value.VocabTerm;
@@ -13,6 +14,8 @@ import whelk.search2.querytree.value.VocabTerm;
 import java.util.Objects;
 
 import static java.util.Objects.hash;
+import static whelk.JsonLd.ID_KEY;
+import static whelk.JsonLd.SEARCH_KEY;
 import static whelk.search2.Operator.EQUALS;
 
 public non-sealed class Condition implements Node {
@@ -42,6 +45,19 @@ public non-sealed class Condition implements Node {
 
     public Value value() {
         return value;
+    }
+
+    public String esField() {
+        String f = selector.esField();
+        if (selector.isObjectProperty()) {
+            if (value instanceof Link) {
+                return String.format("%s.%s", f, ID_KEY);
+            }
+            if (value instanceof FreeText) {
+                return String.format("%s.%s", f, SEARCH_KEY);
+            }
+        }
+        return f;
     }
 
     @Override
