@@ -1,14 +1,11 @@
 package whelk.search2;
 
-import whelk.search2.querytree.node.And;
 import whelk.search2.querytree.node.Condition;
 import whelk.search2.querytree.node.Node;
 import whelk.search2.querytree.node.Or;
 import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.value.Any;
 import whelk.search2.querytree.value.YearRange;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

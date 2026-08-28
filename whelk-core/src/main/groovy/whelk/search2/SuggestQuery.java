@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -105,7 +106,7 @@ public class SuggestQuery extends Query {
                                         "_q", QueryUtil.makeViewFindUrl(q, queryParams),
                                         "_cursor", newCursorPos);
                             })
-                            .filter(qualifier -> qualifier != null)
+                            .filter(Objects::nonNull)
                             .toList();
                     item.put("_qualifiers", qualifiers);
                 })

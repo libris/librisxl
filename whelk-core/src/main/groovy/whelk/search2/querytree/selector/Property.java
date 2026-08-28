@@ -22,7 +22,6 @@ import java.util.stream.Stream;
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.Owl.DATATYPE_PROPERTY;
 import static whelk.JsonLd.Owl.HAS_VALUE;
-import static whelk.JsonLd.Owl.INVERSE_OF;
 import static whelk.JsonLd.Owl.OBJECT_PROPERTY;
 import static whelk.JsonLd.Owl.ON_PROPERTY;
 import static whelk.JsonLd.Owl.PROPERTY_CHAIN_AXIOM;
@@ -43,7 +42,6 @@ public non-sealed class Property extends PathElement {
     protected Map<String, Object> definition;
     protected List<String> domain;
     protected List<String> range;
-    protected String inverseOf;
     protected String langAlias;
     protected boolean isVocabTerm;
     protected boolean isLdSetContainer;
@@ -60,7 +58,6 @@ public non-sealed class Property extends PathElement {
         this.definition = definition;
         this.domain = getDomain(jsonLd);
         this.range = getRange(jsonLd);
-        this.inverseOf = getInverseOf(jsonLd);
         this.indexKey = (String) definition.get("ls:indexKey"); // FIXME: This shouldn't have a different prefix (ls: vs librissearch:)
         this.queryKey = queryKey;
         if (name != null) {
@@ -262,10 +259,6 @@ public non-sealed class Property extends PathElement {
         return ((List<?>) asList(definition.get(TYPE_KEY))).stream().anyMatch(DATATYPE_PROPERTY::equals);
     }
 
-    public boolean isInverseOf(Property property) {
-        return inverseOf != null && inverseOf.equals(property.name());
-    }
-
     public boolean hasIndexKey() {
         return indexKey != null;
     }
@@ -357,19 +350,6 @@ public non-sealed class Property extends PathElement {
 
     private List<String> getRange(JsonLd jsonLd) {
         return findDomainOrRange(RANGE, jsonLd);
-    }
-
-    private String getInverseOf(JsonLd jsonLd) {
-        return Optional.ofNullable(definition.get(INVERSE_OF))
-                .map(Property::getIri)
-                .map(jsonLd::toTermKey)
-                .filter(jsonLd.vocabIndex::containsKey)
-                .orElse(null);
-    }
-
-    private boolean isPlatformTerm() {
-        // FIXME: don't hardcode
-        return isCategory("https://id.kb.se/vocab/platform", definition);
     }
 
     private boolean hasLangAlias() {

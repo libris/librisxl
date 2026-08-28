@@ -1,11 +1,5 @@
 package whelk.search2.querytree.value;
 
-import whelk.search.QueryDateTime;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-
 public record YearRange(String min, String max, Token token) implements Value {
     private static String sep() {
         return "-";
@@ -21,15 +15,6 @@ public record YearRange(String min, String max, Token token) implements Value {
         return min + sep() + max;
     }
 
-    public Map<String, Object> toEsIntRange() {
-        return toEs(Integer::parseInt);
-    }
-
-    public Map<String, Object> toEsDateRange() {
-        return toEs(s -> QueryDateTime.parse(s).toElasticDateString());
-    }
-
-
     public static YearRange parse(String s, Token token) {
         if (s.matches("(\\d{4})?-(\\d{4})?") && !s.equals("-")) {
             var hyphenIdx = s.indexOf('-');
@@ -38,16 +23,5 @@ public record YearRange(String min, String max, Token token) implements Value {
             return new YearRange(min, max, token);
         }
         return null;
-    }
-
-    private Map<String, Object> toEs(Function<String, Object> f) {
-        Map<String, Object> m = new HashMap<>();
-        if (!min.isEmpty()) {
-            m.put("gte", f.apply(min));
-        }
-        if (!max.isEmpty()) {
-            m.put("lte", f.apply(max));
-        }
-        return m;
     }
 }

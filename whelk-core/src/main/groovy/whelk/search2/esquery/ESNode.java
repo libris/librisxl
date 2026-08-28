@@ -39,9 +39,8 @@ public sealed interface ESNode {
 
         @Override
         public MultiMatchType multiMatchType() {
-            // FIXME: Rewrite comment
-            // While the multi_match type may not be specified in simple_query_string,
-            // the score counting corresponds to most_fields
+            // Although simple_query_string does not allow the multi_match type to be specified,
+            // its scoring behavior corresponds to most_fields.
             return MultiMatchType.most_fields;
         }
     }

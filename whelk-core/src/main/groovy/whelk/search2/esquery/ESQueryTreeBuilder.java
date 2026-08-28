@@ -480,23 +480,24 @@ public class ESQueryTreeBuilder {
         List<ESNode> queries = new ArrayList<>();
 
         normalizers.forEach(n -> {
-            // We don't want the normalizer to apply to all fields
-            // So we set the other fields as non-scoring
-            List<ESBoost.Field> adjustedBoosts = fields.stream()
+            // Apply each normalizer in its own query clause.
+            // Other fields are included for matching but excluded from scoring.
+            List<ESBoost.Field> scoreFromNormalizedFieldsOnly = fields.stream()
                     .map(f -> n.equals(f.normalizer()) ? f : ESBoost.Field.nonScoring(f.name()))
                     .toList();
 
-            ESNode.TextQuery tq = query.withFields(adjustedBoosts);
+            ESNode.TextQuery tq = query.withFields(scoreFromNormalizedFieldsOnly);
             ESNode.Script script = getScript(query, n);
 
             queries.add(new ESNode.ScriptScore(tq, script));
         });
 
-        // TODO: Naming, comment
-        List<ESBoost.Field> noBoostForNormalized = fields.stream()
+        // Add a clause where normalized fields do not contribute to the score,
+        // because they are scored by their respective clauses above.
+        List<ESBoost.Field> noScoreFromNormalizedFields = fields.stream()
                 .map(f -> f.normalizer() != null ? ESBoost.Field.nonScoring(f.name()) : f)
                 .toList();
-        queries.add(query.withFields(noBoostForNormalized));
+        queries.add(query.withFields(noScoreFromNormalizedFields));
 
         return queries.size() == 1 ? queries.getFirst() : new ESNode.Should(queries);
     }
