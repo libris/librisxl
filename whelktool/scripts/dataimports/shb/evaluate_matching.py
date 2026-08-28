@@ -78,5 +78,5 @@ if __name__ == "__main__":
             print(f"Libris: {libris_prepped}")
 
     print()
-    print(f"False positives: {false_positives}")
-    print(f"False negatives: {false_negatives}\n")
+    print(f"False matches: {false_positives}")
+    print(f"False non-matches: {false_negatives}\n")

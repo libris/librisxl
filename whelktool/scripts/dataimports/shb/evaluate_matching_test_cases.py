@@ -418,7 +418,7 @@ TEST_CASES = [
         "expected_to_match": False,
         "description": "",
     },
-        {
+    {
         "shb_rec": {
             "@graph": [
                 {
@@ -602,6 +602,6 @@ TEST_CASES = [
             "@context": "/context.jsonld",
         },
         "expected_to_match": True,
-        "description": "Fake example of how an unexpected non-match would be displayed.",
+        "description": "Example of how an unexpected non-match would be displayed.",
     },
 ]
