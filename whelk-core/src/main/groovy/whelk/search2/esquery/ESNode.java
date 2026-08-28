@@ -177,8 +177,8 @@ public sealed interface ESNode {
         @Override
         public Map<String, Object> dsl() {
             if (fields.size() == 1 && stem.includeInParent()) {
-                boolean isSingleTokenQuery = !(query instanceof TextQuery textQuery)
-                        || textQuery.query().query().chars().noneMatch(Character::isWhitespace);
+                boolean isSingleTokenQuery = query instanceof TermQuery || (query instanceof TextQuery textQuery
+                        && textQuery.query().query().chars().noneMatch(Character::isWhitespace));
                 if (isSingleTokenQuery) {
                     // Not necessary to wrap as nested query in this case
                     return query.dsl();

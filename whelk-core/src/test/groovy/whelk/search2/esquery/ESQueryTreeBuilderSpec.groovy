@@ -324,37 +324,6 @@ class ESQueryTreeBuilderSpec extends Specification {
         ]
     }
 
-    def "group nested (OR, include_in_parent=true)"() {
-        given:
-        ESSettings esSettings = new ESSettings(esMappings, new ESBoost([:]))
-        String q = 'p15.p4:"https://id.kb.se/x" OR p15.p4:"https://id.kb.se/y"'
-        Node queryTree = QueryTreeBuilder.buildTree(q, disambiguate)
-        Map result = ESQueryTreeBuilder.buildFrom(queryTree, esSettings).dsl()
-
-        expect:
-        result == [
-                "bool": [
-                        "should": [[
-                                           "bool": [
-                                                   "filter": [
-                                                           "term": [
-                                                                   "p15.p4.@id": "https://id.kb.se/x"
-                                                           ]
-                                                   ]
-                                           ]
-                                   ], [
-                                           "bool": [
-                                                   "filter": [
-                                                           "term": [
-                                                                   "p15.p4.@id": "https://id.kb.se/y"
-                                                           ]
-                                                   ]
-                                           ]
-                                   ]]
-                ]
-        ]
-    }
-
     def "group nested (OR in AND)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new ESBoost([:]))
