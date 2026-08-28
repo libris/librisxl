@@ -166,7 +166,7 @@ public class Disambiguate {
         }
 
         // TODO: Get valid keys from ES index? Add totalItemsByRelation to vocab?
-        if (LD_KEYS.contains(token.value()) || token.value().startsWith("_") || "totalItemsByRelation".equals(token.value())) {
+        if (LD_KEYS.contains(token.value()) || token.value().startsWith("_") || token.value().contains("totalItemsByRelation")) {
             return new Key.RecognizedKey(token);
         }
 
