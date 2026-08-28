@@ -350,7 +350,7 @@ public class ESQueryTreeBuilder {
             } else if (esSettings.mappings().isDateTypeField(field)) {
                 return buildFromYearRangeValue(field, yearRange, v -> QueryDateTime.parse(v).toElasticDateString());
             } else {
-                return buildFieldedTextQuery(field, new FreeText(yearRange.toString()), esSettings.boost().fieldedQuerySettings());
+                return buildFieldedDatatypeQuery(List.of(field), new FreeText(yearRange.toString()), esSettings);
             }
         }
 
