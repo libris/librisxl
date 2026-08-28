@@ -90,14 +90,12 @@ def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict,
 
         match_prepped = prepare_record(match)
 
-        score = get_match_score(shbd_prepepd, match_prepped)
-
-        if len(matches) == 1:
-            score += 0.5
+        score, partial_scores = get_match_score(shbd_prepepd, match_prepped)
 
         scores_and_matches.append(
             {
-                "score": score,
+                "total_score": score,
+                "parital_scores": partial_scores, 
                 "libris_id": match["@id"],
                 "libris_match_record": match_prepped,
             }
@@ -115,60 +113,108 @@ def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict,
 
 
 def get_match_score(shb_prepped: dict, match_prepped: dict):
+    weighted_scores = {}
+    weights = []
     title_score = 0
-    author_score = 0
-    year_score = 0
-    host_or_series_issn_score = 0
     host_or_series_title_score = 0
+    contributor_score = 0
+    year_score = 0
+    issn_score = 0
+    extent_score = 0
+    part_score = 0
 
+    # Ttile should match almost verbatim
     title_score = (
         fuzz.ratio(shb_prepped["full_title"], match_prepped["full_title"]) / 100
     )
 
-    author_score = (
-        fuzz.ratio(
-            shb_prepped["responsibility_statement"],
-            match_prepped["responsibility_statement"],
-        )
-        / 100
-    )
-
-    if shb_prepped["year"] and match_prepped["year"]:
-        year_score = (
-            1.0
-            if normalize_numeric(shb_prepped["year"])
-            == normalize_numeric(match_prepped["year"])
-            else -1
-        )
-    else:
-        year_score = -0.5
-
-    if shb_prepped["host_or_series_issn"] and match_prepped["host_or_series_issn"]:
-        host_or_series_issn_score = (
-            1.0
-            if normalize_numeric(shb_prepped["host_or_series_issn"])
-            == normalize_numeric(match_prepped["host_or_series_issn"])
-            else -1
-        )
-    else:
-        host_or_series_issn_score = -0.5
-
-    host_or_series_title_score = (
+    # Host or series title should match almost verbatim
+    if shb_prepped.get("host_or_series_title") and match_prepped.get("host_or_series_title"):
+        host_or_series_title_score = (
         fuzz.ratio(
             shb_prepped["host_or_series_title"], match_prepped["host_or_series_title"]
         )
         / 100
     )
 
-    overall_score = (
-        0.6 * title_score
-        + 0.6 * author_score
-        + 0.3 * year_score
-        + 0.3 * host_or_series_issn_score
-        + 0.3 * host_or_series_title_score
-    )
+    # Auhtor names are often inverted on one or the other side
+    if shb_prepped.get("responsibility_statement") and match_prepped.get("responsibility_statement"):
+        contributor_score = (
+            fuzz.token_sort_ratio(
+                shb_prepped["responsibility_statement"],
+                match_prepped["responsibility_statement"],
+            )
+            / 100
+        )
 
-    return overall_score
+    # Part should have similar content, but not necessarily the same length or order
+    if shb_prepped.get("part") and match_prepped.get("part"):
+        part_score = (
+            fuzz.token_set_ratio(
+                shb_prepped["part"],
+                match_prepped["part"],
+            )
+            / 100
+        )
+
+    # Extent should have similar content, but not necessarily the same length or order
+    if shb_prepped.get("extent") and match_prepped.get("extent"):
+        extent_score = (
+            fuzz.token_set_ratio(
+                shb_prepped["extent"][0]["label"][0],
+                match_prepped["extent"][0]["label"][0],
+            )
+            / 100
+        )
+
+    # Year and ISSN (normalized to numeric only) are dealbreakers
+    # If they are present and don't match, it's not the same record
+
+    if shb_prepped.get("year") and match_prepped.get("year"):
+        if normalize_numeric(shb_prepped["year"]) != normalize_numeric(
+            match_prepped["year"]
+        ):
+            return 0, {"Dealbreaker": "Year present and not a match"}
+        else:
+            year_score = 1
+    else:
+        year_score = 0
+
+    if shb_prepped.get("host_or_series_issn") and match_prepped.get("host_or_series_issn"):
+        if normalize_numeric(shb_prepped["host_or_series_issn"]) != normalize_numeric(
+            match_prepped["host_or_series_issn"]
+        ):
+            return 0, {"Dealbreaker": "ISSN present and not a match"}
+        else:
+            issn_score = 1
+    else:
+        issn_score = 0
+
+    # Calculate the overall score
+    weighted_scores["title"] = 0.40 * title_score
+    weights.append(0.40)
+
+    weighted_scores["contributor"] = 0.25 * contributor_score
+    weights.append(0.25)
+
+    weighted_scores["host_or_series_issn"] = 0.10 * issn_score
+    weights.append(0.10)
+
+    weighted_scores["year"] = 0.10 * year_score
+    weights.append(0.05)
+
+    weighted_scores["host_or_series_title"] = 0.05 * host_or_series_title_score
+    weights.append(0.10)
+
+    weighted_scores["part"] = 0.05 * part_score
+    weights.append(0.05)
+
+    weighted_scores["extent"] = 0.05 * extent_score
+    weights.append(0.05)
+
+    overall_score = sum(weighted_scores.values()) / sum(weights)
+
+    return overall_score, weighted_scores
 
 
 def get_best_match(scores_and_matches: list, shb_id: str):
@@ -257,7 +303,9 @@ def prepare_record(instance: dict) -> dict:
         return prepped
 
     except KeyError as ke:
-        report.write(f"\nKeyError (details below) while processing instance: \t{instance}\t{traceback.format_exc()}")
+        report.write(
+            f"\nKeyError (details below) while processing instance: \t{instance}\t{traceback.format_exc()}"
+        )
         return prepped
 
 
