@@ -455,8 +455,6 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         remainder, host_or_series = extract_parenthesis_delimited_host_or_series(
             remainder, syntax_era
         )
-        # TODO Possibly look at interpreting the two rightmost remainder.split(".") as series/publication for the pre-parenthesis era
-        # See tests for syntax and examples
 
     # Extract contributors
     primary_contributors, remainder = extract_primary_contributors(remainder)
@@ -893,13 +891,26 @@ def extract_primary_contributors(remainder: dict) -> tuple[str, str]:
 
 def extract_other_contributors(remainder: str) -> tuple[str, str]:
     # If the the title is followed by a " / ", signalling the contributor is next
+    contributors = ""
+
     if " / " in remainder:
         counters["various"].update(["STRUCTURE\t Title / Author"])
         remainder, contributors = remainder.split(" / ", 1)
 
         return contributors, remainder
-    else:
-        return None, remainder
+    
+    if "Utg. " in remainder:
+        parts = remainder.split('Utg. ', 1)
+        remainder = parts[0].strip()
+
+        if not contributors:
+            contributors = 'Utg. ' + parts[1].strip()
+        else:
+            contributors = contributors + ". " + 'Utg. ' + parts[1].strip()
+
+        return contributors, remainder
+    
+    return contributors, remainder
 
 
 def extract_title_and_subtitle(

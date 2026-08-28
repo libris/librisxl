@@ -11,11 +11,11 @@ from reshape_shb import (
 # Clean up of punctuation
 def test_normalize_spacing_and_punctuation():
 
-    note = "Wahlbäck, K.,. Finlandsfrågan  i svensk_politik,återgiven. [Resumé.] Utgiven1964av S.Hadenius; i UNT av R\\agnar\\ Mtymelin."
+    note = "Wahlbäck, K.,. EnAnders. DNNummer 1. Finlandsfrågan  i svensk_politik,återgiven. [Resumé.] Utgiven1964av S.Hadenius; i UNT av R\\agnar\\ Mtymelin."
 
     actual = normalize_spacing_and_punctuation(note)
 
-    assert actual == "Wahlbäck, K., Finlandsfrågan i svensk_politik, återgiven. [Resumé.] Utgiven 1964 av S. Hadenius; i UNT av R[agnar] Mtymelin."
+    assert actual == "Wahlbäck, K., En Anders. DN Nummer 1. Finlandsfrågan i svensk_politik, återgiven. [Resumé.] Utgiven 1964 av S. Hadenius; i UNT av R[agnar] Mtymelin."
 
 # Part-of from parenthesis
 @pytest.mark.parametrize(
@@ -374,7 +374,7 @@ def test_parse_note_1936_1950_Bidrag():
 def test_parse_note_1936_1950_Monografi():
     record = {
         "pattern": "Efternamn, Förnamn, Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)",
-        "sample": "Weibull, C, Händelser och utvecklingslinjer. Historiska studier. Lund 1949,  254 s. (Göteborgs högskola. Forskningar och föreläsningar.) Rec. i HT 70 (1950), s. 69-70 av T. [T:son] H[öjer]; i SvD 21/11 1949 av  dens.; i SDS 25/11 1949 av K.-E. L[öfqvist]; i FT 148 (1950), s. 59-61 av 0.  M[usteli]n; i StT 1/12 1949 av S. U. Palme; i GHT 7/12 1949 av K[nut] P[etersson]. ",
+        "sample": "Weibull, C, Händelser och utvecklingslinjer. Historiska studier. Lund 1949,  254 s. (Göteborgs högskola. Forskningar och föreläsningar.) Rec. i HT 70 (1950), s. 69-70 av T. [T:son] H[öjer]; i SvD 21/11 1949 av  dens.; i SDS 25/11 1949 av K.-E. L[öfqvist]; i FT 148 (1950), s. 59-61 av 0.  M[usteli]n; i StT 1/12 1949 av S. U. Palme; i GHT 7/12 1949 av K[nut] P[etersson]. ",
     }
 
     result = parse_note(record["sample"], "parenthesized")
@@ -917,6 +917,23 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi_utan_författare():
 
 ### Special and edge cases ###
 
+
+def test_separate_publication_info_delimited_utg():
+    record = {
+        "sample": "Marklund, Erik, Övre Norrland i litteraturen. En bibliografi över Norrbottens och Västerbottens län. Utg. av Gösta Engström. Umeå 1963. xv, 698 s. - Skrifter utg. av Vetenskapliga biblioteket i Umeå. 6. [Även utg. som: Acta Bibliothecae Universitatis Gothoburgensis. 6.] Rec. i VästerbK 2.6 1967 av K. Gafvelin; i FTT 70 (1965), s. 106-108 av Esko Häkli; i Lychnos 1965/1966, s. 361-362 av Bror Olsson; i DNS 17.7 1964 av S. Rosén. Register. Göteborg 1966. 87, (1) s. - Acta Bibliothecae Universitatis Gothobur- gensis. 7. [Även utg. som Skrifter utg. av Vetenskapliga biblioteket i Umeå. 7.]",
+    }
+    result = parse_note(record["sample"], "dash_style")
+
+    assert result["is_component_part"] == False
+    assert result["title"] == "Övre Norrland i litteraturen"
+    assert result["subtitle"] == "En bibliografi över Norrbottens och Västerbottens län"
+    assert result["primary_contributors"] == "Marklund, Erik"
+    assert result["other_contributors"] == "Utg. av Gösta Engström"
+    assert result["extent"] == "xv, 698 s."
+    assert result["place"] == "Umeå"
+    assert result["year"] == "1963"
+    assert result["host"] == {"title": "Skrifter utg. av Vetenskapliga biblioteket i Umeå", "part_number": "6. [Även utg. som: Acta Bibliothecae Universitatis Gothoburgensis. 6.]"}
+    assert result["remaining_note"] == "Rec. i VästerbK 2.6 1967 av K. Gafvelin; i FTT 70 (1965), s. 106-108 av Esko Häkli; i Lychnos 1965/1966, s. 361-362 av Bror Olsson; i DNS 17.7 1964 av S. Rosén. Register. Göteborg 1966. 87, (1) s. - Acta Bibliothecae Universitatis Gothobur- gensis. 7. [Även utg. som Skrifter utg. av Vetenskapliga biblioteket i Umeå. 7.]"
 
 def test_no_primary_contributor_one_comma_in_title():
     record = {
