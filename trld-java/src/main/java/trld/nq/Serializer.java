@@ -15,6 +15,7 @@ import java.io.*;
 import trld.Builtins;
 import trld.KeyValue;
 
+import static trld.platform.Common.escapeCodepoints;
 import trld.platform.Output;
 import static trld.jsonld.Base.isBlank;
 import trld.jsonld.RdfDataset;
@@ -61,6 +62,12 @@ public class Serializer {
       String v = (String) ((RdfLiteral) t).value;
       v = v.replace("\\", "\\\\");
       v = v.replace("\"", "\\\"");
+      v = v.replace("", "\\b");
+      v = v.replace("\t", "\\t");
+      v = v.replace("\n", "\\n");
+      v = v.replace("\u000c", "\\f");
+      v = v.replace("\r", "\\r");
+      v = escapeCodepoints(v, (c) -> needsUnicodeEsc(c));
       v = "\"" + v + "\"";
       if (((RdfLiteral) t).language != null) {
         return v + "@" + ((RdfLiteral) t).language;
@@ -71,5 +78,8 @@ public class Serializer {
         return v;
       }
     }
+  }
+  protected static boolean needsUnicodeEsc(Integer cp) {
+    return ((0 <= cp && cp <= 7) || cp == 11 || (14 <= cp && cp <= 31) || cp == 127 || !(((1 <= cp && cp <= 55295) || (57344 <= cp && cp <= 65533) || (65536 <= cp && cp <= 1114111))));
   }
 }
