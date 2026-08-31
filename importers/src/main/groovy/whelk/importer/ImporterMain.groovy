@@ -71,7 +71,7 @@ class ImporterMain {
     void reindex(String... args) {
         def cli = new CliBuilder(
                 usage: 'reindex [collection] -[ht]',
-                header: '\n[collection] = auth|bib|hold|none|@type:<type>\n'
+                header: '\n[collection] = auth|bib|hold|none|<dataset URI>|@type:<type>\n'
         )
         // Create the list of options.
         cli.with {
