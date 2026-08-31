@@ -23,14 +23,14 @@ public record ESQueryTree(ESNode tree) {
             return dsl;
         }
 
-        if (factored instanceof ESNode.Group group) {
-            Optional<ESNode> postFilter = group.subQueries().stream()
+        if (factored instanceof ESNode.Must must) {
+            Optional<ESNode> postFilter = must.subQueries().stream()
                     .filter(ESNode.PostFilter.class::isInstance)
                     .findFirst();
             if (postFilter.isPresent()) {
-                List<ESNode> subQueries = new ArrayList<>(group.subQueries());
+                List<ESNode> subQueries = new ArrayList<>(must.subQueries());
                 subQueries.remove(postFilter.get());
-                ESNode mainQuery = subQueries.size() == 1 ? subQueries.getFirst() : group.withSubQueries(subQueries);
+                ESNode mainQuery = subQueries.size() == 1 ? subQueries.getFirst() : must.withSubQueries(subQueries);
                 Map<String, Object> dsl = new LinkedHashMap<>();
                 dsl.put("query", mainQuery.dsl());
                 dsl.put("post_filter", postFilter.get().dsl());
