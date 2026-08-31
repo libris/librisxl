@@ -206,6 +206,76 @@ class UnicodeSpec extends Specification {
         'abc'    | '1234567' || 7
     }
 
+    def "damerauLevenshtein throws on too long strings"() {
+        when:
+        Unicode.damerauLevenshteinDistance('a' * (Unicode.MAX_LEVENSHTEIN_LENGTH + 1), 'a')
+
+        then:
+        thrown(IllegalArgumentException)
+
+        when:
+        Unicode.damerauLevenshteinDistance('a', 'a' * 3, 2)
+
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "normalize for search"() {
+        expect:
+        Unicode.isNormalizedForSearch(dirty) == (dirty == clean)
+        Unicode.normalizeForSearch(dirty) == clean
+        where:
+        dirty          | clean
+        'abc 123'      | 'abc 123'
+        'ﬁll ﬀ'        | 'fill ff'   // typographic ligatures (NFKC)
+        '²'            | '2'         // compatibility form (NFKC)
+        'ｆｕｌｌｗｉｄｔｈ' | 'fullwidth' // fullwidth forms (NFKC)
+        '”my query”'   | '"my query"'
+    }
+
+    def "trimLeadingNoise"() {
+        expect:
+        Unicode.trimLeadingNoise(dirty) == clean
+        where:
+        dirty              | clean
+        ''                 | ''
+        'clean'            | 'clean'
+        ' _.:;|Überzetsung.' | 'Überzetsung.'
+        '-(paren'          | '(paren'
+        '--123'            | '123'
+        ';;;'              | ''
+    }
+
+    def "formatIsni"() {
+        expect:
+        Unicode.formatIsni(isni) == formatted
+        where:
+        isni                  | formatted
+        '0000000121032683'    | '0000 0001 2103 2683'
+        '000000012103268X'    | '0000 0001 2103 268X'
+        '000000012103268'     | '000000012103268'     // not 16 chars: unchanged
+        '0000 0001 2103 2683' | '0000 0001 2103 2683' // already formatted (19 chars): unchanged
+        ''                    | ''
+    }
+
+    def "iso15924scriptCode"() {
+        expect:
+        Unicode.iso15924scriptCode(script) == code
+        where:
+        script                             | code
+        Character.UnicodeScript.LATIN      | Optional.of('Latn')
+        Character.UnicodeScript.CYRILLIC   | Optional.of('Cyrl')
+        Character.UnicodeScript.OLD_PERMIC | Optional.empty() // not in map
+    }
+
+    def "add15924scriptCode ignores unknown codes"() {
+        when:
+        Unicode.add15924scriptCode('Xxxx')
+
+        then:
+        notThrown(IllegalArgumentException)
+    }
+
     def "looksLikeIsbn"() {
         expect:
         Unicode.looksLikeIsbn(s) == result

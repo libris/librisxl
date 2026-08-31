@@ -4,7 +4,7 @@ import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPOutputStream
 import groovy.cli.picocli.CliBuilder
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
 
@@ -169,6 +169,40 @@ class ImporterMain {
         }
         boolean shouldExcludeItems = excludeItems && excludeItems == '--exclude-items'
         WhelkCopier copier = new WhelkCopier(source, dest, recordIds, additionalTypes, shouldExcludeItems, copyVersions)
+        copier.run()
+    }
+
+    /**
+     * Copy one or a few records, specified by XL id (or IRI) on the command line, from
+     * another whelk, and index them. Like copywhelk, records that the specified records
+     * link to, and records that link to them, are copied as well.
+     *
+     * Unlike copywhelk's --copy-versions, this one is boolean: if set, all
+     * historical versions of the *specified records* (not of their deps) are copied.
+     *
+     * By default a specified record that already exists in the destination is skipped.
+     * With --overwrite-existing its contents are instead overwritten (via an atomic
+     * update) with the source version, and its dependencies/dependers are copied as normal.
+     * Note that overwriting does not reconstruct version history, so --copy-versions
+     * has no effect on records that were overwritten rather than freshly copied.
+     *
+     * The source whelk is configured with a properties file given by the system
+     * property xl.importerSourceSecret.properties, e.g.:
+     * -Dxl.importerSourceSecret.properties=/somewhere/source-secret.properties
+     *
+     * E.g., copy two records including their holdings and full history:
+     * --include-items --copy-versions s93zr6j40v97d0f 3mfj87vf5t3zg3w
+     */
+    @Command(args='RECORD_ID...', flags='--copy-versions --include-items --overwrite-existing')
+    void copyRecords(Map flags, String... recordIds) {
+        if (!recordIds) {
+            throw new IllegalArgumentException("At least one record id must be given.")
+        }
+        Whelk source = Whelk.createLoadedCoreWhelk(PropertyLoader.loadProperties("importerSourceSecret"))
+        Whelk dest = Whelk.createLoadedSearchWhelk(props)
+        def copier = new RecordCopier(source, dest, recordIds as List,
+                (boolean) flags['copy-versions'], (boolean) flags['include-items'],
+                (boolean) flags['overwrite-existing'])
         copier.run()
     }
 

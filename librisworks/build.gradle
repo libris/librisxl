@@ -4,6 +4,10 @@ apply plugin: 'com.gradleup.shadow'
 
 def mainClassName = "whelk.datatool.WhelkTool"
 
+application {
+    mainClass = mainClassName
+}
+
 sourceSets {
     scripts {
         groovy { srcDir 'scripts' }
@@ -31,7 +35,11 @@ test {
 
 shadowJar {
     archiveClassifier = null // removes `-all` in the filename of the created .jar
-    project.setProperty("mainClassName", mainClassName)
+
+    // Ensures we don't shadow the logback.xml of an application that depends on this project
+    filesMatching('logback-librisworks.xml') {
+        path = 'logback.xml'
+    }
 }
 
 jar {
@@ -39,10 +47,7 @@ jar {
     dependsOn(shadowJar)
 
     manifest {
-        attributes "Main-Class": mainClassName,
-                // log4j uses multi-release to ship different stack walking implementations for different java
-                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
-                "Multi-Release": true
+        attributes "Main-Class": mainClassName
     }
 
     archiveClassifier = "nonfat"

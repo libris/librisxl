@@ -1,8 +1,8 @@
 package whelk.rest.api;
 
 import org.apache.hc.core5.http.ContentType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.IdGenerator;
 import whelk.IdType;
@@ -46,7 +46,7 @@ import static whelk.util.http.HttpTools.sendResponse;
  * Handles all GET/PUT/POST/DELETE requests against the backend.
  */
 public class Crud extends WhelkHttpServlet {
-    private static final Logger log = LogManager.getLogger(Crud.class);
+    private static final Logger log = LoggerFactory.getLogger(Crud.class);
     public static final String XL_ACTIVE_SIGEL_HEADER = "XL-Active-Sigel";
     public static final String CONTEXT_PATH = "/context.jsonld";
     public static final String DATA_CONTENT_TYPE = "application/ld+json";
@@ -61,6 +61,7 @@ public class Crud extends WhelkHttpServlet {
     private ConverterUtils converterUtils;
 
     private SiteSearch siteSearch;
+    private SearchFeed searchFeed;
 
     private final Map<String, Tuple2<Document, String>> cachedFetches = new HashMap<>();
 
@@ -99,6 +100,7 @@ public class Crud extends WhelkHttpServlet {
             }
         }
 
+        searchFeed = new SearchFeed(whelk.getJsonld(), whelk.getFresnelUtil(), whelk.getLocales());
         cacheLocalDevResources();
     }
 
@@ -203,7 +205,13 @@ public class Crud extends WhelkHttpServlet {
             sendNotFound(request.getHttpServletRequest(), response);
         } else if (doc == null && loc != null) {
             if (request.getView() == CrudGetRequest.View.DATA) {
-                loc = getDataURI(loc, request);
+                loc = getDataURI(loc, request.getContentType(), null, null);
+            }
+            // Preserve representation parameters (embellished, framed, lens,
+            // computedLabel, _findBlank, ...) so they survive the redirect.
+            String queryString = request.getHttpServletRequest().getQueryString();
+            if (queryString != null && !queryString.isEmpty()) {
+                loc += "?" + queryString;
             }
             sendRedirect(request.getHttpServletRequest(), response, loc);
         } else if (doc != null && doc.getDeleted()) {
@@ -255,7 +263,7 @@ public class Crud extends WhelkHttpServlet {
     private static void sendNotFound(HttpServletRequest request, HttpServletResponse response) {
         String method = request.getMethod();
         if (method != null) {
-            metrics.failedRequests.labels(method, String.valueOf(HttpServletResponse.SC_NOT_FOUND)).inc();
+            metrics.failedRequests.labelValues(method, String.valueOf(HttpServletResponse.SC_NOT_FOUND)).inc();
         }
         HttpTools.sendError(response, HttpServletResponse.SC_NOT_FOUND, "Document not found.");
     }
@@ -321,12 +329,24 @@ public class Crud extends WhelkHttpServlet {
             }
         }
 
-        if (!List.of(MimeTypes.JSON, MimeTypes.JSONLD).contains(request.getContentType())) {
+        if (request.getContentType().equals(MimeTypes.ATOM)) {
+            data.put(JsonLd.CONTEXT_KEY, contextData);
+            var feedId = getFeedId(data, uri);
+            return searchFeed.represent(feedId, data);
+        } else if (!List.of(MimeTypes.JSON, MimeTypes.JSONLD).contains(request.getContentType())) {
             data.put(JsonLd.CONTEXT_KEY, contextData);
             return converterUtils.convert(data, uri, request.getContentType());
         } else {
             return data;
         }
+    }
+
+    private String getFeedId(Object data, String uri) {
+        var searchPath = uri;
+        if (data instanceof Map dataMap) {
+          searchPath = (String) dataMap.get(JsonLd.ID_KEY);
+        }
+        return whelk.getApplicationId() + searchPath.substring(1);
     }
 
     private static Map<String, Object> frameRecord(Document document) {
@@ -968,7 +988,7 @@ public class Crud extends WhelkHttpServlet {
         int code = HttpTools.mapError(e);
         String method = request.getMethod();
         if (method != null) {
-            metrics.failedRequests.labels(method, String.valueOf(code)).inc();
+            RestMetrics.failedRequests.labelValues(method, String.valueOf(code)).inc();
         }
         if (log.isDebugEnabled()) {
             String requestURI = request.getRequestURI();

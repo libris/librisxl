@@ -1,7 +1,7 @@
 package whelk.converter.marc
 
-//import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2 as Log
+import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j as Log
 
 import whelk.TypeCategoryNormalizer
 import whelk.converter.BibTypeNormalizer
@@ -10,13 +10,14 @@ import whelk.util.DocumentUtil
 
 import static whelk.JsonLd.asList
 
-//@CompileStatic
 @Log
+@CompileStatic
 class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     boolean requiresResources = true
 
     BibTypeNormalizer bibTypeNormaliser
+    TypeCategoryNormalizer typeCategoryNormalizer
 
     // Injected configuration
     List<String> matchRelations = Collections.emptyList()
@@ -39,6 +40,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         }
 
         bibTypeNormaliser = new BibTypeNormalizer(resourceCache)
+        typeCategoryNormalizer = bibTypeNormaliser.normalizer
 
         issuanceTypeSet.addAll(newWorkTypes)
 
@@ -47,10 +49,6 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         }
 
         keepMatchingWithCategoriesSet.addAll(keepMatchingWithCategories)
-    }
-
-    TypeCategoryNormalizer getTypeCategoryNormalizer() {
-        return bibTypeNormaliser.normalizer
     }
 
     boolean checkRequired() {
@@ -67,7 +65,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
             return
         }
 
-        bibTypeNormaliser.normalize(thing, thing.instanceOf)
+        bibTypeNormaliser.normalize(thing, (Map) thing.instanceOf)
     }
 
     void unmodify(Map record, Map instance) {
@@ -101,7 +99,9 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         instance.remove('category')
 
         // Mutate into legacy form:
-        def issuanceType = getIssuanceType(work[TYPE], instance[TYPE], workCategories, instanceCategories)
+        var wtype = (String) work[TYPE]
+        var itype = (String) instance[TYPE]
+        def issuanceType = getIssuanceType(wtype, itype, workCategories, instanceCategories)
         reshapeToLegacyWork(work, workCategories)
         reshapeToLegacyInstance(instance, workCategories, instanceCategories)
         instance.issuanceType = issuanceType ?: 'Monograph'
@@ -154,8 +154,8 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
         if (itype == null) {
             typeCategoryNormalizer.remappedLegacyInstanceTypes.each { ruletype, rule ->
-                if (typeCategoryNormalizer.anyImplies(instanceCategories, rule.category)) {
-                    if (typeCategoryNormalizer.anyImplies(workCategories, rule.workCategory)) {
+                if (typeCategoryNormalizer.anyImplies(instanceCategories, (String) rule.category)) {
+                    if (typeCategoryNormalizer.anyImplies(workCategories, (String) rule.workCategory)) {
                         itype = ruletype
                     }
                 }
@@ -171,14 +171,15 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     }
 
     List<Map<String, Object>> getDescriptions(Object refs, boolean onlyLinked=false) {
-        return (List<Map<String, Object>>) asList(refs).findResults {
+        var refList = (List<Map>) asList(refs)
+        return (List<Map<String, Object>>) refList.findResults {
             ID in it && it[ID] in typeCategoryNormalizer.categories
                 ? new HashMap(typeCategoryNormalizer.categories[it[ID]])
                 : onlyLinked ? null : it
         }
     }
 
-    String getIssuanceType(String workType, String instanceType, List workCategories, List instanceCategories) {
+    String getIssuanceType(String workType, String instanceType, List<Map> workCategories, List<Map> instanceCategories) {
         if (instanceCategories.any { it[ID] == componentPartCategory}) {
           return 'ComponentPart'
         }
@@ -214,7 +215,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     boolean isComplexSubjectWithFirstTermOfType(Map term, String baseType) {
         if (term[TYPE] == 'ComplexSubject') {
-            def termComponentList = asList(term['termComponentList'])
+            var termComponentList = (List<Map>) asList(term['termComponentList'])
             if (termComponentList.size() > 0) {
                 return isSubClassOf(termComponentList[0][TYPE], type)
             }
@@ -224,45 +225,59 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
 
     // TODO: optimize by returning result *Map* (check only id in keys unless more is needed)
     Collection<Map<String, Object>> getCategoryOfType(List<Map<String, Object>> categories, String type, boolean keepImplied=false) {
-        var result = new LinkedHashMap()
-        collectCategoryOfType(categories, type, keepImplied, result)
+        var result = new LinkedHashMap<String, Map>()
+        var seen = new HashSet<String>()
+        aggregateCategoryOfType(categories, seen, type, keepImplied, result)
         return result.values().toList()
     }
 
-    private void collectCategoryOfType(List<Map<String, Object>> categories, String type, boolean keepImplied, Map<String, Map<String, Object>> result) {
+    private void aggregateCategoryOfType(List<Map<String, Object>> categories, Set<String> seen, String type, boolean keepImplied, Map<String, Map<String, Object>> result) {
         for (Map<String, Object> ctg : categories) {
+            if (ID in ctg) {
+              var id = (String) ctg[ID]
+              if (id in seen) {
+                continue
+              }
+              seen << id
+            }
+
             if (
                 asList(ctg[TYPE]).any { t -> isSubClassOf(t, type) }
                 || isComplexSubjectWithFirstTermOfType(ctg, type)
             ) {
-                def key = ctg[ID] ?: '_:b' + result.size().toString() // id or throwaway fake blank id
+                var key = (String) ctg[ID] ?: '_:b' + result.size().toString() // id or throwaway fake blank id
                 result[key] = ctg
             }
+
             for (rel in matchRelations) {
                 var implied = getDescriptions(ctg[rel], true)
                 if (!keepImplied) {
                     implied.each {
                         var keep = ID in it
                             && keepMatchingWithCategoriesSet
-                            && asList(it['inCollection']).any { it[ID] in keepMatchingWithCategoriesSet }
+                            && asList(it['inCollection']).any {
+                              it instanceof Map && it[ID] in keepMatchingWithCategoriesSet
+                            }
                         if (!keep) {
                             // Make MarcFrameConverter skip these for regular fields
                             it['_revertedBy'] = 'BibTypeNormalizationStep'
                         }
                     }
                 }
-                collectCategoryOfType(implied, type, keepImplied, result)
+                aggregateCategoryOfType(implied, seen, type, keepImplied, result)
             }
         }
     }
 
     Set<String> collectImpliedTypesFromCategory(List<Map<String, Object>> categories) {
       var result = new HashSet<String>()
-      collectImpliedTypesFromCategory(categories, result)
+      var seen = new HashSet<String>()
+      aggregateImpliedTypesFromCategory(categories, seen, result)
       return result
     }
-    void collectImpliedTypesFromCategory(List<Map<String, Object>> categories, Set<String> result) {
-        // TODO: if multiple types, select one (e.g. prefer Text over StillImage?)
+
+    private void aggregateImpliedTypesFromCategory(List<Map<String, Object>> categories, Set<String> seen, Set<String> result) {
+        // TODO: break on preferred type? (e.g. prioritizedWorkLegacyTypes)
         for (ctg in categories) {
           var type = categoryTypeMap[ctg[ID]]
           if (type) {
@@ -273,7 +288,13 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         // (but less optimal for lots of categories)
         for (rel in matchRelations) {
             for (category in categories) {
-                collectImpliedTypesFromCategory(getDescriptions(category[rel]), result)
+                var id = category[ID]
+                var key = rel + ':' + id
+                if (key in seen) {
+                  continue
+                }
+                seen << key
+                aggregateImpliedTypesFromCategory(getDescriptions(category[rel]), seen, result)
             }
         }
     }

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!-- <?xml version="1.0" encoding="UTF-8"?> -->
 <xsl:stylesheet version="1.0" 
 	xmlns="http://www.loc.gov/mods/v3" 
 	xmlns:xlink="http://www.w3.org/1999/xlink" 
@@ -6,7 +6,7 @@
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform" exclude-result-prefixes="marc">
 	<!--xsl:include href="http://www.loc.gov/marcxml/xslt/MARC21slimUtils.xsl"/-->
 	<xsl:include href="MARC21slimUtils.xsl"/>
-	<xsl:output method="xml" indent="yes" encoding="UTF-8"/>
+	<xsl:output method="xml" indent="yes" encoding="UTF-8" omit-xml-declaration="yes"/>
 
 <!--
 Revision 2003/03/25 08:29 jrad

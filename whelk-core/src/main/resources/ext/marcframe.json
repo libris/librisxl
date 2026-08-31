@@ -20583,7 +20583,7 @@
       },
       "match": [
         {"when": "i2=0", "addLink": "associatedMedia", "resourceType": "MediaObject"},
-        {"when": "i2=1", "addLink": "marc:versionOfResource", "resourceType": "Electronic"},
+        {"when": "i2=1", "addLink": "marc:versionOfResource", "resourceType": "Instance"},
         {"when": "i2=2", "addLink": "isPrimaryTopicOf", "resourceType": "Document"},
         {"when": "i2=8", "addLink": "relatedTo", "resourceType": "Document"}
       ],
@@ -20684,7 +20684,7 @@
             ]}},
           "result": {"mainEntity": {
             "marc:versionOfResource": [{
-              "@type": "Electronic",
+              "@type": "Instance",
               "marc:publicNote": ["Tidskriftens webbplats"],
               "uri": ["http://www.vr.se/tvarsnitt"]
             }]

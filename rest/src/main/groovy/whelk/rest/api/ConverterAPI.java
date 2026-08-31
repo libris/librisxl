@@ -1,8 +1,8 @@
 package whelk.rest.api;
 
 import org.apache.hc.core5.http.ContentType;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import whelk.Document;
 import whelk.Whelk;
@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class ConverterAPI extends WhelkHttpServlet {
-    private static final Logger log = LogManager.getLogger(ConverterAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(ConverterAPI.class);
     private static final ObjectMapper mapper = new ObjectMapper();
     private MarcFrameConverter marcFrameConverter;
 

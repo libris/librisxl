@@ -1,8 +1,8 @@
 package whelk.rest.api;
 
 import com.google.common.io.Files;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
@@ -20,7 +20,7 @@ import static whelk.search2.QueryParams.ApiParams.APP_CONFIG;
 import static whelk.util.Jackson.mapper;
 
 class SiteSearch {
-    private static final Logger log = LogManager.getLogger(SiteSearch.class);
+    private static final Logger log = LoggerFactory.getLogger(SiteSearch.class);
 
     Whelk whelk;
     SearchUtils search;
@@ -137,18 +137,39 @@ class SiteSearch {
         } else if (queryParameters.containsKey("_q") || queryParameters.containsKey("_o") || queryParameters.containsKey("_r")) {
             String appId = activeSite.equals(getDefaultSite()) ? "https://beta.libris.kb.se/" : activeSite;
             Map appDesc = getAndIndexDescription(appId);
+            Map findDesc = null;
             if (appDesc != null) {
-                Map findDesc = getAndIndexDescription(appId + "find");
+                findDesc = getAndIndexDescription(appId + "find");
                 if (!queryParameters.containsKey(APP_CONFIG)) {
                     queryParameters.put(APP_CONFIG, new String[]{mapper.writeValueAsString(search2.buildAppConfig(findDesc))});
                 }
             }
-            return search2.doSearch(queryParameters);
+
+            var results = search2.doSearch(queryParameters);
+
+            if (findDesc != null) {
+                Object titleByLang = findDesc.get("titleByLang");
+                if (titleByLang != null) {
+                    results.put("titleByLang", titleByLang);
+                }
+            }
+
+            return results;
         } else {
             if (queryParameters.get("_statsrepr") == null && searchSettings.get("statsfind") != null) {
                 queryParameters.put("_statsrepr", new String[]{mapper.writeValueAsString(searchSettings.get("statsfind"))});
             }
-            return search.doSearch(queryParameters);
+            var results = search.doSearch(queryParameters);
+
+            var appDesc = appsIndex.get(activeSite + "find");
+            if (appDesc instanceof Map appDescMap) {
+              Object titleByLang = appDescMap.get("titleByLang");
+              if (titleByLang != null) {
+                results.put("titleByLang", titleByLang);
+              }
+            }
+
+            return results;
         }
     }
 

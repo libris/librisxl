@@ -1,7 +1,7 @@
 package whelk.component
 
 import com.google.common.collect.Iterators
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
