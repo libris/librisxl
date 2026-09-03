@@ -21,10 +21,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static whelk.search2.Query.NESTED_AGG_NAME;
-import static whelk.search2.Query.REVERSE_NESTED_AGG_NAME;
 import static whelk.search2.QueryParams.ApiParams.PREDICATES;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
+import static whelk.search2.esquery.ESQueryDefinition.NESTED_AGG_NAME;
+import static whelk.search2.esquery.ESQueryDefinition.REVERSE_NESTED_AGG_NAME;
 import static whelk.util.DocumentUtil.getAtPath;
 import static whelk.util.DocumentUtil.traverse;
 

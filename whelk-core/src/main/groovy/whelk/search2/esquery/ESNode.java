@@ -1,0 +1,306 @@
+package whelk.search2.esquery;
+
+import whelk.search2.Operator;
+import whelk.search2.Query;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+public sealed interface ESNode {
+    enum MultiMatchType {
+        // https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-multi-match-query#multi-match-types
+        best_fields,
+        most_fields
+    }
+
+    Map<String, Object> dsl();
+
+    sealed interface TextQueryMode {
+        String mode();
+        String query();
+        MultiMatchType multiMatchType();
+    }
+
+    record QueryString(String query, MultiMatchType multiMatchType) implements TextQueryMode {
+        @Override
+        public String mode() {
+            return "query_string";
+        }
+    }
+
+    record SimpleQueryString(String query) implements TextQueryMode {
+        @Override
+        public String mode() {
+            return "simple_query_string";
+        }
+
+        @Override
+        public MultiMatchType multiMatchType() {
+            // Although simple_query_string does not allow the multi_match type to be specified,
+            // its scoring behavior corresponds to most_fields.
+            return MultiMatchType.most_fields;
+        }
+    }
+
+    record TextQuery(TextQueryMode query,
+                     List<ESBoost.Field> boostFields,
+                     Query.Connective connective,
+                     ESBoost.TextQuerySettings settings) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            var q = new HashMap<>();
+
+            q.put("query", query.query());
+            q.put("default_operator", connective.name());
+
+            if (settings.analyzeWildcard()) {
+                q.put("analyze_wildcard", true);
+            }
+
+            if (!boostFields.isEmpty()) {
+                List<String> formattedFields = boostFields.stream()
+                        .map(f -> formatBoostField(f.name(), f.boost()))
+                        .collect(Collectors.toList());
+
+                if (settings.includeExactFields()) {
+                    q.put("quote_field_suffix", settings.quoteFieldSuffix());
+
+                    boostFields.forEach(f -> {
+                        // Exact fields are only relevant for scoring, no need to include non-scoring fields
+                        if (f.boost() > 0) {
+                            String exactField = f.name() + settings.quoteFieldSuffix();
+                            formattedFields.add(formatBoostField(exactField, f.boost()));
+                        }
+                    });
+                }
+
+                if (query instanceof QueryString qs && formattedFields.size() > 1) {
+                    q.put("type", qs.multiMatchType().name());
+                }
+
+                q.put("fields", formattedFields);
+            }
+
+            return Map.of(query.mode(), q);
+        }
+
+        public TextQuery withFields(List<ESBoost.Field> newFields) {
+            return new TextQuery(query, newFields, connective, settings);
+        }
+
+        public boolean isSimple() {
+            return query instanceof SimpleQueryString;
+        }
+
+        public static TextQuery simpleUnboostedQuery(String query, String field) {
+            return new TextQuery(new SimpleQueryString(query),
+                    List.of(ESBoost.Field.unboosted(field)),
+                    Query.Connective.AND,
+                    ESBoost.FieldedQuerySettings.defaultSettings());
+        }
+
+        private String formatBoostField(String fieldName, float boost) {
+            return boost == 1 ? fieldName : String.format("%s^%s", fieldName, boost);
+        }
+    }
+
+    record TermQuery(String field, Object value) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            // Wrap in filter clause to prevent scoring
+            return Map.of("bool", Map.of("filter", Map.of("term", Map.of(field, value))));
+        }
+    }
+
+    sealed interface Group extends ESNode permits Disjunction, Must {
+        List<ESNode> subQueries();
+        Group withSubQueries(List<ESNode> subQueries);
+    }
+
+    sealed interface Disjunction extends Group {
+    }
+
+    record Should(List<ESNode> subQueries) implements Disjunction {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("bool", Map.of("should", subQueries.stream().map(ESNode::dsl).toList()));
+        }
+
+        @Override
+        public Should withSubQueries(List<ESNode> subQueries) {
+            return new Should(subQueries);
+        }
+    }
+
+    record DisMax(List<ESNode> subQueries) implements Disjunction {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("dis_max", Map.of("queries", subQueries.stream().map(ESNode::dsl).toList()));
+        }
+
+        @Override
+        public DisMax withSubQueries(List<ESNode> subQueries) {
+            return new DisMax(subQueries);
+        }
+    }
+
+    record Must(List<ESNode> subQueries) implements Group {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("bool", Map.of("must", subQueries.stream().map(ESNode::dsl).toList()));
+        }
+
+        @Override
+        public Must withSubQueries(List<ESNode> subQueries) {
+            return new Must(subQueries);
+        }
+    }
+
+    record MustNot(ESNode query) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("bool", Map.of("must_not", query.dsl()));
+        }
+    }
+
+    record Exists(String field) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("exists", Map.of("field", field));
+        }
+    }
+
+    record Nested(ESNode query, NestedStem stem, Set<NestedField> fields) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            if (fields.size() == 1 && stem.includeInParent()) {
+                boolean isSingleTokenQuery = query instanceof TermQuery || (query instanceof TextQuery textQuery
+                        && textQuery.query().query().chars().noneMatch(Character::isWhitespace));
+                if (isSingleTokenQuery) {
+                    // Not necessary to wrap as nested query in this case
+                    return query.dsl();
+                }
+            }
+            return Map.of("nested", Map.of(
+                    "ignore_unmapped", true, // otherwise can fail when searching multiple indices
+                    "path", stem.stem(),
+                    "query", query.dsl()
+            ));
+        }
+
+        public Nested withInnerQuery(ESNode innerQuery) {
+            return new Nested(innerQuery, stem, fields);
+        }
+    }
+
+    record NestedStem(String stem, boolean includeInParent) {
+    }
+
+    record NestedField(String field, boolean isRepeatable) {
+    }
+
+    record MatchAll() implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("match_all", Map.of());
+        }
+    }
+
+    record MatchNone() implements ESNode {
+        // FIXME: Handle queries that are syntactically correct but make no sense and are guaranteed to return no hits
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("exists", Map.of("field", "nonsense.field"));
+        }
+    }
+
+    record RangeQuery(String field, Map<Operator, Object> range) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            Map<String, Object> m = new HashMap<>();
+            range.forEach((op, v) -> {
+                switch (op) {
+                    case GREATER_THAN_OR_EQUALS -> m.put("gte", v);
+                    case GREATER_THAN -> m.put("gt", v);
+                    case LESS_THAN_OR_EQUALS -> m.put("lte", v);
+                    case LESS_THAN -> m.put("lt", v);
+                    default -> {}
+                }
+            });
+            return Map.of("bool", Map.of("filter", Map.of("range", Map.of(field, m))));
+        }
+    }
+
+    record FunctionScore(List<ESNode.ScoreFunction> functions, String scoreMode, String boostMode) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("function_score",
+                    Map.of("query", new ESNode.MatchAll().dsl(),
+                            "functions", functions.stream().map(ESNode.ScoreFunction::dsl).toList(),
+                            "score_mode", "sum",
+                            "boost_mode", "sum"));
+        }
+
+        public boolean isEmpty() {
+            return functions.isEmpty();
+        }
+    }
+
+    record ConstantScore(ESNode query, float score) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("constant_score", Map.of("filter", query.dsl(), "boost", score));
+        }
+    }
+
+    sealed interface ScoreFunction extends ESNode permits FieldValueFactor, ScriptScore {
+        @Override
+        Map<String, Object> dsl();
+    }
+
+    record FieldValueFactor(Map<?, ?> params, float weight) implements ScoreFunction {
+        public static String key() {
+            return "field_value_factor";
+        }
+
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of(key(), params,
+                    "weight", weight);
+        }
+    }
+
+    record ScriptScore(ESNode query, Script script) implements ScoreFunction {
+        public static String key() {
+            return "script_score";
+        }
+
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("script_score", Map.of(
+                            "query", query.dsl(),
+                            "script", script.asMap()));
+        }
+    }
+
+    record Script(String source, Map<String, Object> params) {
+        Map<String, Object> asMap() {
+            Map<String, Object> m = new HashMap<>();
+            m.put("source", source);
+            if (!params.isEmpty()) {
+                m.put("params", params);
+            }
+            return m;
+        }
+    }
+
+    record PostFilter(ESNode query) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            return query().dsl();
+        }
+    }
+}

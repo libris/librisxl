@@ -1,0 +1,14 @@
+package whelk.search2.querytree.value;
+
+public sealed interface Value permits Any, DateTime, FreeText, Resource, Term, YearRange {
+    // As represented in query string
+    String queryForm();
+
+    default boolean isMultiToken() {
+        return false;
+    }
+
+    default boolean isRangeOpCompatible() {
+        return false;
+    }
+}
