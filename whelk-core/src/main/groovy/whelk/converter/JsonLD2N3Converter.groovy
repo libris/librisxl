@@ -3,7 +3,7 @@ package whelk.converter
 import org.apache.commons.io.IOUtils
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
-import org.apache.jena.rdf.model.RDFWriter
+import org.apache.jena.rdf.model.RDFWriterI
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -34,7 +34,7 @@ class JsonLD2N3Converter implements FormatConverter {
         Model model = ModelFactory.createDefaultModel()
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
         model = model.read(input, Document.BASE_URI.toString(), "JSONLD")
-        RDFWriter writer = model.getWriter("N3")
+        RDFWriterI writer = model.getWriter("N3")
         writer.setProperty("allowBadURIs","true")
         writer.write(model, baos, "")
 

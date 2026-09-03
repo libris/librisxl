@@ -2,9 +2,7 @@ package whelk.converter
 
 import groovy.transform.InheritConstructors
 import groovy.util.logging.Slf4j as Log
-
-import org.apache.jena.iri.IRI
-import org.apache.jena.iri.IRIFactory
+import whelk.util.Iris
 
 import trld.platform.Output
 import trld.trig.SerializerState
@@ -56,8 +54,6 @@ class JsonLdToTrigSerializer {
 @InheritConstructors
 class CleanedTrigSerializerState extends SerializerState {
 
-    static IRIFactory iriFactory = IRIFactory.iriImplementation()
-
     // TODO: We need to fix these when ENTERING the system (Validation/Normalization)!
     String refRepr(Object refobj) {
         if (refobj !instanceof String) {
@@ -79,13 +75,12 @@ class CleanedTrigSerializerState extends SerializerState {
 
         // Now catch things that are too broken to sensibly do anything about, e.g.,
         // "http://foo:", http://", etc.
-        IRI iri = iriFactory.create(cleanedIriString)
-        if (iri.hasViolation(false)) { // false = ignore warnings, care only about errors
+        if (Iris.isBroken(cleanedIriString)) {
             cleanedIriString = "https://BROKEN-IRI/"
         }
 
         if (cleanedIriString != iriString) {
-            log.warn("Broken IRI ${iri}, changing to ${cleanedIriString}")
+            log.warn("Broken IRI ${iriString}, changing to ${cleanedIriString}")
         }
         return super.refRepr(cleanedIriString)
     }
