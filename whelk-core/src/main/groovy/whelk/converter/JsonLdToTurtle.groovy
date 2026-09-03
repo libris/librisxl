@@ -1,8 +1,7 @@
 package whelk.converter
 
 import groovy.util.logging.Slf4j as Log
-import org.apache.jena.iri.IRI
-import org.apache.jena.iri.IRIFactory
+import whelk.util.Iris
 
 import static org.apache.commons.lang3.StringEscapeUtils.escapeJava
 import static whelk.util.Jackson.mapper
@@ -37,7 +36,6 @@ class JsonLdToTurtle {
     boolean useGraphKeyword
     boolean markEmptyBnode
     String emptyMarker = '_:Nothing'
-    static IRIFactory iriFactory = IRIFactory.iriImplementation()
 
     JsonLdToTurtle(Map context, OutputStream outStream, Map opts = null) {
         this(context, outStream, opts?.base, opts)
@@ -156,13 +154,12 @@ class JsonLdToTurtle {
 
         // Now catch things that are too broken to sensibly do anything about, e.g.,
         // "http://foo:", http://", etc.
-        IRI iri = iriFactory.create(cleanedIriString)
-        if (iri.hasViolation(false)) { // false = ignore warnings, care only about errors
+        if (Iris.isBroken(cleanedIriString)) {
             cleanedIriString = "https://BROKEN-IRI/"
         }
 
         if (cleanedIriString != iriString) {
-            log.warn("Broken IRI ${iri}, changing to ${cleanedIriString}")
+            log.warn("Broken IRI ${iriString}, changing to ${cleanedIriString}")
         }
         return cleanedIriString
     }
