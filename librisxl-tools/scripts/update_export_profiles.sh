@@ -32,18 +32,22 @@ do
 
     for var in $sigel_list
     do
-        profile_no_ext=$(echo $var | cut -d'.' -f 1)
-        if [[ ${used_sigels[$profile_no_ext]} != used ]]; then
-            used_sigels[$profile_no_ext]="used"
-	    profile_uri="https://libris.kb.se/library/$profile_no_ext"
-            # This used to be the below line, but it is vulnerable to injection:
-	    # query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES ('https://libris.kb.se/library/$profile_no_ext', '$data');"
-	    IFS=""
-	    query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES (convert_from(decode( '$(echo $profile_uri | base64)', 'base64'), 'UTF8'), convert_from(decode( '$(echo $data | base64)', 'base64'), 'UTF8'));"
-	    IFS=$'\n'
-        fi
-    done
+      profile_no_ext=$(echo $var | cut -d'.' -f 1)
+      if [[ ${used_sigels[$profile_no_ext]} != used ]]; then
+        used_sigels[$profile_no_ext]="used"
 
+        profile_uri="https://libris.kb.se/library/$profile_no_ext"
+
+        IFS=""
+        # base64 to guard against injections. decode in postgres makes strings safe.
+        profile_uri_b64="$(echo $profile_uri | tr -d '\n' | base64)"
+        profile_b64="$(echo $data | base64)" # preserve newlines. additional newline at the end is ok
+
+        # shellcheck disable=SC2089
+        query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES (convert_from(decode( '$profile_uri_b64', 'base64'), 'UTF8'), convert_from(decode( '$profile_b64', 'base64'), 'UTF8'));"
+        IFS=$'\n'
+      fi
+    done
 done
 
 popd
