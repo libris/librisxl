@@ -82,7 +82,10 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     }
 
     void denormalize(Map instance) {
-        def work = instance.get('instanceOf', [:]) // NOTE: *sets* default value
+        // NOTE: *sets* default value. instanceOf should be a single work, but
+        // malformed data may hold a list; use the first and ignore the rest.
+        var works = (List<Map>) asList(instance.get('instanceOf', [:]))
+        Map work = works.isEmpty() ? [:] : works.first()
 
         // Pick out the categories:
         var workCategories = getDescriptions(work.category)
