@@ -82,10 +82,11 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
     }
 
     void denormalize(Map instance) {
-        def work = instance.get('instanceOf', [:]) // NOTE: *sets* default value
+        // NOTE: instanceOf may be a list of works; *sets* default value
+        var works = (List<Map>) asList(instance.get('instanceOf', [:]))
 
         // Pick out the categories:
-        var workCategories = getDescriptions(work.category)
+        var workCategories = (List<Map<String, Object>>) works.collectMany { getDescriptions(it.category) }
         var instanceCategories = getDescriptions(instance.category)
 
         // Stop processing if we already seem to have a legacy shape:
@@ -95,14 +96,14 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         }
 
         // Then remove from shape (*might* hurt to keep, since these are to be used in legacy form):
-        work.remove('category')
+        works.each { it.remove('category') }
         instance.remove('category')
 
         // Mutate into legacy form:
-        var wtype = (String) work[TYPE]
+        var wtypes = works.collect { it[TYPE] }
         var itype = (String) instance[TYPE]
-        def issuanceType = getIssuanceType(wtype, itype, workCategories, instanceCategories)
-        reshapeToLegacyWork(work, workCategories)
+        def issuanceType = getIssuanceType(wtypes, itype, workCategories, instanceCategories)
+        works.each { reshapeToLegacyWork(it, workCategories) }
         reshapeToLegacyInstance(instance, workCategories, instanceCategories)
         instance.issuanceType = issuanceType ?: 'Monograph'
 
@@ -114,10 +115,12 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
             }
         }
 
-        DocumentUtil.traverse(work) { value, path ->
-            if (!path.isEmpty()) {
-                if (value instanceof Map && resourceCache.jsonld.isSubClassOf(getType(value), 'Work')) {
-                    reshapeToLegacyWork(value, getDescriptions(value.remove('category')))
+        works.each { w ->
+            DocumentUtil.traverse(w) { value, path ->
+                if (!path.isEmpty()) {
+                    if (value instanceof Map && resourceCache.jsonld.isSubClassOf(getType(value), 'Work')) {
+                        reshapeToLegacyWork(value, getDescriptions(value.remove('category')))
+                    }
                 }
             }
         }
@@ -179,7 +182,7 @@ class BibTypeNormalizationStep extends MarcFramePostProcStepBase {
         }
     }
 
-    String getIssuanceType(String workType, String instanceType, List<Map> workCategories, List<Map> instanceCategories) {
+    String getIssuanceType(Object workType, String instanceType, List<Map> workCategories, List<Map> instanceCategories) {
         if (instanceCategories.any { it[ID] == componentPartCategory}) {
           return 'ComponentPart'
         }
