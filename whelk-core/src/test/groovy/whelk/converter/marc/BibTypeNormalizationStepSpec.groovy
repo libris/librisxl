@@ -74,11 +74,17 @@ class BibTypeNormalizationStepSpec extends Specification {
       bibTypeNormalizationStep.denormalize(instance)
       then:
       noExceptionThrown()
-      and: 'both works are reshaped to legacy form'
-      instance.instanceOf.every { it.containsKey('contentType') && it.containsKey('genreForm') }
-      instance.instanceOf*.'@type' == ['Text', 'Text']
-      and: 'categories are removed and issuanceType set'
-      instance.instanceOf.every { !it.containsKey('category') }
+      and: 'only the first work is reshaped to legacy form; the rest are ignored'
+      instance.instanceOf[0].'@type' == 'Text'
+      instance.instanceOf[0].containsKey('contentType')
+      instance.instanceOf[0].containsKey('genreForm')
+      !instance.instanceOf[0].containsKey('category')
+      and: 'the second work is left untouched'
+      instance.instanceOf[1] == [
+        '@type': 'Work',
+        'hasTitle': [['@type': 'Title', 'mainTitle': 'Star wars']],
+      ]
+      and: 'the instance itself is denormalized'
       !instance.containsKey('category')
       instance.issuanceType == 'Monograph'
   }
