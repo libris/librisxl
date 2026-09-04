@@ -101,6 +101,7 @@ class DatasetImporter {
                     sourceUrl = sourceRef[ID]
                 } else {
                     String sourcePath = asList(sourceRef['uri'])[0]
+                    log.info("loading {} {} {}", item, sourceBaseDir, sourcePath)
                     sourceUrl = new File(new File(sourceBaseDir), sourcePath).toString()
                 }
                 assert sourceUrl

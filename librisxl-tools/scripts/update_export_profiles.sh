@@ -44,7 +44,7 @@ do
         profile_b64="$(echo $data | base64)" # preserve newlines. additional newline at the end is ok
 
         # shellcheck disable=SC2089
-        query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES (convert_from(decode( '$profile_uri_b64', 'base64'), 'UTF8'), convert_from(decode( '$profile_b64', 'base64'), 'UTF8'));"
+        query="$query INSERT INTO lddb__profiles (library_id, profile) VALUES (convert_from(decode('$profile_uri_b64', 'base64'), 'UTF8'), convert_from(decode('$profile_b64', 'base64'), 'UTF8'));"
         IFS=$'\n'
       fi
     done
