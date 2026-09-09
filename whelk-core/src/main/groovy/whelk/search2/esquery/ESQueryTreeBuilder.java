@@ -2,6 +2,7 @@ package whelk.search2.esquery;
 
 import whelk.search.QueryDateTime;
 import whelk.search2.Operator;
+import whelk.search2.Query;
 import whelk.search2.QueryUtil;
 import whelk.search2.querytree.node.And;
 import whelk.search2.querytree.node.Group;
@@ -437,6 +438,14 @@ public class ESQueryTreeBuilder {
     }
 
     private static ESNode buildTextQuery(FreeText ft, List<ESBoost.Field> fields, ESBoost.TextQuerySettings boostSettings) {
+        if (Query.Connective.OR.equals(ft.connective())) {
+            List<ESNode> perTokenQueries = ft.tokens().stream()
+                    .map(FreeText::new)
+                    .map(freeText -> buildTextQuery(freeText, fields, boostSettings))
+                    .toList();
+            return new ESNode.Should(perTokenQueries);
+        }
+
         String s = ft.toEsString();
         s = Unicode.normalizeForSearch(s);
 
@@ -449,7 +458,7 @@ public class ESQueryTreeBuilder {
                 ? new ESNode.SimpleQueryString(s)
                 : new ESNode.QueryString(escapeNonSimpleQueryString(s), ESNode.MultiMatchType.most_fields);
 
-        ESNode.TextQuery baseQuery = new ESNode.TextQuery(textQueryMode, fields, ft.connective(), boostSettings);
+        ESNode.TextQuery baseQuery = new ESNode.TextQuery(textQueryMode, fields, boostSettings);
 
         if (boostSettings.boostPhrase()) {
             return buildWithPhraseBoost(baseQuery, ft.tokens());
@@ -522,7 +531,7 @@ public class ESQueryTreeBuilder {
         simplePhrases.forEach(s -> {
             // We can't use simple_query_string for phrase query
             ESNode.QueryString qs = new ESNode.QueryString(s, baseQuery.query().multiMatchType());
-            ESNode.TextQuery q = new ESNode.TextQuery(qs, dividedBoosts, baseQuery.connective(), settings);
+            ESNode.TextQuery q = new ESNode.TextQuery(qs, dividedBoosts, settings);
             queries.add(q);
         });
 

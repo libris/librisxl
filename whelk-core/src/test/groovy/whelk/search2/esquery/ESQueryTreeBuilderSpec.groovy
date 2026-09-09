@@ -1435,13 +1435,11 @@ class ESQueryTreeBuilderSpec extends Specification {
         'p1'   | '123'                  | '4567'                 | 'AND'      | 'p1'                    | 123                  | 4567                 | true
         'p1'   | 'x'                    | 'y'                    | 'AND'      | 'p1'                    | null                 | null                 | false
         'p1'   | '123'                  | '4567'                 | 'OR'       | 'p1'                    | 123                  | 4567                 | true
-        'p1'   | 'x'                    | 'y'                    | 'OR'       | 'p1'                    | null                 | null                 | false
         'p1'   | '"åäö"'                | null                   | 'AND'      | 'p1'                    | null                 | null                 | false
         'p2'   | 'E1'                   | 'E2'                   | 'AND'      | 'p2'                    | 'E1'                 | 'E2'                 | true
         'p2'   | "E1"                   | "E2"                   | 'OR'       | 'p2'                    | "E1"                 | 'E2'                 | true
         'p3'   | 'x'                    | 'y'                    | 'AND'      | 'p3._str'               | null                 | null                 | false
         'p3'   | '"https://id.kb.se/x"' | '"https://id.kb.se/y"' | 'AND'      | 'p3.@id'                | 'https://id.kb.se/x' | 'https://id.kb.se/y' | true
-        'p3'   | 'x'                    | 'y'                    | 'OR'       | 'p3._str'               | null                 | null                 | false
         'p3'   | '"https://id.kb.se/x"' | '"https://id.kb.se/y"' | 'OR'       | 'p3.@id'                | 'https://id.kb.se/x' | 'https://id.kb.se/y' | true
         'date' | '1999-01'              | '2000-06'              | 'OR'       | 'date'                  | '1999-01||/M'        | '2000-06||/M'        | true
         'date' | '1999-01'              | '2000-06'              | 'AND'      | 'date'                  | '1999-01||/M'        | '2000-06||/M'        | true
@@ -1452,6 +1450,48 @@ class ESQueryTreeBuilderSpec extends Specification {
         'p9'   | '1234556789'           | '987654321'            | 'OR'       | 'p9.keyword'            | '1234556789'         | '987654321'          | true
         'p9'   | '1234556789'           | '987654321'            | 'AND'      | 'p9.keyword'            | '1234556789'         | '987654321'          | true
         'p9'   | '123*'                 | null                   | 'AND'      | 'p9'                    | null                 | null                 | false
+    }
+
+    def "build OR-connected free-text as per-token should clauses"() {
+        given:
+        Map boostSettings = [
+                "field_boost": [
+                        "fields": [
+                                [
+                                        "name": "freeTextField",
+                                        "boost": 1
+                                ]
+                        ]
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(new ESMappings([]), new ESBoost(boostSettings))
+        Node queryTree = QueryTreeBuilder.buildTree(q, disambiguate)
+        Map result = ESQueryTreeBuilder.buildFrom(queryTree, esSettings).dsl()
+
+        expect:
+        result == [
+                "bool": [
+                        "should": [[
+                                           "simple_query_string": [
+                                                   "default_operator": "AND",
+                                                   "query"           : "x",
+                                                   "fields"          : [esField]
+                                           ]
+                                   ], [
+                                           "simple_query_string": [
+                                                   "default_operator": "AND",
+                                                   "query"           : "y",
+                                                   "fields"          : [esField]
+                                           ]
+                                   ]]
+                ]
+        ]
+
+        where:
+        q             | esField
+        'p1:(x OR y)' | 'p1'
+        'p3:(x OR y)' | 'p3._str'
+        'x OR y'      | 'freeTextField'
     }
 
     def "range query"() {

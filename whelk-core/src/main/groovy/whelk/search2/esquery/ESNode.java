@@ -1,7 +1,6 @@
 package whelk.search2.esquery;
 
 import whelk.search2.Operator;
-import whelk.search2.Query;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,14 +46,13 @@ public sealed interface ESNode {
 
     record TextQuery(TextQueryMode query,
                      List<ESBoost.Field> boostFields,
-                     Query.Connective connective,
                      ESBoost.TextQuerySettings settings) implements ESNode {
         @Override
         public Map<String, Object> dsl() {
             var q = new HashMap<>();
 
             q.put("query", query.query());
-            q.put("default_operator", connective.name());
+            q.put("default_operator", "AND");
 
             if (settings.analyzeWildcard()) {
                 q.put("analyze_wildcard", true);
@@ -88,7 +86,7 @@ public sealed interface ESNode {
         }
 
         public TextQuery withFields(List<ESBoost.Field> newFields) {
-            return new TextQuery(query, newFields, connective, settings);
+            return new TextQuery(query, newFields, settings);
         }
 
         public boolean isSimple() {
@@ -98,7 +96,6 @@ public sealed interface ESNode {
         public static TextQuery simpleUnboostedQuery(String query, String field) {
             return new TextQuery(new SimpleQueryString(query),
                     List.of(ESBoost.Field.unboosted(field)),
-                    Query.Connective.AND,
                     ESBoost.FieldedQuerySettings.defaultSettings());
         }
 
