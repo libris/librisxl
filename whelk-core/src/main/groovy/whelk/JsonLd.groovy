@@ -679,8 +679,9 @@ class JsonLd {
         }
         // NOTE: resilient in case we add inverseOf as a direct term
         def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
-        List revIds = asList(inverseOf)?.collect {
-            toTermKey((String) it[ID_KEY])
+        // NOTE: vocab may have inverseOf with only a label; skip those
+        Collection<String> revIds = asList(inverseOf).findResults {
+            it[ID_KEY] ? toTermKey((String) it[ID_KEY]) : null
         }
         return revIds.find { it in vocabIndex }
     }
