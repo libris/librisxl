@@ -1,10 +1,12 @@
 package whelk.filter
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import whelk.Document
 import whelk.component.DocumentNormalizer
 
 @Log
+@CompileStatic
 class NormalizerChain implements DocumentNormalizer{
     Collection<DocumentNormalizer> normalizers
 

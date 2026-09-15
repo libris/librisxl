@@ -1,5 +1,6 @@
 package whelk.converter
 
+import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
 import groovy.util.logging.Slf4j as Log
 import whelk.util.Iris
@@ -8,6 +9,7 @@ import trld.platform.Output
 import trld.trig.SerializerState
 import trld.trig.Settings
 
+@CompileStatic
 class JsonLdToTrigSerializer {
 
     private CleanedTrigSerializerState state
@@ -31,19 +33,19 @@ class JsonLdToTrigSerializer {
         state.writeGraph(id, data)
     }
 
-    static OutputStream toTrig(context, source, base=null, String iri=null) {
+    static ByteArrayOutputStream toTrig(Object context, Object source, String base=null, String iri=null) {
         return serialize(context, source, base, new Settings())
     }
 
-    static OutputStream toTurtle(context, source, base=null) {
+    static ByteArrayOutputStream toTurtle(Object context, Object source, String base=null) {
         boolean union = true
-        def settings = new Settings(true, !union)
+        Settings settings = new Settings(true, !union)
         return serialize(context, source, base, settings)
     }
 
-    static OutputStream serialize(context, source, base, settings) {
-        def out = new Output()
-        def state = new CleanedTrigSerializerState(out, settings, context, base)
+    static ByteArrayOutputStream serialize(Object context, Object source, String base, Settings settings) {
+        Output out = new Output()
+        CleanedTrigSerializerState state = new CleanedTrigSerializerState(out, settings, context, base)
         state.serialize(source)
         return out.getCaptured()
     }

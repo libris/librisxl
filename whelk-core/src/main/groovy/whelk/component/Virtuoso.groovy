@@ -1,5 +1,6 @@
 package whelk.component
 
+import groovy.transform.CompileStatic
 import com.google.common.base.Preconditions
 import groovy.util.logging.Slf4j as Log
 import org.apache.hc.core5.http.ClassicHttpResponse
@@ -25,6 +26,7 @@ import static whelk.component.Virtuoso.Method.DELETE
 import static whelk.component.Virtuoso.Method.PUT
 
 @Log
+@CompileStatic
 class Virtuoso {
     enum Method { PUT, DELETE }
     
@@ -129,7 +131,7 @@ class Virtuoso {
     }
 
     private String convertToTurtle(Document doc) {
-        def bytes = JsonLdToTrigSerializer.toTurtle(ctx, doc.data).toByteArray()
+        byte[] bytes = JsonLdToTrigSerializer.toTurtle(ctx, doc.data).toByteArray()
         return new String(bytes, StandardCharsets.UTF_8)
     }
     
