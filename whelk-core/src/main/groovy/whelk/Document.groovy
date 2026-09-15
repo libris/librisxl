@@ -18,7 +18,6 @@ import java.util.function.Predicate
 import static whelk.JsonLd.CREATED_KEY
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
-import static whelk.JsonLd.IN_DATASET_KEY
 import static whelk.JsonLd.MODIFIED_KEY
 import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.REVERSE_KEY
@@ -1003,10 +1002,6 @@ class Document {
                 (CREATED_KEY) : record[CREATED_KEY],
                 (MODIFIED_KEY): record[MODIFIED_KEY]
         ]
-
-        if (record[IN_DATASET_KEY]) {
-            workRecord[IN_DATASET_KEY] = record[IN_DATASET_KEY]
-        }
         
         def work = instance.remove(WORK_KEY) as Map
         work[ID_KEY] = workId
