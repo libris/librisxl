@@ -5,12 +5,12 @@ import org.slf4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.Condition;
-import whelk.search2.querytree.FreeText;
-import whelk.search2.querytree.Key;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.Path;
-import whelk.search2.querytree.Token;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.value.FreeText;
+import whelk.search2.querytree.selector.Key;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.selector.Path;
+import whelk.search2.querytree.value.Token;
 import whelk.util.DocumentUtil;
 import whelk.util.FresnelUtil;
 
@@ -131,7 +131,7 @@ public class QueryGenerator {
 
         // TODO
         var q = qPath.path().isEmpty()
-                ? new FreeText(text)
+                ? new FreeText(text).asNode()
                 : new Condition(qPath, Operator.EQUALS, scopedFreeText(text));
 
         insert(q, node);
@@ -139,7 +139,7 @@ public class QueryGenerator {
 
     private static void insert(Node query, Map<String, Object> node) {
         try {
-            var url = QueryUtil.makeViewFindUrl(query.toQueryString(true), new QueryParams(Collections.emptyMap()));
+            var url = QueryUtil.makeViewFindUrl(query.toQueryString(), new QueryParams(Collections.emptyMap()));
             node.put("_find", Map.of(
                     JsonLd.TYPE_KEY, "_Query",
                     JsonLd.ID_KEY, url
@@ -165,7 +165,7 @@ public class QueryGenerator {
 
     private static FreeText scopedFreeText(String s) {
         var tokens = Arrays.stream(s.split("\\s")).map(t -> (Token) new Token.Raw(t)).toList();
-        return new FreeText(null, tokens, Query.Connective.AND);
+        return new FreeText(tokens, Query.Connective.AND);
     }
 
     private static boolean isBlank(Map<String, Object> node) {

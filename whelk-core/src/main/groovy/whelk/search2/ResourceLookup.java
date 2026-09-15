@@ -5,10 +5,10 @@ import org.slf4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Property;
-import whelk.search2.querytree.Term;
-import whelk.search2.querytree.VocabTerm;
+import whelk.search2.querytree.value.Link;
+import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.value.Term;
+import whelk.search2.querytree.value.VocabTerm;
 import whelk.util.DocumentUtil;
 
 import java.util.ArrayList;
