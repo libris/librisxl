@@ -1,8 +1,10 @@
 package whelk.filter
 
+import groovy.transform.CompileStatic
 import whelk.util.DocumentUtil
 import whelk.util.Statistics
 
+@CompileStatic
 class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
     List ignoreCodes = []
 
@@ -22,7 +24,7 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
 
     @Override
     void addDefinition(Map definition) {
-        String code = definition['code'].toLowerCase()
+        String code = ((String) definition['code']).toLowerCase()
         if (ignoreCodes.contains(code)) {
             return
         }
@@ -31,20 +33,25 @@ class LanguageLinker extends BlankNodeLinker implements DocumentUtil.Linker {
     }
 
     @Override
-    protected List split(labelOrCode) {
+    protected List split(Object labelOrCode) {
         if (labelOrCode instanceof List) {
-            return labelOrCode
+            return (List) labelOrCode
         }
 
+        if (!(labelOrCode instanceof String)) {
+            return []
+        }
+        String s = (String) labelOrCode
+
         // concatenated language labels, e.g. "Svenska & engelska"
-        if (labelOrCode ==~ /^(.*,)*.*( & | och | and ).*/) {
-            return labelOrCode.split(/,| & | och | and /) as List
+        if (s ==~ /^(.*,)*.*( & | och | and ).*/) {
+            return s.split(/,| & | och | and /) as List
         }
 
         // concatenated language codes, e.g "sweruseng", "swe ; rus ; eng"
-        if (labelOrCode ==~ /^(\w{3}\W*){2,}/) {
-            def m = labelOrCode =~ /(\w{3})\W*/
-            def matches = []
+        if (s ==~ /^(\w{3}\W*){2,}/) {
+            def m = s =~ /(\w{3})\W*/
+            List matches = []
             while (m.find()) {
                 matches << m.group(1)
             }

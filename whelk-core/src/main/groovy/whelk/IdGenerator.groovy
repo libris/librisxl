@@ -1,7 +1,9 @@
 package whelk
 
+import groovy.transform.CompileStatic
 import java.util.zip.CRC32
 
+@CompileStatic
 class IdGenerator {
 
     static final char[] ALPHANUM = "0123456789abcdefghijklmnopqrstuvwxyz".chars
@@ -51,7 +53,7 @@ class IdGenerator {
     }
 
     static int[] basePositions(long n, int base) {
-        int maxExp = Math.floor(Math.log(n) / Math.log(base))
+        int maxExp = (int) Math.floor(Math.log(n) / Math.log(base))
         int[] positions = new int[maxExp + 1]
         for (int i=maxExp; i > -1; i--) {
             positions[maxExp-i] = (int) (((n / (base ** i)) as long) % base)
@@ -60,8 +62,11 @@ class IdGenerator {
     }
 
     static String baseEncode(int[] positions) {
-        def chars = positions.collect { alphabet[it] }
-        return chars.join("")
+        StringBuilder chars = new StringBuilder()
+        for (int position : positions) {
+            chars.append(alphabet[position])
+        }
+        return chars.toString()
     }
 
     static void rotate(int[] positions, int ceil) {
