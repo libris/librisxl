@@ -39,6 +39,7 @@ class JsonLd {
     public static final String RECORD_KEY = "meta"
     public static final String CREATED_KEY = "created"
     public static final String MODIFIED_KEY = "modified"
+    public static final String IN_DATASET_KEY = "inDataset"
     public static final String RECORD_STATUS_KEY = "recordStatus"
     public static final String NON_JSON_CONTENT_KEY = "content"
     public static final String JSONLD_ALT_ID_KEY = "sameAs"
