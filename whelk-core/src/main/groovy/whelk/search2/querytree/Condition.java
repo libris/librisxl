@@ -39,6 +39,7 @@ public non-sealed class Condition implements Node {
     private final Operator operator;
     private final Value value;
 
+
     public Condition(Selector selector, Operator operator, Value value) {
         this.selector = selector;
         this.operator = operator;
@@ -105,7 +106,9 @@ public non-sealed class Condition implements Node {
 
     @Override
     public RdfSubjectType rdfSubjectType() {
-        return RdfSubjectType.noType();
+        return selector.domain().size() == 1 && selector instanceof Property p
+                ? p.domainTypes.getFirst().rdfSubjectType()
+                : RdfSubjectType.noType();
     }
 
     @Override
