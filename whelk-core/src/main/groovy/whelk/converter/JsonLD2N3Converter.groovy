@@ -1,5 +1,6 @@
 package whelk.converter
 
+import groovy.transform.CompileStatic
 import org.apache.commons.io.IOUtils
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
@@ -12,6 +13,7 @@ import whelk.util.PropertyLoader
 
 import static whelk.util.Jackson.mapper
 
+@CompileStatic
 class JsonLD2N3Converter implements FormatConverter {
 
     Map m_context = null
