@@ -27,8 +27,11 @@ selectBySqlWhere(where) { data ->
         List components = (List) mainEntity.hasComponent
         if (!components.isEmpty())
             component = (Map) components[0]
+        else
+            components.add(component)
     }
-    mainEntity.put("hasComponent", [component])
+    else
+        mainEntity.put("hasComponent", [component])
 
     // Stuff in
     for (String property : moveIntoComponent) {
