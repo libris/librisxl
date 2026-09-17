@@ -10,7 +10,7 @@ KbSigel = ["https://libris.kb.se/library/S",
 
 propertiesToRemove = ["marc:shelvingScheme", "marc:shelvingOrder", "marc:groupid"]
 moveIntoComponent = ["appliesTo", "location", "physicalLocation", "formerShelfLocation", "address", "codedLocationQualifier", "nonCodedLocationQualifier", "shelfMark", "availability", "shelfControlNumber", "callNumberPrefix", "shelfLabel", "callNumberSuffix", "country", "itemCondition", "copyrightArticleFeeCode", "copyNumber", "uri"]
-moveOutOfComponent = ["cataloguersNote"]
+moveOutOfComponent = ["cataloguersNote", "hasNote"]
 
 String where = "collection = 'hold' AND data#>>'{@graph,1,heldBy,@id}' IN ( '£' )".replace("£", String.join("', '", KbSigel))
 
