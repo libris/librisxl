@@ -31,6 +31,8 @@ public class QueryGenerator {
     private static final List<List<Object>> PATHS = List.of(
             List.of(THING_KEY, "classification", "*"),
             List.of(THING_KEY, WORK_KEY, "classification", "*"),
+            List.of(THING_KEY, "subject", "*"),
+            List.of(THING_KEY, WORK_KEY, "subject", "*"),
             List.of(THING_KEY, "publication", "*", "agent"),
             List.of(THING_KEY, REVERSE_KEY, WORK_KEY, "*", "publication", "*", "agent")
     );
