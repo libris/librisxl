@@ -248,7 +248,9 @@ def prepare_record(instance: dict) -> dict:
             prepped["full_title"] = (
                 f"{has_title[0].get('mainTitle', '')} {has_title[0].get('subtitle', '')}"
             )
-        else:
+        elif "instanceOf" in instance:
+            # TODO Clarify handling of cases where the instance doesn't have a title (title only in work - should only happen for serials)
+            print(instance)
             report.write(
                 f"\n{instance['@id']}\tNo title\t{json.dumps(instance, ensure_ascii=False)}\n"
             )
@@ -287,6 +289,7 @@ def prepare_record(instance: dict) -> dict:
                 title = has_title[0].get("mainTitle")
 
             elif instance_of := host_or_series.get("instanceOf", {}):
+                # TODO Get series title from work?
                 has_title = instance_of.get("hasTitle", [{}])
                 title = has_title[0].get("mainTitle")
 
