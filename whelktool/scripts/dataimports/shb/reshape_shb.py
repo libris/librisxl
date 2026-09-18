@@ -124,20 +124,24 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
     syntax_era = identify_syntax_era(instance)
 
     # Prep for adding SAO
-    if "marc:primaryProvisionActivity" in instance and "publication" in instance:
+    if "publication" in instance:
         publ = instance["publication"][0]
         start_year = publ.get("startYear")
         end_year = publ.get("endYear") or publ.get("year")
-        if end_year == instance["marc:primaryProvisionActivity"]["year"]:
+        if "marc:primaryProvisionActivity" in instance and end_year == instance["marc:primaryProvisionActivity"]["year"]:
             del instance["marc:primaryProvisionActivity"]
+    else:
+        anomalies.append(
+            f"SKIPPING Missing publication information\t{instance['@id']}\t{instance}"
+        )
 
     ### Some initial cleanup ###
     # TODO Review this section - what are we doing and do we want to?
 
     if "bibliography" in rec:
         rec["bibliography"] = [{"@id": it["@id"]} for it in rec["bibliography"]]
-    del rec["marc:catalogingSource"]  # "Annan verksamhet"
-
+    if "marc:catalogingSource" in rec:
+        del rec["marc:catalogingSource"]  # "Annan verksamhet"
     # Remove category ("componentPart") - new categories will be added after parsing
     instance.pop("category", None)
 
@@ -165,8 +169,9 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     # Add SAO subject headings and SAB classifications
     sao_headings, sab_codes = get_mapped_sao_and_sab(
-        shb_host_num, start_year, end_year, subject_mappings
-    )
+    shb_host_num, start_year, end_year, subject_mappings
+)
+
 
     structured_record["sao_headings"] = sao_headings
     structured_record["sab_codes"] = sab_codes
@@ -762,7 +767,7 @@ def extract_review_diss_or_content_note(note: str) -> tuple[str, str]:
     Returns a tuple of (review_note, remainder)."""
 
     match = re.search(
-        r"Rec\.\s+i\b|\bSummary:\s*|\s*-\s*Diss\b|\s*-\s*Oiss\b|Innehåller b",
+        r"Rec\.\s+i\b|\bSummary:\s*|\s*-\s*Diss\b|\s*-\s*Oiss\b|Innehåller b|Innehåller:",
         note,
     )
 
@@ -1094,21 +1099,29 @@ def get_mapped_sao_and_sab(
     """Add subject headings to the work based on the SHB part number and publication years.
     Returns a list of subject references, or None if no subjects found."""
 
+    sao_headings = ""
+    sab_codes = ""
+
     # Remove extra characters before matching with SAO/SAB mapping
     shb_host_num = re.sub(r"[a-z]", "", shb_host_num)
     shb_host_num = shb_host_num.replace("1/2", "").strip()
 
     years_key = f"{start_year}-{end_year}" if start_year else end_year
-    if rownummap := subject_mappings.get(years_key):
+    rownummap = subject_mappings.get(years_key)
+
+    if not rownummap:
+        anomalies.append(
+            f"SHB part number not found in SAO/SAB mapping for years {years_key}: {shb_host_num}"
+        )
+    else:
         sao_headings = rownummap.get(shb_host_num, {}).get("sao")
         sab_codes = rownummap.get(shb_host_num, {}).get("sab")
-
         if not sao_headings and not sab_codes:
             anomalies.append(
                 f"Neither SAO heading nor SAB class found for \tSHB part num: {shb_host_num}\tStart year: {start_year}\tEnd year: {end_year}"
             )
 
-        return sao_headings, sab_codes
+    return sao_headings, sab_codes
 
 
 def link_to_shb_volume(
