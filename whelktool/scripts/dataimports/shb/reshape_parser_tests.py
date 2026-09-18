@@ -3,6 +3,7 @@ from reshape_shb import (
     extract_extent,
     extract_parenthesis_delimited_host_or_series,
     normalize_spacing_and_punctuation,
+    extract_review_diss_or_content_note,
     parse_note,
 )
 
@@ -196,7 +197,7 @@ PARSE_NOTE_TEST_CASES = {
         {
             "primary_contributors": "Fries, Elias",
             "title": "Hembygdsperiodika",
-            "subtitle": "förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl",
+            "subtitle": "förteckning över periodiskaskrifter samt skriftserier utgivna t. o. m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m. fl",
             "extent": "40 bl.",
             "place": "Borås",
             "year": "1976",
@@ -207,12 +208,12 @@ PARSE_NOTE_TEST_CASES = {
                 "issn": "0347-1128",
             },
             "is_component_part": False,
-            "original_note": "Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t.o.m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m.fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)"
+            "original_note": "Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t. o. m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m. fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)"
 
         },
     ),
     "monograph-with-series-and-dissertation-note-with-issn": (
-        "Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
+        "Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscherZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
         "isbd",
         {
             "primary_contributors": "Edvardsson, Lars",
@@ -222,13 +223,13 @@ PARSE_NOTE_TEST_CASES = {
             "place": "Lund",
             "year": "1976",
             "host": {
-                "title": "Bibliotheca historico-ecclesiasticaLundensis",
+                "title": "Bibliotheca historico-ecclesiastica Lundensis",
                 "part_number": "6",
                 "issn": "0346-5438",
             },
-            "remaining_note": "Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
+            "remaining_note": "Diss. Hit deutscher Zusammenfassung Rec. i Kyrkohistorisk årsskrift 1976 av I. Brohed",
             "is_component_part": False,
-            "original_note": "Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiasticaLundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher ZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av I. Brohed"
+            "original_note": "Edvardsson, Lars, Kyrka och judendom : svensk judemission medsärskild hänsyn till Svenska israelmissionens verksamhet 1875-1975. -Lund, 1976. - 194 s. - (Bibliotheca historico-ecclesiastica Lundensis, ISSN 0346-5438 ; 6). - Diss. Hit deutscher Zusammenfassung Rec. i Kyrkohistorisk årsskrift 1976 av I. Brohed"
 
         },
     ),
@@ -237,7 +238,7 @@ PARSE_NOTE_TEST_CASES = {
         "isbd",
         {
             "primary_contributors": "Frithz, Carl-Gösta",
-            "title": "Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning",
+            "title": "Till frågan om det s. k. Kelgeandshusmissaletsliturgihistoriska ställning",
             "extent": "428 s.",
             "place": "Lund",
             "year": "1976",
@@ -246,9 +247,9 @@ PARSE_NOTE_TEST_CASES = {
                 "part_number": "34",
                 "issn": "0519-9859",
             },
-            "remaining_note": "Diss. Mit deutscherZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av S. Helander",
+            "remaining_note": "Diss. Mit deutscher Zusammenfassung Rec. i Kyrkohistorisk årsskrift 1976 av S. Helander",
             "is_component_part": False,
-            "original_note": "Frithz, Carl-Gösta, Till frågan om det s.k. Kelgeandshusmissaletsliturgihistoriska ställning. - Lund, 1976. - 428 s. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscherZusammenfassungRec. i Kyrkohistorisk årsskrift 1976 av S. Helander"
+            "original_note": "Frithz, Carl-Gösta, Till frågan om det s. k. Kelgeandshusmissaletsliturgihistoriska ställning. - Lund, 1976. - 428 s. - (Bibliothecatheologiae practicae, ISSN 0519-9859 ; 34) - Oiss. Mit deutscher Zusammenfassung Rec. i Kyrkohistorisk årsskrift 1976 av S. Helander"
 
         },
     ),
@@ -546,7 +547,7 @@ def test_parse_note_1971_1975_Monografi():
     assert result["year"] == "1974"
     assert result["extent"] == "43 s."
     assert result["host"] == {
-        "title": "Acta RegiaeSocietatis scientiarum et litterarum Gothoburgensis. Humaniora",
+        "title": "Acta Regiae Societatis scientiarum et litterarum Gothoburgensis. Humaniora",
         "part_number": "10",
     }
 
@@ -633,11 +634,9 @@ def test_parse_note_1921_1935_Monografi():
     }
     result = parse_note(record["sample"], "parenthesized")
 
-    
-
     assert result["is_component_part"] == False
     assert result["primary_contributors"] == "Nohrstrom, Holger"
-    assert result["title"] == "Borgå gymnasiebibliotek och dess föregångare blandFinlands läroverksbibliotek"
+    assert result["title"] == "Borgå gymnasiebibliotek och dess föregångare bland Finlands läroverksbibliotek"
     assert result["subtitle"] == "Ett bidrag till Finlands biblioteks- och kulturhistoria"
     assert result["place"] == "Hfors"
     assert result["year"] == "1927"
@@ -730,7 +729,7 @@ def test_parse_note_1976_Bidrag_utan_författare():
     result = parse_note(record["sample"], "isbd")
 
     assert result["is_component_part"] == True
-    assert result["other_contributors"] == "LarsFrendel ..."
+    assert result["other_contributors"] == "Lars Frendel ..."
     assert result["title"] == "Arbetare! Kamrater!"
     assert result["subtitle"] == "dokument kring första maj 1890"
     assert result["host"] == {
@@ -752,7 +751,7 @@ def test_parse_note_1976_Monografi_utan_författare():
     assert result["is_component_part"] == False
     assert (
         result["other_contributors"]
-        == "med bidrag av JohanAhlsten ..... red.: Paul Norrby"
+        == "med bidrag av Johan Ahlsten ..... red.: Paul Norrby"
     )
     assert result["title"] == "Folkhögskolan på Gotland 100 år"
     assert (
@@ -772,7 +771,7 @@ def test_parse_note_1971_1975_Monografi_utan_författare():
     result = parse_note(record["sample"], "isbd_transition")
 
     assert result["is_component_part"] == False
-    assert result["other_contributors"] == "red.: ArneStade o. Jan Wimmer"
+    assert result["other_contributors"] == "red.: Arne Stade o. Jan Wimmer"
     assert result["title"] == "Polens krig med Sverige 1655-1660"
     assert result["subtitle"] == "krigshistoriska studier"
     assert result["place"] == "Stockholm"
@@ -782,7 +781,7 @@ def test_parse_note_1971_1975_Monografi_utan_författare():
         result["remaining_note"]
         == "Summary: A review of operations in the Polish-Swedish war of 1655-1660"
     )
-    assert result["host"] == {"title": "Carl XGustaf-studier", "part_number": "5"}
+    assert result["host"] == {"title": "Carl X Gustaf-studier", "part_number": "5"}
 
 
 def test_parse_note_1961_1970_Bidrag_utan_författare():
@@ -916,6 +915,13 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi_utan_författare():
 
 
 ### Special and edge cases ###
+
+def test_extract_diss_or_content_note():
+    note = "Bref och uppteckningar från kriget i Finland 1808-1809. Utgifna af B. Hausen. x + 219 s. + 1 portr. Helsingfors 1916. Skrifter utgivna av Svenska Litteratursällskapet i Finland. 130. Innehåller: Kammarrådet F. L. Nybergs bref bok; Byttmästare C. M. Möllersvärds journal; Kapten H. Wärnhjelms relation om Sveaborgs kapitulation."
+    review_or_diss_note, remainder = extract_review_diss_or_content_note(note)
+
+    assert review_or_diss_note == "Innehåller: Kammarrådet F. L. Nybergs bref bok; Byttmästare C. M. Möllersvärds journal; Kapten H. Wärnhjelms relation om Sveaborgs kapitulation."
+    assert remainder == "Bref och uppteckningar från kriget i Finland 1808-1809. Utgifna af B. Hausen. x + 219 s. + 1 portr. Helsingfors 1916. Skrifter utgivna av Svenska Litteratursällskapet i Finland. 130."
 
 
 def test_separate_publication_info_delimited_utg():
