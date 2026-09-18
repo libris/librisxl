@@ -73,9 +73,9 @@ if __name__ == "__main__":
         )
 
         if "FALSE" in result:
-            print(f"Scores by property: {individual_scores}  ")
-            print(f"SHB: {shb_prepped}")
-            print(f"Libris: {libris_prepped}")
+            print(f"*** Scores by property: {individual_scores}")
+            print(f"*** SHB: {shb_prepped}")
+            print(f"*** Libris: {libris_prepped}\n")
 
     print()
     print(f"False matches: {false_positives}")
