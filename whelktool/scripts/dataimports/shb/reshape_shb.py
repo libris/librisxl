@@ -51,7 +51,7 @@ DASH_ERAS = ["dash_style", "isbd_transition", "isbd"]
 ### Extreme regex ###
 EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl)<DOT>", re.I)
 COMPONENT_EXTENT = re.compile(
-    r"\b((?:s|bl|pl)(<DOT>)?)\s*(\d+)(?:-(\d+))?(?:\s*:?\s+(ill(<DOT>)?))?"
+    r"\b((?:s|bl|pl)(<DOT>)?)\s*(\d+)(?:-(\d+))?(?:\s*:?\s+(ill(<DOT>)|portr(<DOT>)?))?"
 )
 MONOGRAPH_EXTENT_RE = re.compile(
     r"""
@@ -60,7 +60,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
             \[\d+\]              # [2]
             |\(\d+\)              # (2)
             |\d+                  # 806
-            |\b[ivxlc]{2,}\b      # Roman numerals - mostly used for shorter sections
+            |\b(?:[vxlc]|[ivxlc]{2,})\b  # Roman numerals, excluding standalone "i" which could be a word
         )
         (?:\s*(?:,|\+)\s*)?
     )+
@@ -73,11 +73,11 @@ MONOGRAPH_EXTENT_RE = re.compile(
                 \[\d+\]
                 |\(\d+\)
                 |\d+
-                |\b[ivxlc]{2,}\b
+                |\b(?:[vxlc]|[ivxlc]{2,})\b
             )
             (?:,\s*)?
         )+
-        \s*(?:kartbl|pl<DOT>-bl|pl|bl|s)(<DOT>)?
+        \s*(?:kartbl|pl<DOT>-bl|pl|bl|s|portr|ill|illustr)(<DOT>)?
     )*
 
     (?:\s*:?\s*ill(<DOT>)?)?
