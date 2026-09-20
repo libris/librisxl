@@ -1,22 +1,26 @@
 import whelk.Whelk
-import whelk.converter.TrigToJsonLdParser
 import whelk.datatool.DocumentItem
+import static whelk.converter.RdfReader.readRdf
 
 List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
-    Map data = new File(rdfSourcePath).withInputStream { TrigToJsonLdParser.parse(it) }
-    contextDocData = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
-    return TrigToJsonLdParser.compact(data, contextDocData)[GRAPH]
+    var context = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
+    Map data = new File(rdfSourcePath).withInputStream { readRdf(it, rdfSourcePath, context) }
+    return data[GRAPH]
 }
 
-String rdfDataFile = System.getProperty("rdfdata")
-List<Map> newDocs = loadDescriptions(getWhelk(), rdfDataFile).collect {
-    create( [ "@graph": [
-        [
-            "@id": "TEMPID",
-            "mainEntity" : ["@id": it[ID]]
-        ],
-        it
-    ]])
+String rdfSourcePath = System.getProperty("rdfdata")
+List<Map> newDocs = loadDescriptions(getWhelk(), rdfSourcePath).collect { Map mainEntity ->
+    var record = [
+        '@id': 'TEMPID',
+        'mainEntity' : ['@id': mainEntity[ID]]
+    ]
+    if (mainEntity.containsKey('meta')) {
+      record.putAll(mainEntity.get('meta'))
+      mainEntity.remove('meta')
+    }
+    var data = ['@graph': [record, mainEntity]]
+
+    create(data)
 }
 
 selectFromIterable(newDocs, { newItem ->
