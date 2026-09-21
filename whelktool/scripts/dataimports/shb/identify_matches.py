@@ -281,8 +281,12 @@ def prepare_record(instance: dict) -> dict:
         prepped["extent"] = instance.get("extent", "")
 
         if publication := instance.get("publication"):
-            if place := publication[0].get("place", []):
-                prepped["place"] = place[0].get("label", [])[0]
+            place = publication[0].get("place")
+            if place:
+                if isinstance(place, list):
+                    prepped["place"] = place[0].get("label", [])[0]
+                elif isinstance(place, dict):
+                    prepped["place"] = place.get("label", {})
             if year := publication[0].get("year", ""):
                 prepped["year"] = year
 
