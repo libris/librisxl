@@ -722,10 +722,12 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
     place, year = None, None
     PLACE_YEAR_RE = re.compile(
         r"""
-        \-?\s*
+        -?\s*
         (?P<place>
             (?:\[[^\]]+\]\s*)?
             [A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]*?
+            |
+            \[[^\]]+\]
         )
         [, ]+
         (?P<year>
@@ -738,7 +740,6 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
         """,
         re.X,
     )
-
     remainder = strip_trailing_separators(remainder)
 
     # Split by period followed by space and thereafter dash or capital letter
