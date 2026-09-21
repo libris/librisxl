@@ -44,15 +44,19 @@ NON_TERMINATING_ABBREVIATIONS = [
     "kartbl.",
     "pl.-bl.",
     "facs.",
+    "th."
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
 DASH_ERAS = ["dash_style", "isbd_transition", "isbd"]
 
 ### Extreme regex ###
-EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl)<DOT>", re.I)
+EXTENT_MARKER_RE = re.compile(r"\b(?:s|bl|bd|th)<DOT>", re.I)
+
+MONOGRAPH_VOLUMES_RE = re.compile(r"\b((?:Bd|Th)\.?)\s*(\d+)-?(\d*)", re.I)
+
 COMPONENT_EXTENT = re.compile(
-    r"\b((?:s|bl|pl)(<DOT>)?)\s*(\d+)(?:-(\d+))?(?:\s*:?\s+(ill(<DOT>)|portr(<DOT>)?))?"
+    r"\b((?:s|bl|pl|th)(<DOT>)?)\s*(\d+)(?:-(\d+))?(?:\s*:?\s+(ill(<DOT>)|portr(<DOT>)?))?"
 )
 MONOGRAPH_EXTENT_RE = re.compile(
     r"""
@@ -596,10 +600,9 @@ def extract_period_delimited_host_or_series(
     # Reintroduce initals...
     parts = reinclude_abbreviations_after_split(parts)
 
-    # If there's no extent, and parta[1] doesn't look like a monograph volume number, it's likely a newspaper article
-    MONO_VOLUME_RE = re.compile(r"\b((?:Bd)\.?)\s*(\d+)-?(\d*)", re.I)
+    # If there's no extent, and parts[1] doesn't look like a monograph volume number, it's likely a newspaper article
     # Title. Newspaper, Number.
-    if len(parts) > 1 and not extent and not MONO_VOLUME_RE.match(parts[1]):
+    if len(parts) > 1 and not extent and not MONOGRAPH_VOLUMES_RE.match(parts[1]):
         host_or_series = parts[-1]
         remainder = ". ".join(part.strip(".") for part in parts[:-1])
         is_component_part = True
