@@ -1249,6 +1249,9 @@ def normalize_spacing_and_punctuation(text: str) -> str:
     # Always have a space between a digit and two lowercase letters
     text = re.sub(r"(\d)([a-zåäö]{2,})", r"\1 \2", text)
 
+    # Always have a space between a digit and the letter "s" (for pages)
+    text = re.sub(r"(\d)([sS])", r"\1 \2", text)
+
     # \\ Double backslashes, aka one backslash escaped with another, seem to be a common misreading of brackets
     # Get the opening and closing
     text = re.sub(r"\\([a-zåäöA-ZÅÄÖ]+)\\", r"[\1]", text)
