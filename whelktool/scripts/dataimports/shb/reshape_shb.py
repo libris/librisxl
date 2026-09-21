@@ -43,6 +43,7 @@ NON_TERMINATING_ABBREVIATIONS = [
     "pl.",
     "kartbl.",
     "pl.-bl.",
+    "facs.",
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
@@ -77,7 +78,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
             )
             (?:,\s*)?
         )+
-        \s*(?:kartbl|pl<DOT>-bl|pl|bl|s|portr|ill|illustr)(<DOT>)?
+        \s*(?:kartbl|pl<DOT>-bl|facs<DOT>\spl|facs|pl|bl|s|portr|ill|illustr)(<DOT>)?
     )*
 
     (?:\s*:?\s*ill(<DOT>)?)?
