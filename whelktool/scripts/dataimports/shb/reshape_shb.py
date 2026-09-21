@@ -472,7 +472,7 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     other_contributors, remainder = extract_other_contributors(remainder)
 
     if syntax_era == "early":
-        host_or_series, remainder, is_component_part = (
+        host_or_series, extent, remainder, is_component_part = (
             extract_period_delimited_host_or_series(
                 remainder, extent, is_component_part
             )
@@ -602,42 +602,49 @@ def extract_period_delimited_host_or_series(
 
     # If there's no extent, and parts[1] doesn't look like a monograph volume number, it's likely a newspaper article
     # Title. Newspaper, Number.
-    if len(parts) > 1 and not extent and not MONOGRAPH_VOLUMES_RE.match(parts[1]):
-        host_or_series = parts[-1]
-        remainder = ". ".join(part.strip(".") for part in parts[:-1])
-        is_component_part = True
-        return host_or_series, remainder, is_component_part
+    if len(parts) > 1:
+        if not extent and not MONOGRAPH_VOLUMES_RE.match(parts[1]):
+            host_or_series = parts[-1]
+            remainder = ". ".join(part.strip(".") for part in parts[:-1])
+            is_component_part = True
+            return host_or_series, extent, remainder, is_component_part
 
-    elif len(parts) > 2:
-        if is_component_part:
-            # Other component parts
-            # Title. Journal. Number.
-            host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
-            remainder = ". ".join(part.strip(".") for part in parts[:-2])
-
-            return host_or_series, remainder, is_component_part
-
-        else:
-            # Monographs
-            # Title. Place year. Series. Number.
-            # Similar structure with series info in the two furthest right positions
-            # However not all monographs are part of series
-            host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
-
-            # Only treat as publication/series info it contains
-            # At least 2 alphabetic characters (series title)
-            # At least one numeric character (part number)
-            alpha_chars = [char for char in host_or_series if char.isalpha()]
-            num_chars = [char for char in host_or_series if char.isnumeric()]
-            if len(alpha_chars) > 1 and len(num_chars) > 0:
+        # The remainder could be host/series info!
+        elif len(parts) > 2:
+            if is_component_part:
+                # Other component parts
+                # Title. Journal. Number.
+                host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
                 remainder = ". ".join(part.strip(".") for part in parts[:-2])
 
-                return host_or_series, remainder, is_component_part
+                return host_or_series, extent,remainder, is_component_part
+            else:
+                # Monographs
+                # Title. Place year. Series. Number.
+                # Similar structure with series info in the two furthest right positions
+                # However not all monographs are part of series
+                host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
+
+                # Only treat as publication/series info it contains
+                # At least 2 alphabetic characters (series title)
+                # At least one numeric character (part number)
+                alpha_chars = [char for char in host_or_series if char.isalpha()]
+                num_chars = [char for char in host_or_series if char.isnumeric()]
+                if len(alpha_chars) > 1 and len(num_chars) > 0:
+                    remainder = ". ".join(part.strip(".") for part in parts[:-2])
+
+                    return host_or_series, extent, remainder, is_component_part
+
+        # Lastly, if the second part looks like a monograph volume number, treat it as such
+        elif not extent and MONOGRAPH_VOLUMES_RE.match(parts[1]):
+            extent = parts[1]
+            parts = [parts[0]]
+
 
     # Or else
     remainder = ". ".join(part.strip(".") for part in parts)
 
-    return None, remainder, is_component_part
+    return None, extent, remainder, is_component_part
 
 
 def extract_dash_delimited_host_or_series(
@@ -1255,6 +1262,9 @@ def normalize_spacing_and_punctuation(text: str) -> str:
 
     # Always have a space between a digit and the letter "s" (for pages)
     text = re.sub(r"(\d)([sS])", r"\1 \2", text)
+
+    # Always have a space between a letter followed by a period and a digit (e.g., "B.1" -> "B. 1")
+    text = re.sub(r"([a-zåäöA-ZÅÄÖ]\.)(\d)", r"\1 \2", text)
 
     # \\ Double backslashes, aka one backslash escaped with another, seem to be a common misreading of brackets
     # Get the opening and closing

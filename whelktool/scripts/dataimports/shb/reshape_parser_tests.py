@@ -916,6 +916,18 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi_utan_författare():
 
 ### Special and edge cases ###
 
+def test_parse_note_multi_volume_monograph():
+    record = {
+        "sample": "Arndt, E. M., Reise durch Schweden im Jahr 1804. Th.1-4. Berlin 1806.Rec. i Göttingische gelehrte Anzeigen 1807. Bd 1, s. 673-680.Th. 1-2 rec. i Neueste critische Nachrichten 1806. Bd 32, s.161-165.",
+    }
+    result = parse_note(record["sample"], "early")
+    assert result["is_component_part"] == False
+    assert result["title"] == "Reise durch Schweden im Jahr 1804"
+    assert result["primary_contributors"] == "Arndt, E. M."
+    assert result["extent"] == "Th. 1-4."
+    assert result["place"] == "Berlin"
+    assert result["remaining_note"] == "Rec. i Göttingische gelehrte Anzeigen 1807. Bd 1, s. 673-680. Th. 1-2 rec. i Neueste critische Nachrichten 1806. Bd 32, s. 161-165"
+
 def test_extract_diss_or_content_note():
     note = "Bref och uppteckningar från kriget i Finland 1808-1809. Utgifna af B. Hausen. x + 219 s. + 1 portr. Helsingfors 1916. Skrifter utgivna av Svenska Litteratursällskapet i Finland. 130. Innehåller: Kammarrådet F. L. Nybergs bref bok; Byttmästare C. M. Möllersvärds journal; Kapten H. Wärnhjelms relation om Sveaborgs kapitulation."
     review_or_diss_note, remainder = extract_review_diss_or_content_note(note)
