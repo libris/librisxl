@@ -219,8 +219,8 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
 
 def get_best_match(scores_and_matches: list, shb_id: str):
 
-    highest_score = max(m["score"] for m in scores_and_matches)
-    winners = [m for m in scores_and_matches if m["score"] == highest_score]
+    highest_score = max(m["total_score"] for m in scores_and_matches)
+    winners = [m for m in scores_and_matches if m["total_score"] == highest_score]
 
     if len(winners) > 1:
         report.write(
