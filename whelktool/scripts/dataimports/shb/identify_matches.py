@@ -118,6 +118,7 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     title_score = 0
     host_or_series_title_score = 0
     contributor_score = 0
+    place_score = 0
     year_score = 0
     issn_score = 0
     extent_score = 0
@@ -157,6 +158,17 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             / 100
         )
 
+    # Place should have similar content, but not necessarily the same length or order
+    if shb_prepped.get("place") and match_prepped.get("place"):
+        place_score = (
+            fuzz.ratio(
+                shb_prepped["place"],
+                match_prepped["place"],
+            )
+            / 100
+        )
+
+
     # Extent should have similar content, but not necessarily the same length or order
     if shb_prepped.get("extent") and match_prepped.get("extent"):
         extent_score = (
@@ -191,29 +203,35 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
         issn_score = 0
 
     # Calculate the overall score
+    ## Properites that describe the thign itself
     weighted_scores["title"] = 0.40 * title_score
     weights.append(0.40)
 
     weighted_scores["contributor"] = 0.25 * contributor_score
     weights.append(0.25)
 
-    weighted_scores["host_or_series_issn"] = 0.10 * issn_score
-    weights.append(0.10)
-
     weighted_scores["year"] = 0.10 * year_score
-    weights.append(0.05)
-
-    weighted_scores["host_or_series_title"] = 0.05 * host_or_series_title_score
     weights.append(0.10)
 
-    weighted_scores["part"] = 0.05 * part_score
-    weights.append(0.05)
+    weighted_scores["place"] = 0.075 * place_score
+    weights.append(0.075)
 
     weighted_scores["extent"] = 0.05 * extent_score
     weights.append(0.05)
 
-    overall_score = sum(weighted_scores.values()) / sum(weights)
+    ## Properites that describe the thing itself
+    weighted_scores["host_or_series_issn"] = 0.05 * issn_score
+    weights.append(0.05)
 
+    weighted_scores["host_or_series_title"] = 0.05 * host_or_series_title_score
+    weights.append(0.05)
+
+    weighted_scores["part"] = 0.025 * part_score
+    weights.append(0.025)
+
+    assert sum(weights) == 1, f"Weights must add up to 1. Actual sum: {sum(weights)}"
+
+    overall_score = sum(weighted_scores.values()) / sum(weights)
     return overall_score, weighted_scores
 
 
@@ -263,8 +281,8 @@ def prepare_record(instance: dict) -> dict:
         prepped["extent"] = instance.get("extent", "")
 
         if publication := instance.get("publication"):
-            if place := publication[0].get("place"):
-                prepped["place"] = place[0].get("label", "")
+            if place := publication[0].get("place", []):
+                prepped["place"] = place[0].get("label", [])[0]
             if year := publication[0].get("year", ""):
                 prepped["year"] = year
 

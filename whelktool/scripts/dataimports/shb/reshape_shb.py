@@ -242,7 +242,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
     publication = {}
 
     if structured_record.get("place"):
-        publication["place"] = [{"@type": "Place", "label": structured_record["place"]}]
+        publication["place"] = [{"@type": "Place", "label": [structured_record["place"]]}]
 
     if structured_record.get("year"):
         publication["year"] = structured_record["year"]
