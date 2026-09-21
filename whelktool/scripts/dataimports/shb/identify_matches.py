@@ -46,6 +46,7 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
         "_q": query_string,
         "_lens": "cards",
         "_stats": "false",  # Not needed
+        "computedLabel": "sv",
         "limit": 50,
     }
 
@@ -173,8 +174,8 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     if shb_prepped.get("extent") and match_prepped.get("extent"):
         extent_score = (
             fuzz.token_set_ratio(
-                shb_prepped["extent"][0]["label"][0],
-                match_prepped["extent"][0]["label"][0],
+                shb_prepped["extent"],
+                match_prepped["extent"],
             )
             / 100
         )
@@ -207,24 +208,24 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     weighted_scores["title"] = 0.40 * title_score
     weights.append(0.40)
 
-    weighted_scores["contributor"] = 0.25 * contributor_score
-    weights.append(0.25)
+    weighted_scores["contributor"] = 0.30 * contributor_score
+    weights.append(0.30)
 
-    weighted_scores["year"] = 0.10 * year_score
-    weights.append(0.10)
+    weighted_scores["year"] = 0.125 * year_score
+    weights.append(0.125)
 
     weighted_scores["place"] = 0.075 * place_score
     weights.append(0.075)
 
-    weighted_scores["extent"] = 0.05 * extent_score
-    weights.append(0.05)
+    weighted_scores["extent"] = 0.025 * extent_score
+    weights.append(0.025)
 
     ## Properites that describe the thing itself
-    weighted_scores["host_or_series_issn"] = 0.05 * issn_score
-    weights.append(0.05)
+    weighted_scores["host_or_series_issn"] = 0.025 * issn_score
+    weights.append(0.025)
 
-    weighted_scores["host_or_series_title"] = 0.05 * host_or_series_title_score
-    weights.append(0.05)
+    weighted_scores["host_or_series_title"] = 0.025 * host_or_series_title_score
+    weights.append(0.025)
 
     weighted_scores["part"] = 0.025 * part_score
     weights.append(0.025)
@@ -274,11 +275,16 @@ def prepare_record(instance: dict) -> dict:
             )
             return None
 
-        prepped["responsibility_statement"] = instance.get(
-            "responsibilityStatement", ""
-        )
+        # For some Libris records, we need to get the contributor from the agent entity instead
+        responsibility_statement = instance.get("responsibilityStatement", "")
 
-        prepped["extent"] = instance.get("extent", "")
+        if not responsibility_statement and instance.get("instanceOf", {}).get("contribution"):
+            agent = instance["instanceOf"]["contribution"][0].get("agent", {})
+            responsibility_statement = agent.get("familyName", "") + ", " + agent.get("givenName", "")
+
+        prepped["responsibility_statement"] = responsibility_statement
+
+        prepped["extent"] = instance.get("extent", [{}])[0].get("label", [""])[0]
 
         if publication := instance.get("publication"):
             place = publication[0].get("place")
@@ -312,8 +318,13 @@ def prepare_record(instance: dict) -> dict:
 
             elif instance_of := host_or_series.get("instanceOf", {}):
                 # TODO Get series title from work?
-                has_title = instance_of.get("hasTitle", [{}])
-                title = has_title[0].get("mainTitle")
+                if isinstance(instance_of, dict):
+                    has_title = instance_of.get("hasTitle", [{}])
+                    title = has_title[0].get("mainTitle")
+                else:
+                    report.write(
+                        f"\n{instance['@id']}\tUnexpected instanceOf type\t{json.dumps(instance_of, ensure_ascii=False)}\n"
+                    )
 
             if title:
                 prepped["host_or_series_title"] = title
