@@ -7,7 +7,7 @@ from rapidfuzz import fuzz
 import traceback
 
 
-# Search in Libris #
+### Search in Libris ###
 def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
     """
     Given an SHBD record, finds matching records already in LIBRIS.
@@ -82,7 +82,7 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
         report.write(f"\n{he}\t{query_string}\n")
 
 
-# Analyze search results #
+### Analyze search results ###
 def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict, float]:
 
     scores_and_matches = []
@@ -256,7 +256,7 @@ def get_best_match(scores_and_matches: list, shb_id: str):
     return winners[0]
 
 
-# Prepare records for matching #
+### Prepare records for matching ###
 def prepare_record(instance: dict) -> dict:
     try:
         prepped = {
@@ -341,14 +341,23 @@ def prepare_record(instance: dict) -> dict:
             )
             return None
 
-        return prepped
-
-    except KeyError as ke:
+    except KeyError:
         report.write(
             f"\nCODE ISSUE\t{instance['@id']}\tKeyError while processing instance: \t{instance}\t{traceback.format_exc()}\n"
         )
-        return prepped
+    except AttributeError:
+        report.write(
+            f"\nCODE ISSUE\t{instance['@id']}\tAttributeError while processing instance: \t{instance}\t{traceback.format_exc()}\n"
+        )
 
+    return prepped
+
+### Store away matched and unmatched records ###
+
+def store_matched_records(best_match: dict):
+    pass
+
+### Helper function ###
 
 def normalize_text(value: str):
     # Remove diacritics -- ??? too radical or useful with the OCR'd data?
@@ -382,7 +391,6 @@ def remove_problematic_punctuation(text: str) -> str:
     text = text.replace("(", "").replace(")", "").replace('"', "").replace("'", "")
 
     return text
-
 
 ### Main action ###
 if __name__ == "__main__":
