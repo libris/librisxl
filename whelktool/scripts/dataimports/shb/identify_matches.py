@@ -6,6 +6,8 @@ import time
 from rapidfuzz import fuzz
 import traceback
 
+THRESHOLD = 0.80
+
 
 ### Search in Libris ###
 def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
@@ -83,7 +85,7 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
 
 
 ### Analyze search results ###
-def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict, float]:
+def analyze_matches(shbd_prepepd, matches: list) -> dict:
 
     scores_and_matches = []
 
@@ -97,7 +99,7 @@ def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict,
             {
                 "api_ranking": i + 1,
                 "total_score": score,
-                "parital_scores": partial_scores, 
+                "parital_scores": partial_scores,
                 "libris_id": match["@id"],
                 "libris_match_record": match_prepped,
             }
@@ -105,7 +107,7 @@ def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict,
 
     best_match = get_best_match(scores_and_matches, shbd_prepepd["@id"])
 
-    match_map[shbd_prepepd["@id"]] = {
+    match_summary = {
         "shb_match_record": shbd_prepepd,
         "best_match": best_match,
         "all_matches": scores_and_matches,
@@ -113,10 +115,10 @@ def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict,
 
     if best_match and best_match["api_ranking"] != 1:
         report.write(
-            f"\nMATCHING\t{shbd_prepepd['@id']}\tBest match is not the first result from the API\t{best_match['libris_id']}\tAPI ranking: {best_match['api_ranking']}\tMatch score: {best_match['total_score']}\n"
+            f"\nMATCHING\t{shbd_prepepd['@id']}\tBest match is not the highest ranked result from the API\t{best_match['libris_id']}\tAPI ranking: {best_match['api_ranking']}\tMatch score: {best_match['total_score']}"
         )
 
-    return match_map
+    return match_summary
 
 
 def get_match_score(shb_prepped: dict, match_prepped: dict):
@@ -137,16 +139,21 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     )
 
     # Host or series title should match almost verbatim
-    if shb_prepped.get("host_or_series_title") and match_prepped.get("host_or_series_title"):
+    if shb_prepped.get("host_or_series_title") and match_prepped.get(
+        "host_or_series_title"
+    ):
         host_or_series_title_score = (
-        fuzz.ratio(
-            shb_prepped["host_or_series_title"], match_prepped["host_or_series_title"]
+            fuzz.ratio(
+                shb_prepped["host_or_series_title"],
+                match_prepped["host_or_series_title"],
+            )
+            / 100
         )
-        / 100
-    )
 
     # Auhtor names are often inverted on one or the other side
-    if shb_prepped.get("responsibility_statement") and match_prepped.get("responsibility_statement"):
+    if shb_prepped.get("responsibility_statement") and match_prepped.get(
+        "responsibility_statement"
+    ):
         contributor_score = (
             fuzz.token_sort_ratio(
                 shb_prepped["responsibility_statement"],
@@ -175,7 +182,6 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             / 100
         )
 
-
     # Extent should have similar content, but not necessarily the same length or order
     if shb_prepped.get("extent") and match_prepped.get("extent"):
         extent_score = (
@@ -199,7 +205,9 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     else:
         year_score = 0
 
-    if shb_prepped.get("host_or_series_issn") and match_prepped.get("host_or_series_issn"):
+    if shb_prepped.get("host_or_series_issn") and match_prepped.get(
+        "host_or_series_issn"
+    ):
         if normalize_numeric(shb_prepped["host_or_series_issn"]) != normalize_numeric(
             match_prepped["host_or_series_issn"]
         ):
@@ -242,7 +250,7 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     return overall_score, weighted_scores
 
 
-def get_best_match(scores_and_matches: list, shb_id: str):
+def get_best_match(scores_and_matches: list, shb_id: str) -> dict | None:
 
     highest_score = max(m["total_score"] for m in scores_and_matches)
     winners = [m for m in scores_and_matches if m["total_score"] == highest_score]
@@ -284,9 +292,13 @@ def prepare_record(instance: dict) -> dict:
         # For some Libris records, we need to get the contributor from the agent entity instead
         responsibility_statement = instance.get("responsibilityStatement", "")
 
-        if not responsibility_statement and instance.get("instanceOf", {}).get("contribution"):
+        if not responsibility_statement and instance.get("instanceOf", {}).get(
+            "contribution"
+        ):
             agent = instance["instanceOf"]["contribution"][0].get("agent", {})
-            responsibility_statement = agent.get("familyName", "") + ", " + agent.get("givenName", "")
+            responsibility_statement = (
+                agent.get("familyName", "") + ", " + agent.get("givenName", "")
+            )
 
         prepped["responsibility_statement"] = responsibility_statement
 
@@ -325,7 +337,11 @@ def prepare_record(instance: dict) -> dict:
             elif instance_of := host_or_series.get("instanceOf", {}):
                 # Get series title from work
                 if isinstance(instance_of, dict):
-                    has_title = host_or_series["instanceOf"].get("hasTitle", [{}])[0].get("mainTitle")
+                    has_title = (
+                        host_or_series["instanceOf"]
+                        .get("hasTitle", [{}])[0]
+                        .get("mainTitle")
+                    )
                 else:
                     report.write(
                         f"\nDATA ISSUE\t{instance['@id']}\tUnexpected instanceOf type\t{json.dumps(instance_of, ensure_ascii=False)}\n"
@@ -352,12 +368,16 @@ def prepare_record(instance: dict) -> dict:
 
     return prepped
 
+
 ### Store away matched and unmatched records ###
+
 
 def store_matched_records(best_match: dict):
     pass
 
+
 ### Helper function ###
+
 
 def normalize_text(value: str):
     # Remove diacritics -- ??? too radical or useful with the OCR'd data?
@@ -392,15 +412,18 @@ def remove_problematic_punctuation(text: str) -> str:
 
     return text
 
+def write_instance_to_json_lines(record, file):
+        json.dump(record, file, ensure_ascii=False)
+        file.write("\n")
+
 ### Main action ###
 if __name__ == "__main__":
 
     argp = argparse.ArgumentParser()
     argp.add_argument("env")
     argp.add_argument("shbd_file")
-    argp.add_argument("search_result_file")
-    argp.add_argument("match_map_file")
-    argp.add_argument("report")
+    argp.add_argument("results_folder")
+    argp.add_argument("reports_folder")
     argp.add_argument(
         "search_codes",
         choices=["title", "title_and_contributor", "none"],
@@ -408,6 +431,23 @@ if __name__ == "__main__":
     args = argp.parse_args()
 
     start = time.time()
+    date = time.strftime("%Y%m%d_%H%M%S")
+
+    matched_shb_path = (
+        f"{args.results_folder}/{date}_matched_shb_{args.search_codes}.jsonl"
+    )
+
+    non_matched_shb_path = (
+        f"{args.results_folder}/{date}_non_matched_shb_{args.search_codes}.jsonl"
+    )
+
+    search_result_path = (
+        f"{args.reports_folder}/{date}_api_search_result_{args.search_codes}.tsv"
+    )
+    match_map_path = (
+        f"{args.reports_folder}/{date}_match_map_{args.search_codes}.json"
+    )
+    report_path = f"{args.reports_folder}/{date}_report_{args.search_codes}.tsv"
 
     perfect_matches = []
     match_counts = {}
@@ -420,14 +460,14 @@ if __name__ == "__main__":
     print(f"Getting started! Matching against records in {base_url}")
 
     with open(args.shbd_file, "r") as source_file, open(
-        args.search_result_file, "w"
-    ) as search_result_file, open(
-        args.match_map_file, "w", encoding="utf-8"
-    ) as match_map_file, open(
-        args.report, "w", encoding="utf-8"
-    ) as report:
+        matched_shb_path, "w", encoding="utf-8") as matched_shb_file, open(
+        non_matched_shb_path, "w", encoding="utf-8") as non_matched_shb_file, open(
+        search_result_path, "w") as search_result_file, open(
+        match_map_path, "w", encoding="utf-8") as match_map_file, open(
+        report_path, "w", encoding="utf-8") as report:
         search_result_file.write("id\tnumber_of_matches\tquery_string\tmatches\n")
 
+        # Loop through the SHB records
         for idx, line in enumerate(source_file):
 
             if idx % 500 == 0:
@@ -441,16 +481,42 @@ if __name__ == "__main__":
                     )
                     print(match_counts)
 
-            instance = json.loads(line)["@graph"][1]
+            shb_instance = json.loads(line)["@graph"][1]
 
-            shbd_prepepd = prepare_record(instance)
+            shbd_prepepd = prepare_record(shb_instance)
 
             if shbd_prepepd:
                 matches = find_matches(shbd_prepepd, match_counts)
 
             if matches:
-                analyze_matches(shbd_prepepd, matches, match_map)
+                match_summary = analyze_matches(shbd_prepepd, matches)
 
+            match_map[shbd_prepepd["@id"]] = match_summary
+
+            # If best match score reaches the threshold, save SHB instance to matched_file
+            # If best match score does not reach the threshold, save SHB instance to non_matched_file
+            # If there is no best match at all, save SHB instance to non_matched_file
+
+            if best_match := match_summary.get("best_match"):
+                if best_match["total_score"] >= THRESHOLD:
+                    match_dict = {
+                        "libris_id": best_match["libris_id"],
+                        "matched_shb": shb_instance,
+                    }
+                    write_instance_to_json_lines(match_dict, matched_shb_file)
+
+                else:
+                    write_instance_to_json_lines(shb_instance, non_matched_shb_file)
+                    report.write(
+                        f"\nMATCHING\t{shbd_prepepd['@id']}\tBest match score below threshold {THRESHOLD}\t{best_match['libris_id']}\tMatch score: {best_match['total_score']}"
+                    )
+            else:
+                write_instance_to_json_lines(shb_instance, non_matched_shb_file)
+
+
+        # Finally, print full match maps
         json.dump(match_map, match_map_file, ensure_ascii=False)
 
     print(f"\nTotal matches:\n{match_counts}")
+
+
