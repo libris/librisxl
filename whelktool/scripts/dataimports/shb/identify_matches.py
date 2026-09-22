@@ -87,7 +87,7 @@ def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict,
 
     scores_and_matches = []
 
-    for match in matches:
+    for i, match in enumerate(matches):
 
         match_prepped = prepare_record(match)
 
@@ -95,6 +95,7 @@ def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict,
 
         scores_and_matches.append(
             {
+                "api_ranking": i + 1,
                 "total_score": score,
                 "parital_scores": partial_scores, 
                 "libris_id": match["@id"],
@@ -109,6 +110,11 @@ def analyze_matches(shbd_prepepd, matches: list, match_map: dict) -> tuple[dict,
         "best_match": best_match,
         "all_matches": scores_and_matches,
     }
+
+    if best_match and best_match["api_ranking"] != 1:
+        report.write(
+            f"\nMATCHING\t{shbd_prepepd['@id']}\tBest match is not the first result from the API\t{best_match['libris_id']}\tAPI ranking: {best_match['api_ranking']}\tMatch score: {best_match['total_score']}\n"
+        )
 
     return match_map
 
@@ -243,7 +249,7 @@ def get_best_match(scores_and_matches: list, shb_id: str):
 
     if len(winners) > 1:
         report.write(
-            f"\n{shb_id}\tUnable to identify best match: {len(winners)} matches have high score {highest_score}\t{[match['libris_id'] for match in winners]}"
+            f"\nMATCHING\t{shb_id}\tUnable to identify best match: {len(winners)} matches have high score {highest_score}\t{[match['libris_id'] for match in winners]}"
         )
         return None
 
@@ -268,10 +274,10 @@ def prepare_record(instance: dict) -> dict:
                 f"{has_title[0].get('mainTitle', '')} {has_title[0].get('subtitle', '')}"
             )
         elif "instanceOf" in instance:
-            # TODO Clarify handling of cases where the instance doesn't have a title (title only in work - should only happen for serials)
+            # No hasTitle in instance, only in work - should only happen for serials
             print(instance)
             report.write(
-                f"\n{instance['@id']}\tNo title\t{json.dumps(instance, ensure_ascii=False)}\n"
+                f"\nDATA ISSUE\t{instance['@id']}\tNo title\t{json.dumps(instance, ensure_ascii=False)}\n"
             )
             return None
 
@@ -307,7 +313,7 @@ def prepare_record(instance: dict) -> dict:
         else:
             host_or_series = []
 
-        # Get title from instance or work
+        # Get ISSN and title from host instance or work
         if host_or_series:
             if host_has_issn := host_or_series.get("identifiedBy", []):
                 prepped["host_or_series_issn"] = host_has_issn[0].get("value", "")
@@ -317,13 +323,12 @@ def prepare_record(instance: dict) -> dict:
                 title = has_title[0].get("mainTitle")
 
             elif instance_of := host_or_series.get("instanceOf", {}):
-                # TODO Get series title from work?
+                # Get series title from work
                 if isinstance(instance_of, dict):
-                    has_title = instance_of.get("hasTitle", [{}])
-                    title = has_title[0].get("mainTitle")
+                    has_title = host_or_series["instanceOf"].get("hasTitle", [{}])[0].get("mainTitle")
                 else:
                     report.write(
-                        f"\n{instance['@id']}\tUnexpected instanceOf type\t{json.dumps(instance_of, ensure_ascii=False)}\n"
+                        f"\nDATA ISSUE\t{instance['@id']}\tUnexpected instanceOf type\t{json.dumps(instance_of, ensure_ascii=False)}\n"
                     )
 
             if title:
@@ -332,7 +337,7 @@ def prepare_record(instance: dict) -> dict:
         # Don't try to match if the instance has only one property
         if len(prepped) < 2:
             report.write(
-                f"\n{instance['@id']}\tNot enough properties to match on\t{json.dumps(instance, ensure_ascii=False)}\n"
+                f"\nDATA ISSUE\t{instance['@id']}\tNot enough properties to match on\t{json.dumps(instance, ensure_ascii=False)}\n"
             )
             return None
 
@@ -340,7 +345,7 @@ def prepare_record(instance: dict) -> dict:
 
     except KeyError as ke:
         report.write(
-            f"\nKeyError (details below) while processing instance: \t{instance}\t{traceback.format_exc()}"
+            f"\nCODE ISSUE\t{instance['@id']}\tKeyError while processing instance: \t{instance}\t{traceback.format_exc()}\n"
         )
         return prepped
 
