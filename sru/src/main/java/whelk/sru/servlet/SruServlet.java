@@ -13,7 +13,7 @@ import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.InvalidQueryException;
 import whelk.search2.AppParams;
-import whelk.search2.ESSettings;
+import whelk.search2.esquery.ESSettings;
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
 import whelk.search2.ResourceLookup;

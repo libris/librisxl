@@ -1,7 +1,7 @@
 package whelk.util;
 
-import whelk.search2.querytree.Property;
-import whelk.search2.querytree.Value;
+import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.value.Value;
 
 public class Restrictions {
     public sealed interface OnProperty permits HasValue {
