@@ -467,6 +467,8 @@ if __name__ == "__main__":
         report_path, "w", encoding="utf-8") as report:
         search_result_file.write("id\tnumber_of_matches\tquery_string\tmatches\n")
 
+        match_summary = {}
+
         # Loop through the SHB records
         for idx, line in enumerate(source_file):
 
@@ -486,32 +488,30 @@ if __name__ == "__main__":
             shbd_prepepd = prepare_record(shb_instance)
 
             if shbd_prepepd:
-                matches = find_matches(shbd_prepepd, match_counts)
+                api_matches = find_matches(shbd_prepepd, match_counts)
 
-            if matches:
-                match_summary = analyze_matches(shbd_prepepd, matches)
-
-            match_map[shbd_prepepd["@id"]] = match_summary
-
-            # If best match score reaches the threshold, save SHB instance to matched_file
-            # If best match score does not reach the threshold, save SHB instance to non_matched_file
-            # If there is no best match at all, save SHB instance to non_matched_file
-
-            if best_match := match_summary.get("best_match"):
-                if best_match["total_score"] >= THRESHOLD:
-                    match_dict = {
-                        "libris_id": best_match["libris_id"],
-                        "matched_shb": shb_instance,
-                    }
-                    write_instance_to_json_lines(match_dict, matched_shb_file)
-
-                else:
-                    write_instance_to_json_lines(shb_instance, non_matched_shb_file)
-                    report.write(
-                        f"\nMATCHING\t{shbd_prepepd['@id']}\tBest match score below threshold {THRESHOLD}\t{best_match['libris_id']}\tMatch score: {best_match['total_score']}"
-                    )
-            else:
+            if not api_matches:
                 write_instance_to_json_lines(shb_instance, non_matched_shb_file)
+            else:
+                match_summary = analyze_matches(shbd_prepepd, api_matches)
+                match_map[shbd_prepepd["@id"]] = match_summary
+
+                best_match = match_summary.get("best_match")
+                # If there is a best match and the score reaches the threshold, save SHB instance to matched_file
+                if best_match and best_match["total_score"] >= THRESHOLD:
+                        match_dict = {
+                            "libris_id": best_match["libris_id"],
+                            "matched_shb": shb_instance,
+                        }
+                        write_instance_to_json_lines(match_dict, matched_shb_file)
+                # If the the score does not reach the threshold, or there is no best match at all,
+                # save SHB instance to non_matched_file
+                else:
+                        write_instance_to_json_lines(shb_instance, non_matched_shb_file)
+                        if best_match:
+                            report.write(
+                            f"\nMATCHING\t{shbd_prepepd['@id']}\tBest match score below threshold {THRESHOLD}\t{best_match['libris_id']}\tMatch score: {best_match['total_score']}"
+                        )
 
 
         # Finally, print full match maps
