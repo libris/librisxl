@@ -1518,7 +1518,7 @@ public class FresnelUtil {
     }
 
     private boolean isTypedNode(Object o) {
-        return o instanceof Map && ((Map<?, ?>) o).containsKey(TYPE_KEY);
+        return o instanceof Map && ((Map<?, ?>) o).get(TYPE_KEY) != null;
     }
 
     // TODO handle multiple types=
