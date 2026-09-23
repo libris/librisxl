@@ -5,8 +5,8 @@ import groovy.transform.Immutable
 import groovy.transform.Memoized
 import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 import whelk.exception.FramingException
 import whelk.exception.WhelkRuntimeException
 import whelk.util.DocumentUtil
@@ -127,7 +127,7 @@ class JsonLd {
 
     public static final String ALTERNATE_PROPERTIES = 'alternateProperties'
 
-    private static Logger log = LogManager.getLogger(JsonLd.class)
+    private static Logger log = LoggerFactory.getLogger(JsonLd.class)
 
     public Map<String, Object> context
     public Map displayData
@@ -679,8 +679,9 @@ class JsonLd {
         }
         // NOTE: resilient in case we add inverseOf as a direct term
         def inverseOf = relDescription['owl:inverseOf'] ?: relDescription.inverseOf
-        List revIds = asList(inverseOf)?.collect {
-            toTermKey((String) it[ID_KEY])
+        // NOTE: vocab may have inverseOf with only a label; skip those
+        Collection<String> revIds = asList(inverseOf).findResults {
+            it[ID_KEY] ? toTermKey((String) it[ID_KEY]) : null
         }
         return revIds.find { it in vocabIndex }
     }
@@ -1191,7 +1192,7 @@ class JsonLd {
                     m[k] = v
                 }
             }
-            if (!m.isEmpty()) {
+            if (!m.isEmpty() && o.containsKey(TYPE_KEY)) {
                 m[TYPE_KEY] = o[TYPE_KEY]
             }
             return m

@@ -1,15 +1,15 @@
 package whelk.converter
 
+import groovy.transform.CompileStatic
 import groovy.transform.InheritConstructors
-import groovy.util.logging.Log4j2 as Log
-
-import org.apache.jena.iri.IRI
-import org.apache.jena.iri.IRIFactory
+import groovy.util.logging.Slf4j as Log
+import whelk.util.Iris
 
 import trld.platform.Output
 import trld.trig.SerializerState
 import trld.trig.Settings
 
+@CompileStatic
 class JsonLdToTrigSerializer {
 
     private CleanedTrigSerializerState state
@@ -33,19 +33,19 @@ class JsonLdToTrigSerializer {
         state.writeGraph(id, data)
     }
 
-    static OutputStream toTrig(context, source, base=null, String iri=null) {
+    static ByteArrayOutputStream toTrig(Object context, Object source, String base=null, String iri=null) {
         return serialize(context, source, base, new Settings())
     }
 
-    static OutputStream toTurtle(context, source, base=null) {
+    static ByteArrayOutputStream toTurtle(Object context, Object source, String base=null) {
         boolean union = true
-        def settings = new Settings(true, !union)
+        Settings settings = new Settings(true, !union)
         return serialize(context, source, base, settings)
     }
 
-    static OutputStream serialize(context, source, base, settings) {
-        def out = new Output()
-        def state = new CleanedTrigSerializerState(out, settings, context, base)
+    static ByteArrayOutputStream serialize(Object context, Object source, String base, Settings settings) {
+        Output out = new Output()
+        CleanedTrigSerializerState state = new CleanedTrigSerializerState(out, settings, context, base)
         state.serialize(source)
         return out.getCaptured()
     }
@@ -55,8 +55,6 @@ class JsonLdToTrigSerializer {
 @Log
 @InheritConstructors
 class CleanedTrigSerializerState extends SerializerState {
-
-    static IRIFactory iriFactory = IRIFactory.iriImplementation()
 
     // TODO: We need to fix these when ENTERING the system (Validation/Normalization)!
     String refRepr(Object refobj) {
@@ -79,13 +77,12 @@ class CleanedTrigSerializerState extends SerializerState {
 
         // Now catch things that are too broken to sensibly do anything about, e.g.,
         // "http://foo:", http://", etc.
-        IRI iri = iriFactory.create(cleanedIriString)
-        if (iri.hasViolation(false)) { // false = ignore warnings, care only about errors
+        if (Iris.isBroken(cleanedIriString)) {
             cleanedIriString = "https://BROKEN-IRI/"
         }
 
         if (cleanedIriString != iriString) {
-            log.warn("Broken IRI ${iri}, changing to ${cleanedIriString}")
+            log.warn("Broken IRI ${iriString}, changing to ${cleanedIriString}")
         }
         return super.refRepr(cleanedIriString)
     }

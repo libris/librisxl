@@ -7,7 +7,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.ListenableFutureTask
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import whelk.Document
 import whelk.Link
 import whelk.exception.MissingMainIriException

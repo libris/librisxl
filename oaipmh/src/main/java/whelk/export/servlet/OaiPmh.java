@@ -18,12 +18,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
-import io.prometheus.client.Counter;
-import io.prometheus.client.Gauge;
-import io.prometheus.client.Summary;
+import io.prometheus.metrics.core.datapoints.Timer;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.core.metrics.Gauge;
+import io.prometheus.metrics.core.metrics.Summary;
 
 
 public class OaiPmh extends HttpServlet
@@ -38,20 +39,20 @@ public class OaiPmh extends HttpServlet
     public final static String OAIPMH_ERROR_NO_METADATA_FORMATS = "noMetadataFormats";
     public final static String OAIPMH_ERROR_NO_SET_HIERARCHY = "noSetHierarchy";
 
-    static final Counter requests = Counter.build()
+    static final Counter requests = Counter.builder()
             .name("oaipmh_requests_total").help("Total requests to OAIPMH.")
             .labelNames("verb").register();
 
-    static final Gauge ongoingRequests = Gauge.build()
-            .name("oaipmh_ongoing_requests_total").help("Total ongoing OAIPMH requests.")
+    static final Gauge ongoingRequests = Gauge.builder()
+            .name("oaipmh_ongoing_requests").help("Total ongoing OAIPMH requests.")
             .labelNames("verb").register();
 
-    static final Summary requestsLatency = Summary.build()
+    static final Summary requestsLatency = Summary.builder()
             .name("oaipmh_requests_latency_seconds")
             .help("OAIPMH request latency in seconds.")
             .labelNames("verb").register();
 
-    static final Counter badRequests = Counter.build()
+    static final Counter badRequests = Counter.builder()
             .name("oaipmh_bad_request_total").help("Total bad requests.")
             .labelNames("error").register();
 
@@ -79,7 +80,7 @@ public class OaiPmh extends HttpServlet
     // Placed here, because the call to generate this is expensive, and should not be done on every request.
     public static Set<String> workDerivativeTypes;
 
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static Whelk getWhelk(HttpServletResponse res) throws IOException {
         if (s_whelk == null) {
@@ -88,7 +89,7 @@ public class OaiPmh extends HttpServlet
                     try {
                         s_whelk = Whelk.createLoadedCoreWhelk();
                     } catch (Exception e) {
-                        LogManager.getLogger(OaiPmh.class).error("Failed to initialize Whelk", e);
+                        LoggerFactory.getLogger(OaiPmh.class).error("Failed to initialize Whelk", e);
                         res.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Whelk unavailable");
                         return null;
                     }
@@ -149,13 +150,11 @@ public class OaiPmh extends HttpServlet
 
         res.setContentType("text/xml");
 
-        requests.labels(verb).inc();
-        ongoingRequests.labels(verb).inc();
-        Summary.Timer requestTimer = requestsLatency.labels(verb).startTimer();
-
+        requests.labelValues(verb).inc();
+        ongoingRequests.labelValues(verb).inc();
         res.setCharacterEncoding("utf-8");
 
-        try
+        try (Timer _ = requestsLatency.labelValues(verb).startTimer())
         {
             switch (verb) {
                 case "GetRecord":
@@ -178,7 +177,7 @@ public class OaiPmh extends HttpServlet
                     ListSets.handleListSetsRequest(req, res);
                     break;
                 default:
-                    badRequests.labels(OAIPMH_ERROR_BAD_VERB).inc();
+                    badRequests.labelValues(OAIPMH_ERROR_BAD_VERB).inc();
                     ResponseCommon.sendOaiPmhError(OAIPMH_ERROR_BAD_VERB, "OAI-PMH verb must be one of [GetRecord, Identify, " +
                             "ListIdentifiers, ListMetadataFormats, ListRecords, ListSets].", req, res);
             }
@@ -195,8 +194,7 @@ public class OaiPmh extends HttpServlet
             res.sendError(500);
         }
         finally {
-            ongoingRequests.labels(verb).dec();
-            requestTimer.observeDuration();
+            ongoingRequests.labelValues(verb).dec();
         }
     }
 }

@@ -1,7 +1,7 @@
 package whelk.rest.api;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.converter.FormatConverter;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ConverterUtils {
-    private static final Logger log = LogManager.getLogger(ConverterUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(ConverterUtils.class);
 
     private final Whelk whelk;
     private final Map<String, FormatConverter> converters;

@@ -1,6 +1,6 @@
 package whelk.importer
 
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import groovy.transform.CompileStatic
 import whelk.exception.LinkValidationException
 

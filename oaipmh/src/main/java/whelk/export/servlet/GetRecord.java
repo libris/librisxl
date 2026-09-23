@@ -8,7 +8,7 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.sql.*;
 
-import io.prometheus.client.Counter;
+import io.prometheus.metrics.core.metrics.Counter;
 
 public class GetRecord
 {
@@ -16,7 +16,7 @@ public class GetRecord
     private final static String FORMAT_PARAM = "metadataPrefix";
     private final static String DELETED_DATA_PARAM = "x-withDeletedData";
 
-    private static final Counter failedRequests = Counter.build()
+    private static final Counter failedRequests = Counter.builder()
             .name("oaipmh_failed_getrecord_requests_total").help("Total failed GetRecord requests.")
             .labelNames("error").register();
 
@@ -38,7 +38,7 @@ public class GetRecord
 
         if (metadataPrefix == null)
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
+            failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "metadataPrefix argument required.", request, response);
             return;
@@ -46,7 +46,7 @@ public class GetRecord
 
         if (!OaiPmh.supportedFormats.containsKey(metadataPrefix))
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
+            failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_CANNOT_DISSEMINATE_FORMAT, "Unsupported format: " + metadataPrefix,
                     request, response);
             return;
@@ -54,7 +54,7 @@ public class GetRecord
 
         if (identifierUri == null)
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
+            failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_BAD_ARGUMENT,
                     "identifier argument required.", request, response);
             return;
@@ -70,7 +70,7 @@ public class GetRecord
         }
         if (id == null)
         {
-            failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
+            failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
             ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
             return;
         }
@@ -78,11 +78,11 @@ public class GetRecord
         try (Connection dbconn = OaiPmh.s_whelk.getStorage().getOuterConnection())
         {
             dbconn.setAutoCommit(false);
-            try (Helpers.ResultIterator it = Helpers.getMatchingDocuments(dbconn, null, null, null, id, false, false))
+            try (Helpers.ResultIterator it = Helpers.getMatchingDocuments(dbconn, null, null, null, id, false, false, null, null, 1))
             {
                 if (!it.hasNext())
                 {
-                    failedRequests.labels(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
+                    failedRequests.labelValues(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH).inc();
                     ResponseCommon.sendOaiPmhError(OaiPmh.OAIPMH_ERROR_NO_RECORDS_MATCH, "", request, response);
                     return;
                 }

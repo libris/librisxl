@@ -27,6 +27,10 @@ class ResourceCache {
       this.jsonld = jsonld
     }
 
+    JsonLd getJsonld() {
+      return jsonld
+    }
+
     ResourceCache(Whelk whelk, LanguageLinker languageLinker, BlankNodeLinker relatorLinker) {
         this.whelk = whelk
         this.jsonld = whelk.jsonld

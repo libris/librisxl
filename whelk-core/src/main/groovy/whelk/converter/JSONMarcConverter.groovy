@@ -1,6 +1,6 @@
 package whelk.converter
 
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import org.w3c.dom.DocumentFragment
 import se.kb.libris.util.marc.Controlfield
 import se.kb.libris.util.marc.Datafield

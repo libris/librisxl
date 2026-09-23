@@ -1,7 +1,7 @@
 package whelk.rest.api;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Whelk;
 import whelk.util.Romanizer;
 import whelk.util.http.HttpTools;
@@ -17,7 +17,7 @@ import java.util.Map;
 import static whelk.util.Jackson.mapper;
 
 public class TransliterationAPI extends WhelkHttpServlet {
-    private static final Logger log = LogManager.getLogger(TransliterationAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(TransliterationAPI.class);
     private Romanizer romanizer;
 
     @Override

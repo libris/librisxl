@@ -6,8 +6,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 import groovy.lang.Tuple2;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -31,7 +31,7 @@ import static whelk.search.ESQuery.Connective.OR;
 import static whelk.util.Unicode.stripPrefix;
 
 public class SearchUtils {
-    private static final Logger log = LogManager.getLogger(SearchUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(SearchUtils.class);
 
     public static final int DEFAULT_LIMIT = 200;
     public static final int MAX_LIMIT = 4000;
@@ -670,13 +670,15 @@ public class SearchUtils {
                 }
                 String label = String.join(" ", parts);
 
-                if (matchesTerm) {
+                if (matchesTerm && !chain.isEmpty()) {
                     Object proptype = chain.getLast().get(JsonLd.TYPE_KEY);
                     List<String> proptypes;
                     if (proptype instanceof String) {
                         proptypes = List.of((String) proptype);
-                    } else {
+                    } else if (proptype instanceof List) {
                         proptypes = (List<String>) proptype;
+                    } else {
+                        proptypes = List.of();
                     }
                     boolean anyObjectProperty = proptypes.stream().anyMatch(pt -> ld.isSubClassOf(pt, "ObjectProperty"));
                     if (anyObjectProperty) {
@@ -951,6 +953,12 @@ public class SearchUtils {
 
                 termKey = stripPrefix(termKey, ESQuery.AND_PREFIX);
                 termKey = stripPrefix(termKey, ESQuery.OR_PREFIX);
+
+                if (termKey.startsWith(ESQuery.EXISTS_PREFIX)) {
+                  termKey = stripPrefix(termKey, ESQuery.EXISTS_PREFIX);
+                  valueProp = "value";
+                  value = ESQuery.parseBoolean(termKey, val);
+                }
 
                 Map<String, Object> mapping = new HashMap<>();
                 mapping.put("variable", param);

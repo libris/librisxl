@@ -1,7 +1,7 @@
 package whelk;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.util.FresnelUtil;
 import whelk.util.Unicode;
 import whelk.util.http.HttpTools;
@@ -65,7 +65,7 @@ public class Dump {
      * The last line of a finished dump holds a (also 17 bytes) marker, to separate the finished
      * dump from one that is still being generated but just haven't gotten any further yet.
      */
-    private static final Logger logger = LogManager.getLogger(Dump.class);
+    private static final Logger logger = LoggerFactory.getLogger(Dump.class);
     private static final String DUMP_END_MARKER_NO_NEWLINE = "_DUMP_END_MARKER";
     private static final String DUMP_END_MARKER = DUMP_END_MARKER_NO_NEWLINE + "\n"; // Must be 17 bytes
     private static final String JSON_CONTENT_TYPE = "application/json";

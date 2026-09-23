@@ -5,8 +5,9 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.metrics.prometheus.PrometheusHistogramMetricsTrackerFactory
 import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2 as Log
-import io.prometheus.client.Counter
+import groovy.util.logging.Slf4j as Log
+import io.prometheus.metrics.core.datapoints.CounterDataPoint
+import io.prometheus.metrics.core.metrics.Counter
 import org.postgresql.PGConnection
 import org.postgresql.PGNotification
 import org.postgresql.PGStatement
@@ -205,15 +206,15 @@ class PostgreSQLComponent {
     private static final String LOAD_ALL_DOCUMENTS = """
             SELECT id, data, created, modified, deleted 
             FROM lddb 
-            WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) >= ? 
-              AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ?
+            WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) >= ?
+              AND GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) <= ?
             """.stripIndent()
 
     private static final String LOAD_ALL_DOCUMENTS_BY_COLLECTION = """
             SELECT id, data, created, modified, deleted
             FROM lddb 
-            WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) >= ? 
-              AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ? 
+            WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) >= ?
+              AND GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) <= ?
               AND collection = ? 
               AND deleted = false
             """.stripIndent()
@@ -434,8 +435,8 @@ class PostgreSQLComponent {
     private static final String LOAD_ALL_DOCUMENTS_BY_DATASET = """
             SELECT id, data, created, modified, deleted
             FROM lddb
-            WHERE GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) >= ?
-            AND GREATEST(modified, (data#>>'{@graph,0,generationDate}')::timestamptz) <= ?
+            WHERE GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) >= ?
+            AND GREATEST(modified, totstz(data#>>'{@graph,0,generationDate}')) <= ?
             AND data#>'{@graph,0,inDataset}' @> ?::jsonb
             AND deleted = false
             """.stripIndent()
@@ -559,7 +560,7 @@ class PostgreSQLComponent {
                 preparedStatement = connection.prepareStatement(UPSERT_EMBELLISHED_DOCUMENT)
                 preparedStatement.setString(1, id)
                 preparedStatement.setObject(2, mapper.writeValueAsString(embellishedDocument.data), java.sql.Types.OTHER)
-                preparedStatement.setArray(3, connection.createArrayOf("TEXT", ids as String[]))
+                preparedStatement.setArray(3, connection.createArrayOf("TEXT", ids.toArray(new String[0])))
 
                 preparedStatement.execute()
             }
@@ -1261,7 +1262,7 @@ class PostgreSQLComponent {
         ResultSet rs = null
         try {
             getSystemIds = connection.prepareStatement(GET_SYSTEMIDS_BY_IRIS)
-            getSystemIds.setArray(1, connection.createArrayOf("TEXT", iris as String[]))
+            getSystemIds.setArray(1, connection.createArrayOf("TEXT", iris.collect { it as String }.toArray(new String[0])))
 
             rs = getSystemIds.executeQuery()
             while (rs.next()) {
@@ -1440,7 +1441,7 @@ class PostgreSQLComponent {
             ResultSet rs = null
             try {
                 preparedStatement = connection.prepareStatement(BULK_LOAD_CARDS)
-                preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids as String[]))
+                preparedStatement.setArray(1,  connection.createArrayOf("TEXT", ids.collect { it as String }.toArray(new String[0])))
 
                 rs = preparedStatement.executeQuery()
                 SortedMap<String, Map> result = new TreeMap<>()
@@ -2004,7 +2005,7 @@ class PostgreSQLComponent {
                 // The latest version of every document
                 if(asOf == null) {
                     preparedStatement = connection.prepareStatement(BULK_LOAD_DOCUMENTS)
-                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
+                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds.collect { it as String }.toArray(new String[0])))
 
                     rs = preparedStatement.executeQuery()
                     SortedMap<String, Document> result = new TreeMap<>()
@@ -2014,7 +2015,7 @@ class PostgreSQLComponent {
                     return result
                 } else { // Every document as it looked at time 'asOf'
                     preparedStatement = connection.prepareStatement(BULK_LOAD_DOCUMENTS_AS_OF)
-                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
+                    preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds.collect { it as String }.toArray(new String[0])))
                     preparedStatement.setTimestamp(2, Timestamp.from(asOf))
 
                     rs = preparedStatement.executeQuery()
@@ -2443,8 +2444,8 @@ class PostgreSQLComponent {
             try {
                 Connection connection = getMyConnection()
                 preparedStatement = connection.prepareStatement(FILTER_BIB_IDS_BY_HELD_BY)
-                preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds as String[]))
-                preparedStatement.setArray(2, connection.createArrayOf("TEXT", libraryURIs as String[]))
+                preparedStatement.setArray(1, connection.createArrayOf("TEXT", systemIds.toArray(new String[0])))
+                preparedStatement.setArray(2, connection.createArrayOf("TEXT", libraryURIs.toArray(new String[0])))
                 rs = preparedStatement.executeQuery()
                 Set<String> result = new HashSet<>()
                 while (rs.next()) {
@@ -2963,10 +2964,11 @@ class PostgreSQLComponent {
 
     class NotificationListener extends Thread {
         private static final String NAME = 'pg_listener'
-        private static final Counter counter = Counter.build()
+        private static final Counter counter = (Counter) Counter.builder()
                 .name("${NAME}_handled")
                 .labelNames("name")
-                .help("Number of notifications handled.").register()
+                .help("Number of notifications handled.")
+                .register()
 
         DataSource dataSource
         
@@ -2980,6 +2982,12 @@ class PostgreSQLComponent {
         void run() {
             while (true) {
                 try(Connection connection = dataSource.getConnection()) {
+                    if (connection == null) {
+                        // FIXME: One or more unit tests end up here? Avoid NPE and looping without pause.
+                        sleep(100)
+                        continue
+                    }
+
                     for (NotificationType t : NotificationType.values()) {
                         try (def statement = connection.createStatement()) {
                             statement.execute("LISTEN ${t.id()}")
@@ -3026,7 +3034,7 @@ class PostgreSQLComponent {
                 dependencyCache.handleInvalidateNotification(payload)
             }
             
-            counter.labels(type.id()).inc()
+            ((CounterDataPoint) counter.labelValues(type.id())).inc()
         }
         
         private void onConnected() {

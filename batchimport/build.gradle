@@ -4,7 +4,7 @@ apply plugin: 'com.gradleup.shadow'
 
 repositories {
     mavenCentral()
-    maven { url "https://jitpack.io/" }
+    maven { url = "https://jitpack.io/" }
 }
 
 // Don't blame me for this TRAVESTY. It is a necessity because of the versioning of xml-apis (2.0.2 which gradle otherwise chooses is OLDER (and broken) despite the version.)
@@ -17,13 +17,14 @@ configurations.all {
 dependencies {
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     // XL dependencies
     implementation(project(':whelk-core'))
-    implementation "io.prometheus:simpleclient:${prometheusVersion}"
-    implementation "io.prometheus:simpleclient_pushgateway:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-core:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-exporter-pushgateway:${prometheusVersion}"
 
     testImplementation "org.spockframework:spock-core:${spockVersion}"
 }
@@ -52,10 +53,7 @@ jar {
     manifest {
         attributes 'Implementation-Title':'Libris XL metadata importer',
                 'Implementation-Version': '1.0',
-                'Main-class': application.mainClass,
-                // log4j uses multi-release to ship different stack walking implementations for different java
-                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
-                "Multi-Release": true
+                'Main-class': application.mainClass
     }
 
     archiveClassifier = "nonfat"

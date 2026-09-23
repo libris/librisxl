@@ -1,7 +1,7 @@
 package whelk;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.util.http.CoreWhelkHttpServlet;
 import whelk.util.http.HttpTools;
 
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 public class EmmServlet extends CoreWhelkHttpServlet {
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private TargetVocabMapper targetVocabMapper;
 
     public static final String AS2_CONTENT_TYPE = "application/activity+json";

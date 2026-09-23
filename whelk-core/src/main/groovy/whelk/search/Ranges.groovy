@@ -3,7 +3,7 @@ package whelk.search
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 
 import java.time.ZoneId
 import java.time.format.DateTimeParseException

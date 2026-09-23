@@ -92,8 +92,8 @@ if (cmd == "save-typemappings") {
 }
 
 if (perf) {
-    fpaths = fpaths * perf
-    System.err.println "Measuring performance of ${fpaths.size()} ${cmd} runs..."
+    items = items * perf
+    System.err.println "Measuring performance of ${items.size()} ${cmd} runs..."
 }
 
 var start = new Date().time

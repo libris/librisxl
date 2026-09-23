@@ -1,8 +1,8 @@
 package whelk.util;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import whelk.Document;
 import whelk.JsonLd;
@@ -167,7 +167,7 @@ public class FresnelUtil {
     private record DerivedLensCacheKey(Object types, LensGroupChain lensGroupChain, List<LensGroupChain> minus) {}
     private record LensCacheKey(Object types, LensGroupChain lensGroupChain) {}
 
-    private static final Logger logger = LogManager.getLogger(FresnelUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(FresnelUtil.class);
 
     JsonLd jsonLd;
     List<LangCode> fallbackLocales;
@@ -269,7 +269,29 @@ public class FresnelUtil {
 
         public void restoreLinks(Map<String, Object> thing) {
             if (thing.get(ID_KEY) instanceof String id && !JsonLd.isLink(thing)) {
-                preservedLinksMap.getOrDefault(id, List.of()).forEach(lr -> lr.restoreTo(thing));
+                var linkRestorations = preservedLinksMap.remove(id);
+                if (linkRestorations != null) {
+                    linkRestorations.forEach(lr -> lr.restoreTo(thing));
+                }
+            }
+        }
+
+        public void restoreLinksByKey(Map<String, Object> thing, String key) {
+            if (thing.get(ID_KEY) instanceof String id && !JsonLd.isLink(thing)) {
+                var linkRestorations = preservedLinksMap.remove(id);
+                if (linkRestorations != null) {
+                    List<LinkRestoration> remaining = new ArrayList<>();
+                    linkRestorations.forEach(lr -> {
+                        if (key.equals(lr.key())) {
+                            lr.restoreTo(thing);
+                        } else {
+                            remaining.add(lr);
+                        }
+                    });
+                    if (!remaining.isEmpty()) {
+                        preservedLinksMap.put(id, remaining);
+                    }
+                }
             }
         }
     }
@@ -1496,7 +1518,7 @@ public class FresnelUtil {
     }
 
     private boolean isTypedNode(Object o) {
-        return o instanceof Map && ((Map<?, ?>) o).containsKey(TYPE_KEY);
+        return o instanceof Map && ((Map<?, ?>) o).get(TYPE_KEY) != null;
     }
 
     // TODO handle multiple types=

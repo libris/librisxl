@@ -1,6 +1,7 @@
 package whelk
 
-import groovy.util.logging.Log4j2 as Log
+import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j as Log
 
 import trld.jsonld.Compaction
 import trld.jsonld.Expansion
@@ -11,8 +12,9 @@ import trld.tvm.Mapper
  * Wrapper for the TRLD API (adjust as needed)
  */
 @Log
+@CompileStatic
 class TargetVocabMapper {
-    private Map targetVocabularyMaps = [:]
+    private Map<String, Map> targetVocabularyMaps = [:]
     private Object vocab
     private Map dataContext
 
@@ -22,7 +24,7 @@ class TargetVocabMapper {
             (JsonLd.GRAPH_KEY): jsonld.vocabIndex.values() as List
         ]
         vocab = Expansion.expand(vocabData, jsonld.vocabId)
-        this.dataContext = JsonLd.CONTEXT_KEY in dataContext ? dataContext[JsonLd.CONTEXT_KEY] : dataContext
+        this.dataContext = (Map) (JsonLd.CONTEXT_KEY in dataContext ? dataContext[JsonLd.CONTEXT_KEY] : dataContext)
     }
 
     Object applyTargetVocabularyMap(String profileId, Map target, Map data) {
@@ -31,13 +33,12 @@ class TargetVocabMapper {
             targetMap = Mapmaker.makeTargetMap(vocab, target)
             targetVocabularyMaps.put(profileId, targetMap)
         }
-        def dataIri = null
-        def indata = data
-        def dropUnmapped = true
+        String dataIri = null
+        boolean dropUnmapped = true
         if (!data.containsKey(JsonLd.CONTEXT_KEY)) {
             data[JsonLd.CONTEXT_KEY] = dataContext
         }
-        indata = Expansion.expand(indata, dataIri)
+        List indata = Expansion.expand(data, dataIri)
         Object outdata = Mapper.mapTo(targetMap, indata, dropUnmapped)
         return Compaction.compact(target, outdata)
     }

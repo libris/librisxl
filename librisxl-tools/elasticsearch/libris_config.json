@@ -321,7 +321,17 @@
                         "index": true,
                         "type": "keyword"
                     },
-                    "match": "controlNumber",
+                    "match": ["controlNumber", "librissearch:controlNumbers"],
+                    "match_mapping_type": "string"
+                }
+            },
+            {
+                "librissearch_instance_identifier_template": {
+                    "mapping": {
+                        "index": true,
+                        "type": "keyword"
+                    },
+                    "match": "librissearch:instanceIdentifier",
                     "match_mapping_type": "string"
                 }
             },

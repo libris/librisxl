@@ -3,8 +3,8 @@ package whelk.importer;
 import whelk.Document;
 import whelk.history.History;
 import whelk.history.Ownership;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.io.IOException;
 import java.util.*;
 
@@ -47,7 +47,7 @@ public class Merge {
     // Maps a path to a sigel priority list.
     private Map<List<Object>, Map> m_pathReplaceRules = null;
 
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public Merge(Map rulesMap) throws IOException {
         m_pathAddRules = new HashMap<>();

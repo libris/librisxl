@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diagnostics>
+  <diagnostic xmlns="http://www.loc.gov/zing/srw/diagnostic/">
+    <uri>info:srw/diagnostic/1/4</uri>
+    <message>Unsupported operation</message>
+  </diagnostic>
+</diagnostics>

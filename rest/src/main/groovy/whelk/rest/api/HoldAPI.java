@@ -5,8 +5,8 @@ import whelk.Whelk;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.http.WhelkHttpServlet;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import java.util.List;
 import static whelk.util.Jackson.mapper;
 
 public class HoldAPI extends WhelkHttpServlet {
-    private static final Logger log = LogManager.getLogger(HoldAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(HoldAPI.class);
 
     public HoldAPI() {
         // Do nothing - only here for Tomcat to have something to call

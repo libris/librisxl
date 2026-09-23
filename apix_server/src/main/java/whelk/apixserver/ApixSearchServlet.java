@@ -1,7 +1,7 @@
 package whelk.apixserver;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 
 import javax.servlet.http.HttpServlet;
@@ -12,7 +12,7 @@ import java.util.*;
 
 public class ApixSearchServlet extends HttpServlet
 {
-    private static final Logger s_logger = LogManager.getLogger(ApixSearchServlet.class);
+    private static final Logger s_logger = LoggerFactory.getLogger(ApixSearchServlet.class);
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException
     {

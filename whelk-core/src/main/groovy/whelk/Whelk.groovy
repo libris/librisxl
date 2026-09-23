@@ -2,7 +2,7 @@ package whelk
 
 import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import se.kb.libris.Normalizers
 import whelk.component.CachingPostgreSQLComponent
 import whelk.component.DocumentNormalizer
@@ -420,13 +420,15 @@ class Whelk {
             String p = link.property()
             if (jsonld.isIntegral(jsonld.getInverseProperty(p))) {
                 String id = storage.getSystemIdByIri(link.iri)
-                Document doc = storage.load(id)
-                def lenses = ['chips', 'cards', 'full']
-                def reverseRelations = lenses
-                        .collect { jsonld.getInverseProperties(doc.data, it) }
-                        .flatten()
-                if (reverseRelations.contains(p)) {
-                    indexDocAndVirtual(doc)
+                if (id) {
+                    Document doc = storage.load(id)
+                    def lenses = ['chips', 'cards', 'full']
+                    def reverseRelations = lenses
+                            .collect { jsonld.getInverseProperties(doc.data, it) }
+                            .flatten()
+                    if (reverseRelations.contains(p)) {
+                        indexDocAndVirtual(doc)
+                    }
                 }
             }
         }

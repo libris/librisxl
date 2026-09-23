@@ -1,8 +1,8 @@
 package whelk.housekeeping;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Whelk;
 import whelk.datatool.Script;
 import whelk.datatool.WhelkTool;
@@ -17,7 +17,7 @@ public class ScriptRunner extends HouseKeeper {
     private String status = "OK";
     private final String scriptName;
     private final String schedule;
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final Whelk premadeWhelk;
 
     public ScriptRunner(Whelk premadeWhelk, String scriptName, String schedule) {
@@ -55,7 +55,7 @@ public class ScriptRunner extends HouseKeeper {
             tool.run();
 
             Path errorLogPath = reportPath.resolve("ERRORS.txt");
-            if (Files.size(errorLogPath) > 0) {
+            if (Files.exists(errorLogPath) && Files.size(errorLogPath) > 0) {
                 String firstError = "[could not read]";
                 try (BufferedReader errorLogReader = Files.newBufferedReader(errorLogPath)) {
                     firstError = errorLogReader.readLine();

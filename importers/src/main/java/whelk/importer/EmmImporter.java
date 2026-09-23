@@ -1,7 +1,7 @@
 package whelk.importer;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.Whelk;
 import whelk.util.LegacyIntegrationTools;
@@ -19,7 +19,7 @@ import java.util.Map;
 import static whelk.util.Jackson.mapper;
 
 public class EmmImporter {
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final Whelk whelk;
     private final boolean usingQuickCreate;
     final String emmBaseUrl;

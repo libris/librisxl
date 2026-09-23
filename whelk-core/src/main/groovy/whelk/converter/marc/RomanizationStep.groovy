@@ -1,7 +1,7 @@
 package whelk.converter.marc
 
 import groovy.transform.MapConstructor
-import groovy.util.logging.Log4j2 as Log
+import groovy.util.logging.Slf4j as Log
 import whelk.util.DocumentUtil
 import whelk.util.Unicode
 

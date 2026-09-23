@@ -1,5 +1,8 @@
 package whelk.converter.marc
 
+import groovy.transform.CompileStatic
+import groovy.transform.MapConstructor
+
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -7,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import whelk.JsonLd
 import whelk.ResourceCache
 
+@CompileStatic
 interface MarcFramePostProcStep {
     var ID = JsonLd.ID_KEY
     var TYPE = JsonLd.TYPE_KEY
@@ -20,6 +24,7 @@ interface MarcFramePostProcStep {
 }
 
 
+@CompileStatic
 abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
 
     String type
@@ -44,7 +49,7 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
 
         def key = path[0]
         def object
-        if (ld == null) {
+        if (ld == null && source instanceof Map) {
             object = source[key]
         } else {
             object = getValue(source, key)
@@ -58,15 +63,15 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
     def getValue(source, key) {
         if (source instanceof List) {
             if (key instanceof Integer) {
-                return source[key]
+                return ((List) source)[(Integer) key]
             }
-            return source.findResults { getValue(it, key) }
+            return source.findResults { getValue(it, (String) key) }
         }
 
         if (source instanceof Map) {
-            def value = ld.getPropertyValue(source, key)
+            def value = ld.getPropertyValue(source, (String) key)
             if (!value) {
-                value = ld.getSubProperties(key).findResult {
+                value = ld.getSubProperties((String) key).findResult {
                     ld.getPropertyValue(source, (String) it)
                 }
             }
@@ -82,9 +87,9 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
         int padded = 0
 
         for (prop in showProperties) {
-            def fmt = null
+            Map fmt = null
             if (prop instanceof Map) {
-                fmt = prop.useValueFormat
+                fmt = (Map) prop.useValueFormat
                 prop = prop.property
             }
             def value = prop instanceof List ? findValue(node, prop) : getValue(node, prop)
@@ -133,6 +138,7 @@ abstract class MarcFramePostProcStepBase implements MarcFramePostProcStep {
 }
 
 
+@CompileStatic
 class CopyOnRevertStep extends MarcFramePostProcStepBase {
 
     String sourceLink
@@ -163,7 +169,7 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
 
     void unmodify(Map record, Map thing) {
         def source = sourceLink ? thing[sourceLink] : thing
-        def target = targetLink ? thing[targetLink] : thing
+        Map target = targetLink ? (Map) thing[targetLink] : thing
 
         if (source) {
             if (!(source instanceof List)) {
@@ -171,7 +177,8 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
             }
             for (prop in copyIfMissing) {
                 for (item in source) {
-                    if (!target.containsKey(prop.to) && item.containsKey(prop.from)) {
+                    if (item instanceof Map &&
+                        !target.containsKey(prop.to) && item.containsKey(prop.from)) {
                         def src = item[prop.from]
                         def copy = cloneValue(src)
 
@@ -207,6 +214,7 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
         }
     }
 
+    @MapConstructor
     class FromToProperty {
         String from
         String to
@@ -215,6 +223,7 @@ class CopyOnRevertStep extends MarcFramePostProcStepBase {
 }
 
 
+@CompileStatic
 class MappedPropertyStep implements MarcFramePostProcStep {
 
     String type
@@ -236,14 +245,14 @@ class MappedPropertyStep implements MarcFramePostProcStep {
      * Sets computed value if missing. Leaves any given value as is.
      */
     void modify(Map record, Map thing) {
-        def target = targetEntity == "?record"? record : thing
+        var target = targetEntity == "?record"? record : thing
         if (target[targetProperty]) {
             return
         }
 
-        def source = sourceEntity == "?record"? record : thing
+        Map source = sourceEntity == "?record"? record : thing
         if (sourceLink) {
-            source = source.get(sourceLink)
+            source = (Map) source.get(sourceLink)
         }
         def values = source?.get(sourceProperty)
         if (values instanceof String) {
@@ -269,6 +278,7 @@ class MappedPropertyStep implements MarcFramePostProcStep {
 }
 
 
+@CompileStatic
 class VerboseRevertDataStep extends MarcFramePostProcStepBase {
 
     String sourceProperty
@@ -315,6 +325,7 @@ class VerboseRevertDataStep extends MarcFramePostProcStepBase {
 }
 
 
+// TODO: @CompileStatic
 class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
 
     String sourceLink
@@ -521,6 +532,7 @@ class RestructPropertyValuesAndFlagStep extends MarcFramePostProcStepBase {
 }
 
 
+@CompileStatic
 class ProduceIfMissingStep extends MarcFramePostProcStepBase {
 
     String select
@@ -531,23 +543,23 @@ class ProduceIfMissingStep extends MarcFramePostProcStepBase {
 
     void unmodify(Map record, Map thing) {
         def source = thing[select]
-        def items = source instanceof List ? source : source ? [source] : []
-        if (items.any { produceMissing.produceProperty in it }) {
+        var items = source instanceof List ? source : source ? [source] : []
+        if (items.any { it instanceof Map && produceMissing.produceProperty in it }) {
             return
             // Only apply rules in *no* property is found (since if one is
             // found, we don't know if data is intentionally sparse).
         }
         items.each {
-            def value = findValue(it, produceMissing.sourcePath)
+            def value = findValue(it, (List) produceMissing.sourcePath)
             if (value) {
                 // IMPROVE: use produceMissing.multiple to build from all
                 if (value instanceof List) {
                     value = value[0]
                 }
-                if (produceMissing.showProperties) {
-                    value = buildString(value, produceMissing.showProperties)
+                if (produceMissing.showProperties && value instanceof Map) {
+                    value = buildString(value, (List) produceMissing.showProperties)
                 }
-                if (value) {
+                if (value && it instanceof Map) {
                     it[produceMissing.produceProperty] = value
                 }
             }
@@ -556,6 +568,7 @@ class ProduceIfMissingStep extends MarcFramePostProcStepBase {
 }
 
 
+@CompileStatic
 class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
 
     List<Map> rules
@@ -565,11 +578,11 @@ class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
     }
 
     void unmodify(Map record, Map thing) {
-        def item = thing
+        var item = thing
         for (rule in rules) {
-            def refs = [:]
-            if (deepMatches(item, rule.matches, refs)) {
-                Map injectData = jsonClone(rule.injectData)
+            var refs = [:]
+            if (deepMatches(item, (Map) rule.matches, refs)) {
+                Map injectData = jsonClone((Map) rule.injectData)
                 injectInto(item, injectData, refs)
                 break
             }
@@ -585,10 +598,10 @@ class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
             if (k == ID && v == ref) return true
             Util.asList(v).every {
                 return Util.asList(o[k]).any { ov ->
-                    boolean matches = (ov instanceof Map) ?
+                    boolean matches = (ov instanceof Map && it instanceof Map) ?
                         deepMatches(ov, it, refs) :
                         ov == it
-                    if (!matches && k == TYPE) {
+                    if (!matches && k == TYPE && ov instanceof String && it instanceof String) {
                         matches = ld?.isSubClassOf(ov, it)
                     }
                     if (matches) {
@@ -629,6 +642,7 @@ class InjectWhenMatchingOnRevertStep extends MarcFramePostProcStepBase {
 }
 
 
+@CompileStatic
 class SetFlagsByPatternsStep extends MarcFramePostProcStepBase {
 
     String select
@@ -642,16 +656,18 @@ class SetFlagsByPatternsStep extends MarcFramePostProcStepBase {
         def selected = thing[select]
         def items = selected instanceof List
                     ? selected : selected ? [selected] : []
-        items.each { item ->
-            for (rule in match) {
-                if (rule.exists.every { item.containsKey(it) }) {
-                    rule.setFlags.each { flag, flagValue ->
-                        if (!item.containsKey(flag) || force) {
-                            item[flag] = flagValue
-                        }
-                    }
-                    break
-                }
+        for (item in items) {
+            if (item instanceof Map) {
+              for (rule in match) {
+                  if (((List) rule.exists).every { item.containsKey((String) it) }) {
+                      ((Map) rule.setFlags).each { flag, flagValue ->
+                          if (!item.containsKey((String) flag) || force) {
+                              item[flag] = flagValue
+                          }
+                      }
+                      break
+                  }
+              }
             }
         }
     }

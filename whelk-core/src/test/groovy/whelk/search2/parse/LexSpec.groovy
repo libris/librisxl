@@ -227,4 +227,16 @@ class LexSpec extends Specification {
         ]
     }
 
+    def "nbsp is space"() {
+        given:
+        def input = "\u00A0AAA\u2007NOT\u202FBBB\u00A0"
+        def lexedSymbols = Lex.lexQuery(input)
+
+        expect:
+        lexedSymbols as List == [
+                new Lex.Symbol(Lex.TokenName.STRING, "AAA", 1),
+                new Lex.Symbol(Lex.TokenName.KEYWORD, "not", 5),
+                new Lex.Symbol(Lex.TokenName.STRING, "BBB", 9),
+        ]
+    }
 }

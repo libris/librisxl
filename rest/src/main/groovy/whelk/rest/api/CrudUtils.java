@@ -8,8 +8,8 @@ import org.apache.hc.core5.http.HeaderElement;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicHeaderValueParser;
 import org.apache.hc.core5.http.message.ParserCursor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.util.http.BadRequestException;
 import whelk.util.http.MimeTypes;
 import whelk.util.http.NotFoundException;
@@ -20,13 +20,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 class CrudUtils {
-    private static final Logger log = LogManager.getLogger(CrudUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(CrudUtils.class);
     static final MediaType JSON = MediaType.parse(MimeTypes.JSON);
     static final MediaType JSONLD = MediaType.parse(MimeTypes.JSONLD);
     static final MediaType TURTLE = MediaType.parse(MimeTypes.TURTLE);
     static final MediaType TRIG = MediaType.parse(MimeTypes.TRIG);
     static final MediaType RDFXML = MediaType.parse(MimeTypes.RDF);
     static final MediaType N3 = MediaType.parse(MimeTypes.N3);
+    static final MediaType ATOM = MediaType.parse(MimeTypes.ATOM);
 
     static final Map<String, List<MediaType>> ALLOWED_MEDIA_TYPES_BY_EXT = new LinkedHashMap<>();
     static {
@@ -38,6 +39,7 @@ class CrudUtils {
         ALLOWED_MEDIA_TYPES_BY_EXT.put("xml", List.of(RDFXML));
         ALLOWED_MEDIA_TYPES_BY_EXT.put("rdf", List.of(RDFXML));
         ALLOWED_MEDIA_TYPES_BY_EXT.put("n3", List.of(N3));
+        ALLOWED_MEDIA_TYPES_BY_EXT.put("atom", List.of(ATOM));
     }
 
     protected static Map<String, String> EXTENSION_BY_MEDIA_TYPE = new HashMap<>();
@@ -53,7 +55,7 @@ class CrudUtils {
         }
     }
 
-    static final List<MediaType> ALLOWED_MEDIA_TYPES = List.of(JSON, JSONLD, TRIG, TURTLE, RDFXML, N3);
+    static final List<MediaType> ALLOWED_MEDIA_TYPES = List.of(JSON, JSONLD, TRIG, TURTLE, RDFXML, N3, ATOM);
 
     static String getBestContentType(String acceptHeader, String resourcePath) {
         List<MediaType> desired = parseAcceptHeader(acceptHeader);
@@ -234,7 +236,7 @@ class CrudUtils {
         }
     }
 
-    static class ETag {
+    public static class ETag {
         private static final String SEPARATOR = ":";
 
         private String plain = null;
@@ -292,14 +294,14 @@ class CrudUtils {
         private static String cleanEtag(String str) {
             String result = stripQuotes(str);
             if (result != null) {
-                result = result.replaceAll("W/", "");
-                result = result.replaceAll("-gzip", "");
+                result = result.replace("W/", "");
+                result = result.replace("-gzip", "");
             }
             return result;
         }
 
         private static String stripQuotes(String str) {
-            return str != null ? str.replaceAll("\"", "") : null;
+            return str != null ? str.replace("\"", "") : null;
         }
     }
 }

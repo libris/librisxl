@@ -165,7 +165,8 @@ class WhelkCopier {
     }
 
     void maybeCopyVersions(Document doc) {
-        if (versionTypes && ("all" in versionTypes || doc.getThingType() in versionTypes)) {
+        if (versionTypes && ("all" in versionTypes ||
+                versionTypes.any { source.jsonld.isSubClassOf(doc.getThingType(), it) })) {
             idsToCopyVersionsOf.add(doc.shortId)
         }
     }

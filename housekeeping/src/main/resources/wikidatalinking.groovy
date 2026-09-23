@@ -5,7 +5,6 @@
 import org.apache.jena.query.ARQ
 import org.apache.jena.query.ParameterizedSparqlString
 import org.apache.jena.query.QueryExecution
-import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.query.ResultSet
 import org.apache.jena.query.ResultSetFactory
@@ -213,7 +212,7 @@ ResultSet runQuery(String command, List values = null) {
         paramString.setParam(i, v)
     }
 
-    QueryExecution qExec = QueryExecutionFactory.sparqlService("https://query.wikidata.org/sparql", paramString.asQuery())
+    QueryExecution qExec = QueryExecution.service("https://query.wikidata.org/sparql", paramString.asQuery())
 
     ResultSet resultSet
 

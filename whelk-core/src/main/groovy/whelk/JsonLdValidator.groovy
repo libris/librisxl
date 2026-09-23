@@ -1,9 +1,8 @@
 package whelk
 
-import org.apache.jena.iri.IRI
-import org.apache.jena.iri.IRIFactory
 import com.google.common.base.Preconditions
 import whelk.util.DocumentUtil
+import whelk.util.Iris
 
 class JsonLdValidator {
     private static JsonLd jsonLd
@@ -15,8 +14,6 @@ class JsonLdValidator {
             'hold': Validation.Scope.HOLD,
     ]
     private Set langAliases
-    
-    static IRIFactory iriFactory = IRIFactory.iriImplementation()
     
     private JsonLdValidator(JsonLd jsonLd) {
         this.jsonLd = jsonLd
@@ -232,8 +229,7 @@ class JsonLdValidator {
 
     private void validateId(String key, value, Validation validation) {
         if (key == jsonLd.ID_KEY) {
-            IRI iri = iriFactory.create(value)
-            if (iri.hasViolation(false)) {
+            if (Iris.isBroken(value as String)) {
                 handleError(new Error(Error.Type.INVALID_IRI, key, value), validation)
             }
         }

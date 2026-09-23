@@ -1,7 +1,7 @@
 package whelk;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.eclipse.jetty.ee8.servlet.DefaultServlet;
 import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
@@ -27,7 +27,7 @@ import static whelk.datatool.bulkchange.BulkJob.BULK_CONTEXT_PATH;
 import static whelk.datatool.bulkchange.BulkJob.BULK_REPORTS_PATH;
 
 public class HouseKeepingServer extends XlServer {
-    private final static Logger log = LogManager.getLogger(HouseKeepingServer.class);
+    private final static Logger log = LoggerFactory.getLogger(HouseKeepingServer.class);
 
     @Override
     protected void configureHandlers(Server server) {

@@ -1,7 +1,7 @@
 package whelk.util.http;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.codehaus.groovy.runtime.StackTraceUtils;
 import whelk.component.PostgreSQLComponent;
 import whelk.exception.LinkValidationException;
@@ -22,7 +22,7 @@ import static org.eclipse.jetty.http.HttpStatus.getMessage;
 import static whelk.util.Jackson.mapper;
 
 public class HttpTools {
-    private static final Logger log = LogManager.getLogger(HttpTools.class);
+    private static final Logger log = LoggerFactory.getLogger(HttpTools.class);
     public static void sendResponse(HttpServletResponse response, Map<?, ?> data, String contentType) {
         sendResponse(response, data, contentType, 200);
     }

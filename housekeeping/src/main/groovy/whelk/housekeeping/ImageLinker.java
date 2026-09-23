@@ -1,8 +1,8 @@
 package whelk.housekeeping;
 
 import org.apache.jena.atlas.logging.Log;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.Whelk;
 import whelk.component.PostgreSQLComponent;
@@ -28,7 +28,7 @@ public class ImageLinker extends HouseKeeper {
     private final String INSTANCES_STATE_KEY = "linkedNewInstancesUpTo";
     private String status = "OK";
     private final Whelk whelk;
-    private final Logger logger = LogManager.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public ImageLinker(Whelk whelk) {
         this.whelk = whelk;

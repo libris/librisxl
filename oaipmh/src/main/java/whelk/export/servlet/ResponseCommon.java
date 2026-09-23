@@ -1,8 +1,8 @@
 package whelk.export.servlet;
 
 import org.apache.cxf.staxutils.StaxUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Link;
@@ -24,7 +24,7 @@ import java.util.List;
 
 public class ResponseCommon
 {
-    private static final Logger logger = LogManager.getLogger(ResponseCommon.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResponseCommon.class);
     private static final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 
     /**

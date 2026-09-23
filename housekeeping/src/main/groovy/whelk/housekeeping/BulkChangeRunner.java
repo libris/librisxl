@@ -1,7 +1,7 @@
 package whelk.housekeeping;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
@@ -17,7 +17,7 @@ import static whelk.datatool.bulkchange.BulkJobDocument.JOB_TYPE;
 import static whelk.datatool.bulkchange.BulkJobDocument.STATUS_KEY;
 
 public class BulkChangeRunner extends HouseKeeper {
-    private static final Logger logger = LogManager.getLogger(BulkChangeRunner.class);
+    private static final Logger logger = LoggerFactory.getLogger(BulkChangeRunner.class);
     private static final ThreadGroup threadGroup = new ThreadGroup(BulkChangeRunner.class.getSimpleName());
 
     private final String status = "OK";

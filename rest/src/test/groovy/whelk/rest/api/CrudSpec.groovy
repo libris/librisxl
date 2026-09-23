@@ -221,6 +221,85 @@ class CrudSpec extends Specification {
         response.getStatus() == HttpServletResponse.SC_FOUND
     }
 
+    def "GET /<sameAs ID> 302 redirect should preserve query parameters"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def altId = BASE_URI.resolve("/alt_1234").toString()
+        request.pathInfo >> {
+            '/' + id
+        }
+        request.getPathInfo() >> {
+            "/${id}".toString()
+        }
+        request.getQueryString() >> {
+            "framed=true&_findBlank=true"
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        storage.load(_, _) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(altId) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(id) >> {
+            new Document(['@graph': [['@id': id, 'sameAs': [['@id': altId]]]]])
+        }
+        storage.getMainId(_) >> {
+            return id
+        }
+        storage.getIdType(_) >> {
+            return IdType.RecordSameAsId
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FOUND
+        response.getHeader("Location") == id + "?framed=true&_findBlank=true"
+    }
+
+    def "GET /<sameAs ID>/data.jsonld 302 redirect should preserve query parameters without duplicating lens"() {
+        given:
+        def id = BASE_URI.resolve("/1234").toString()
+        def altId = BASE_URI.resolve("/alt_1234").toString()
+        request.pathInfo >> {
+            '/' + id + '/data.jsonld'
+        }
+        request.getPathInfo() >> {
+            "/${id}/data.jsonld".toString()
+        }
+        request.getQueryString() >> {
+            "lens=chip"
+        }
+        request.getParameter("lens") >> {
+            "chip"
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        storage.load(_, _) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(altId) >> {
+            return null
+        }
+        storage.loadDocumentByMainId(id) >> {
+            new Document(['@graph': [['@id': id, 'sameAs': [['@id': altId]]]]])
+        }
+        storage.getMainId(_) >> {
+            return id
+        }
+        storage.getIdType(_) >> {
+            return IdType.RecordSameAsId
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_FOUND
+        response.getHeader("Location") == id + "/data.jsonld?lens=chip"
+    }
+
     def "GET /<id> should return 404 Not Found if document can't be found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()

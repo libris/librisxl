@@ -4,8 +4,8 @@ import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import com.fasterxml.jackson.core.type.TypeReference;
 import whelk.util.PropertyLoader;
 
@@ -38,7 +38,7 @@ public class AuthenticationFilter implements Filter {
     private String url = null;
     private CloseableHttpClient httpClient;
 
-    final static Logger log = LogManager.getLogger(AuthenticationFilter.class);
+    final static Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {

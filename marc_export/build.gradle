@@ -29,20 +29,21 @@ dependencies {
     implementation "org.eclipse.jetty.ee8:jetty-ee8-servlet:${jettyVersion}"
 
     // Logging
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     // metrics
-    implementation "io.prometheus:simpleclient:${prometheusVersion}"
-    implementation "io.prometheus:simpleclient_servlet:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-core:${prometheusVersion}"
+    implementation "io.prometheus:prometheus-metrics-exporter-servlet-javax:${prometheusVersion}"
 
     // Tools
-    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    implementation "xml-apis:xml-apis:1.4.01"
     implementation 'org.apache.commons:commons-lang3:3.18.0'
 
     // Dependencies inherited from classic libris, due to profile handling
-    implementation group: 'com.ibm.icu', name: 'icu4j', version: '4.8.1.1'
-    implementation(group: 'org.dspace', name: 'xoai', version: '3.2.10') {
+    implementation "com.ibm.icu:icu4j:4.8.1.1"
+    implementation("org.dspace:xoai:3.2.10") {
         exclude group: 'org.mockito'
         exclude group: 'org.hamcrest'
         exclude group: 'junit'
@@ -62,10 +63,7 @@ jar {
     dependsOn(shadowJar)
 
     manifest {
-        attributes "Main-Class": mainClassName,
-                // log4j uses multi-release to ship different stack walking implementations for different java
-                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
-                "Multi-Release": true
+        attributes "Main-Class": mainClassName
     }
 
     archiveClassifier = "nonfat"

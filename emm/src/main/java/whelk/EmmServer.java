@@ -1,6 +1,6 @@
 package whelk;
 
-import io.prometheus.client.exporter.MetricsServlet;
+import io.prometheus.metrics.exporter.servlet.javax.PrometheusMetricsServlet;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
 
@@ -13,7 +13,7 @@ public class EmmServer extends XlServer {
 
         server.setHandler(context);
 
-        context.addServlet(MetricsServlet.class, "/metrics");
+        context.addServlet(PrometheusMetricsServlet.class, "/metrics");
         context.addServlet(EmmServlet.class, "/");
         serveStaticContent(context);
     }

@@ -1,7 +1,7 @@
 package whelk.search2;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
@@ -26,11 +26,13 @@ import static whelk.JsonLd.WORK_KEY;
 import static whelk.JsonLd.asList;
 
 public class QueryGenerator {
-    private static final Logger log = LogManager.getLogger(QueryGenerator.class);
+    private static final Logger log = LoggerFactory.getLogger(QueryGenerator.class);
 
     private static final List<List<Object>> PATHS = List.of(
             List.of(THING_KEY, "classification", "*"),
             List.of(THING_KEY, WORK_KEY, "classification", "*"),
+            List.of(THING_KEY, "subject", "*"),
+            List.of(THING_KEY, WORK_KEY, "subject", "*"),
             List.of(THING_KEY, "publication", "*", "agent"),
             List.of(THING_KEY, REVERSE_KEY, WORK_KEY, "*", "publication", "*", "agent")
     );
@@ -88,13 +90,16 @@ public class QueryGenerator {
                         }
                         else if (type.equals("SeriesMembership")) {
                             if (node.containsKey("seriesStatement")) {
-                                @SuppressWarnings("unchecked")
-                                List<String> statements = asList(node.get("seriesStatement"));
+                                List<?> statements = asList(node.get("seriesStatement"));
                                 node.put("seriesStatement", statements.stream()
-                                        .map(s -> {
+                                        .map(statement -> {
+                                            if (!(statement instanceof String s)) {
+                                                return statement;
+                                            }
+                                            
                                             var v  = new HashMap<String, Object>();
                                             v.put(JsonLd.TYPE_KEY, "_Value");
-                                            v.put("label", String.valueOf(s));
+                                            v.put("label", s);
                                             insert(
                                                     new Condition(toKey("seriesMembership"), Operator.EQUALS, scopedFreeText(s)),
                                                     QueryUtil.castToStringObjectMap(v)
@@ -102,6 +107,13 @@ public class QueryGenerator {
                                             return v;
                                         }).toList());
                             }
+                        }
+                        else if (type.equals("Title") && path.contains("inSeries") && node.containsKey("mainTitle")) {
+                            var title = String.valueOf(node.get("mainTitle"));
+                            insert(
+                                    new Condition(toKey("seriesMembership"), Operator.EQUALS, scopedFreeText(title)),
+                                    node
+                            );
                         }
                     }
                 }

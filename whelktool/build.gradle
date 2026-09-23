@@ -55,7 +55,7 @@ test.testLogging {
 
 repositories {
     mavenCentral()
-    maven { url "https://jitpack.io/" }
+    maven { url = "https://jitpack.io/" }
 }
 
 configurations.all {
@@ -74,10 +74,11 @@ dependencies {
     implementation "org.apache.groovy:groovy:${groovyVersion}"
     implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     implementation 'commons-codec:commons-codec:1.19.0'
-    implementation group: 'xml-apis', name: 'xml-apis', version: '1.4.01'
+    implementation "xml-apis:xml-apis:1.4.01"
 
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: "${log4jVersion}"
-    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: "${log4jVersion}"
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core:${logbackVersion}"
 
     whelktoolScriptsCompileOnly sourceSets.main.output
     whelktoolScriptsCompileOnly project(':whelk-core')
@@ -87,6 +88,11 @@ shadowJar {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
     archiveClassifier = null // removes `-all` in the filename of the created .jar
+
+    // Ensures we don't shadow the logback.xml of an application that depends on this project
+    filesMatching('logback-whelktool.xml') {
+        path = 'logback.xml'
+    }
 }
 
 jar {
@@ -94,10 +100,7 @@ jar {
     dependsOn(shadowJar)
 
     manifest {
-        attributes "Main-Class": "whelk.datatool.WhelkTool",
-                // log4j uses multi-release to ship different stack walking implementations for different java
-                // versions. Since we repackage everything as a fat jar, that jar must also be multi-release.
-                "Multi-Release": true
+        attributes "Main-Class": "whelk.datatool.WhelkTool"
     }
 
     archiveClassifier = "nonfat"
@@ -116,7 +119,7 @@ task(doRun, dependsOn: "classes", type: JavaExec) {
 }
 
 task(groovy, dependsOn: "classes", type: JavaExec) {
-    description "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
+    description = "Run a Groovy Script (USAGE: -Dargs=\"<script> [...]\")"
     classpath = sourceSets.test.runtimeClasspath
     mainClass = "groovy.ui.GroovyMain"
     args(System.getProperty("args", "").split() as String[])

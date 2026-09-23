@@ -1,8 +1,8 @@
 package whelk.importer;
 
-import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.Counter;
-import io.prometheus.client.exporter.PushGateway;
+import io.prometheus.metrics.core.metrics.Counter;
+import io.prometheus.metrics.exporter.pushgateway.PushGateway;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import se.kb.libris.util.marc.MarcRecord;
 import se.kb.libris.util.marc.io.Iso2709MarcRecordReader;
 import se.kb.libris.util.marc.io.MarcXmlRecordReader;
@@ -16,9 +16,9 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.ThreadContext;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.MDC;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,7 +37,7 @@ import java.util.List;
 public class Main {
     private static XL s_librisXl = null;
     
-    static Logger LOG = LogManager.getLogger(Main.class);
+    static Logger LOG = LoggerFactory.getLogger(Main.class);
 
     private static boolean verbose = false;
 
@@ -45,16 +45,16 @@ public class Main {
 
     // Metrics
     private final static String METRICS_PUSHGATEWAY = "metrics.libris.kb.se:9091";
-    private final static CollectorRegistry registry = new CollectorRegistry();
-    private final static Counter importedBibRecords = Counter.build()
+    private final static PrometheusRegistry registry = new PrometheusRegistry();
+    private final static Counter importedBibRecords = Counter.builder()
             .name("batchimport_imported_bibliographic_records_count")
             .help("The total number of bibliographic records imported.")
             .register(registry);
-    private final static Counter importedHoldRecords = Counter.build()
+    private final static Counter importedHoldRecords = Counter.builder()
             .name("batchimport_imported_holding_records_count")
             .help("The total number of holding records imported.")
             .register(registry);
-    private final static Counter encounteredMulBibs = Counter.build()
+    private final static Counter encounteredMulBibs = Counter.builder()
             .name("batchimport_encountered_mulbibs")
             .help("The total number of incoming records with more than one duplicate already in the system.")
             .register(registry);
@@ -66,8 +66,8 @@ public class Main {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable throwable) {
-                Logger log = LogManager.getLogger(XL.class.getName() + ".unhandled");
-                log.fatal("PANIC ABORT, unhandled exception:\n", throwable);
+                Logger log = LoggerFactory.getLogger(XL.class.getName() + ".unhandled");
+                log.error("PANIC ABORT, unhandled exception:\n", throwable);
                 System.exit(-1);
             }
         });
@@ -120,8 +120,12 @@ public class Main {
         }
 
         try {
-            PushGateway pg = new PushGateway(METRICS_PUSHGATEWAY);
-            pg.pushAdd(registry, "batch_import");
+            PushGateway pg = PushGateway.builder()
+                    .address(METRICS_PUSHGATEWAY)
+                    .job("batch_import")
+                    .registry(registry)
+                    .build();
+            pg.pushAdd();
         } catch (Throwable e) {
             LOG.warn("Metrics server connection failed. No metrics will be generated.");
         }
@@ -229,7 +233,7 @@ public class Main {
         int recordNo = 0;
         for (MarcRecord marcRecord : batch) {
             try {
-                ThreadContext.push(Integer.toString(recordNo++));
+                MDC.put("recordNo", Integer.toString(recordNo++));
                 if (verbose) {
                     dumpDigIds(marcRecord);
                 }
@@ -265,7 +269,7 @@ public class Main {
                 LOG.error("Failed to convert or write the following MARC record:\n" + marcRecord.toString());
                 throw new RuntimeException(e);
             } finally {
-                ThreadContext.pop();
+                MDC.remove("recordNo");
             }
         }
     }
