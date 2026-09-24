@@ -313,11 +313,14 @@ public class Query {
     }
 
     private List<FilterAlias> collectOptionalFilters() {
+        var queryAliased = queryParams.aliased.stream().map(FilterAlias::alias).toList();
         var filterByAlias = appParams.getFilterByAlias();
         Stream<FilterAlias> appDefined = appParams.filters.optionalFilters().stream()
                 .filter(filterByAlias::containsKey)
-                .map(filterByAlias::get);
-        Stream<FilterAlias.QueryDefinedAlias> queryDefined = queryParams.aliased.stream();
+                .map(filterByAlias::get)
+                .filter(f -> !(f.isQueryFilterTemplate() && queryAliased.contains(f.alias())));
+        Stream<FilterAlias.QueryDefinedAlias> queryDefined = queryParams.aliased.stream()
+                .map(f -> filterByAlias.containsKey(f.alias()) && filterByAlias.get(f.alias()).isQueryFilterTemplate() ? f.withPrefLabel(filterByAlias.get(f.alias())) : f);
         return Stream.concat(appDefined, queryDefined).peek(this::parse).toList();
     }
 
