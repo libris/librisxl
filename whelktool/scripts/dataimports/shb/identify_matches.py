@@ -5,6 +5,8 @@ import requests
 import time
 from rapidfuzz import fuzz
 import traceback
+from urllib.parse import urlparse
+
 
 THRESHOLD = 0.80
 
@@ -369,13 +371,6 @@ def prepare_record(instance: dict) -> dict:
     return prepped
 
 
-### Store away matched and unmatched records ###
-
-
-def store_matched_records(best_match: dict):
-    pass
-
-
 ### Helper function ###
 
 
@@ -416,6 +411,7 @@ def write_instance_to_json_lines(record, file):
         json.dump(record, file, ensure_ascii=False)
         file.write("\n")
 
+
 ### Main action ###
 if __name__ == "__main__":
 
@@ -434,11 +430,11 @@ if __name__ == "__main__":
     date = time.strftime("%Y%m%d_%H%M%S")
 
     matched_shb_path = (
-        f"{args.results_folder}/{date}_matched_shb_{args.search_codes}.jsonl"
+        f"{args.results_folder}/{date}_{args.search_codes}_matched_for_update.jsonl"
     )
 
-    non_matched_shb_path = (
-        f"{args.results_folder}/{date}_non_matched_shb_{args.search_codes}.jsonl"
+    unmatched_shb_path = (
+        f"{args.results_folder}/{date}_{args.search_codes}_unmatched_for_create.jsonl"
     )
 
     search_result_path = (
@@ -461,7 +457,7 @@ if __name__ == "__main__":
 
     with open(args.shbd_file, "r") as source_file, open(
         matched_shb_path, "w", encoding="utf-8") as matched_shb_file, open(
-        non_matched_shb_path, "w", encoding="utf-8") as non_matched_shb_file, open(
+        unmatched_shb_path, "w", encoding="utf-8") as unmatched_shb_file, open(
         search_result_path, "w") as search_result_file, open(
         match_map_path, "w", encoding="utf-8") as match_map_file, open(
         report_path, "w", encoding="utf-8") as report:
@@ -483,32 +479,36 @@ if __name__ == "__main__":
                     )
                     print(match_counts)
 
-            shb_instance = json.loads(line)["@graph"][1]
+            shb_graph = json.loads(line)
+            shb_instance = shb_graph["@graph"][1]
 
             shbd_prepepd = prepare_record(shb_instance)
 
             if shbd_prepepd:
                 api_matches = find_matches(shbd_prepepd, match_counts)
 
+            # If the API returns no results, save full SHB graph to file of unmatched
             if not api_matches:
-                write_instance_to_json_lines(shb_instance, non_matched_shb_file)
+                write_instance_to_json_lines(shb_graph, unmatched_shb_file)
             else:
                 match_summary = analyze_matches(shbd_prepepd, api_matches)
                 match_map[shbd_prepepd["@id"]] = match_summary
 
                 best_match = match_summary.get("best_match")
-                # If there is a best match and the score reaches the threshold, save SHB instance to matched_file
+                # If there is a best match and the score reaches the threshold, save full SHB graph to file of matched
                 if best_match and best_match["total_score"] >= THRESHOLD:
+                        libris_short_id = urlparse(best_match["libris_id"]).path.rsplit("/", 1)[-1]
                         match_dict = {
-                            "libris_id": best_match["libris_id"],
-                            "matched_shb": shb_instance,
+                            libris_short_id: shb_graph,
                         }
                         write_instance_to_json_lines(match_dict, matched_shb_file)
+
                 # If the the score does not reach the threshold, or there is no best match at all,
-                # save SHB instance to non_matched_file
+                # save full SHB graph to file of
                 else:
-                        write_instance_to_json_lines(shb_instance, non_matched_shb_file)
-                        if best_match:
+                    write_instance_to_json_lines(shb_graph, unmatched_shb_file)
+                        
+                    if best_match:
                             report.write(
                             f"\nMATCHING\t{shbd_prepepd['@id']}\tBest match score below threshold {THRESHOLD}\t{best_match['libris_id']}\tMatch score: {best_match['total_score']}"
                         )
