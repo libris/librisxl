@@ -1,0 +1,61 @@
+1771-1874	Monografi: Efternamn, Förnamn [initial]., Titel. undertitel. sid. Ort år. Serietillhörighet. numrering. 
+1875-1900	Monografi: Efternamn, Förnamn [initial]., Titel. undertitel. sid. Ort år. Serietillhörighet. numrering. 
+1901-1920	Monografi: Efternamn, Förnamn [initial]., Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
+1921-1935	Monografi: Efternamn, Förnamn, Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)
+1936-1950	Monografi: Efternamn, Förnamn [initial]., Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)
+1951-1960	Monografi: Efternamn, Förnamn, Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.) 
+1961-1970	Monografi: Efternamn, Förnamn, Titel. undertitel. Ort år. sid. - Serietillhörighet. numrering.
+1971-1975	Monografi: Efternamn, Förnamn, Titel : undertitel. Ort år. sid. - (Serietillhörighet ; numrering)
+1976		Monografi: Efternamn, Förnamn, Titel : undertitel. - Ort, år. - sid. - (Serietillhörighet, ISSN)
+
+1771-1874	Monografi utan författare: Titel. undertitel. sid. Ort år. Serietillhörighet. numrering. 
+1875-1900	Monografi utan författare: Titel. undertitel. sid. Ort år. Serietillhörighet. numrering. 
+1901-1920	Monografi utan författare: Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.
+1921-1935	Monografi utan författare: Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)
+1936-1950	Monografi utan författare:  Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)
+1951-1960	Monografi utan författare: Titel. undertitel. sid. Ort år. (Serietillhörighet. numrering.) 
+1961-1970	Monografi utan författare: Titel. undertitel. Ort år. sid. - Serietillhörighet. numrering. 
+1971-1975	Monografi utan författare: Titel : undertitel / Upphov. Ort år. sid. - (Serietillhörighet ; numrering)
+1976		Monografi utan författare: Titel : undertitel / Upphov. - Ort, år. - sid.
+
+1771-1874	Bidrag: Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel. nr, sid.
+1875-1900	Bidrag: Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel. nr, sid.
+1901-1920	Bidrag: Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel. nr, sid.
+1921-1935	Bidrag: Efternamn, Förnamn, Titel. undertitel. (Publ-titel nr (årtal), sid.)
+1936-1950	Bidrag: Efternamn, Förnamn [initial]., Titel. undertitel. (Publ-titel nr (årtal), sid.)
+1951-1960	Bidrag: Efternamn, Förnamn, Titel. undertitel. (Publ-titel nr (årtal), sid.)
+1961-1970	Bidrag: Efternamn, Förnamn, Titel. - Publ-titel årg (årtal):numrering, sid.
+1971-1975	Bidrag: Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel årg(årtal):numrering, sid.
+1976		Bidrag: Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel, ISSN, numrering, årg, sid.
+	
+1771-1874	Bidrag utan författare: Titel. undertitel. Publ-titel. nr, sid.
+1875-1900	Bidrag utan författare: Titel. undertitel. Publ-titel. nr, sid.
+1901-1920	Bidrag utan författare: Titel. undertitel. Publ-titel. nr, sid.
+1921-1935	Bidrag utan författare:  Titel. undertitel. (Publ-titel. nr. årg, sid.)
+1936-1950	Bidrag utan författare:  Titel. undertitel. (Publ-titel. nr. årg, sid.)  
+1961-1970	Bidrag utan författare: Titel. - Publ-titel årg (årtal):numrering, sid.
+1971-1975	Bidrag utan författare: Titel : undertitel / Upphov. - "I:" Publ-titel årg(årtal):numrering, sid.
+1976		Bidrag utan författare: Titel : undertitel / Upphov. - "I:" Publ-titel, ISSN, numrering, årg, sid.
+
+
+1771-1874	Bidrag (tidningsartikel): Efternamn, Förnamn [initial]., Titel. Publ-titel YYYY, nr (DD/MM).
+1875-1900	Bidrag (tidningsartikel): Efternamn, Förnamn [initial]., Titel. Publ-titel YYYY, nr. 
+1901-1920	Bidrag (tidningsartikel): Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel YYYY, numrering (DD/MM).
+1921-1935	Bidrag (tidningsartikel): Efternamn, Förnamn, Titel. undertitel. (Publ-titel YYYY: DD/MM.)
+1936-1950	Bidrag (tidningsartikel): Efternamn, Förnamn [initial]., Titel. undertitel. (Publ-titel DD/MM YYYY.)
+1951-1960	Bidrag (tidningsartikel): Efternamn, Förnamn, Titel. undertitel. (Publ-titel DD/MM YYYY.)
+1961-1970	Bidrag (tidningsartikel): Efternamn, Förnamn, Titel. - Publ-titel DD.MM YYYY.
+1971-1975	Bidrag (tidningsartikel): Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel DD.MM YYYY 
+1976		Bidrag (tidningsartikel) Efternamn, Förnamn, Titel : undertitel. - "I:" Publ-titel DD.MM.YYYY
+		
+
+
+
+
+
+
+	
+	
+	
+	
+	
