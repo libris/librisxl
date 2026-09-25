@@ -572,7 +572,7 @@ class ElasticSearch {
         var shapedIntegralEmbellishments = shapeIntegralThings(fresnel, integralEmbellishments)
 
         var nonIntegralEmbellishments = fullEmbellishedGraph.drop(mainGraph.size() + integralEmbellishments.size()) as List<Map<String, Object>>
-        Set<String> visited = integralIds + originalGraph.findResults { (String) it[ID_KEY] }
+        Set<String> visited = integralIds + originalGraph.findResults { (String) it[ID_KEY] } + nonIntegralEmbellishments.findResults { (String) it[ID_KEY] }
         var shapedNonIntegralEmbellishments = shapeNonIntegralThings(nonIntegralEmbellishments, whelk, visited)
 
         copy.data[GRAPH_KEY] = shapedMainGraph + shapedIntegralEmbellishments + shapedNonIntegralEmbellishments
