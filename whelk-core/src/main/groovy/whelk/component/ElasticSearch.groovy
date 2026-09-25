@@ -9,7 +9,6 @@ import se.kb.libris.utils.isbn.Isbn
 import se.kb.libris.utils.isbn.IsbnException
 import se.kb.libris.utils.isbn.IsbnParser
 import whelk.Document
-import whelk.Embellisher
 import whelk.JsonLd
 import whelk.Whelk
 import whelk.exception.InvalidQueryException
@@ -21,7 +20,6 @@ import whelk.util.Unicode
 
 import java.util.concurrent.LinkedBlockingQueue
 
-import static whelk.FeatureFlags.Flag.EXPERIMENTAL_INDEX_HOLDING_ORGS
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
 import static whelk.JsonLd.GRAPH_KEY
 import static whelk.JsonLd.ID_KEY
@@ -554,27 +552,30 @@ class ElasticSearch {
             copy.centerOnVirtualMainEntity()
         }
 
+        FresnelUtil fresnel = whelk.fresnelUtil
+        JsonLd ld = whelk.jsonld
+
         var originalGraph = ((List) document.data[GRAPH_KEY])
         var fullEmbellishedGraph = ((List) copy.data[GRAPH_KEY])
         var mainGraph = fullEmbellishedGraph.take(originalGraph.size()) as List<Map<String, Object>>
 
-
-        Set<String> links = whelk.jsonld.expandLinks(JsonLd.getExternalReferences([(GRAPH_KEY): mainGraph]))
+        Set<String> links = ld.expandLinks(JsonLd.getExternalReferences([(GRAPH_KEY): mainGraph]))
                 .collect{ it.iri } as Set<String>
 
-        FresnelUtil.LensMappingBatch lensedMainGraph = batchToSearchCard(whelk.fresnelUtil, mainGraph, links)
-        var shapedMainGraph = lensedMainGraph.lensedThings()
+        FresnelUtil.LensMappingBatch lensedMainGraph = batchToSearchCard(fresnel, mainGraph, links)
+        var shapedMainGraph = lensedMainGraph.shapedThings()
         shapedMainGraph.forEach { lensedMainGraph.restoreLinksByKey(it, CATEGORY_BY_COLLECTION) }
 
-        var integralIds = collectIntegralIds(shapedMainGraph, whelk.jsonld)
-        var embellishedIntegralGraphs = fullEmbellishedGraph.drop(mainGraph.size())
-                .findAll { integralIds.contains(DocumentUtil.getAtPath(it, Document.thingIdPath2)) }
-        var shapedEmbellishedIntegralGraphs = shapeIntegralThings(whelk.fresnelUtil, embellishedIntegralGraphs)
+        var integralIds = collectIntegralIds(shapedMainGraph, ld)
+        var integralEmbellishments = fullEmbellishedGraph.drop(mainGraph.size())
+                .findAll { integralIds.contains(DocumentUtil.getAtPath(it, Document.thingIdPath2)) } as List<Map<String, Object>>
+        var shapedIntegralEmbellishments = shapeIntegralThings(fresnel, integralEmbellishments)
 
-        var embellishedNonIntegralGraphs = fullEmbellishedGraph.drop(mainGraph.size() + embellishedIntegralGraphs.size())
-        var shapedEmbellishedNonIntegralGraphs = shapeNonIntegralThings(whelk.fresnelUtil, embellishedNonIntegralGraphs)
+        var nonIntegralEmbellishments = fullEmbellishedGraph.drop(mainGraph.size() + integralEmbellishments.size()) as List<Map<String, Object>>
+        Set<String> visited = integralIds + originalGraph.findResults { (String) it[ID_KEY] }
+        var shapedNonIntegralEmbellishments = shapeNonIntegralThings(nonIntegralEmbellishments, whelk, visited)
 
-        copy.data[GRAPH_KEY] = shapedMainGraph + shapedEmbellishedIntegralGraphs + shapedEmbellishedNonIntegralGraphs
+        copy.data[GRAPH_KEY] = shapedMainGraph + shapedIntegralEmbellishments + shapedNonIntegralEmbellishments
 
         setIdentifiers(copy)
         copy.setThingMeta(document.getCompleteId())
@@ -588,7 +589,7 @@ class ElasticSearch {
         Map searchCard = JsonLd.frame(thingId, copy.data)
 
         searchCard[LINKS] = links
-        searchCard[OUTER_EMBELLISHMENTS] = copy.getEmbellishments() - links
+        searchCard[OUTER_EMBELLISHMENTS] = copy.getEmbellishmentIds() - links
 
         Map<String, Long> incomingLinkCountByRelation = whelk.getStorage().getIncomingLinkCountByIdAndRelation(stripHash(copy.getShortId()))
         var totalItems = incomingLinkCountByRelation.values().sum(0)
@@ -622,7 +623,7 @@ class ElasticSearch {
             log.error("Couldn't create search fields for {}: {}", document.shortId, e, e)
         }
 
-        searchCard[IDS] = collectRecordIds(originalGraph, embellishedIntegralGraphs)
+        searchCard[IDS] = collectRecordIds(originalGraph, integralEmbellishments)
 
         DocumentUtil.traverse(searchCard) { value, path ->
             if (path && SEARCH_STRINGS.contains(path.last())) {
@@ -654,11 +655,11 @@ class ElasticSearch {
                 // { "foo": "FOO", "fooByLang": { "en": "EN", "sv": "SV" }, "__foo": ["FOO", "EN", "SV"] }
                 Map<String, List> flattened = [:]
                 value.each { k, v ->
-                    if (k in whelk.jsonld.langContainerAlias) {
+                    if (k in ld.langContainerAlias) {
                         var __k = flattenedLangMapKey((String) k)
                         flattened[__k] = ((List) (flattened[__k] ?: [])) + asList(v)
-                    } else if (k in whelk.jsonld.langContainerAliasInverted) {
-                        var __k = flattenedLangMapKey((String) whelk.jsonld.langContainerAliasInverted[k])
+                    } else if (k in ld.langContainerAliasInverted) {
+                        var __k = flattenedLangMapKey((String) ld.langContainerAliasInverted[k])
                         flattened[__k] = ((List) (flattened[__k] ?: [])) + ((Map) v).values().flatten()
                     }
                 }
@@ -680,23 +681,6 @@ class ElasticSearch {
                             ? controlNumber
                             : [controlNumber, recordShortId]
                 }
-            }
-
-            if ('Item' != searchCard[TYPE_KEY]
-                    && path
-                    && "heldBy" == path.last()
-                    && !path.contains('hasComponent')
-                    && value instanceof Map
-                    && value[JsonLd.ID_KEY]) {
-                if (whelk.features.isEnabled(EXPERIMENTAL_INDEX_HOLDING_ORGS) && !value['isPartOf']) {
-                    var org = whelk.relations.getBy((String) value[JsonLd.ID_KEY], ['isPartOf'])
-                    if (!org.isEmpty()) {
-                        value['isPartOf'] = [(JsonLd.ID_KEY): org.first()]
-                    }
-                }
-                // Libraries may sometimes be embedded in the item via embellish (when appearing as descriptionCreator/descriptionLastModifier).
-                // Retain only @id and isPartOf to maintain consistency with non-embedded libraries and avoid indexing unnecessary data.
-                return new DocumentUtil.Replace(value.subMap([ID_KEY, 'isPartOf']))
             }
 
             return DocumentUtil.NOP
@@ -812,18 +796,87 @@ class ElasticSearch {
                 .toSet()
     }
 
-
-    private static List shapeIntegralThings(FresnelUtil fresnelUtil, List graphs) {
-        var lensedBatch = batchToSearchCard(fresnelUtil, toLensReadyForm(graphs), collectCategoryLinks(graphs))
-        var shapedThings = lensedBatch.lensedThings()
+    private static List<Map<String, Object>> shapeIntegralThings(FresnelUtil fresnelUtil, List<Map<String, Object>> graphs) {
+        var lensReadyThings = toLensReadyForm(graphs) as List<Map<String, Object>>
+        var lensedBatch = batchToSearchCard(fresnelUtil, lensReadyThings, collectCategoryLinks(graphs))
+        var shapedThings = lensedBatch.shapedThings()
         shapedThings.each(lensedBatch::restoreLinks)
         return restoreGraphForm(shapedThings, graphs)
     }
 
-    private static List shapeNonIntegralThings(FresnelUtil fresnelUtil, List graphs) {
-        graphs = embedFakeIntegralThings(graphs) //FIXME
-        var lensedBatch = batchToSearchChip(fresnelUtil, toLensReadyForm(graphs), [])
-        return restoreGraphForm(lensedBatch.lensedThings(), graphs)
+    private static final int MAX_FETCH_FURTHER_DEPTH = 2
+
+    // fetchAndEmbedMidPathLinks and fetchAndEmbedFurtherLinks compensate for entities that embellish doesn't reach,
+    // fetching exactly what is actually specified by the lens definitions
+    private static List<Map<String, Object>> shapeNonIntegralThings(List<Map<String, Object>> graphs, Whelk whelk, Set<String> visited) {
+        var lensReadyThings = toLensReadyForm(graphs)
+        // Must run before shaping: an unfetched link in the middle of a multi-segment path (e.g. "shelfMark/*/label")
+        // needs to be loaded first, since its data may be needed to build the shaped output (e.g. by fresnel:mergeProperties).
+        fetchAndEmbedMidPathLinks(lensReadyThings, whelk, visited)
+        var shapedThings = batchToSearchChip(whelk.fresnelUtil, lensReadyThings, []).shapedThings()
+        fetchAndEmbedFurtherLinks(shapedThings, whelk, visited, MAX_FETCH_FURTHER_DEPTH)
+        return restoreGraphForm(shapedThings, graphs)
+    }
+
+    private static void fetchAndEmbedMidPathLinks(List<Map<String, Object>> things, Whelk whelk, Set<String> visited) {
+        List<Map<String, Object>> unfetched = things
+                .collectMany { thing -> whelk.fresnelUtil.findFslMidPathLinks(thing, FresnelUtil.Lenses.SEARCH_CHIP) }
+                .findAll { !visited.contains(it[ID_KEY]) }
+
+        if (unfetched) {
+            fetchAndEmbed(unfetched, whelk)
+            visited.addAll(unfetched.collect { (String) it[ID_KEY] })
+        }
+    }
+
+    private static void fetchAndEmbedFurtherLinks(Collection<Map<String, Object>> things, Whelk whelk, Set<String> visited, int maxDepth) {
+        if (maxDepth == 0 || things.isEmpty()) {
+            return
+        }
+
+        List<Map<String, Object>> links = []
+
+        Set<String> newVisited = [] as Set
+
+        for (thing in things) {
+            // Only the first occurrence of a given iri within a thing is embedded, to avoid redundant embedding
+            // of e.g. an Item's heldBy and hasComponent.heldBy pointing at the same library.
+            Set<String> localVisited = [] as Set
+            DocumentUtil.traverse(thing) { value, path ->
+                if (value instanceof Map && JsonLd.isLink(value) && !path.contains(JSONLD_ALT_ID_KEY)) {
+                    String iri = value[ID_KEY]
+                    if (localVisited.add(iri) && !visited.contains(iri)) {
+                        links.add((Map<String, Object>) value)
+                    }
+                }
+                return new DocumentUtil.Nop()
+            }
+            newVisited.addAll(localVisited)
+        }
+
+        fetchAndEmbed(links, whelk)
+
+        List<Map<String, Object>> fetched = links.findAll { !JsonLd.isLink(it) }
+
+        fetched.each {thing ->
+            var shaped = whelk.fresnelUtil.mapThroughLens(thing, FresnelUtil.Lenses.SEARCH_CHIP)
+            thing.clear()
+            thing.putAll(shaped)
+        }
+
+        visited.addAll(newVisited)
+
+        fetchAndEmbedFurtherLinks(fetched, whelk, visited, maxDepth - 1)
+    }
+
+    private static void fetchAndEmbed(List<Map<String, Object>> links, Whelk whelk) {
+        var linksByIri = links.groupBy { (String) it[ID_KEY] }
+        whelk.bulkLoad(linksByIri.keySet()).each { String iri, Document doc ->
+            linksByIri[iri].each { link ->
+                link.clear()
+                link.putAll(doc.getThing())
+            }
+        }
     }
 
     private static List toLensReadyForm(List graphs) {
@@ -860,28 +913,6 @@ class ElasticSearch {
             }
         }
         return categoryLinks
-    }
-
-    //FIXME
-    private static List embedFakeIntegralThings(List graphs) {
-        graphs.each { graph ->
-            def thing = DocumentUtil.getAtPath(graph, Document.thingPath, [:])
-            if (thing[TYPE_KEY] == 'Item') {
-                DocumentUtil.findKey(thing, Embellisher.FAKE_INTEGRAL_RELATIONS) { value, path ->
-                    asList(value).each { v ->
-                        if (v instanceof Map && JsonLd.isLink(v)) {
-                            graphs.find { DocumentUtil.getAtPath(it, Document.thingIdPath2) == v[ID_KEY] }
-                                    ?.with {
-                                        def fakeIntegralThing = (Map) DocumentUtil.getAtPath(it, Document.thingPath, [:])
-                                        ((Map) v).putAll(fakeIntegralThing)
-                                    }
-                        }
-                    }
-                    return new DocumentUtil.Nop()
-                }
-            }
-        }
-        return graphs
     }
 
     @CompileStatic

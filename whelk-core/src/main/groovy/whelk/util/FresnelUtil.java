@@ -31,11 +31,9 @@ import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.JSONLD_ALT_ID_KEY;
-import static whelk.JsonLd.RECORD_TYPE;
 import static whelk.JsonLd.REVERSE_KEY;
 import static whelk.JsonLd.THING_KEY;
 import static whelk.JsonLd.TYPE_KEY;
-import static whelk.JsonLd.WORK_KEY;
 import static whelk.JsonLd.asList;
 
 // https://www.w3.org/2005/04/fresnel-info/manual/
@@ -215,18 +213,18 @@ public class FresnelUtil {
     public LensMappingBatch mapBatchThroughLens(List<Map<String, Object>> things, Lens lens, Collection<Options> options, Collection<String> preserveLinks) {
         List<LensMappingResult> mappings = things.stream().map(t -> _mapThroughLens(t, lens, options, preserveLinks)).toList();
 
-        List<Map<String, Object>> lensedThings = new ArrayList<>();
+        List<Map<String, Object>> shapedThings = new ArrayList<>();
         Map<String, List<FresnelUtil.LinkRestoration>> idToPreservedLinks = new HashMap<>();
 
         mappings.forEach(lmr -> {
-            lensedThings.add(lmr.thing());
+            shapedThings.add(lmr.thing());
             var id = (String) lmr.thing().get(ID_KEY);
             if (id != null) {
                 idToPreservedLinks.put(id, lmr.preservedLinks());
             }
         });
 
-        return new LensMappingBatch(lensedThings, idToPreservedLinks);
+        return new LensMappingBatch(shapedThings, idToPreservedLinks);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -247,24 +245,48 @@ public class FresnelUtil {
     }
 
     public List<?> fslSelect(Map<String, Object> thing, String fslSelector) {
-        return new FslPath(fslSelector).select(thing)
-                .stream()
-                .map(Node.Selected::getFlatValues)
-                .flatMap(List::stream)
-                .toList();
+        return new FslPath(fslSelector).selectRawValues(thing);
+    }
+
+    public List<Map<String, Object>> findFslMidPathLinks(Map<String, Object> thing, Lens lens) {
+        return findFslMidPathLinks(thing, lens, loadShowProperties(thing, lens, List.of()));
+    }
+
+    private List<Map<String, Object>> findFslMidPathLinks(Map<String, Object> thing, Lens lens, List<ShowProperty> showProperties) {
+        List<Map<String, Object>> links = new ArrayList<>();
+
+        for (ShowProperty sp : showProperties) {
+            switch (sp) {
+                case FslPath f -> {
+                    links.addAll(f.findMidPathLinks(thing));
+                    f.selectRawBlankNodes(thing).stream()
+                            .map(m -> findFslMidPathLinks(m, lens))
+                            .forEach(links::addAll);
+                }
+                case AlternateProperties a -> a.alternatives().forEach(alt -> links.addAll(findFslMidPathLinks(thing, lens, List.of(alt))));
+                case MergeProperties m -> links.addAll(findFslMidPathLinks(thing, lens, m.merge()));
+                case PropertyDescription pd -> new FslPath(pd.property().name()).selectRawBlankNodes(thing)
+                        .stream()
+                        .map(m -> findFslMidPathLinks(m, lens, pd.subLens()))
+                        .forEach(links::addAll);
+                case Unrecognized ignored -> {}
+            }
+        }
+
+        return links;
     }
 
     public static class LensMappingBatch {
-        private final List<Map<String, Object>> lensedThings;
+        private final List<Map<String, Object>> shapedThings;
         private final Map<String, List<LinkRestoration>> preservedLinksMap;
 
-        LensMappingBatch(List<Map<String, Object>> lensedThings, Map<String, List<LinkRestoration>> preservedLinksMap) {
-            this.lensedThings = lensedThings;
+        LensMappingBatch(List<Map<String, Object>> shapedThings, Map<String, List<LinkRestoration>> preservedLinksMap) {
+            this.shapedThings = shapedThings;
             this.preservedLinksMap = preservedLinksMap;
         }
 
-        public List<Map<String, Object>> lensedThings() {
-            return lensedThings;
+        public List<Map<String, Object>> shapedThings() {
+            return shapedThings;
         }
 
         public void restoreLinks(Map<String, Object> thing) {
@@ -1246,6 +1268,16 @@ public class FresnelUtil {
             return select(sourceEntity, new ArrayList<>(List.of(pathParts)));
         }
 
+        List<?> selectRawValues(Map<String, Object> sourceEntity) {
+            return rawValues(select(sourceEntity)).toList();
+        }
+
+        List<Map<String, Object>> selectRawBlankNodes(Map<String, Object> sourceEntity) {
+            return rawNodes(select(sourceEntity))
+                    .filter(m -> !m.containsKey(ID_KEY))
+                    .toList();
+        }
+
         boolean isIntegralProperty() {
             return new ArcStep(path).asPropertyKey().isIntegral();
         }
@@ -1292,7 +1324,39 @@ public class FresnelUtil {
             return selection;
         }
 
-        private sealed abstract class LocationStep permits ArcStep, NodeStep {}
+        List<Map<String, Object>> findMidPathLinks(Map<String, Object> currentEntity) {
+            return findMidPathLinks(currentEntity, new ArrayList<>(List.of(pathParts)));
+        }
+
+        List<Map<String, Object>> findMidPathLinks(Map<String, Object> currentEntity, List<String> pathRemainder) {
+            if (pathRemainder.size() <= 1) {
+                return List.of();
+            }
+
+            ArcStep arcStep = new ArcStep(pathRemainder.removeFirst());
+            NodeStep nodeStep = new NodeStep(pathRemainder.removeFirst());
+
+            return rawNodes(arcStep.select(currentEntity, nodeStep.allowedTypes(), false))
+                    .flatMap(m -> JsonLd.isLink(m)
+                            ? Stream.of(m)
+                            : findMidPathLinks(m, pathRemainder).stream())
+                    .toList();
+        }
+
+        private Stream<Map<String, Object>> rawNodes(List<Node.Selected> selected) {
+            return rawValues(selected)
+                    .map(FresnelUtil::asMap)
+                    .filter(Predicate.not(Map::isEmpty));
+        }
+
+        private Stream<?> rawValues(List<Node.Selected> selected) {
+            return selected.stream()
+                    .map(Node.Selected::getFlatValues)
+                    .flatMap(List::stream);
+        }
+
+        private sealed abstract class LocationStep permits ArcStep, NodeStep {
+        }
 
         private final class NodeStep extends LocationStep {
             private final List<String> allowedTypes = new ArrayList<>();
@@ -1335,8 +1399,12 @@ public class FresnelUtil {
             }
 
             List<Node.Selected> select(Map<?, ?> entity, List<String> allowedTypes) {
+                return select(entity, allowedTypes, true);
+            }
+
+            List<Node.Selected> select(Map<?, ?> entity, List<String> allowedTypes, boolean strictTypeMatch) {
                 return candidateKeys.stream()
-                        .map(p -> select(entity, p, allowedTypes))
+                        .map(p -> select(entity, p, allowedTypes, strictTypeMatch))
                         .filter(Objects::nonNull)
                         .toList();
             }
@@ -1353,7 +1421,7 @@ public class FresnelUtil {
                 return new PropertyKey(p);
             }
 
-            private Node.Selected select(Map<?, ?> m, String p, List<String> allowedTypes) {
+            private Node.Selected select(Map<?, ?> m, String p, List<String> allowedTypes, boolean strictTypeMatch) {
                 if (reverse) {
                     m = (Map<?, ?>) DocumentUtil.getAtPath(m, List.of(JsonLd.REVERSE_KEY), Map.of());
                 }
@@ -1362,7 +1430,7 @@ public class FresnelUtil {
                 List<Object> values = new ArrayList<>();
 
                 for (var o : JsonLd.asList(m.get(pName))) {
-                    if (isAllowedType(o, allowedTypes)) {
+                    if (isAllowedType(o, allowedTypes, strictTypeMatch)) {
                         values.add(o);
                     }
                 }
@@ -1405,10 +1473,19 @@ public class FresnelUtil {
             }
         }
 
-        private boolean isAllowedType(Object o, List<String> allowedTypes) {
-            return allowedTypes.isEmpty()
-                    || !(o instanceof Map<?,?> m)
-                    || allowedTypes.stream().anyMatch(JsonLd.asList(m.get(TYPE_KEY))::contains);
+        private boolean isAllowedType(Object o, List<String> allowedTypes, boolean strict) {
+            if (allowedTypes.isEmpty()) {
+                return true;
+            }
+
+            boolean isTypedNode = o instanceof Map<?, ?> m && m.containsKey(TYPE_KEY);
+
+            if (isTypedNode) {
+                return allowedTypes.stream()
+                        .anyMatch(JsonLd.asList(((Map<?, ?>) o).get(TYPE_KEY))::contains);
+            }
+
+            return !strict;
         }
     }
 
