@@ -2,13 +2,30 @@ package whelk.search2;
 
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
-import whelk.search2.querytree.*;
+import whelk.search2.querytree.Any;
+import whelk.search2.querytree.DateTime;
+import whelk.search2.querytree.FilterAlias;
+import whelk.search2.querytree.FreeText;
+import whelk.search2.querytree.InvalidValue;
+import whelk.search2.querytree.Key;
+import whelk.search2.querytree.Link;
+import whelk.search2.querytree.Path;
+import whelk.search2.querytree.PathElement;
+import whelk.search2.querytree.Property;
+import whelk.search2.querytree.Selector;
+import whelk.search2.querytree.Token;
+import whelk.search2.querytree.Value;
+import whelk.search2.querytree.VocabTerm;
+import whelk.search2.querytree.YearRange;
 
 import java.time.format.DateTimeParseException;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.LD_KEYS;
@@ -239,7 +256,21 @@ public class Disambiguate {
     }
 
     private Map<String, FilterAlias> getFilterAliasMappings(Collection<FilterAlias> appFilterAliases, Collection<FilterAlias.QueryDefinedAlias> queryFilterAliases) {
-        return Stream.concat(appFilterAliases.stream(), queryFilterAliases.stream())
-                .collect(Collectors.toMap(fa -> fa.alias().toLowerCase(), Function.identity()));
+        // query filter aliases may override
+        var result = new HashMap<String, FilterAlias>();
+        for (var f : appFilterAliases) {
+            result.put(f.alias().toLowerCase(), f);
+        }
+        for (var f : queryFilterAliases) {
+            var k = f.alias().toLowerCase();
+            if (result.containsKey(k)) {
+                if (result.get(k).isQueryFilterTemplate()) {
+                    f = f.withPrefLabel(result.get(k));
+                }
+            }
+
+            result.put(f.alias().toLowerCase(), f);
+        }
+        return result;
     }
 }
