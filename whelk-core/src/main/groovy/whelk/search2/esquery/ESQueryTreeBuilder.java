@@ -38,8 +38,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.SEARCH_KEY;
@@ -215,8 +217,17 @@ public class ESQueryTreeBuilder {
                     .map(ESNode.Nested::fields)
                     .flatMap(Set::stream)
                     .collect(Collectors.toSet());
+
+            // FIXME: Temporary check to avoid libraries and library organizations being grouped as nested
+            Supplier<Boolean> isMixOfLibraryAndLibraryOrganization = () -> Stream.concat(fields.stream(), currentFields.stream())
+                        .map(ESNode.NestedField::field)
+                        .filter(f -> f.endsWith("@reverse.itemOf.heldBy.@id") || f.endsWith("@reverse.itemOf.heldBy.isPartOf.@id"))
+                        .distinct()
+                        .count() > 1;
+
             return stem.equals(currentNestedStem.get())
-                    && fields.stream().noneMatch(f -> !f.isRepeatable() && currentFields.contains(f));
+                    && fields.stream().noneMatch(f -> !f.isRepeatable() && currentFields.contains(f))
+                    && !isMixOfLibraryAndLibraryOrganization.get();
         };
 
         for (ESNode subQuery : must.subQueries()) {
