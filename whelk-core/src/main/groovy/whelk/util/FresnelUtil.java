@@ -1478,7 +1478,7 @@ public class FresnelUtil {
                 return true;
             }
 
-            boolean isTypedNode = o instanceof Map<?, ?> m && m.containsKey(TYPE_KEY);
+            boolean isTypedNode = o instanceof Map<?, ?> m && m.get(TYPE_KEY) != null;
 
             if (isTypedNode) {
                 return allowedTypes.stream()
