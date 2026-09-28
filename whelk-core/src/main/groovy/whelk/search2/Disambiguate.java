@@ -146,16 +146,16 @@ public class Disambiguate {
                     .getOrDefault(ns, Set.of());
             if (mappedProperties.size() == 1) {
                 String p = getUnambiguous(mappedProperties);
-                return getProperty(p, token);
+                return buildProperty(p, token);
             }
             if (mappedProperties.size() > 1) {
                 // Ambiguous
                 Optional<String> equalPropertyKey = mappedProperties.stream().filter(token.value()::equalsIgnoreCase).findFirst();
                 if (equalPropertyKey.isPresent()) {
-                    return getProperty(equalPropertyKey.get(), token);
+                    return buildProperty(equalPropertyKey.get(), token);
                 }
                 Optional<Property> propertyWithCode = mappedProperties.stream()
-                        .map(pKey -> getProperty(pKey, token))
+                        .map(pKey -> buildProperty(pKey, token))
                         .filter(property -> property.definition().containsKey("librisQueryCode"))
                         .findFirst();
                 if (propertyWithCode.isPresent()) {
@@ -173,8 +173,8 @@ public class Disambiguate {
         return new Key.UnrecognizedKey(token);
     }
 
-    private Property getProperty(String propertyKey, Token token) {
-        return Property.getProperty(propertyKey, jsonLd, new Key.RecognizedKey(token));
+    private Property buildProperty(String propertyKey, Token token) {
+        return Property.buildProperty(propertyKey, jsonLd, new Key.RecognizedKey(token));
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {
