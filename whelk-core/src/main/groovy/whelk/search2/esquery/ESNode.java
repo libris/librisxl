@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public sealed interface ESNode {
     enum MultiMatchType {
         // https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-multi-match-query#multi-match-types
-        best_fields,
+        cross_fields,
         most_fields
     }
 
@@ -24,9 +24,36 @@ public sealed interface ESNode {
     }
 
     record QueryString(String query, MultiMatchType multiMatchType) implements TextQueryMode {
+        public QueryString {
+            query = escapeNonSimpleQueryString(query);
+        }
+
         @Override
         public String mode() {
             return "query_string";
+        }
+
+        private static String escapeNonSimpleQueryString(String queryString) {
+            // Treat escaped question marks as actual wildcards
+            queryString = queryString.replace("\\?", "?");
+
+            // The following chars are reserved in ES and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
+            // Escape the ones that are not part of our query language.
+            for (char c : List.of('=', '&', '!', '{', '}', '[', ']', '^', ':', '/')) {
+                queryString = queryString.replace("" + c, "\\" + c);
+            }
+
+            // Inside words, treat '-' as regular hyphen instead of "NOT" and escape it
+            queryString = queryString.replaceAll("(^|\\s+)-(\\S+)", "$1#ACTUAL_NOT#$2");
+            queryString = queryString.replace("-", "\\-");
+            queryString = queryString.replace("#ACTUAL_NOT#", "-");
+
+            // Strip un-escapable characters
+            for (char c : List.of('<', '>')) {
+                queryString = queryString.replace("" + c, "");
+            }
+
+            return queryString;
         }
     }
 
