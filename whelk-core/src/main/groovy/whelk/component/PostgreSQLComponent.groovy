@@ -351,6 +351,13 @@ class PostgreSQLComponent {
             WHERE t1.iri = ? AND t2.mainid = true
             """.stripIndent()
 
+    private static final String GET_MAIN_IDS = """
+            SELECT t1.iri, t2.iri
+            FROM lddb__identifiers t1
+            JOIN lddb__identifiers t2 ON t2.id = t1.id AND t2.graphindex = t1.graphindex
+            WHERE t1.iri = ANY(?) AND t2.mainid = true
+            """.stripIndent()
+
     private static final String GET_SYSTEMID_BY_IRI = """
             SELECT lddb__identifiers.id, lddb.deleted
             FROM lddb__identifiers 
@@ -1257,6 +1264,22 @@ class PostgreSQLComponent {
         return ids
     }
 
+    /**
+     * Similar to getSystemIds, but this is never served from a cache.
+     */
+    Set<String> getExistingIris(Collection<String> iris) {
+        Set<String> existing = new HashSet<>()
+        if (iris.isEmpty()) {
+            return existing
+        }
+        withDbConnection {
+            getSystemIds(iris, getMyConnection()) { String iri, String systemId, boolean deleted ->
+                existing.add(iri)
+            }
+        }
+        return existing
+    }
+
     private void getSystemIds(Iterable iris, Connection connection, Closure c) {
         PreparedStatement getSystemIds = null
         ResultSet rs = null
@@ -1843,6 +1866,35 @@ class PostgreSQLComponent {
 
     String getMainId(String id, Connection connection) {
         return getRecordOrThingId(id, GET_MAIN_ID, connection)
+    }
+
+    /**
+     * Batch version of getMainId. Each (found) supplied identifier is mapped to its main ID.
+     */
+    Map<String, String> getMainIds(Collection<String> ids) {
+        Map<String, String> result = [:]
+        if (ids.isEmpty()) {
+            return result
+        }
+        withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement selectstmt = null
+            ResultSet rs = null
+            try {
+                selectstmt = connection.prepareStatement(GET_MAIN_IDS)
+                selectstmt.setArray(1, connection.createArrayOf("TEXT", ids.toArray(new String[0])))
+                rs = selectstmt.executeQuery()
+                while (rs.next()) {
+                    String id = rs.getString(1)
+                    if (result.putIfAbsent(id, rs.getString(2)) != null) {
+                        log.warn("Multiple main IDs found for ID ${id}")
+                    }
+                }
+            } finally {
+                close(rs, selectstmt)
+            }
+        }
+        return result
     }
 
     private static String getRecordOrThingId(String id, String sql, Connection connection) {
