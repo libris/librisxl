@@ -22,7 +22,7 @@ public class RdfXmlToJsonLdParser {
         }
         var inData = mapper.readValue(baos.toString("UTF-8"), Map.class);
         var data = TrigToJsonLdParser.compact(inData, context);
-        data = EmbedBlanks.embedBlanks(data);
+        EmbedBlanks.embedBlanks(data);
         return data;
     }
 
