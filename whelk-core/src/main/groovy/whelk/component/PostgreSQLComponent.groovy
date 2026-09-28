@@ -380,6 +380,9 @@ class PostgreSQLComponent {
     private static final String GET_COLLECTION_BY_SYSTEM_ID =
             "SELECT collection FROM lddb where id = ?"
 
+    private static final String DOCUMENT_EXISTS =
+            "SELECT EXISTS(SELECT 1 FROM lddb WHERE id = ?)"
+
     private static final String GET_MAINENTITY_TYPE_BY_SYSTEM_ID =
             "SELECT data#>>'{@graph,1,@type}' FROM lddb WHERE id = ?"
 
@@ -1965,6 +1968,24 @@ class PostgreSQLComponent {
             }
         } else {
             return null
+        }
+    }
+
+    boolean exists(String systemId) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement selectStatement = null
+            ResultSet resultSet = null
+            try {
+                selectStatement = connection.prepareStatement(DOCUMENT_EXISTS)
+                selectStatement.setString(1, systemId)
+                resultSet = selectStatement.executeQuery()
+                resultSet.next()
+                return resultSet.getBoolean(1)
+            }
+            finally {
+                close(resultSet, selectStatement)
+            }
         }
     }
 

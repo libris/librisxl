@@ -396,10 +396,11 @@ class DatasetImporter {
     }
 
     private WRITE_RESULT createOrUpdateDocument(Document incomingDoc) {
-        Document storedDoc = whelk.getDocument(incomingDoc.getShortId())
+        Set<String> storedIds = new HashSet<>()
         WRITE_RESULT result
-        if (storedDoc != null) {
-            boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, false, "xl", null, { doc ->
+        if (whelk.storage.exists(incomingDoc.getShortId())) {
+            boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, false, "xl", null, { Document doc ->
+                storedIds = identifiers(doc)
                 doc.data = incomingDoc.data
             })
             if (updated) {
@@ -412,13 +413,12 @@ class DatasetImporter {
             result = WRITE_RESULT.CREATED
         }
         if (result != WRITE_RESULT.ALREADY_UP_TO_DATE) {
-            trackChangedIdentifiers(storedDoc, incomingDoc)
+            trackChangedIdentifiers(storedIds, incomingDoc)
         }
         return result
     }
 
-    private void trackChangedIdentifiers(Document storedDoc, Document writtenDoc) {
-        Set<String> oldIds = storedDoc != null ? identifiers(storedDoc) : new HashSet<String>()
+    private void trackChangedIdentifiers(Set<String> oldIds, Document writtenDoc) {
         Set<String> newIds = identifiers(writtenDoc)
         thingIdCache.keySet().removeAll(oldIds)
         thingIdCache.keySet().removeAll(newIds)
