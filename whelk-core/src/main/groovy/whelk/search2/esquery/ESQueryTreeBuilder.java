@@ -182,6 +182,9 @@ public class ESQueryTreeBuilder {
         return groupNested(must);
     }
 
+    private static final Pattern LIBRARY_OR_ORG_FIELD =
+            Pattern.compile("@reverse\\.itemOf\\.heldBy\\.(isPartOf\\.)?(@id|_str)$");
+
     private static ESNode groupNested(ESNode.Must must) {
         List<ESNode> subQueries = new ArrayList<>();
 
@@ -221,7 +224,7 @@ public class ESQueryTreeBuilder {
             // FIXME: Temporary check to avoid libraries and library organizations being grouped as nested
             Supplier<Boolean> isMixOfLibraryAndLibraryOrganization = () -> Stream.concat(fields.stream(), currentFields.stream())
                         .map(ESNode.NestedField::field)
-                        .filter(f -> f.endsWith("@reverse.itemOf.heldBy.@id") || f.endsWith("@reverse.itemOf.heldBy.isPartOf.@id"))
+                        .filter(f -> LIBRARY_OR_ORG_FIELD.matcher(f).find())
                         .distinct()
                         .count() > 1;
 
