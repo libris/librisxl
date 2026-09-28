@@ -56,7 +56,12 @@ class UnicodeSpec extends Specification {
         'CARRIAGE RETURN\r\r\r'                                     | 'CARRIAGE RETURN'
         'line breaks\u000A\u000B\u000C\u000D\u0085\u2028\u2029'     | 'line breaks'
         '\r\nkeep leading line breaks'                              | '\r\nkeep leading line breaks'
-        
+        ''                                                          | ''
+        'nothing to trim.'                                          | 'nothing to trim.'
+        'Åre och Östersund'                                         | 'Åre och Östersund'
+        '١٢٣ Arabic-Indic digits ٣'                                  | '١٢٣ Arabic-Indic digits ٣'
+        'x'                                                         | 'x'
+
     }
 
     def "stripPrefix"() {
