@@ -4,8 +4,6 @@ import groovy.util.logging.Slf4j as Log
 import groovy.transform.CompileStatic
 import whelk.exception.LinkValidationException
 
-import static groovy.transform.TypeCheckingMode.SKIP
-
 import whelk.Document
 import whelk.JsonLd
 import whelk.TargetVocabMapper
@@ -60,7 +58,19 @@ class DatasetImporter {
     TargetVocabMapper tvm = null
     Map contextDocData = null
 
-    Map<String, String> aliasMap = [:]
+    static final int THING_ID_CACHE_SIZE = 100_000
+    static final int MAX_CHANGED_IDENTIFIERS = 1_000_000
+
+    // LRU cache for whelk.storage.getThingId() results
+    private Map<String, String> thingIdCache = new LinkedHashMap<String, String>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+            return size() > THING_ID_CACHE_SIZE
+        }
+    }
+
+    private Set<String> changedIdentifiers = []
+    private Set<String> removedIds = []
 
     DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], Object descriptions=null) {
         this.whelk = whelk
@@ -175,7 +185,7 @@ class DatasetImporter {
         // dataset links to another doc in the dataset that has not yet been imported.
         // A symptom is for example @reverse/broader not being calculated correctly.
         // Should be fixed by merging PlaceholderRecord handling?
-        idsInInput.each { whelk.storage.recalculateDependencies(whelk.getDocument(it)) }
+        recalculateStaleDependencies(idsInInput)
 
         System.err.println("Created: " + createdCount +" new,\n" +
                 "updated: " + updatedCount + " existing and\n" +
@@ -305,18 +315,26 @@ class DatasetImporter {
         }
     }
 
-    @CompileStatic(SKIP)
     protected void normalizeLinks(Map data) {
-        DocumentUtil.findKey(data[GRAPH][1], ID) { id, path ->
+        DocumentUtil.findKey(((List) data[GRAPH])[1], ID) { Object id, List<Object> path ->
             if ('sameAs' in path) {
-                return
+                return DocumentUtil.NOP
             }
-            def canonical = aliasMap.get(id) ?: whelk.storage.getThingId(id)
+            String canonical = getThingId((String) id)
             if (canonical && id != canonical) {
-                aliasMap[id] = canonical
                 return new DocumentUtil.Replace(canonical)
             }
+            return DocumentUtil.NOP
         }
+    }
+
+    private String getThingId(String id) {
+        if (thingIdCache.containsKey(id)) {
+            return thingIdCache[id]
+        }
+        String thingId = whelk.storage.getThingId(id)
+        thingIdCache[id] = thingId
+        return thingId
     }
 
     private Map loadData(String path) {
@@ -393,7 +411,58 @@ class DatasetImporter {
             whelk.createDocument(incomingDoc, "xl", null, collection, false)
             result = WRITE_RESULT.CREATED
         }
+        if (result != WRITE_RESULT.ALREADY_UP_TO_DATE) {
+            trackChangedIdentifiers(storedDoc, incomingDoc)
+        }
         return result
+    }
+
+    private void trackChangedIdentifiers(Document storedDoc, Document writtenDoc) {
+        Set<String> oldIds = storedDoc != null ? identifiers(storedDoc) : new HashSet<String>()
+        Set<String> newIds = identifiers(writtenDoc)
+        thingIdCache.keySet().removeAll(oldIds)
+        thingIdCache.keySet().removeAll(newIds)
+        if (changedIdentifiers != null) {
+            changedIdentifiers.addAll(newIds - oldIds)
+            changedIdentifiers.addAll(oldIds - newIds)
+            // Possibly unnecessary but an unbounded set feels a little icky. When limit is reached
+            // we fall back to recalculating dependencies for every record (like before).
+            if (changedIdentifiers.size() > MAX_CHANGED_IDENTIFIERS) {
+                changedIdentifiers = null
+            }
+        }
+    }
+
+    private static Set<String> identifiers(Document doc) {
+        Set<String> ids = new HashSet<>(doc.getRecordIdentifiers())
+        ids.addAll(doc.getThingIdentifiers())
+        return ids
+    }
+
+    private void recalculateStaleDependencies(Set<String> idsInInput) {
+        if (changedIdentifiers == null) {
+            idsInInput.each { whelk.storage.recalculateDependencies(whelk.getDocument(it)) }
+            return
+        }
+
+        Set<String> dependersOfRemoved = new HashSet<>()
+        for (String removedId : removedIds) {
+            dependersOfRemoved.addAll(whelk.storage.getDependers(removedId).findAll { it in idsInInput })
+        }
+        dependersOfRemoved.each { whelk.storage.recalculateDependencies(whelk.getDocument(it)) }
+
+        if (changedIdentifiers.isEmpty()) {
+            return
+        }
+        for (String id : idsInInput) {
+            if (id in dependersOfRemoved) {
+                continue
+            }
+            Document doc = whelk.getDocument(id)
+            if (doc.getExternalRefs().any { changedIdentifiers.contains(it.iri) }) {
+                whelk.storage.recalculateDependencies(doc)
+            }
+        }
     }
 
     private long removeDeleted(Set<String> idsInInput, List<String> needsRetry) {
@@ -452,6 +521,7 @@ class DatasetImporter {
         try {
             log.info("Removing " + id + " from dataset")
             whelk.remove(id, "xl", null, force)
+            removedIds.add(id)
             return true
         } catch (LinkValidationException ignored) {
             return false
