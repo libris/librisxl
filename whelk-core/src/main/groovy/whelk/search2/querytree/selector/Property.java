@@ -79,20 +79,28 @@ public non-sealed class Property extends PathElement {
         this.range = List.of();
     }
 
-    public static Property getProperty(String propertyKey, JsonLd jsonLd) {
-        return getProperty(propertyKey, jsonLd, null);
+    public static Property getProperty(String key, JsonLd jsonLd) {
+        return getProperty(key, jsonLd, null);
     }
 
-    public static Property getProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+    public static Property getProperty(String key, JsonLd jsonLd, Key.RecognizedKey queryKey) {
         var vocab = jsonLd.vocabIndex;
-        if (vocab.containsKey(LIBRIS_SEARCH_NS + propertyKey)) {
+        if (vocab.containsKey(LIBRIS_SEARCH_NS + key)) {
             // FIXME: This is only temporary to avoid having to include the prefix for terms in the libris search namespace
-            return buildProperty(LIBRIS_SEARCH_NS + propertyKey, jsonLd, new Key.RecognizedKey(new Token.Raw(propertyKey)));
+            return buildProperty(LIBRIS_SEARCH_NS + key, jsonLd, new Key.RecognizedKey(new Token.Raw(key)));
         }
-        if (!vocab.containsKey(propertyKey)) {
-            throw new IllegalArgumentException("No such property: " + propertyKey);
+        if (!vocab.containsKey(key)) {
+            throw new IllegalArgumentException("No such property: " + key);
         }
-        return buildProperty(propertyKey, jsonLd, queryKey);
+        return buildProperty(key, jsonLd, queryKey);
+    }
+
+    public static Property buildProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
+        return buildProperty(jsonLd.vocabIndex.get(propertyKey), jsonLd, propertyKey, queryKey);
+    }
+
+    public static Property buildProperty(String propertyKey, JsonLd jsonLd) {
+        return buildProperty(jsonLd.vocabIndex.get(propertyKey), jsonLd, propertyKey, null);
     }
 
     protected static Property buildProperty(Map<String, Object> propertyNode, JsonLd jsonLd) {
@@ -103,12 +111,8 @@ public non-sealed class Property extends PathElement {
             return buildProperty(definition, jsonLd, null, null);
         } else {
             var pKey = jsonLd.toTermKey((String) propertyNode.get(ID_KEY));
-            return buildProperty(pKey, jsonLd, new Key.RecognizedKey(new Token.Raw(pKey)));
+            return buildProperty(pKey, jsonLd);
         }
-    }
-
-    protected static Property buildProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
-        return buildProperty(jsonLd.vocabIndex.get(propertyKey), jsonLd, propertyKey, queryKey);
     }
 
     private static Property buildProperty(Map<String, Object> definition, JsonLd jsonLd, String propertyKey, Key.RecognizedKey queryKey) {
@@ -318,7 +322,7 @@ public non-sealed class Property extends PathElement {
                     Optional<Property> onProperty = Optional.ofNullable(restriction.get(ON_PROPERTY))
                             .map(Property::getIri)
                             .map(jsonLd::toTermKey)
-                            .map(pKey -> getProperty(pKey, jsonLd));
+                            .map(pKey -> buildProperty(pKey, jsonLd));
                     if (onProperty.isPresent()) {
                         Property p = onProperty.get();
                         Optional.ofNullable(restriction.get(HAS_VALUE))
@@ -419,7 +423,7 @@ public non-sealed class Property extends PathElement {
     protected Property getSuperProperty(JsonLd jsonLd) {
         return getSuperPropertyKeys(definition, jsonLd)
                 .findFirst()
-                .map(pKey -> getProperty(pKey, jsonLd))
+                .map(pKey -> buildProperty(pKey, jsonLd))
                 .orElse(null);
     }
 
@@ -622,7 +626,7 @@ public non-sealed class Property extends PathElement {
 
             jsonLd.getSubProperties(name)
                     .stream()
-                    .map(p -> getProperty(p, jsonLd))
+                    .map(p -> buildProperty(p, jsonLd))
                     .forEach(components::add);
 
             return components;
