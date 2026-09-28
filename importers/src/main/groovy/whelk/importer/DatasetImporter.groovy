@@ -11,6 +11,8 @@ import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
 import whelk.util.DocumentUtil
 
+import java.time.Duration
+
 import static whelk.JsonLd.asList
 import static whelk.JsonLd.findInData
 import static whelk.util.Jackson.mapper
@@ -128,6 +130,7 @@ class DatasetImporter {
     }
 
     void importDataset(String sourceUrl) {
+        long startTime = System.nanoTime()
         System.err.println("Importing from: ${sourceUrl}")
 
         Set<String> idsInInput = []
@@ -187,11 +190,13 @@ class DatasetImporter {
         // Should be fixed by merging PlaceholderRecord handling?
         recalculateStaleDependencies(idsInInput)
 
+        Duration elapsedTime = Duration.ofNanos(System.nanoTime() - startTime)
+        String elapsed = String.format("%02dh%02dm%02ds", elapsedTime.toHours(), elapsedTime.toMinutesPart(), elapsedTime.toSecondsPart())
         System.err.println("Created: " + createdCount +" new,\n" +
                 "updated: " + updatedCount + " existing and\n" +
                 "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
                 "out of the: " + idsInInput.size() + " records in dataset: \"" + dsInfo.uri + "\".\n" +
-                "Dataset now in sync.")
+                "Dataset now in sync in ${elapsed}.")
     }
 
     void dropDataset() {
