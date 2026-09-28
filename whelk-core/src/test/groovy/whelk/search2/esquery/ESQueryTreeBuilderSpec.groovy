@@ -239,9 +239,10 @@ class ESQueryTreeBuilderSpec extends Specification {
             "nested" : [
                 "path" : "p3",
                 "query" : [
-                    "simple_query_string" : [
+                    "query_string" : [
                         "default_operator" : "AND",
                         "query" : "x y",
+                        "type" : "cross_fields",
                         "fields" : [ "p3.p18", "p3.p17" ]
                     ]
                 ],
@@ -1223,9 +1224,10 @@ class ESQueryTreeBuilderSpec extends Specification {
 
         expect:
         result == [
-                "simple_query_string": [
+                "query_string": [
                         "default_operator": "AND",
                         "query"           : "x y",
+                        "type"            : "cross_fields",
                         "fields"          : ["p18", "p17"]
                 ]
         ]
@@ -1248,9 +1250,10 @@ class ESQueryTreeBuilderSpec extends Specification {
                                                    "fields"          : ["p1"]
                                            ]
                                    ], [
-                                           "simple_query_string": [
+                                           "query_string": [
                                                    "default_operator": "AND",
                                                    "query"           : "x y",
+                                                   "type"            : "cross_fields",
                                                    "fields"          : ["p18", "p17"]
                                            ]
                                    ]]
@@ -1286,13 +1289,14 @@ class ESQueryTreeBuilderSpec extends Specification {
                                                                       "query_string": [
                                                                               "default_operator": "AND",
                                                                               "query"           : "\"x y\"",
-                                                                              "type"            : "most_fields",
+                                                                              "type"            : "cross_fields",
                                                                               "fields"          : ["p18^50.0", "p17^50.0"]
                                                                       ]
                                                               ], [
-                                                                      "simple_query_string": [
+                                                                      "query_string": [
                                                                               "default_operator": "AND",
                                                                               "query"           : "x y",
+                                                                              "type"            : "cross_fields",
                                                                               "fields"          : ["p18^400.0", "p17^400.0"]
                                                                       ]
                                                               ]]
@@ -1725,7 +1729,7 @@ class ESQueryTreeBuilderSpec extends Specification {
 
     def "escape"() {
         expect:
-        ESQueryTreeBuilder.escapeNonSimpleQueryString(query) == result
+        new ESNode.QueryString(query, ESNode.MultiMatchType.most_fields).query() == result
 
         where:
         query          | result
