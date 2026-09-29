@@ -4,20 +4,37 @@ import java.util.*;
 import java.io.*;
 
 import whelk.exception.WhelkRuntimeException;
+
+import static whelk.JsonLd.CONTEXT_KEY;
+import static whelk.JsonLd.GRAPH_KEY;
 import static whelk.util.Jackson.mapper;
 
 public class RdfReader {
 
     static Map readRdf(InputStream bis, String rdfSourcePath, Map context) throws IOException {
-      if (rdfSourcePath.endsWith(".ttl")) {
-        return readTurtle(bis, rdfSourcePath, context);
-      } else if (rdfSourcePath.endsWith(".rdf")) {
-        return readRdfXml(bis, rdfSourcePath, context);
-      } else if (rdfSourcePath.endsWith(".jsonld")) {
-        return readJsonLd(bis, rdfSourcePath, context);
-      } else {
-        throw new WhelkRuntimeException("Unknown RDF format for ${rdfSourcePath}");
-      }
+        Map data;
+        if (rdfSourcePath.endsWith(".ttl")) {
+            data = readTurtle(bis, rdfSourcePath, context);
+        } else if (rdfSourcePath.endsWith(".rdf")) {
+            data = readRdfXml(bis, rdfSourcePath, context);
+        } else if (rdfSourcePath.endsWith(".jsonld")) {
+            data = readJsonLd(bis, rdfSourcePath, context);
+        } else {
+            throw new WhelkRuntimeException("Unknown RDF format for ${rdfSourcePath}");
+        }
+
+        if (!data.containsKey(GRAPH_KEY)) {
+            var wrapper = new HashMap<String, Object>();
+            if (data.containsKey(CONTEXT_KEY)) {
+                wrapper.put(CONTEXT_KEY, data.remove(CONTEXT_KEY));
+            }
+            var nodes = new ArrayList<Map>();
+            nodes.add(data);
+            wrapper.put(GRAPH_KEY, nodes);
+            return wrapper;
+        } else {
+            return data;
+        }
     }
 
     static Map readTurtle(InputStream bis, String rdfSourcePath, Map context) throws IOException {
