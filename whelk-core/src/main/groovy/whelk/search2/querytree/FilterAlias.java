@@ -95,7 +95,7 @@ public sealed class FilterAlias implements Node {
 
     public void parse(Disambiguate disambiguate) throws InvalidQueryException {
         if (parsed == null) {
-            this.parsed = QueryTreeBuilder.buildTree(raw, disambiguate);
+            this.parsed = QueryTreeBuilder.buildTree(isQueryFilterTemplate() ? "" : raw, disambiguate);
         }
     }
 
