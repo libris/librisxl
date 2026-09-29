@@ -10,13 +10,18 @@ List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
 
 String rdfSourcePath = System.getProperty("rdfdata")
 List<Map> newDocs = loadDescriptions(getWhelk(), rdfSourcePath).collect { Map mainEntity ->
+    def mainId = mainEntity[ID]
+    assert mainId.endsWith('#it')
     var record = [
-        '@id': 'TEMPID',
-        'mainEntity' : ['@id': mainEntity[ID]]
+        '@id': mainId.replace('#it', ''),
+        'mainEntity' : ['@id': mainId]
     ]
     if (mainEntity.containsKey('meta')) {
-      record.putAll(mainEntity.get('meta'))
-      mainEntity.remove('meta')
+        def meta = mainEntity.get('meta')
+        assert meta instanceof Map
+        assert '@id' !in meta
+        record.putAll(meta)
+        mainEntity.remove('meta')
     }
     var data = ['@graph': [record, mainEntity]]
 

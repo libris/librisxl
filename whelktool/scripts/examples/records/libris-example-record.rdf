@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#">
+]>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="https://id.kb.se/vocab/">
+  <PhysicalResource rdf:about="local001#it">
+    <instanceOf rdf:resource="https://libris.kb.se/l3crh1z1j8xdfqmg#it"/>
+    <category rdf:resource="https://id.kb.se/term/saobf/Print"/>
+    <category rdf:resource="https://id.kb.se/term/rda/Volume"/>
+    <hasTitle>
+      <Title>
+        <mainTitle>Bilbo</mainTitle>
+        <subtitle>en hobbits äventyr</subtitle>
+      </Title>
+    </hasTitle>
+    <responsibilityStatement>J.R.R. Tolkien ; översättning av Britt G. Hallqvist</responsibilityStatement>
+    <contribution>
+      <Contribution>
+        <role rdf:resource="https://id.kb.se/relator/illustrator"/>
+        <agent rdf:resource="https://libris.kb.se/wt79bh6f2j46dtr#it"/>
+      </Contribution>
+    </contribution>
+    <illustrativeContent rdf:resource="https://id.kb.se/marc/Illustration"/>
+    <identifiedBy>
+      <ISBN>
+        <value>9151827271</value>
+        <qualifier>INB.</qualifier>
+        <acquisitionTerms>202:00</acquisitionTerms>
+      </ISBN>
+    </identifiedBy>
+    <editionStatement>14. uppl.</editionStatement>
+    <editionStatementRemainder>illustrationer av Tove Jansson</editionStatementRemainder>
+    <hasDimensions>
+      <Dimensions>
+        <label>24 cm</label>
+      </Dimensions>
+    </hasDimensions>
+    <extent>
+      <Extent>
+        <label>308 s.</label>
+      </Extent>
+    </extent>
+    <publication>
+      <PrimaryPublication>
+        <year>1994</year>
+        <place>
+          <Place>
+            <label>Stockholm</label>
+          </Place>
+        </place>
+        <country rdf:resource="https://id.kb.se/country/sw"/>
+        <agent>
+          <Agent>
+            <label>Rab&#xE9;n Prisma</label>
+          </Agent>
+        </agent>
+      </PrimaryPublication>
+    </publication>
+    <manufacture>
+      <Manufacture>
+        <place>
+          <Place>
+            <label>Falun</label>
+          </Place>
+        </place>
+        <agent>
+          <Agent>
+            <label>Scandbook</label>
+          </Agent>
+        </agent>
+      </Manufacture>
+    </manufacture>
+    <hasNote>
+      <Note>
+        <label>Första svenska uppl. 1947. Första uppl. i denna version 1962. - Även utg. med titeln: Hompen</label>
+      </Note>
+    </hasNote>
+    <meta>
+      <Record>
+        <descriptionCreator rdf:resource="https://libris.kb.se/library/S"/>
+        <created rdf:datatype="&xsd;dateTime">2026-09-29T09:16:44Z</created>
+        <encodingLevel rdf:resource="https://id.kb.se/marc/MinimalLevel"/>
+        <bibliography rdf:resource="https://libris.kb.se/library/NB"/>
+      </Record>
+    </meta>
+  </PhysicalResource>
+</rdf:RDF>
