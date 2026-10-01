@@ -50,6 +50,10 @@ public sealed interface Token permits Token.Quoted, Token.Raw {
     }
     
     record Quoted(String value, int offset) implements Token {
+        public Quoted(String value) {
+            this(value, -1);
+        }
+
         @Override
         public String formatted() {
             return QueryUtil.quote(value);

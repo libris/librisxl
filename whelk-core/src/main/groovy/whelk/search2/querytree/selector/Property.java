@@ -2,6 +2,7 @@ package whelk.search2.querytree.selector;
 
 import whelk.JsonLd;
 import whelk.component.ElasticSearch;
+import whelk.search2.Disambiguate;
 import whelk.search2.QueryUtil;
 import whelk.search2.querytree.value.Link;
 import whelk.search2.querytree.value.Term;
@@ -36,7 +37,7 @@ import static whelk.JsonLd.asList;
 
 public non-sealed class Property extends PathElement {
     protected String name;
-    protected Key.RecognizedKey queryKey;
+    private Key.RecognizedKey queryKey;
     protected String indexKey;
 
     protected Map<String, Object> definition;
@@ -45,8 +46,6 @@ public non-sealed class Property extends PathElement {
     protected String langAlias;
     protected boolean isVocabTerm;
     protected boolean isLdSetContainer;
-
-    private static final String LIBRIS_SEARCH_NS = "librissearch:";
 
     // TODO: Get substitutions from context instead?
     private static final Map<String, String> substitutions = Map.of(
@@ -65,6 +64,9 @@ public non-sealed class Property extends PathElement {
             this.langAlias = (String) jsonLd.langContainerAlias.get(name);
             this.isVocabTerm = jsonLd.isVocabTerm(name);
             this.isLdSetContainer = jsonLd.isSetContainer(name);
+            if (queryKey == null) {
+                this.queryKey = deriveQueryKey(name, jsonLd);
+            }
         }
     }
 
@@ -77,22 +79,6 @@ public non-sealed class Property extends PathElement {
         this.definition = Map.of();
         this.domain = List.of();
         this.range = List.of();
-    }
-
-    public static Property getProperty(String key, JsonLd jsonLd) {
-        return getProperty(key, jsonLd, null);
-    }
-
-    public static Property getProperty(String key, JsonLd jsonLd, Key.RecognizedKey queryKey) {
-        var vocab = jsonLd.vocabIndex;
-        if (vocab.containsKey(LIBRIS_SEARCH_NS + key)) {
-            // FIXME: This is only temporary to avoid having to include the prefix for terms in the libris search namespace
-            return buildProperty(LIBRIS_SEARCH_NS + key, jsonLd, new Key.RecognizedKey(new Token.Raw(key)));
-        }
-        if (!vocab.containsKey(key)) {
-            throw new IllegalArgumentException("No such property: " + key);
-        }
-        return buildProperty(key, jsonLd, queryKey);
     }
 
     public static Property buildProperty(String propertyKey, JsonLd jsonLd, Key.RecognizedKey queryKey) {
@@ -164,9 +150,24 @@ public non-sealed class Property extends PathElement {
 
     @Override
     public String queryKey() {
-        return queryKey != null
-                ? queryKey.queryKey()
-                : (name.startsWith(LIBRIS_SEARCH_NS) ? name.replace(LIBRIS_SEARCH_NS, "") : name); // FIXME
+        return queryKey.queryKey();
+    }
+
+    // When a property has no query key of its own (e.g. when found internally rather than parsed from a query),
+    // prefer the unprefixed form if it can be correctly disambiguated again via the namespace precedence order.
+    private static Key.RecognizedKey deriveQueryKey(String name, JsonLd jsonLd) {
+        String[] keyParts = name.split(":");
+        boolean isPrefixed = keyParts.length == 2;
+
+        if (!isPrefixed) {
+            return new Key.RecognizedKey(new Token.Raw(name));
+        }
+
+        Property unprefixedDisambiguated = Disambiguate.getPropertyByKey(keyParts[1], jsonLd);
+
+        return unprefixedDisambiguated.name().equals(name)
+                ? unprefixedDisambiguated.queryKey
+                : new Key.RecognizedKey(new Token.Quoted(name));
     }
 
     @Override

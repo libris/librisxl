@@ -67,7 +67,7 @@ public class AppParams {
             this.defaultConnective = parseConnective(settings);
             this.subSlice = parseSubSlice(settings, jsonLd);
             this.showIf = parseShowIf(settings);
-            this.property = Property.getProperty(String.join(".", chain), jsonLd);
+            this.property = Disambiguate.getPropertyByKey(String.join(".", chain), jsonLd);
             this.propertyKey = property.name();
             this.shouldCountTopLevelDocs = parseShouldCountTopLevelDocs(settings);
         }

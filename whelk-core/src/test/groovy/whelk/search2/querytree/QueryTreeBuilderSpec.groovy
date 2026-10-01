@@ -7,7 +7,6 @@ import whelk.search2.Operator
 import whelk.search2.TestData
 import whelk.search2.querytree.node.And
 import whelk.search2.querytree.node.Condition
-import whelk.search2.querytree.selector.Property
 import whelk.search2.querytree.value.FreeText
 import whelk.search2.querytree.node.Node
 
@@ -15,7 +14,7 @@ class QueryTreeBuilderSpec extends Specification {
     static Disambiguate disambiguate = TestData.getDisambiguate()
     static JsonLd jsonLd = TestData.getJsonLd()
 
-    static var p1 = Property.getProperty("p1", jsonLd)
+    static var p1 = Disambiguate.getPropertyByKey("p1", jsonLd)
     static var p1v1 = new Condition(p1, Operator.EQUALS, new FreeText("v1"))
     static var p1v2 = new Condition(p1, Operator.EQUALS, new FreeText("v2"))
 

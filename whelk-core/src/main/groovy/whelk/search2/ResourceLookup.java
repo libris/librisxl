@@ -26,7 +26,6 @@ import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.Owl.DATATYPE_PROPERTY;
 import static whelk.JsonLd.Owl.OBJECT_PROPERTY;
 import static whelk.JsonLd.Rdfs.RDF_TYPE;
-import static whelk.JsonLd.VOCAB_KEY;
 import static whelk.JsonLd.asList;
 import static whelk.util.DocumentUtil.getAtPath;
 
@@ -46,9 +45,9 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
         Map<Code, Map<Namespace, Set<TermKey>>>
         for example:
             [
-                "språk"    : ["https://id.kb.se/vocab/": ["language", "associatedLanguage"]],
+                "språk"    : ["kbv": ["language", "associatedLanguage"]],
                 "bibliotek": ["librissearch": ["librissearch:itemHeldBy"]],
-                "format"   : ["librissearch": ["librissearch:hasInstanceType"], "https://id.kb.se/vocab/": ["hasFormat", "format"]]
+                "format"   : ["librissearch": ["librissearch:hasInstanceType"], "kbv": ["hasFormat", "format"]]
             ]
          */
             Map<String, Map<String, Set<String>>> properties,
@@ -56,8 +55,8 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
         Map<Code, Map<Namespace, Set<TermKey>>>
         for example:
             [
-                "person"         : ["https://id.kb.se/vocab/": ["Person"]],
-                "digitalresource": ["https://id.kb.se/vocab/": ["DigitalResource"]]
+                "person"         : ["kbv": ["Person"]],
+                "digitalresource": ["kbv": ["DigitalResource"]]
             ]
          */
             Map<String, Map<String, Set<String>>> classes,
@@ -92,7 +91,7 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
         private static VocabMappings getMappings(Whelk whelk) {
             var jsonLd = whelk.getJsonld();
             var vocab = jsonLd.vocabIndex;
-            var systemVocabNs = (String) whelk.getJsonld().context.get(VOCAB_KEY);
+            var vocabPrefix = jsonLd.getVocabPrefix();
 
             Map<String, Map<String, Set<String>>> properties = new HashMap<>();
             Map<String, Map<String, Set<String>>> classes = new HashMap<>();
@@ -101,7 +100,7 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
             List<String> coercingProperties = new ArrayList<>();
 
             vocab.forEach((termKey, termDefinition) -> {
-                String ns = getNs(termKey, systemVocabNs);
+                String ns = getNs(termKey, vocabPrefix);
                 if (isProperty(termDefinition)) {
                     addAllMappings(termKey, ns, properties, jsonLd);
                     if (jsonLd.getCategoryMembers("librissearch:coercing").contains(termKey)) {
@@ -119,10 +118,10 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
             return new VocabMappings(properties, classes, enums, getPropertiesRestrictedByValue(whelk, coercingProperties));
         }
 
-        private static String getNs(String termKey, String systemVocabNs) {
+        static String getNs(String termKey, String vocabPrefix) {
             return JsonLd.looksLikeIri(termKey)
                     ? termKey.substring(termKey.lastIndexOf("/") + 1)
-                    : (termKey.contains(":") ? termKey.substring(0, termKey.indexOf(":")) : systemVocabNs);
+                    : (termKey.contains(":") ? termKey.substring(0, termKey.indexOf(":")) : vocabPrefix);
         }
 
         private static void addAllMappings(String termKey, String ns, Map<String, Map<String, Set<String>>> mappings, JsonLd jsonLd) {
