@@ -81,6 +81,6 @@ public class PredicateObjectQuery extends ObjectQuery {
     }
 
     private List<Property> predicates() {
-        return queryParams.predicates.stream().map(p -> Property.getProperty(p, whelk.getJsonld())).toList();
+        return queryParams.predicates.stream().map(p -> Disambiguate.getPropertyByKey(p, whelk.getJsonld())).toList();
     }
 }
