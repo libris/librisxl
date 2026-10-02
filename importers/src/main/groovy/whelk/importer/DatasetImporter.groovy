@@ -223,10 +223,19 @@ class DatasetImporter {
         }
         startIndexing()
         long deletedCount
+        boolean indexed = false
         try {
             deletedCount = removeDeleted([] as Set, [])
-        } finally {
+            indexed = true
             finishIndexing()
+        } finally {
+            if (!indexed) {
+                try {
+                    finishIndexing()
+                } catch (Exception e) {
+                    log.error("Failed indexing records removed before dropping the dataset failed: $e", e)
+                }
+            }
         }
         System.err.println("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
     }

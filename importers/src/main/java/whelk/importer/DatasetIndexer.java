@@ -138,7 +138,7 @@ public class DatasetIndexer {
         }
     }
 
-    // Wwhat Whelk.reindexAffected() would update
+    // What Whelk.reindexAffected() would update
     private void linksChanged(Document document, Set<Link> preUpdateLinks, Set<Link> postUpdateLinks) {
         for (Link link : minus(postUpdateLinks, preUpdateLinks)) {
             addedLinks.computeIfAbsent(link.getIri(), iri -> new HashSet<>()).add(link.getRelation());
