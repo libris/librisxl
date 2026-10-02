@@ -45,6 +45,8 @@ public class DatasetIndexer {
     private final Set<String> removedLinkTargets = new HashSet<>();
     private final Set<String> changedCardIris = new HashSet<>();
     private final Set<String> changedMainEntityIds = new HashSet<>();
+    // System IDs of other documents to reindex
+    private final Set<String> toReindex = new HashSet<>();
 
     public DatasetIndexer(Whelk whelk, int numThreads) {
         this.whelk = whelk;
@@ -67,7 +69,7 @@ public class DatasetIndexer {
             if (Whelk.hasChangedMainEntityId(updated, preUpdateDoc)) {
                 changedMainEntityIds.add(updated.getShortId());
             } else {
-                linksChanged(updated, preUpdateDoc.getExternalRefs(), updated.getExternalRefs());
+                linksChanged(updated, linksIfNotDeleted(preUpdateDoc), linksIfNotDeleted(updated));
             }
         }
     }
@@ -80,6 +82,10 @@ public class DatasetIndexer {
         if (!whelk.isSkipIndexDependers()) {
             linksChanged(doc, doc.getExternalRefs(), Set.of());
         }
+    }
+
+    public void reindex(Collection<String> systemIds) {
+        toReindex.addAll(systemIds);
     }
 
     public int flush() {
@@ -141,7 +147,7 @@ public class DatasetIndexer {
     }
 
     private Set<String> findAffected() {
-        Set<String> ids = new HashSet<>();
+        Set<String> ids = new HashSet<>(toReindex);
         Map<String, String> targetIdByIri = new HashMap<>();
         try {
             Set<String> targetIris = new HashSet<>(addedLinks.keySet());
@@ -198,6 +204,11 @@ public class DatasetIndexer {
         }
 
         return ids;
+    }
+
+    // A deleted document links to nothing
+    private static Set<Link> linksIfNotDeleted(Document doc) {
+        return doc.getDeleted() ? Set.of() : doc.getExternalRefs();
     }
 
     private static <T> Set<T> minus(Collection<T> from, Collection<T> remove) {
