@@ -168,7 +168,7 @@ public class Unicode {
         if (s.length() > length) {
             return truncate(s, length) + "…";
         }
-        return s.substring(0, length);
+        return s;
     }
 
     public static boolean isRtl(Character.UnicodeScript script) {
