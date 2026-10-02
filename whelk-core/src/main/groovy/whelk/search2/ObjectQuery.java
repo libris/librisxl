@@ -137,7 +137,7 @@ public class ObjectQuery extends Query {
                 .filter(r -> whelk.getJsonld().isSubClassOf(object.getType(), r.objectType()))
                 .findFirst()
                 .map(AppParams.RelationFilter::predicates)
-                .map(predicates -> predicates.stream().map(p -> Property.getProperty(p, whelk.getJsonld())).toList())
+                .map(predicates -> predicates.stream().map(p -> Disambiguate.getPropertyByKey(p, whelk.getJsonld())).toList())
                 .orElse(Collections.emptyList());
     }
 }

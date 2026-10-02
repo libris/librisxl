@@ -49,6 +49,8 @@ import static whelk.search2.esquery.ESMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.esquery.ESMappings.FOUR_DIGITS_SHORT_SUFFIX;
 import static whelk.search2.esquery.ESMappings.KEYWORD;
 import static whelk.search2.QueryUtil.quote;
+import static whelk.search2.esquery.ESNode.MultiMatchType.cross_fields;
+import static whelk.search2.esquery.ESNode.MultiMatchType.most_fields;
 
 public class ESQueryTreeBuilder {
     public static ESNode buildFrom(Node queryTreeNode, ESSettings settings) {
@@ -119,7 +121,7 @@ public class ESQueryTreeBuilder {
         List<ESNode> result = new ArrayList<>();
 
         fieldsGroupedByNestedStem.forEach((stem, fields) -> {
-            ESNode query = buildFieldedQuery(fields, ft, esSettings, isDatatypeText);
+            ESNode query = buildFieldedQuery(fields, ft, esSettings, isDatatypeText, cross_fields);
 
             if (fields.stream().map(fieldToCondition::get).anyMatch(Condition::isFlaggedForPostFilter)) {
                 query = new ESNode.PostFilter(query);
@@ -308,7 +310,7 @@ public class ESQueryTreeBuilder {
     }
 
     private static ESNode buildFromFreeText(FreeText ft, ESBoost esBoost) {
-        return buildTextQuery(ft, esBoost.freeTextFields(), esBoost.freeTextQuerySettings());
+        return buildTextQuery(ft, esBoost.freeTextFields(), esBoost.freeTextQuerySettings(), most_fields);
     }
 
     private static ESNode buildFromDateTimeValue(String field, Operator operator, DateTime dateTime, ESSettings esSettings) {
@@ -325,7 +327,7 @@ public class ESQueryTreeBuilder {
     private static ESNode buildFromFreeTextValue(String field, Operator operator, FreeText ft, ESSettings esSettings, boolean isDatatypeText) {
         return switch (operator) {
             case EQUALS, LIKE ->
-                    buildFieldedQuery(List.of(field), ft, esSettings, isDatatypeText);
+                    buildFieldedQuery(List.of(field), ft, esSettings, isDatatypeText, most_fields);
             case LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN_OR_EQUALS ->
                     buildRangeQuery(field, operator, ft, esSettings.mappings());
         };
@@ -365,7 +367,7 @@ public class ESQueryTreeBuilder {
             } else if (esSettings.mappings().isDateTypeField(field)) {
                 return buildFromYearRangeValue(field, yearRange, v -> QueryDateTime.parse(v).toElasticDateString());
             } else {
-                return buildFieldedDatatypeQuery(List.of(field), new FreeText(yearRange.toString()), esSettings);
+                return buildFieldedDatatypeQuery(List.of(field), new FreeText(yearRange.toString()), esSettings, most_fields);
             }
         }
 
@@ -385,13 +387,15 @@ public class ESQueryTreeBuilder {
         return new ESNode.RangeQuery(field, rangeMap);
     }
 
-    private static ESNode buildFieldedQuery(List<String> fields, FreeText ft, ESSettings esSettings, boolean isDatatypeText) {
+    private static ESNode buildFieldedQuery(List<String> fields, FreeText ft, ESSettings esSettings,
+                                             boolean isDatatypeText, ESNode.MultiMatchType matchType) {
         return isDatatypeText
-                ? buildFieldedTextQuery(fields, ft, esSettings.boost().fieldedQuerySettings())
-                : buildFieldedDatatypeQuery(fields, ft, esSettings);
+                ? buildFieldedTextQuery(fields, ft, esSettings.boost().fieldedQuerySettings(), matchType)
+                : buildFieldedDatatypeQuery(fields, ft, esSettings, matchType);
     }
 
-    private static ESNode buildFieldedDatatypeQuery(List<String> fields, FreeText ft, ESSettings esSettings) {
+    private static ESNode buildFieldedDatatypeQuery(List<String> fields, FreeText ft, ESSettings esSettings,
+                                                     ESNode.MultiMatchType matchType) {
         ESMappings mappings = esSettings.mappings();
 
         // Known placeholder values (0000, 9999) are excluded from 4-digit fields to prevent them from being treated as valid years in sorting and aggregations.
@@ -416,7 +420,7 @@ public class ESQueryTreeBuilder {
                     // The field/token combination has no special significance,
                     // so treat the entire expression as a text query rather than
                     // generating individual term queries for each token.
-                    return buildFieldedTextQuery(fields, ft, esSettings.boost().fieldedQuerySettings());
+                    return buildFieldedTextQuery(fields, ft, esSettings.boost().fieldedQuerySettings(), matchType);
                 }
             }
 
@@ -441,21 +445,23 @@ public class ESQueryTreeBuilder {
     }
 
     private static ESNode buildFieldedTextQuery(String fieldName, FreeText ft, ESBoost.FieldedQuerySettings boostSettings) {
-        return buildFieldedTextQuery(List.of(fieldName), ft, boostSettings);
+        return buildFieldedTextQuery(List.of(fieldName), ft, boostSettings, most_fields);
     }
 
-    private static ESNode buildFieldedTextQuery(List<String> fieldNames, FreeText ft, ESBoost.FieldedQuerySettings boostSettings) {
+    private static ESNode buildFieldedTextQuery(List<String> fieldNames, FreeText ft, ESBoost.FieldedQuerySettings boostSettings,
+                                                 ESNode.MultiMatchType matchType) {
         List<ESBoost.Field> fields = fieldNames.stream()
                 .map(f -> new ESBoost.Field(f, boostSettings.defaultBoostFactor()))
                 .toList();
-        return buildTextQuery(ft, fields, boostSettings);
+        return buildTextQuery(ft, fields, boostSettings, matchType);
     }
 
-    private static ESNode buildTextQuery(FreeText ft, List<ESBoost.Field> fields, ESBoost.TextQuerySettings boostSettings) {
+    private static ESNode buildTextQuery(FreeText ft, List<ESBoost.Field> fields, ESBoost.TextQuerySettings boostSettings,
+                                          ESNode.MultiMatchType matchType) {
         if (Query.Connective.OR.equals(ft.connective())) {
             List<ESNode> perTokenQueries = ft.tokens().stream()
                     .map(FreeText::new)
-                    .map(freeText -> buildTextQuery(freeText, fields, boostSettings))
+                    .map(freeText -> buildTextQuery(freeText, fields, boostSettings, matchType))
                     .toList();
             return new ESNode.Should(perTokenQueries);
         }
@@ -468,9 +474,7 @@ public class ESQueryTreeBuilder {
             s = s.replace("-", "");
         }
 
-        ESNode.TextQueryMode textQueryMode = isSimple(s)
-                ? new ESNode.SimpleQueryString(s)
-                : new ESNode.QueryString(escapeNonSimpleQueryString(s), ESNode.MultiMatchType.most_fields);
+        ESNode.TextQueryMode textQueryMode = chooseTextQueryMode(s, matchType);
 
         ESNode.TextQuery baseQuery = new ESNode.TextQuery(textQueryMode, fields, boostSettings);
 
@@ -608,6 +612,15 @@ public class ESQueryTreeBuilder {
         return esMappings.getNestedTypeFields().stream().filter(field::startsWith).findFirst();
     }
 
+    private static ESNode.TextQueryMode chooseTextQueryMode(String s, ESNode.MultiMatchType matchType) {
+        return switch (matchType) {
+            case cross_fields -> new ESNode.QueryString(s, cross_fields);
+            case most_fields -> isSimple(s)
+                    ? new ESNode.SimpleQueryString(s)
+                    : new ESNode.QueryString(s, most_fields);
+        };
+    }
+
     // leading wildcards e.g. "*foo" are removed by simple_query_string
     private static final Pattern NON_SIMPLE_QUERY = Pattern.compile("\\\\[?]|([*?])\\S+");
 
@@ -616,29 +629,6 @@ public class ESQueryTreeBuilder {
      */
     public static boolean isSimple(String queryString) {
         return !NON_SIMPLE_QUERY.matcher(queryString).find();
-    }
-
-    public static String escapeNonSimpleQueryString(String queryString) {
-        // Treat escaped question marks as actual wildcards
-        queryString = queryString.replace("\\?", "?");
-
-        // The following chars are reserved in ES and need to be escaped to be used as literals: \+-=|&><!(){}[]^"~*?:/
-        // Escape the ones that are not part of our query language.
-        for (char c : List.of('=', '&', '!', '{', '}', '[', ']', '^', ':', '/')) {
-            queryString = queryString.replace("" + c, "\\" + c);
-        }
-
-        // Inside words, treat '-' as regular hyphen instead of "NOT" and escape it
-        queryString = queryString.replaceAll("(^|\\s+)-(\\S+)", "$1#ACTUAL_NOT#$2");
-        queryString = queryString.replace("-", "\\-");
-        queryString = queryString.replace("#ACTUAL_NOT#", "-");
-
-        // Strip un-escapable characters
-        for (char c : List.of('<', '>')) {
-            queryString = queryString.replace("" + c, "");
-        }
-
-        return queryString;
     }
 
     private static boolean isMaskedOrTruncated(String s) {

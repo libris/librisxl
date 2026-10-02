@@ -12,63 +12,73 @@ class TestData {
     static def XYFilter = new FilterAlias("XY", "p1:X p3:Y", [:])
 
     static def getDisambiguate() {
+        def jsonLd = getJsonLd()
+
         def propertyMappings = [
-                'p1'              : ['p1'] as Set,
-                'p1label'         : ['p1'] as Set,
-                'p2'              : ['p2'] as Set,
-                'p3'              : ['p3'] as Set,
-                'p4'              : ['p4'] as Set,
-                'p5'              : ['p5'] as Set,
-                'p6'              : ['p6'] as Set,
-                'p7'              : ['p7'] as Set,
-                'p8'              : ['p8'] as Set,
-                'p9'              : ['p9'] as Set,
-                'p10'             : ['p10'] as Set,
-                'p11'             : ['p11'] as Set,
-                'p12'             : ['p12'] as Set,
-                'p13'             : ['p13'] as Set,
-                'p14'             : ['p14'] as Set,
-                'p15'             : ['p15'] as Set,
-                'p16'             : ['p16'] as Set,
-                'ctx.p'           : ['ctxProp'] as Set,
-                'type'            : ['rdf:type'] as Set,
-                'rdf:type'        : ['rdf:type'] as Set,
-                'instanceof'      : ['instanceOf'] as Set,
-                'hasinstance'     : ['hasInstance'] as Set,
-                'hasitem'         : ['hasItem'] as Set,
-                'p'               : ['p', 'p1'] as Set,
-                'plabel'          : ['p2', 'p3'] as Set,
-                'pp'              : ['p3', 'p4'] as Set,
-                'workcategory'    : ['librissearch:workCategory'] as Set,
-                'instancecategory': ['librissearch:instanceCategory'] as Set,
-                'findcategory'    : ['librissearch:findCategory'] as Set,
-                'identifycategory': ['librissearch:identifyCategory'] as Set,
-                'nonecategory'    : ['librissearch:noneCategory'] as Set,
-                'p3p1'            : ['p3p1'] as Set,
-                't1p3p1'          : ['t1p3p1'] as Set,
-                'restrictedp_p1'  : ['restrictedP_p1'] as Set,
-                'restrictedp_p1_2': ['restrictedP_p1_2'] as Set,
-                't1type'          : ['t1Type'] as Set,
-                'date'            : ['date'] as Set,
-                'year'            : ['year'] as Set
+                'p1'              : ['p1'],
+                'p1label'         : ['p1'],
+                'p2'              : ['p2'],
+                'p3'              : ['p3'],
+                'p4'              : ['p4'],
+                'p5'              : ['p5'],
+                'p6'              : ['p6'],
+                'p7'              : ['p7'],
+                'p8'              : ['p8'],
+                'p9'              : ['p9'],
+                'p10'             : ['p10'],
+                'p11'             : ['p11'],
+                'p12'             : ['p12'],
+                'p13'             : ['p13'],
+                'p14'             : ['p14'],
+                'p15'             : ['p15'],
+                'p16'             : ['p16'],
+                'ctx.p'           : ['ctxProp'],
+                'type'            : ['rdf:type'],
+                'rdf:type'        : ['rdf:type'],
+                'instanceof'      : ['instanceOf'],
+                'hasinstance'     : ['hasInstance'],
+                'hasitem'         : ['hasItem'],
+                'p'               : ['p', 'p1'],
+                'plabel'          : ['p2', 'p3'],
+                'pp'              : ['p3', 'p4'],
+                'workcategory'    : ['librissearch:workCategory'],
+                'instancecategory': ['librissearch:instanceCategory'],
+                'findcategory'    : ['librissearch:findCategory'],
+                'identifycategory': ['librissearch:identifyCategory'],
+                'nonecategory'    : ['librissearch:noneCategory'],
+                'p3p1'            : ['p3p1'],
+                't1p3p1'          : ['t1p3p1'],
+                'restrictedp_p1'  : ['restrictedP_p1'],
+                'restrictedp_p1_2': ['restrictedP_p1_2'],
+                't1type'          : ['t1Type'],
+                'date'            : ['date'],
+                'year'            : ['year']
         ]
         def classMappings = [
-                't1' : ['T1'] as Set,
-                't2' : ['T2'] as Set,
-                't3' : ['T3'] as Set,
-                't1x': ['T1x'] as Set,
-                't2x': ['T2x'] as Set,
-                't3x': ['T3x'] as Set,
-                't'  : ['T', 'T1'] as Set,
-                'tt' : ['T', 'T1'] as Set
+                't1' : ['T1'],
+                't2' : ['T2'],
+                't3' : ['T3'],
+                't1x': ['T1x'],
+                't2x': ['T2x'],
+                't3x': ['T3x'],
+                't'  : ['T', 'T1'],
+                'tt' : ['T', 'T1']
         ]
         def enumMappings = [
-                'e1': ['E1'] as Set,
-                'e2': ['E2'] as Set
+                'e1': ['E1'],
+                'e2': ['E2']
         ]
 
-        def insertNamespace = m -> m.keySet().each { k -> m.put(k, ['https://id.kb.se/vocab/': m[k]]) }
-        Stream.of(propertyMappings, classMappings, enumMappings).forEach(insertNamespace)
+        // Group each mapped term under its own namespace, same as ResourceLookup.VocabMappings
+        // does for the real vocab, e.g. "rdf:type" under "rdf", "librissearch:workCategory"
+        // under "librissearch", and terms without a prefix under the default vocab namespace.
+        def nsOf = term -> ResourceLookup.VocabMappings.getNs((String) term, jsonLd.getVocabPrefix())
+        def insertNamespace = m -> m.keySet().each { k ->
+            def terms = ((List) m[(String) k])
+            def groupedByNs = terms.groupBy(nsOf).collectEntries { ns, group -> [ns, group as Set] }
+            m.put(k, groupedByNs)
+        }
+        Stream.of(propertyMappings, classMappings, enumMappings).each(insertNamespace)
 
         def propertiesRestrictedByValue = [
                 'librissearch:workCategory': [
@@ -87,7 +97,7 @@ class TestData {
                 XYFilter
         ]
 
-        return new Disambiguate(resourceLookup, filterAliases, getJsonLd())
+        return new Disambiguate(resourceLookup, filterAliases, jsonLd)
     }
 
     static def getJsonLd() {
@@ -383,6 +393,7 @@ class TestData {
         ]]
         def ctx = [
                 '@context': [
+                        'kbv'   : 'https://id.kb.se/vocab/',
                         '@vocab': 'https://id.kb.se/vocab/',
                         'p2'    : ['@type': '@vocab'],
                         'p4'    : ['@container': '@set'],

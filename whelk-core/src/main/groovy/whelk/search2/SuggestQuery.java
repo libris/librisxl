@@ -137,7 +137,7 @@ public class SuggestQuery extends Query {
                         .findFirst()
                         .map(Map.Entry::getValue)
                         .map(predicates -> predicates.stream()
-                                .map(p -> propertyByKey.computeIfAbsent(p, x -> Property.getProperty(p, whelk.getJsonld())))
+                                .map(p -> propertyByKey.computeIfAbsent(p, _ -> Disambiguate.getPropertyByKey(p, whelk.getJsonld())))
                                 .map(Selector.class::cast)
                                 .toList())
                         .orElse(List.of());
