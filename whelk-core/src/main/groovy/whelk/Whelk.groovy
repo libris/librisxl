@@ -324,6 +324,7 @@ class Whelk {
         return storage.loadAllByType(type)
     }
 
+    // NOTE: DatasetIndexer (in importers) applies the same rules when indexing after a dataset import
     private void reindexUpdated(Document updated, Document preUpdateDoc) {
         indexAsyncOrSync {
             elastic.index(updated, this)
@@ -387,20 +388,19 @@ class Whelk {
             }
         }
 
+        // NOTE: DatasetIndexer (in importers) applies the same rules when indexing after a dataset import
         addedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
             if (id) {
                 Document doc = storage.load(id)
-                def lenses = ['chips', 'cards', 'full']
-                def reverseRelations = lenses.collect { jsonld.getInverseProperties(doc.data, it) }.flatten()
-                if (reverseRelations.contains(link.relation)) {
+                if (hasInReverseRelations(doc, link.relation)) {
                     // we added a link to a document that includes us in its @reverse relations, reindex it
                     indexDocAndVirtual(doc)
                     // that document may in turn have documents that include it, and by extension us in their
                     // @reverse relations. Reindex them. (For example item -> instance -> work)
                     // TODO this should be calculated in a more general fashion. We depend on the fact that indexed
                     // TODO docs are embellished one level (cards, chips) -> everything else must be integral relations
-                    reindexAffectedReverseIntegral(doc)
+                    integralReverseDependents(doc).each { indexDocAndVirtual(it) }
                 } else {
                     // just update link counter
                     elastic.incrementReverseLinks(doc, link.relation)
@@ -415,23 +415,34 @@ class Whelk {
         }
     }
 
-    private void reindexAffectedReverseIntegral(Document reIndexedDoc) {
+    /**
+     * True if doc includes documents linking to it through relation in its @reverse relations
+     * (in any lens), and so must be reindexed when such a link is added.
+     */
+    boolean hasInReverseRelations(Document doc, String relation) {
+        def lenses = ['chips', 'cards', 'full']
+        def reverseRelations = lenses.collect { jsonld.getInverseProperties(doc.data, it) }.flatten()
+        return reverseRelations.contains(relation)
+    }
+
+    /**
+     * Documents that reIndexedDoc is integral to, that include it in their @reverse relations.
+     */
+    List<Document> integralReverseDependents(Document reIndexedDoc) {
+        List<Document> dependents = []
         JsonLd.getExternalReferences(reIndexedDoc.data).forEach { link ->
             String p = link.property()
             if (jsonld.isIntegral(jsonld.getInverseProperty(p))) {
                 String id = storage.getSystemIdByIri(link.iri)
                 if (id) {
                     Document doc = storage.load(id)
-                    def lenses = ['chips', 'cards', 'full']
-                    def reverseRelations = lenses
-                            .collect { jsonld.getInverseProperties(doc.data, it) }
-                            .flatten()
-                    if (reverseRelations.contains(p)) {
-                        indexDocAndVirtual(doc)
+                    if (hasInReverseRelations(doc, p)) {
+                        dependents.add(doc)
                     }
                 }
             }
         }
+        return dependents
     }
 
     private void bulkIndex(Iterable<String> ids) {

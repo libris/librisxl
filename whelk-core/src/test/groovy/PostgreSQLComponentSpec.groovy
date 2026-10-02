@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j as Log
 import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
 import whelk.Document
+import whelk.Link
 
 import javax.sql.DataSource
 import java.sql.Connection
@@ -109,6 +110,54 @@ class PostgreSQLComponentSpec extends Specification {
 
         then:
         cs1 == cs2
+    }
+
+    def "dependencies are links to existing documents, except to itself"() {
+        given:
+        Set<Link> links = [
+                Link.of('instanceOf.genreForm', 'https://id.kb.se/term/a'),
+                Link.of('instanceOf.subject', 'https://id.kb.se/term/a'),
+                Link.of('instanceOf.language', 'https://id.kb.se/language/eng'),   // two IRIs of
+                Link.of('instanceOf.language', 'https://libris.kb.se/eng-record'), // the same document
+                Link.of('isPartOf', 'https://id.kb.se/does-not-exist'),
+                Link.of('sameAs', 'https://libris.kb.se/self#it'),
+                Link.of('note', 'urn:not-http'),
+        ] as Set
+        Map<String, Set<String>> liveSystemIdsByIri = [
+                'https://id.kb.se/term/a'          : ['a'] as Set,
+                'https://id.kb.se/language/eng'    : ['eng'] as Set,
+                'https://libris.kb.se/eng-record'  : ['eng'] as Set,
+                'https://libris.kb.se/self#it'     : ['self'] as Set,
+                'urn:not-http'                     : ['other'] as Set,
+        ]
+
+        expect:
+        PostgreSQLComponent.calculateDependencies('self', links, liveSystemIdsByIri).collect { it as List }.sort() == [
+                ['instanceOf.genreForm', 'a'],
+                ['instanceOf.language', 'eng'],
+                ['instanceOf.language', 'eng'],
+                ['instanceOf.subject', 'a'],
+        ]
+        PostgreSQLComponent.dependencyIris(links) == links.collect { it.iri }.findAll { it.startsWith('http') } as Set
+    }
+
+    def "changed dependencies are compared as multisets"() {
+        expect:
+        PostgreSQLComponent.changedDependencies(rows(expected), rows(stored)) == (changed as Set)
+
+        where:
+        expected                    | stored                      || changed
+        []                          | []                          || null
+        [['r', 'a'], ['s', 'b']]    | [['s', 'b'], ['r', 'a']]    || null
+        [['r', 'a'], ['s', 'b']]    | [['r', 'a']]                || ['b']
+        [['r', 'a']]                | [['r', 'a'], ['s', 'b']]    || ['b']
+        [['r', 'a']]                | [['s', 'a']]                || ['a']
+        [['r', 'a'], ['r', 'a']]    | [['r', 'a']]                || ['a']
+        []                          | [['r', 'a'], ['s', 'b']]    || ['a', 'b']
+    }
+
+    private static List<String[]> rows(List<List<String>> rows) {
+        return rows.collect { it as String[] }
     }
 
 }
