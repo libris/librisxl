@@ -1378,7 +1378,7 @@ class PostgreSQLComponent {
     }
 
     /**
-     * Similar to getSystemIds, but this is never served from a cache.
+     * Similar to getSystemIdsByIris, but this one is never served from a cache.
      */
     Set<String> getExistingIris(Collection<String> iris) {
         Set<String> existing = new HashSet<>()
