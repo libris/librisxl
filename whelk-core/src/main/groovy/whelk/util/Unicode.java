@@ -145,6 +145,19 @@ public class Unicode {
         return s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s;
     }
 
+    public static String truncate(String s, int length) {
+        if (length < 0) {
+            throw new IllegalArgumentException("length cannot be negative");
+        }
+        if (s == null) {
+            return "";
+        }
+        if (s.length() <= length) {
+            return s;
+        }
+        return s.substring(0, length);
+    }
+
     public static boolean isRtl(Character.UnicodeScript script) {
         return RTL_SCRIPTS.contains(script);
     }
