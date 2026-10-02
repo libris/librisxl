@@ -1281,6 +1281,13 @@ class PostgreSQLComponent {
         liveSystemIdsByIri.computeIfAbsent(iri, { String i -> new HashSet<String>() }).add(systemId)
     }
 
+    /**
+     * Finds documents whose stored dependencies differ from what saveDependencies() would store now.
+     * This is read-only. Use recalculateDependencies() to actually update them.
+     *
+     * @return for each document with stale dependencies (by system ID), the system IDs of the targets
+     *         whose dependencies differ
+     */
     Map<String, Set<String>> findStaleDependencies(Collection<Document> docs) {
         Map<String, Set<String>> stale = [:]
         if (docs.isEmpty()) {
