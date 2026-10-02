@@ -33,6 +33,7 @@ public class DatasetIndexer {
 
     static final int BATCH_SIZE = 100;
     static final int AFFECTED_IDS_BATCH_SIZE = 200;
+    static final int TARGET_LOOKUP_BATCH_SIZE = 1000;
 
     private final Whelk whelk;
     private final BlockingThreadPool.SimplePool threadPool;
@@ -158,16 +159,13 @@ public class DatasetIndexer {
         Map<String, String> targetIdByIri = new HashMap<>();
         Set<String> targetIris = new HashSet<>(addedLinks.keySet());
         targetIris.addAll(removedLinkTargets);
-        for (String iri : targetIris) {
+        targetIris.stream().gather(Gatherers.windowFixed(TARGET_LOOKUP_BATCH_SIZE)).forEach(iris -> {
             try {
-                String id = whelk.getStorage().getSystemIdByIri(iri);
-                if (id != null && !id.isEmpty()) {
-                    targetIdByIri.put(iri, id);
-                }
+                targetIdByIri.putAll(whelk.getStorage().getSystemIdsByIris(iris));
             } catch (Exception e) {
-                log.error("Error finding link target {}: {}", iri, e.toString(), e);
+                log.error("Error finding link targets {}: {}", iris, e.toString(), e);
             }
-        }
+        });
         ids.addAll(targetIdByIri.values());
 
         List<String> addedLinkTargetIds = new ArrayList<>();
