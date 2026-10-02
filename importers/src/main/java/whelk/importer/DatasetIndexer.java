@@ -154,40 +154,49 @@ public class DatasetIndexer {
 
     private Set<String> findAffected() {
         Set<String> ids = new HashSet<>(toReindex);
+        // Failures are logged per target, so that one bad target doesn't affect the others
         Map<String, String> targetIdByIri = new HashMap<>();
-        try {
-            Set<String> targetIris = new HashSet<>(addedLinks.keySet());
-            targetIris.addAll(removedLinkTargets);
-            for (String iri : targetIris) {
+        Set<String> targetIris = new HashSet<>(addedLinks.keySet());
+        targetIris.addAll(removedLinkTargets);
+        for (String iri : targetIris) {
+            try {
                 String id = whelk.getStorage().getSystemIdByIri(iri);
                 if (id != null && !id.isEmpty()) {
                     targetIdByIri.put(iri, id);
                 }
+            } catch (Exception e) {
+                log.error("Error finding link target {}: {}", iri, e.toString(), e);
             }
-            ids.addAll(targetIdByIri.values());
-        } catch (Exception e) {
-            log.error("Error finding targets of changed links: {}", e.toString(), e);
         }
+        ids.addAll(targetIdByIri.values());
 
-        try {
-            List<String> addedLinkTargetIds = new ArrayList<>();
-            for (String iri : addedLinks.keySet()) {
-                if (targetIdByIri.containsKey(iri)) {
-                    addedLinkTargetIds.add(targetIdByIri.get(iri));
-                }
+        List<String> addedLinkTargetIds = new ArrayList<>();
+        for (String iri : addedLinks.keySet()) {
+            if (targetIdByIri.containsKey(iri)) {
+                addedLinkTargetIds.add(targetIdByIri.get(iri));
             }
-            Map<String, Document> addedLinkTargets = whelk.bulkLoad(addedLinkTargetIds);
-            for (var entry : addedLinks.entrySet()) {
-                String id = targetIdByIri.get(entry.getKey());
-                Document target = id != null ? addedLinkTargets.get(id) : null;
-                if (target != null && entry.getValue().stream().anyMatch(r -> whelk.hasInReverseRelations(target, r))) {
+        }
+        Map<String, Document> addedLinkTargets = Map.of();
+        try {
+            addedLinkTargets = whelk.bulkLoad(addedLinkTargetIds);
+        } catch (Exception e) {
+            log.error("Error loading targets of added links: {}", e.toString(), e);
+        }
+        for (var entry : addedLinks.entrySet()) {
+            String id = targetIdByIri.get(entry.getKey());
+            Document target = id != null ? addedLinkTargets.get(id) : null;
+            if (target == null) {
+                continue;
+            }
+            try {
+                if (entry.getValue().stream().anyMatch(r -> whelk.hasInReverseRelations(target, r))) {
                     for (Document dependent : whelk.integralReverseDependents(target)) {
                         ids.add(dependent.getShortId());
                     }
                 }
+            } catch (Exception e) {
+                log.error("Error finding documents with {} in their @reverse relations: {}", entry.getKey(), e.toString(), e);
             }
-        } catch (Exception e) {
-            log.error("Error finding documents with added links in their @reverse relations: {}", e.toString(), e);
         }
 
         changedCardIris.stream().gather(Gatherers.windowFixed(AFFECTED_IDS_BATCH_SIZE)).forEach(iris -> {
