@@ -74,6 +74,9 @@ class DatasetImporter {
     private Set<String> changedIdentifiers = []
     private Set<String> removedIds = []
 
+    // Indexes what is written, if indexing (see startIndexing())
+    private DatasetIndexer indexer = null
+
     DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], Object descriptions=null) {
         this.whelk = whelk
         this.datasetUri = datasetUri
@@ -133,78 +136,127 @@ class DatasetImporter {
         long startTime = System.nanoTime()
         System.err.println("Importing from: ${sourceUrl}")
 
-        Set<String> idsInInput = []
+        // Index in bulk, in the background, instead of after each write
+        startIndexing()
+        boolean indexed = false
+        try {
+            Set<String> idsInInput = []
 
-        if (dsRecord != null) {
-            idsInInput.add(dsRecord.getShortId())
-        }
+            if (dsRecord != null) {
+                idsInInput.add(dsRecord.getShortId())
+            }
 
-        String recordType = sourceUrl ==~ /^(https?):.+/ ? JsonLd.CACHE_RECORD_TYPE : JsonLd.RECORD_TYPE
+            String recordType = sourceUrl ==~ /^(https?):.+/ ? JsonLd.CACHE_RECORD_TYPE : JsonLd.RECORD_TYPE
 
-        long updatedCount = 0
-        long createdCount = 0
-        long lineCount = 1 // The datasets' self describing first record also counts.
+            long updatedCount = 0
+            long createdCount = 0
+            long lineCount = 1 // The datasets' self describing first record also counts.
 
-        boolean first = true
+            boolean first = true
 
-        processDataset(sourceUrl) { Map data ->
-            if (first) {
-                first = false
-                String dsId = determineDatasetDescription(data)
-                if (dsId) {
-                    idsInInput.add(dsId)
+            processDataset(sourceUrl) { Map data ->
+                if (first) {
+                    first = false
+                    String dsId = determineDatasetDescription(data)
+                    if (dsId) {
+                        idsInInput.add(dsId)
+                    }
+                } else if (dsInfo == null) {
+                    if (!first) {
+                        throw new RuntimeException("Self-described dataset must be the first item.")
+                    }
                 }
-            } else if (dsInfo == null) {
-                if (!first) {
-                    throw new RuntimeException("Self-described dataset must be the first item.")
+
+                Document incomingDoc = completeRecord(data, recordType, true)
+                idsInInput.add(incomingDoc.getShortId())
+
+                // This race condition should be benign. If there is a document with
+                // the same ID created in between the check and the creation, we'll
+                // get an exception and fail early (unfortunate but acceptable).
+                switch (createOrUpdateDocument(incomingDoc)) {
+                    case WRITE_RESULT.CREATED:
+                        createdCount++;
+                        break;
+                    case WRITE_RESULT.UPDATED:
+                        updatedCount++;
+                }
+
+                if ( lineCount % 100 == 0 ) {
+                    System.err.println("Processed " + lineCount + " input records. " + createdCount + " created, " +
+                            updatedCount + " updated, " + (lineCount-createdCount-updatedCount) + " already up to date.")
+                }
+                ++lineCount
+            }
+
+            List<String> needsRetry = []
+            long deletedCount = removeDeleted(idsInInput, needsRetry)
+
+            // FIXME: this is a workaround for lddb__dependers not being populated correctly when a doc in a
+            // dataset links to another doc in the dataset that has not yet been imported.
+            // A symptom is for example @reverse/broader not being calculated correctly.
+            // Should be fixed by merging PlaceholderRecord handling?
+            recalculateStaleDependencies(idsInInput)
+
+            // After recalculating dependencies, since reindexing counts reverse links from them
+            indexed = true
+            finishIndexing()
+
+            Duration elapsedTime = Duration.ofNanos(System.nanoTime() - startTime)
+            String elapsed = String.format("%02dh%02dm%02ds", elapsedTime.toHours(), elapsedTime.toMinutesPart(), elapsedTime.toSecondsPart())
+            System.err.println("Created: " + createdCount +" new,\n" +
+                    "updated: " + updatedCount + " existing and\n" +
+                    "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
+                    "out of the: " + idsInInput.size() + " records in dataset: \"" + dsInfo.uri + "\".\n" +
+                    "Dataset now in sync in ${elapsed}.")
+        } finally {
+            if (!indexed) {
+                // The import failed, but what was written must still be indexed: on a rerun
+                // it would be up to date, and not written (or indexed) again
+                try {
+                    finishIndexing()
+                } catch (Exception e) {
+                    log.error("Failed indexing records written before the import failed: $e", e)
                 }
             }
-
-            Document incomingDoc = completeRecord(data, recordType, true)
-            idsInInput.add(incomingDoc.getShortId())
-
-            // This race condition should be benign. If there is a document with
-            // the same ID created in between the check and the creation, we'll
-            // get an exception and fail early (unfortunate but acceptable).
-            switch (createOrUpdateDocument(incomingDoc)) {
-                case WRITE_RESULT.CREATED:
-                    createdCount++;
-                    break;
-                case WRITE_RESULT.UPDATED:
-                    updatedCount++;
-            }
-
-            if ( lineCount % 100 == 0 ) {
-                System.err.println("Processed " + lineCount + " input records. " + createdCount + " created, " +
-                        updatedCount + " updated, " + (lineCount-createdCount-updatedCount) + " already up to date.")
-            }
-            ++lineCount
         }
-
-        List<String> needsRetry = []
-        long deletedCount = removeDeleted(idsInInput, needsRetry)
-
-        // FIXME: this is a workaround for lddb__dependers not being populated correctly when a doc in a
-        // dataset links to another doc in the dataset that has not yet been imported.
-        // A symptom is for example @reverse/broader not being calculated correctly.
-        // Should be fixed by merging PlaceholderRecord handling?
-        recalculateStaleDependencies(idsInInput)
-
-        Duration elapsedTime = Duration.ofNanos(System.nanoTime() - startTime)
-        String elapsed = String.format("%02dh%02dm%02ds", elapsedTime.toHours(), elapsedTime.toMinutesPart(), elapsedTime.toSecondsPart())
-        System.err.println("Created: " + createdCount +" new,\n" +
-                "updated: " + updatedCount + " existing and\n" +
-                "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
-                "out of the: " + idsInInput.size() + " records in dataset: \"" + dsInfo.uri + "\".\n" +
-                "Dataset now in sync in ${elapsed}.")
     }
 
     void dropDataset() {
         if (dsInfo == null) {
             dsInfo =  new DatasetInfo([(ID): datasetUri])
         }
-        long deletedCount = removeDeleted([] as Set, [])
+        startIndexing()
+        long deletedCount
+        try {
+            deletedCount = removeDeleted([] as Set, [])
+        } finally {
+            finishIndexing()
+        }
         System.err.println("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
+    }
+
+    private void startIndexing() {
+        if (whelk.skipIndex || !whelk.elastic) {
+            return
+        }
+        // Leave a core for the import, and database connections for it and the rest
+        int numThreads = Math.min(Runtime.getRuntime().availableProcessors() - 1, whelk.storage.getPoolSize() - 2)
+        indexer = new DatasetIndexer(whelk, Math.max(1, numThreads))
+        // The indexer indexes what is written, instead of Whelk after each write
+        whelk.setSkipIndex(true)
+    }
+
+    private void finishIndexing() {
+        if (indexer == null) {
+            return
+        }
+        DatasetIndexer finishing = indexer
+        indexer = null
+        whelk.setSkipIndex(false)
+        System.err.println("Indexing remaining records in Elasticsearch...")
+        long startTime = System.nanoTime()
+        int count = finishing.flush()
+        System.err.println("Indexed ${count} records (finished in ${Duration.ofNanos(System.nanoTime() - startTime).toSeconds()}s).")
     }
 
     private void processDataset(String sourceUrl, Closure processItem) {
@@ -402,20 +454,25 @@ class DatasetImporter {
 
     private WRITE_RESULT createOrUpdateDocument(Document incomingDoc) {
         Set<String> storedIds = new HashSet<>()
+        Document storedDoc = null
         WRITE_RESULT result
         if (whelk.storage.exists(incomingDoc.getShortId())) {
             boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, false, "xl", null, { Document doc ->
                 storedIds = identifiers(doc)
+                // No copy needed, the stored data is replaced rather than modified
+                storedDoc = new Document(doc.data)
                 doc.data = incomingDoc.data
             })
             if (updated) {
                 result = WRITE_RESULT.UPDATED
+                indexer?.updated(storedDoc, incomingDoc)
             } else {
                 result = WRITE_RESULT.ALREADY_UP_TO_DATE
             }
         } else {
             whelk.createDocument(incomingDoc, "xl", null, collection, false)
             result = WRITE_RESULT.CREATED
+            indexer?.created(incomingDoc)
         }
         if (result != WRITE_RESULT.ALREADY_UP_TO_DATE) {
             trackChangedIdentifiers(storedIds, incomingDoc)
@@ -525,8 +582,12 @@ class DatasetImporter {
     private boolean remove(String id, boolean force) {
         try {
             log.info("Removing " + id + " from dataset")
+            Document doc = indexer != null ? whelk.getDocument(id) : null
             whelk.remove(id, "xl", null, force)
             removedIds.add(id)
+            if (doc != null) {
+                indexer.removed(doc)
+            }
             return true
         } catch (LinkValidationException ignored) {
             return false

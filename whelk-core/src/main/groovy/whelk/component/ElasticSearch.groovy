@@ -509,6 +509,13 @@ class ElasticSearch {
         }
     }
     
+    /**
+     * Makes all changes so far visible to searches.
+     */
+    void refresh() {
+        client.performRequest('POST', "/${allIndexNames().join(',')}/_refresh", '')
+    }
+
     void remove(String identifier) {
         if (log.isDebugEnabled()) {
             log.debug("Deleting object with identifier ${toElasticId(identifier)}.")
