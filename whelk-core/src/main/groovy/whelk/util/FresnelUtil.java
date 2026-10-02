@@ -238,7 +238,7 @@ public class FresnelUtil {
                     node.put(JsonLd.Platform.COMPUTED_LABEL, label);
                     // TODO Check if structured value and don't compute for sub-nodes?
                 } catch (Exception e) {
-                    var d = Unicode.truncate(String.valueOf(data), 1024);
+                    var d = Unicode.ellipsis(String.valueOf(data), 1024);
                     logger.warn("Error computing label for {}: {}", d, e, e);
                 }
             }

@@ -99,6 +99,20 @@ class UnicodeSpec extends Specification {
         null  | 5      || ""
     }
 
+    def "ellipsis"() {
+        expect:
+        Unicode.ellipsis(s, len) == result
+        where:
+        s     | len    || result
+        "abc" | 0      || "…"
+        "abc" | 1      || "a…"
+        "abc" | 2      || "ab…"
+        "abc" | 3      || "abc"
+        "abc" | 4      || "abc"
+        "abc" | 5      || "abc"
+        null  | 5      || ""
+    }
+
     def "double quotation marks"() {
         expect:
         Unicode.isNormalizedDoubleQuotes(dirty) == (dirty == clean)

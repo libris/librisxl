@@ -158,6 +158,19 @@ public class Unicode {
         return s.substring(0, length);
     }
 
+    public static String ellipsis(String s, int length) {
+        if (length < 0) {
+            throw new IllegalArgumentException("length cannot be negative");
+        }
+        if (s == null) {
+            return "";
+        }
+        if (s.length() > length) {
+            return truncate(s, length) + "…";
+        }
+        return s.substring(0, length);
+    }
+
     public static boolean isRtl(Character.UnicodeScript script) {
         return RTL_SCRIPTS.contains(script);
     }
