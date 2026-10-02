@@ -140,8 +140,11 @@ public class BlockingThreadPool {
         }
         
         public void awaitAllAndShutdown() {
-            queue.awaitAll();
-            pool.shutdown();
+            try {
+                queue.awaitAll();
+            } finally {
+                pool.shutdown();
+            }
         }
     }
 

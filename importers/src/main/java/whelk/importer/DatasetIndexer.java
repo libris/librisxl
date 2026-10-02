@@ -127,7 +127,13 @@ public class DatasetIndexer {
 
     private void submit(List<String> batch) {
         if (!batch.isEmpty()) {
-            threadPool.submit(() -> whelk.elastic.bulkIndexWithRetry(batch, whelk));
+            threadPool.submit(() -> {
+                try {
+                    whelk.elastic.bulkIndexWithRetry(batch, whelk);
+                } catch (Exception e) {
+                    log.error("Failed indexing {}: {}", batch, e.toString(), e);
+                }
+            });
         }
     }
 
