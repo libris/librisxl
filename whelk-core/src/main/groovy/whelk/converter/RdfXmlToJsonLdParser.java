@@ -21,8 +21,7 @@ public class RdfXmlToJsonLdParser {
           model.write(outSteam, "JSONLD");
         }
         var inData = mapper.readValue(baos.toString("UTF-8"), Map.class);
-        var data = TrigToJsonLdParser.compact(inData, context);
-        EmbedBlanks.embedBlanks(data);
+        var data = JsonLdShapes.compactWithEmbeddedBlanks(inData, context);
         return data;
     }
 

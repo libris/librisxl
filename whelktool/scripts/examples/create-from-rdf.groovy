@@ -4,7 +4,9 @@ import static whelk.converter.RdfReader.readRdf
 
 List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
     var context = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
-    Map data = new File(rdfSourcePath).withInputStream { readRdf(it, rdfSourcePath, context) }
+    Map data = new File(rdfSourcePath).withInputStream {
+        readRdf(it, rdfSourcePath, context, whelk.systemContextUri)
+    }
     return data[GRAPH]
 }
 
@@ -25,7 +27,7 @@ List<Map> newDocs = loadDescriptions(getWhelk(), rdfSourcePath).collect { Map ma
     }
     var data = ['@graph': [record, mainEntity]]
 
-    create(data)
+    return create(data)
 }
 
 selectFromIterable(newDocs, { newItem ->
