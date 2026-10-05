@@ -238,7 +238,8 @@ public class FresnelUtil {
                     node.put(JsonLd.Platform.COMPUTED_LABEL, label);
                     // TODO Check if structured value and don't compute for sub-nodes?
                 } catch (Exception e) {
-                    logger.warn("Error computing label for {}: {}", data, e, e);
+                    var d = Unicode.ellipsis(String.valueOf(data), 1024);
+                    logger.warn("Error computing label for {}: {}", d, e, e);
                 }
             }
 
@@ -1518,7 +1519,7 @@ public class FresnelUtil {
     }
 
     private boolean isTypedNode(Object o) {
-        return o instanceof Map && ((Map<?, ?>) o).containsKey(TYPE_KEY);
+        return o instanceof Map && ((Map<?, ?>) o).get(TYPE_KEY) != null;
     }
 
     // TODO handle multiple types=

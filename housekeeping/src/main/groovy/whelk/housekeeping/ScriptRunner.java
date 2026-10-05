@@ -55,7 +55,7 @@ public class ScriptRunner extends HouseKeeper {
             tool.run();
 
             Path errorLogPath = reportPath.resolve("ERRORS.txt");
-            if (Files.size(errorLogPath) > 0) {
+            if (Files.exists(errorLogPath) && Files.size(errorLogPath) > 0) {
                 String firstError = "[could not read]";
                 try (BufferedReader errorLogReader = Files.newBufferedReader(errorLogPath)) {
                     firstError = errorLogReader.readLine();

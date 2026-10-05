@@ -5,12 +5,13 @@ import org.slf4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
+
 import whelk.search2.querytree.node.Condition;
 import whelk.search2.querytree.value.FreeText;
 import whelk.search2.querytree.selector.Key;
 import whelk.search2.querytree.node.Node;
-import whelk.search2.querytree.selector.Path;
 import whelk.search2.querytree.value.Token;
+
 import whelk.util.DocumentUtil;
 import whelk.util.FresnelUtil;
 
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static whelk.JsonLd.REVERSE_KEY;
 import static whelk.JsonLd.THING_KEY;
@@ -31,9 +33,16 @@ public class QueryGenerator {
     private static final List<List<Object>> PATHS = List.of(
             List.of(THING_KEY, "classification", "*"),
             List.of(THING_KEY, WORK_KEY, "classification", "*"),
+            List.of(THING_KEY, "subject", "*"),
+            List.of(THING_KEY, WORK_KEY, "subject", "*"),
             List.of(THING_KEY, "publication", "*", "agent"),
             List.of(THING_KEY, REVERSE_KEY, WORK_KEY, "*", "publication", "*", "agent")
     );
+
+    private static final Map<String, String> PATH_TO_SHORTHAND = Map.of(
+            "publication.agent", "publisher"
+    );
+
 
     /*
     TODO
@@ -78,7 +87,7 @@ public class QueryGenerator {
                     if (t instanceof String type) {
                         if (type.equals("ISSN") && !"identifiedBy".equals(path.getFirst())) {
                             if (node.containsKey("value") && node.get("value") instanceof String issn) {
-                                insert(new Condition(toKey("ISXN"), Operator.EQUALS, scopedFreeText(issn)), node);
+                                insert(new Condition(toKey("identifier"), Operator.EQUALS, scopedFreeText(issn)), node);
                             }
                         }
                         else if (type.equals("Record") && path.contains("describedBy")) {
@@ -122,17 +131,16 @@ public class QueryGenerator {
     }
 
     private static void insert(List<Object> path, Map<String, Object> node, Whelk whelk) {
-        var qPath = toQueryPath(path, whelk.jsonld);
+        var qKey = toQueryKey(path, whelk.jsonld);
 
         var text = whelk.getFresnelUtil().asString(node, FresnelUtil.Lenses.SEARCH_NEEDLE);
         if (text.isBlank()) {
             return;
         }
 
-        // TODO
-        var q = qPath.path().isEmpty()
+        var q = qKey.isEmpty()
                 ? new FreeText(text).asNode()
-                : new Condition(qPath, Operator.EQUALS, scopedFreeText(text));
+                : new Condition(toKey(PATH_TO_SHORTHAND.getOrDefault(qKey, qKey)), Operator.EQUALS, scopedFreeText(text));
 
         insert(q, node);
     }
@@ -149,14 +157,15 @@ public class QueryGenerator {
         }
     }
 
-    private static Path toQueryPath(List<Object> docPath, JsonLd jsonLd) {
-        return new Path(docPath.stream()
+    private static String toQueryKey(List<Object> docPath, JsonLd jsonLd) {
+        return docPath.stream()
                 .filter(s -> !THING_KEY.equals(s))
                 .filter(s -> !(s instanceof Number))
                 .filter(s -> !"*".equals(s))
                 .filter(s -> !JsonLd.REVERSE_KEY.equals(s))
-                .filter(s -> !jsonLd.isIntegral(String.valueOf(s)))
-                .map(p -> toKey(String.valueOf(p))).toList());
+                .map(String::valueOf)
+                .filter(s -> !jsonLd.isIntegral(s))
+                .collect(Collectors.joining("."));
     }
 
     private static Key.UnrecognizedKey toKey(String s) {

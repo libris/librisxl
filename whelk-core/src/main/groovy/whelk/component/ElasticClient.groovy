@@ -1,5 +1,6 @@
 package whelk.component
 
+import groovy.transform.CompileStatic
 import com.google.common.collect.Iterators
 import groovy.util.logging.Slf4j as Log
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
@@ -46,6 +47,7 @@ import java.util.function.Function
 import static whelk.util.Jackson.mapper
 
 @Log
+@CompileStatic
 class ElasticClient {
     static final int MAX_CONNECTIONS_PER_HOST = 40
     static final int CONNECTION_POOL_SIZE = 120

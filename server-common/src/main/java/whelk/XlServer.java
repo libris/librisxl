@@ -74,7 +74,10 @@ public abstract class XlServer {
         requestLogWriter.setFilename(logRoot.resolve("access_log.yyyy_MM_dd.txt").toString());
         requestLogWriter.setTimeZone(TimeZone.getDefault().getID());
         requestLogWriter.setRetainDays(14);
-        var requestLog = new CustomRequestLog(requestLogWriter, CustomRequestLog.EXTENDED_NCSA_FORMAT);
+        String format = "%{client}a - %u %{dd/MMM/yyyy:HH:mm:ss ZZZ|"
+                + TimeZone.getDefault().getID()
+                + "}t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\"";
+        var requestLog = new CustomRequestLog(requestLogWriter, format);
         server.setRequestLog(requestLog);
     }
 

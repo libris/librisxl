@@ -1,0 +1,58 @@
+prefix : <https://id.kb.se/vocab/>
+prefix marc: <https://id.kb.se/marc/>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+
+<local001#it> a :PhysicalResource ;
+  :instanceOf <https://libris.kb.se/l3crh1z1j8xdfqmg#it> ;
+  :category <https://id.kb.se/term/rda/Volume> ,
+    <https://id.kb.se/term/saobf/Print> ;
+  :hasTitle [ a :Title ;
+      :mainTitle "Bilbo" ;
+      :subtitle "en hobbits äventyr"
+    ] ;
+  :responsibilityStatement "J.R.R. Tolkien ; översättning av Britt G. Hallqvist" ;
+  :contribution [ a :Contribution ;
+      :agent <https://libris.kb.se/wt79bh6f2j46dtr#it> ;
+      :role <https://id.kb.se/relator/illustrator>
+    ] ;
+  :illustrativeContent marc:Illustration ;
+  :identifiedBy [ a :ISBN ;
+      :acquisitionTerms "202:00" ;
+      :qualifier "INB." ;
+      :value "9151827271"
+    ] ;
+  :editionStatement "14. uppl." ;
+  :editionStatementRemainder "illustrationer av Tove Jansson" ;
+  :extent [ a :Extent ;
+      :label "308 s."
+    ] ;
+  :hasDimensions [ a :Dimensions ;
+      :label "24 cm"
+    ] ;
+  :publication [ a :PrimaryPublication ;
+      :agent [ a :Agent ;
+          :label "Rabén Prisma"
+        ] ;
+      :country <https://id.kb.se/country/sw> ;
+      :place [ a :Place ;
+          :label "Stockholm"
+        ] ;
+      :year "1994"
+    ] ;
+  :manufacture [ a :Manufacture ;
+      :agent [ a :Agent ;
+          :label "Scandbook"
+        ] ;
+      :place [ a :Place ;
+          :label "Falun"
+        ]
+    ] ;
+  :hasNote [ a :Note ;
+      :label "Första svenska uppl. 1947. Första uppl. i denna version 1962. - Även utg. med titeln: Hompen"
+    ] ;
+  :meta [ a :Record ;
+      :bibliography <https://libris.kb.se/library/NB> ;
+      :created "2026-09-29T09:16:44Z"^^xsd:dateTime ;
+      :descriptionCreator <https://libris.kb.se/library/S> ;
+      :encodingLevel marc:MinimalLevel
+    ] .

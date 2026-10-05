@@ -88,6 +88,7 @@ public final class Link extends Resource {
 
     @Override
     public String getType() {
-        return (String) asList(chip.get(TYPE_KEY)).getFirst();
+        var types = asList(chip.get(TYPE_KEY));
+        return types.isEmpty() ? null : (String) types.getFirst();
     }
 }

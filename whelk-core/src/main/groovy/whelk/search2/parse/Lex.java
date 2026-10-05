@@ -42,10 +42,18 @@ public class Lex {
     }
 
     private static void consumeWhiteSpace(StringBuilder query, MutableInteger offset) {
-        while (!query.isEmpty() && Character.isWhitespace(query.charAt(0))) {
+        while (!query.isEmpty() && isWhitespace(query.charAt(0))) {
             query.deleteCharAt(0);
             offset.increase(1);
         }
+    }
+
+    private static boolean isWhitespace(char c) {
+        return Character.isWhitespace(c) || isNonBreakingSpace(c);
+    }
+
+    private static boolean isNonBreakingSpace(char c) {
+        return c == '\u00A0' || c == '\u2007' || c == '\u202F';
     }
 
     public static final List<Character> reservedCharsInString = Arrays.asList('<', '>', '=', '(', ')', ':', '~');
@@ -141,7 +149,7 @@ public class Lex {
                 } else {
                     query.deleteCharAt(0);
                     offset.increase(1);
-                    if (Character.isWhitespace(c))
+                    if (isWhitespace(c))
                         break;
                     symbolValue.append(c);
                     if (query.isEmpty())

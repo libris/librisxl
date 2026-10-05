@@ -11,7 +11,7 @@ import static whelk.JsonLd.TYPE_KEY;
 
 public sealed class FilterAlias implements Node {
     private final String alias;
-    private final String raw;
+    protected final String raw;
     private final Map<String, Object> prefLabelByLang;
 
     private Node parsed;
@@ -44,7 +44,7 @@ public sealed class FilterAlias implements Node {
 
     public void parse(Disambiguate disambiguate) throws InvalidQueryException {
         if (parsed == null) {
-            this.parsed = QueryTreeBuilder.buildTree(raw, disambiguate);
+            this.parsed = QueryTreeBuilder.buildTree(isQueryFilterTemplate() ? "" : raw, disambiguate);
         }
     }
 
@@ -59,17 +59,32 @@ public sealed class FilterAlias implements Node {
         return alias;
     }
 
+    public boolean isQueryFilterTemplate() {
+        return raw == null;
+    }
+
     public Map<String, Object> description() {
-        return Map.of(TYPE_KEY, RESOURCE,
+        return isQueryFilterTemplate()
+                ? Map.of(TYPE_KEY, RESOURCE,
+                "prefLabelByLang", prefLabelByLang,
+                "alias", alias)
+                : Map.of(TYPE_KEY, RESOURCE,
                 "prefLabelByLang", prefLabelByLang,
                 "alias", alias,
-                "raw", raw
-        );
+                "raw", raw);
     }
 
     public static final class QueryDefinedAlias extends FilterAlias {
         public QueryDefinedAlias(String alias, String raw) {
             super(alias, raw, Map.of());
+        }
+
+        private QueryDefinedAlias(String alias, String raw, Map<String, Object> prefLabelByLang) {
+            super(alias, raw, prefLabelByLang);
+        }
+
+        public QueryDefinedAlias withPrefLabel(FilterAlias fa) {
+            return new QueryDefinedAlias(this.alias(), this.raw, fa.prefLabelByLang);
         }
     }
 }

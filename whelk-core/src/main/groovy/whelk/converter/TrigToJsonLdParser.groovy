@@ -10,8 +10,13 @@ import trld.trig.Parser
 
 @CompileStatic
 class TrigToJsonLdParser {
-    static Map parse(InputStream ins) {
-        return (Map) Parser.parse(new Input(ins))
+    public static Map parse(InputStream inStream) {
+        return parse(inStream, (Map) null);
+    }
+
+    public static Map parse(InputStream inStream, Map context) throws IOException {
+        Map data = (Map) Parser.parse(new Input(inStream))
+        return (Map) compact(data, context)
     }
 
     static Object expand(Object data, String baseIri=null) {
