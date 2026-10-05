@@ -4,14 +4,14 @@ import groovy.util.logging.Slf4j as Log
 import groovy.transform.CompileStatic
 import whelk.exception.LinkValidationException
 
-import static groovy.transform.TypeCheckingMode.SKIP
-
 import whelk.Document
 import whelk.JsonLd
 import whelk.TargetVocabMapper
 import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
 import whelk.util.DocumentUtil
+
+import java.time.Duration
 
 import static whelk.JsonLd.asList
 import static whelk.JsonLd.findInData
@@ -60,7 +60,16 @@ class DatasetImporter {
     TargetVocabMapper tvm = null
     Map contextDocData = null
 
-    Map<String, String> aliasMap = [:]
+    static final int THING_ID_CACHE_SIZE = 100_000
+    static final int DEPENDENCY_CHECK_BATCH_SIZE = 100
+
+    // LRU cache for whelk.storage.getThingId() results
+    private Map<String, String> thingIdCache = new LinkedHashMap<String, String>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+            return size() > THING_ID_CACHE_SIZE
+        }
+    }
 
     DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], Object descriptions=null) {
         this.whelk = whelk
@@ -118,6 +127,7 @@ class DatasetImporter {
     }
 
     void importDataset(String sourceUrl) {
+        long startTime = System.nanoTime()
         System.err.println("Importing from: ${sourceUrl}")
 
         Set<String> idsInInput = []
@@ -175,13 +185,15 @@ class DatasetImporter {
         // dataset links to another doc in the dataset that has not yet been imported.
         // A symptom is for example @reverse/broader not being calculated correctly.
         // Should be fixed by merging PlaceholderRecord handling?
-        idsInInput.each { whelk.storage.recalculateDependencies(whelk.getDocument(it)) }
+        recalculateStaleDependencies(idsInInput)
 
+        Duration elapsedTime = Duration.ofNanos(System.nanoTime() - startTime)
+        String elapsed = String.format("%02dh%02dm%02ds", elapsedTime.toHours(), elapsedTime.toMinutesPart(), elapsedTime.toSecondsPart())
         System.err.println("Created: " + createdCount +" new,\n" +
                 "updated: " + updatedCount + " existing and\n" +
                 "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
                 "out of the: " + idsInInput.size() + " records in dataset: \"" + dsInfo.uri + "\".\n" +
-                "Dataset now in sync.")
+                "Dataset now in sync in ${elapsed}.")
     }
 
     void dropDataset() {
@@ -305,18 +317,26 @@ class DatasetImporter {
         }
     }
 
-    @CompileStatic(SKIP)
     protected void normalizeLinks(Map data) {
-        DocumentUtil.findKey(data[GRAPH][1], ID) { id, path ->
+        DocumentUtil.findKey(((List) data[GRAPH])[1], ID) { Object id, List<Object> path ->
             if ('sameAs' in path) {
-                return
+                return DocumentUtil.NOP
             }
-            def canonical = aliasMap.get(id) ?: whelk.storage.getThingId(id)
+            String canonical = getThingId((String) id)
             if (canonical && id != canonical) {
-                aliasMap[id] = canonical
                 return new DocumentUtil.Replace(canonical)
             }
+            return DocumentUtil.NOP
         }
+    }
+
+    private String getThingId(String id) {
+        if (thingIdCache.containsKey(id)) {
+            return thingIdCache[id]
+        }
+        String thingId = whelk.storage.getThingId(id)
+        thingIdCache[id] = thingId
+        return thingId
     }
 
     private Map loadData(String path) {
@@ -378,10 +398,11 @@ class DatasetImporter {
     }
 
     private WRITE_RESULT createOrUpdateDocument(Document incomingDoc) {
-        Document storedDoc = whelk.getDocument(incomingDoc.getShortId())
+        Set<String> storedIds = new HashSet<>()
         WRITE_RESULT result
-        if (storedDoc != null) {
-            boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, false, "xl", null, { doc ->
+        if (whelk.storage.exists(incomingDoc.getShortId())) {
+            boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, false, "xl", null, { Document doc ->
+                storedIds = identifiers(doc)
                 doc.data = incomingDoc.data
             })
             if (updated) {
@@ -393,7 +414,32 @@ class DatasetImporter {
             whelk.createDocument(incomingDoc, "xl", null, collection, false)
             result = WRITE_RESULT.CREATED
         }
+        if (result != WRITE_RESULT.ALREADY_UP_TO_DATE) {
+            thingIdCache.keySet().removeAll(storedIds)
+            thingIdCache.keySet().removeAll(identifiers(incomingDoc))
+        }
         return result
+    }
+
+    private static Set<String> identifiers(Document doc) {
+        Set<String> ids = new HashSet<>(doc.getRecordIdentifiers())
+        ids.addAll(doc.getThingIdentifiers())
+        return ids
+    }
+
+    private void recalculateStaleDependencies(Set<String> idsInInput) {
+        long recalculated = 0
+        for (List<String> batch : new ArrayList<String>(idsInInput).collate(DEPENDENCY_CHECK_BATCH_SIZE)) {
+            Map<String, Document> docs = whelk.storage.bulkLoad(batch)
+            Map<String, Set<String>> stale = whelk.storage.findStaleDependencies(docs.values())
+            stale.each { String id, Set<String> changedDependencies ->
+                whelk.storage.recalculateDependencies(docs[id])
+                recalculated++
+            }
+        }
+        if (recalculated > 0) {
+            System.err.println("Recalculated stale dependencies of ${recalculated} records.")
+        }
     }
 
     private long removeDeleted(Set<String> idsInInput, List<String> needsRetry) {

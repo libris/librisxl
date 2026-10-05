@@ -297,6 +297,9 @@ class PostgreSQLComponent {
     private static final String GET_DEPENDENCIES =
             "SELECT dependsOnId FROM lddb__dependencies WHERE id = ?"
 
+    private static final String GET_DEPENDENCY_ROWS =
+            "SELECT id, relation, dependsOnId FROM lddb__dependencies WHERE id = ANY(?)"
+
     private static final String UPSERT_CARD = """
             INSERT INTO lddb__cards (id, data, checksum, changed)
             VALUES (?, ?, ?, ?) 
@@ -351,6 +354,13 @@ class PostgreSQLComponent {
             WHERE t1.iri = ? AND t2.mainid = true
             """.stripIndent()
 
+    private static final String GET_MAIN_IDS = """
+            SELECT t1.iri, t2.iri
+            FROM lddb__identifiers t1
+            JOIN lddb__identifiers t2 ON t2.id = t1.id AND t2.graphindex = t1.graphindex
+            WHERE t1.iri = ANY(?) AND t2.mainid = true
+            """.stripIndent()
+
     private static final String GET_SYSTEMID_BY_IRI = """
             SELECT lddb__identifiers.id, lddb.deleted
             FROM lddb__identifiers 
@@ -372,6 +382,9 @@ class PostgreSQLComponent {
 
     private static final String GET_COLLECTION_BY_SYSTEM_ID =
             "SELECT collection FROM lddb where id = ?"
+
+    private static final String DOCUMENT_EXISTS =
+            "SELECT EXISTS(SELECT 1 FROM lddb WHERE id = ?)"
 
     private static final String GET_MAINENTITY_TYPE_BY_SYSTEM_ID =
             "SELECT data#>>'{@graph,1,@type}' FROM lddb WHERE id = ?"
@@ -1229,21 +1242,128 @@ class PostgreSQLComponent {
     }
 
     private List<String[]> _calculateDependenciesSystemIDs(Document doc, Connection connection) {
-        List<String[]> dependencies = []
+        Set<Link> links = doc.getExternalRefs()
+        Map<String, Set<String>> liveSystemIdsByIri = [:]
+        getSystemIds(dependencyIris(links), connection) { String iri, String systemId, boolean deleted ->
+            if (!deleted) {
+                addLiveSystemId(liveSystemIdsByIri, iri, systemId)
+            }
+        }
+        return calculateDependencies(doc.getShortId(), links, liveSystemIdsByIri)
+    }
 
-        Map<String, Set<Link>> linksByIri = [:]
-        doc.getExternalRefs()
-            .findAll{ it.iri.startsWith("http") }
-            .each { link ->
-                linksByIri.computeIfAbsent(link.iri, { iri -> new HashSet<>() }).add(link)
+    static Set<String> dependencyIris(Set<Link> links) {
+        Set<String> iris = new HashSet<>()
+        for (Link link : links) {
+            if (link.iri.startsWith("http")) {
+                iris.add(link.iri)
+            }
+        }
+        return iris
+    }
+
+    static List<String[]> calculateDependencies(String systemId, Set<Link> links, Map<String, Set<String>> liveSystemIdsByIri) {
+        List<String[]> dependencies = []
+        for (Link link : links) {
+            if (!link.iri.startsWith("http")) {
+                continue
+            }
+            for (String dependsOnId : liveSystemIdsByIri.getOrDefault(link.iri, Collections.<String>emptySet())) {
+                if (dependsOnId != systemId) { // Exclude A -> A (self-references)
+                    dependencies.add([link.relation, dependsOnId] as String[])
+                }
+            }
+        }
+        return dependencies
+    }
+
+    private static void addLiveSystemId(Map<String, Set<String>> liveSystemIdsByIri, String iri, String systemId) {
+        liveSystemIdsByIri.computeIfAbsent(iri, { String i -> new HashSet<String>() }).add(systemId)
+    }
+
+    /**
+     * Finds documents whose stored dependencies differ from what saveDependencies() would store now.
+     * This is read-only. Use recalculateDependencies() to actually update them.
+     *
+     * @return for each document with stale dependencies (by system ID), the system IDs of the targets
+     *         whose dependencies differ
+     */
+    Map<String, Set<String>> findStaleDependencies(Collection<Document> docs) {
+        Map<String, Set<String>> stale = [:]
+        if (docs.isEmpty()) {
+            return stale
+        }
+        withDbConnection {
+            Connection connection = getMyConnection()
+
+            Map<String, Set<Link>> linksById = [:]
+            Set<String> iris = new HashSet<>()
+            for (Document doc : docs) {
+                Set<Link> links = doc.getDeleted() ? Collections.<Link>emptySet() : doc.getExternalRefs()
+                linksById[doc.getShortId()] = links
+                iris.addAll(dependencyIris(links))
             }
 
-        getSystemIds(linksByIri.keySet(), connection) { String iri, String systemId, boolean deleted ->
-            if (!deleted && systemId != doc.getShortId()) // Exclude A -> A (self-references)
-                dependencies.addAll(linksByIri[iri].collect { [it.relation, systemId] as String[] })
-        }
+            Map<String, Set<String>> liveSystemIdsByIri = [:]
+            if (!iris.isEmpty()) {
+                getSystemIds(iris, connection) { String iri, String systemId, boolean deleted ->
+                    if (!deleted) {
+                        addLiveSystemId(liveSystemIdsByIri, iri, systemId)
+                    }
+                }
+            }
 
-        return dependencies
+            Map<String, List<String[]>> stored = getDependencyRows(linksById.keySet(), connection)
+            linksById.each { String id, Set<Link> links ->
+                Set<String> changed = changedDependencies(
+                        calculateDependencies(id, links, liveSystemIdsByIri),
+                        stored.getOrDefault(id, Collections.<String[]>emptyList()))
+                if (changed != null) {
+                    stale[id] = changed
+                }
+            }
+        }
+        return stale
+    }
+
+    /**
+     * Compares two lists of dependencies ([relation, dependsOnId]) as multisets.
+     *
+     * @return null if they are the same, else the dependsOnIds of the dependencies that differ
+     */
+    static Set<String> changedDependencies(List<String[]> expected, List<String[]> stored) {
+        Map<List<String>, Integer> difference = [:]
+        for (String[] dependency : expected) {
+            difference.merge(Arrays.asList(dependency), 1, { Integer a, Integer b -> a + b })
+        }
+        for (String[] dependency : stored) {
+            difference.merge(Arrays.asList(dependency), -1, { Integer a, Integer b -> a + b })
+        }
+        Set<String> changed = new HashSet<>()
+        difference.each { List<String> dependency, Integer count ->
+            if (count != 0) {
+                changed.add(dependency[1])
+            }
+        }
+        return changed.isEmpty() ? null : changed
+    }
+
+    private static Map<String, List<String[]>> getDependencyRows(Collection<String> ids, Connection connection) {
+        Map<String, List<String[]>> rows = [:]
+        PreparedStatement statement = null
+        ResultSet rs = null
+        try {
+            statement = connection.prepareStatement(GET_DEPENDENCY_ROWS)
+            statement.setArray(1, connection.createArrayOf("TEXT", ids.toArray(new String[0])))
+            rs = statement.executeQuery()
+            while (rs.next()) {
+                rows.computeIfAbsent(rs.getString(1), { String id -> new ArrayList<String[]>() })
+                        .add([rs.getString(2), rs.getString(3)] as String[])
+            }
+        } finally {
+            close(rs, statement)
+        }
+        return rows
     }
 
     Map<String, String> getSystemIdsByIris (Iterable iris) {
@@ -1255,6 +1375,19 @@ class PostgreSQLComponent {
             }
         }
         return ids
+    }
+
+    Set<String> getExistingIris(Collection<String> iris) {
+        Set<String> existing = new HashSet<>()
+        if (iris.isEmpty()) {
+            return existing
+        }
+        withDbConnection {
+            getSystemIds(iris, getMyConnection()) { String iri, String systemId, boolean deleted ->
+                existing.add(iri)
+            }
+        }
+        return existing
     }
 
     private void getSystemIds(Iterable iris, Connection connection, Closure c) {
@@ -1845,6 +1978,35 @@ class PostgreSQLComponent {
         return getRecordOrThingId(id, GET_MAIN_ID, connection)
     }
 
+    /**
+     * Batch version of getMainId. Each (found) supplied identifier is mapped to its main ID.
+     */
+    Map<String, String> getMainIds(Collection<String> ids) {
+        Map<String, String> result = [:]
+        if (ids.isEmpty()) {
+            return result
+        }
+        withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement selectstmt = null
+            ResultSet rs = null
+            try {
+                selectstmt = connection.prepareStatement(GET_MAIN_IDS)
+                selectstmt.setArray(1, connection.createArrayOf("TEXT", ids.toArray(new String[0])))
+                rs = selectstmt.executeQuery()
+                while (rs.next()) {
+                    String id = rs.getString(1)
+                    if (result.putIfAbsent(id, rs.getString(2)) != null) {
+                        log.warn("Multiple main IDs found for ID ${id}")
+                    }
+                }
+            } finally {
+                close(rs, selectstmt)
+            }
+        }
+        return result
+    }
+
     private static String getRecordOrThingId(String id, String sql, Connection connection) {
         PreparedStatement selectstmt = null
         ResultSet rs = null
@@ -1913,6 +2075,24 @@ class PostgreSQLComponent {
             }
         } else {
             return null
+        }
+    }
+
+    boolean exists(String systemId) {
+        return withDbConnection {
+            Connection connection = getMyConnection()
+            PreparedStatement selectStatement = null
+            ResultSet resultSet = null
+            try {
+                selectStatement = connection.prepareStatement(DOCUMENT_EXISTS)
+                selectStatement.setString(1, systemId)
+                resultSet = selectStatement.executeQuery()
+                resultSet.next()
+                return resultSet.getBoolean(1)
+            }
+            finally {
+                close(resultSet, selectStatement)
+            }
         }
     }
 
