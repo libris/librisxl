@@ -61,7 +61,7 @@ class DatasetImporter {
     Map contextDocData = null
 
     static final int THING_ID_CACHE_SIZE = 100_000
-    static final int MAX_CHANGED_IDENTIFIERS = 1_000_000
+    static final int DEPENDENCY_CHECK_BATCH_SIZE = 100
 
     // LRU cache for whelk.storage.getThingId() results
     private Map<String, String> thingIdCache = new LinkedHashMap<String, String>(16, 0.75f, true) {
@@ -70,9 +70,6 @@ class DatasetImporter {
             return size() > THING_ID_CACHE_SIZE
         }
     }
-
-    private Set<String> changedIdentifiers = []
-    private Set<String> removedIds = []
 
     DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], Object descriptions=null) {
         this.whelk = whelk
@@ -418,24 +415,10 @@ class DatasetImporter {
             result = WRITE_RESULT.CREATED
         }
         if (result != WRITE_RESULT.ALREADY_UP_TO_DATE) {
-            trackChangedIdentifiers(storedIds, incomingDoc)
+            thingIdCache.keySet().removeAll(storedIds)
+            thingIdCache.keySet().removeAll(identifiers(incomingDoc))
         }
         return result
-    }
-
-    private void trackChangedIdentifiers(Set<String> oldIds, Document writtenDoc) {
-        Set<String> newIds = identifiers(writtenDoc)
-        thingIdCache.keySet().removeAll(oldIds)
-        thingIdCache.keySet().removeAll(newIds)
-        if (changedIdentifiers != null) {
-            changedIdentifiers.addAll(newIds - oldIds)
-            changedIdentifiers.addAll(oldIds - newIds)
-            // Possibly unnecessary but an unbounded set feels a little icky. When limit is reached
-            // we fall back to recalculating dependencies for every record (like before).
-            if (changedIdentifiers.size() > MAX_CHANGED_IDENTIFIERS) {
-                changedIdentifiers = null
-            }
-        }
     }
 
     private static Set<String> identifiers(Document doc) {
@@ -445,28 +428,17 @@ class DatasetImporter {
     }
 
     private void recalculateStaleDependencies(Set<String> idsInInput) {
-        if (changedIdentifiers == null) {
-            idsInInput.each { whelk.storage.recalculateDependencies(whelk.getDocument(it)) }
-            return
-        }
-
-        Set<String> dependersOfRemoved = new HashSet<>()
-        for (String removedId : removedIds) {
-            dependersOfRemoved.addAll(whelk.storage.getDependers(removedId).findAll { it in idsInInput })
-        }
-        dependersOfRemoved.each { whelk.storage.recalculateDependencies(whelk.getDocument(it)) }
-
-        if (changedIdentifiers.isEmpty()) {
-            return
-        }
-        for (String id : idsInInput) {
-            if (id in dependersOfRemoved) {
-                continue
+        long recalculated = 0
+        for (List<String> batch : new ArrayList<String>(idsInInput).collate(DEPENDENCY_CHECK_BATCH_SIZE)) {
+            Map<String, Document> docs = whelk.storage.bulkLoad(batch)
+            Map<String, Set<String>> stale = whelk.storage.findStaleDependencies(docs.values())
+            stale.each { String id, Set<String> changedDependencies ->
+                whelk.storage.recalculateDependencies(docs[id])
+                recalculated++
             }
-            Document doc = whelk.getDocument(id)
-            if (doc.getExternalRefs().any { changedIdentifiers.contains(it.iri) }) {
-                whelk.storage.recalculateDependencies(doc)
-            }
+        }
+        if (recalculated > 0) {
+            System.err.println("Recalculated stale dependencies of ${recalculated} records.")
         }
     }
 
@@ -526,7 +498,6 @@ class DatasetImporter {
         try {
             log.info("Removing " + id + " from dataset")
             whelk.remove(id, "xl", null, force)
-            removedIds.add(id)
             return true
         } catch (LinkValidationException ignored) {
             return false
