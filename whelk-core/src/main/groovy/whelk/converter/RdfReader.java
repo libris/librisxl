@@ -58,7 +58,7 @@ public class RdfReader {
         if (contextUri != null && contextUri.equals(data.get(CONTEXT_KEY))) {
             data.put(CONTEXT_KEY, context.get(CONTEXT_KEY));
         }
-        return (Map) JsonLdShapes.compactWithEmbeddedBlanks(data, context);
+        return (Map) JsonLdShapes.reCompactWithEmbeddedBlanks(data, context);
     }
 
 }

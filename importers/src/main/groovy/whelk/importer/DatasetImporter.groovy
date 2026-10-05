@@ -385,7 +385,7 @@ class DatasetImporter {
             ctx['xsd'] = XSD_NS
             // Assumes VOCAB + created in source actually means this!
             ctx['created'] = [(TYPE): 'xsd:dateTime']
-            data = (Map) JsonLdShapes.compact(data, [(CONTEXT): ctx])
+            data = (Map) JsonLdShapes.reCompact(data, [(CONTEXT): ctx])
         }
         return data
     }
@@ -410,7 +410,7 @@ class DatasetImporter {
                 if ('uri' !in ctx) {
                     ctx['uri'] = [(TYPE): 'xsd:anyURI']
                 }
-                return (Map) JsonLdShapes.compact(data, contextDocData)
+                return (Map) JsonLdShapes.reCompact(data, contextDocData)
             }
         }
         return (Map) getTvm().applyTargetVocabularyMap(whelk.systemContextUri, contextDocData, data)

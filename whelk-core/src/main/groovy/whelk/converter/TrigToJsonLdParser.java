@@ -14,6 +14,6 @@ class TrigToJsonLdParser {
 
     public static Map parse(InputStream inStream, Map context) throws IOException {
         var data = (Map) Parser.parse(new Input(inStream));
-        return (Map) JsonLdShapes.compact(data, context);
+        return (Map) JsonLdShapes.reCompact(data, context);
     }
 }
