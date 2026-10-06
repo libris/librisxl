@@ -3,8 +3,17 @@ package whelk.importer
 import java.lang.annotation.*
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPOutputStream
+
+import java.nio.file.FileVisitResult
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
+
 import groovy.cli.picocli.CliBuilder
 import groovy.util.logging.Slf4j as Log
+
 import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
 
@@ -12,9 +21,11 @@ import whelk.Document
 import whelk.Whelk
 import whelk.component.PostgreSQLComponent
 import whelk.converter.JsonLdToTrigSerializer
+import whelk.converter.RdfReader
 import whelk.filter.LinkFinder
 import whelk.reindexer.CardRefresher
 import whelk.reindexer.ElasticReindexer
+import whelk.util.Jackson
 import whelk.util.PropertyLoader
 
 @Log
@@ -28,6 +39,52 @@ class ImporterMain {
 
     def getWhelk() {
         return Whelk.createLoadedSearchWhelk(props)
+    }
+
+    @Command(args='SOURCE_URL [SUFFIXES]')
+    void rdfDirToJsonLines(String sourceDir, String suffixes='rdf,ttl,jsonld') {
+        var whelk = Whelk.createLoadedCoreWhelk(props)
+
+        var systemContextUri = whelk.systemContextUri
+        var baseUri = whelk.baseUri.toString()
+        System.err.println "Whelk system context URI: $systemContextUri; base URI: $baseUri"
+
+        var context = whelk.storage.loadDocumentByMainId(systemContextUri).data
+
+        var sourceDirPath = Paths.get(sourceDir)
+        var matcher = sourceDirPath.getFileSystem().getPathMatcher("glob:**/*.{$suffixes}")
+
+        var printStream = System.out
+
+        Files.walkFileTree(sourceDirPath, new SimpleFileVisitor<Path>() {
+            @Override
+            FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
+                if (!matcher.matches(path)) {
+                    return FileVisitResult.CONTINUE
+                }
+
+                var rdfSourcePath = path.toString()
+                var data = new File(rdfSourcePath).withInputStream {
+                    RdfReader.readRdf(it, rdfSourcePath, context, systemContextUri, baseUri)
+                }
+
+                if ('@graph' in data) {
+                  // Ensure LDDB-expected order of things:
+                  Map record = data['@graph'].find { it -> it['@type'] == 'Record' }
+                  if (record) {
+                    // assumes correctly structured record
+                    def mainId = record['mainEntity']['@id']
+                    Map mainEntity = data['@graph'].find { it -> it['@id'] == mainId }
+                    List rest = data['@graph'].findAll { it -> !it.is(record) && !it.is(mainEntity) }
+                    data = ['@graph': [record, mainEntity] + rest]
+                  }
+                }
+
+                printStream.println(Jackson.mapper.writeValueAsString(data))
+
+                return FileVisitResult.CONTINUE
+            }
+        })
     }
 
     @Command(args='SOURCE_URL DATASET_URI [DATASET_DESCRIPTION_FILE]',
