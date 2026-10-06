@@ -6,7 +6,7 @@ import trld.jsonld.Compaction;
 import trld.jsonld.Expansion;
 import trld.jsonld.Flattening;
 
-class JsonLdShapes {
+public class JsonLdShapes {
     public static Object reCompact(Object data, Map context) {
       return reCompact(data, context, null);
     }
@@ -23,7 +23,7 @@ class JsonLdShapes {
     public static Object reCompactWithEmbeddedBlanks(Object data, Map context, String baseIri) {
         var expanded = expand(data, baseIri);
         var flattened = flatten(expanded);
-        var compacted = Compaction.compact(context, flattened);
+        var compacted = Compaction.compact(context, flattened, baseIri);
         EmbedBlanks.embedBlanks(compacted);
         return compacted;
     }
