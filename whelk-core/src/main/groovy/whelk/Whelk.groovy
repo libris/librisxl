@@ -388,10 +388,10 @@ class Whelk {
         removedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
             if (id) {
-                Document doc = storage.load(id)
                 if (isDeferringIndexing()) {
-                    deferredIndexIds.add(doc.getShortId())
+                    deferredIndexIds.add(id)
                 } else {
+                    Document doc = storage.load(id)
                     elastic.decrementReverseLinks(doc, link.relation)
                 }
             }
