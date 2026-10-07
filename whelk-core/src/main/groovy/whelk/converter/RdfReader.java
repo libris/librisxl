@@ -12,13 +12,21 @@ import static whelk.util.Jackson.mapper;
 public class RdfReader {
 
     static Map readRdf(InputStream bis, String rdfSourcePath, Map context) throws IOException {
+        return readRdf(bis, rdfSourcePath, context, null);
+    }
+
+    static Map readRdf(InputStream bis, String rdfSourcePath, Map context, String contextUri) throws IOException {
+        return readRdf(bis, rdfSourcePath, context, contextUri, null);
+    }
+
+    static Map readRdf(InputStream bis, String rdfSourcePath, Map context, String contextUri, String baseIri) throws IOException {
         Map data;
         if (rdfSourcePath.endsWith(".ttl")) {
-            data = readTurtle(bis, rdfSourcePath, context);
+            data = readTurtle(bis, rdfSourcePath, context, baseIri);
         } else if (rdfSourcePath.endsWith(".rdf")) {
-            data = readRdfXml(bis, rdfSourcePath, context);
+            data = readRdfXml(bis, rdfSourcePath, context, baseIri);
         } else if (rdfSourcePath.endsWith(".jsonld")) {
-            data = readJsonLd(bis, rdfSourcePath, context);
+            data = readJsonLd(bis, rdfSourcePath, context, contextUri, baseIri);
         } else {
             throw new WhelkRuntimeException("Unknown RDF format for ${rdfSourcePath}");
         }
@@ -37,17 +45,20 @@ public class RdfReader {
         }
     }
 
-    static Map readTurtle(InputStream bis, String rdfSourcePath, Map context) throws IOException {
-        return TrigToJsonLdParser.parse(bis, context);
+    private static Map readTurtle(InputStream bis, String rdfSourcePath, Map context, String baseIri) throws IOException {
+        return TrigToJsonLdParser.parse(bis, context, baseIri);
     }
 
-    static Map readRdfXml(InputStream bis, String rdfSourcePath, Map context) throws IOException {
-        return (Map) RdfXmlToJsonLdParser.parse(bis, context);
+    private static Map readRdfXml(InputStream bis, String rdfSourcePath, Map context, String baseIri) throws IOException {
+        return (Map) RdfXmlToJsonLdParser.parse(bis, context, baseIri);
     }
 
-    static Map readJsonLd(InputStream bis, String rdfSourcePath, Map context) throws IOException {
+    private static Map readJsonLd(InputStream bis, String rdfSourcePath, Map context, String contextUri, String baseIri) throws IOException {
         Map data = mapper.readValue(bis, Map.class);
-        return (Map) TrigToJsonLdParser.compact(data, context);
+        if (contextUri != null && contextUri.equals(data.get(CONTEXT_KEY))) {
+            data.put(CONTEXT_KEY, context.get(CONTEXT_KEY));
+        }
+        return (Map) JsonLdShapes.reCompactWithEmbeddedBlanks(data, context, baseIri);
     }
 
 }

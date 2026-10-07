@@ -14,15 +14,18 @@ public class RdfXmlToJsonLdParser {
     }
 
     public static Object parse(InputStream inStream, Map context) throws IOException {
+        return parse(inStream, context, null);
+    }
+
+    public static Object parse(InputStream inStream, Map context, String baseIri) throws IOException {
         var model = ModelFactory.createDefaultModel();
-        model.read(inStream, "RDF/XML");
+        model.read(inStream, baseIri, "RDF/XML");
         var baos = new ByteArrayOutputStream();
         try (var outSteam = new OutputStreamWriter(baos)) {
           model.write(outSteam, "JSONLD");
         }
         var inData = mapper.readValue(baos.toString("UTF-8"), Map.class);
-        var data = TrigToJsonLdParser.compact(inData, context);
-        EmbedBlanks.embedBlanks(data);
+        var data = JsonLdShapes.reCompactWithEmbeddedBlanks(inData, context, baseIri);
         return data;
     }
 
