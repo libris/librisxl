@@ -549,6 +549,10 @@ class Whelk {
             }
         }
 
+        if (!includingTypedIDs && !log.isDebugEnabled()) {
+            return collidingSystemIDs;
+        }
+
         // Typed id queries on:
         List<Tuple> typedIDs = document.getTypedRecordIdentifiers()
         typedIDs.addAll(document.getTypedThingIdentifiers())
