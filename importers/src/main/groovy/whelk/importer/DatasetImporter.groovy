@@ -432,6 +432,7 @@ class DatasetImporter {
                 }
             }
             if (ctx.size() == expectedSize) {
+                // TODO: remove this hack when definitions consistently use `:uri ""^^xsd:anyURI`!
                 // Force plain string uri value to be expanded as datatyped:
                 if ('uri' !in ctx) {
                     ctx['uri'] = [(TYPE): 'xsd:anyURI']
