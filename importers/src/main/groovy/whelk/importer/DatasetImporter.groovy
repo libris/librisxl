@@ -78,9 +78,20 @@ class DatasetImporter {
     DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], Object descriptions=null) {
         this.whelk = whelk
         this.datasetUri = datasetUri
+        if (datasetUri != null) {
+          log.info("Initialized DatasetImporter for ${datasetUri}")
+        }
+        log.info("Using system context: ${whelk.systemContextUri}")
         if (whelk.systemContextUri) {
             contextDocData = getDocByMainEntityId(whelk.systemContextUri)?.data
+          if (contextDocData.containsKey(CONTEXT)) {
+            def ctx = contextDocData.get(CONTEXT)
+            if (ctx instanceof Map) log.info("Context size: ${ctx.size()}")
+          } else {
+            log.warn("Context missing ${CONTEXT}")
+          }
         }
+
         if (descriptions != null) {
             Map datasetDesc = descriptions instanceof Map ? (Map) descriptions : loadData((String) descriptions)
             givenDsData = (Map) findInData(datasetDesc, datasetUri)
@@ -97,13 +108,14 @@ class DatasetImporter {
     }
 
     static void loadDescribedDatasets(Whelk whelk, String datasetDescPath, String sourceBaseDir, Set<String> onlyDatasets=null, Map flags=[:]) {
+        log.info("Loading datasets described in: ${datasetDescPath}")
         var dsImp = new DatasetImporter(whelk, null)
         var datasets = (Map) new File(datasetDescPath).withInputStream {
             dsImp.contextDocData ? dsImp.loadTurtleAsSystemShaped(it) : loadSelfCompactedTurtle(it)
         }
         for (Map item : (List<Map>) datasets[GRAPH] ?: asList(datasets)) {
             if (onlyDatasets && item[ID] !in onlyDatasets) {
-                System.err.println("Skipping dataset: ${item[ID]}")
+                log.info("Skipping dataset: ${item[ID]}")
                 continue
             }
             if (item[TYPE] == 'Dataset' && 'sourceData' in item) {
@@ -141,7 +153,7 @@ class DatasetImporter {
 
     private void doImportDataset(String sourceUrl) {
         long startTime = System.nanoTime()
-        System.err.println("Importing from: ${sourceUrl}")
+        log.info("Importing from: ${sourceUrl}")
 
         Set<String> idsInInput = []
 
@@ -186,7 +198,7 @@ class DatasetImporter {
             countWriteAndMaybeFlushIndexing()
 
             if ( lineCount % 100 == 0 ) {
-                System.err.println("Processed " + lineCount + " input records. " + createdCount + " created, " +
+                log.info("Processed " + lineCount + " input records. " + createdCount + " created, " +
                         updatedCount + " updated, " + (lineCount-createdCount-updatedCount) + " already up to date.")
             }
             ++lineCount
@@ -206,11 +218,11 @@ class DatasetImporter {
 
         Duration elapsedTime = Duration.ofNanos(System.nanoTime() - startTime)
         String elapsed = String.format("%02dh%02dm%02ds", elapsedTime.toHours(), elapsedTime.toMinutesPart(), elapsedTime.toSecondsPart())
-        System.err.println("Created: " + createdCount +" new,\n" +
-                "updated: " + updatedCount + " existing and\n" +
-                "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
-                "out of the: " + idsInInput.size() + " records in dataset: \"" + dsInfo.uri + "\".\n" +
-                "Dataset now in sync in ${elapsed}.")
+        log.info("Created: " + createdCount +" new,\n" +
+                "\tupdated: " + updatedCount + " existing and\n" +
+                "\tdeleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
+                "\tout of the: " + idsInInput.size() + " records in dataset: \"" + dsInfo.uri + "\".\n" +
+                "\tDataset now in sync in ${elapsed}.")
     }
 
     void dropDataset() {
@@ -224,7 +236,7 @@ class DatasetImporter {
         } finally {
             whelk.endDeferredIndexing()
         }
-        System.err.println("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
+        log.info("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
     }
 
     private void processDataset(String sourceUrl, Closure processItem) {
@@ -252,16 +264,16 @@ class DatasetImporter {
         Map selfDescribedDsData = findInData(data, datasetUri)
         String dsId = null
         if (selfDescribedDsData != null) {
-            System.err.println("Using self-described dataset description")
+            log.info("Using self-described dataset description")
             setDatasetInfo(datasetUri, data)
         } else if (givenDsData != null) {
-            System.err.println("Using given dataset description")
+            log.info("Using given dataset description")
             setDatasetInfo(datasetUri, givenDsData)
             dsRecord = completeRecord(givenDsData, JsonLd.SYSTEM_RECORD_TYPE)
             createOrUpdateDocument(dsRecord)
             dsId = dsRecord.getShortId()
         } else if (useExistingDatasetDescription) {
-            System.err.println("Using existing dataset description")
+            log.info("Using existing dataset description")
             lookupDatasetInfo(datasetUri)
         }
         return dsId
@@ -273,7 +285,7 @@ class DatasetImporter {
             throw new RuntimeException("Provided dataset ${givenData[ID]} does not match: ${datasetUri}")
         }
         dsInfo = new DatasetInfo(dsData)
-        System.err.println("Using new dataset: ${dsInfo.uri}")
+        log.info("Using new dataset: ${dsInfo.uri}")
     }
 
     protected void lookupDatasetInfo(String datasetUri) {
@@ -284,7 +296,7 @@ class DatasetImporter {
         Map datasetData = ((List) datasetRecord.data[GRAPH])[1]
         assert datasetData[ID] == datasetUri
         dsInfo = new DatasetInfo(datasetData)
-        System.err.println("Using already defined dataset: ${dsInfo.uri}")
+        log.info("Using already defined dataset: ${dsInfo.uri}")
     }
 
     protected Document completeRecord(Map data, String recordType, boolean remap = false) {
@@ -492,7 +504,7 @@ class DatasetImporter {
                 } else {
                     deletedCount++
                     if (deletedCount % 50 == 0) {
-                        System.err.println("Cleaning up: " + deletedCount + " records deleted (they are no longer in the dataset).")
+                        log.info("Cleaning up: " + deletedCount + " records deleted (they are no longer in the dataset).")
                     }
                 }
             }
