@@ -375,7 +375,7 @@ class DatasetImporter {
 
     private static Map loadSelfCompactedTurtle(InputStream ins) {
         // Assuming that the Turtle *shape* follows a hard-coded system context!
-        Map data = (Map) TrigToJsonLdParser.parse(ins)
+        Map data = (Map) TrigToJsonLdParser.parseRaw(ins)
         if (CONTEXT in data) {
             Map ctx = [:]
             ctx.putAll((Map) data[CONTEXT])
@@ -392,7 +392,7 @@ class DatasetImporter {
 
     private Map loadTurtleAsSystemShaped(InputStream ins) {
         assert contextDocData
-        Map data = TrigToJsonLdParser.parse(ins)
+        Map data = TrigToJsonLdParser.parseRaw(ins)
         if (data[CONTEXT] instanceof Map) {
             Map ctx = (Map) data[CONTEXT]
             int expectedSize = 0
