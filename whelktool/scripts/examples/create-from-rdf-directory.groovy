@@ -1,4 +1,3 @@
-import java.nio.file.FileVisitOption
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
@@ -11,9 +10,9 @@ import whelk.datatool.DocumentItem
 import static whelk.converter.RdfReader.readRdf
 
 Map loadRdf(Whelk whelk, String rdfSourcePath) {
-    var context = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
+    var context = whelk.storage.loadDocumentByMainId(whelk.systemContextUri).data
     return new File(rdfSourcePath).withInputStream {
-        readRdf(it, rdfSourcePath, context, whelk.systemContextUri)
+        readRdf(it, rdfSourcePath, context, whelk.systemContextUri, whelk.baseUri.toString())
     }
 }
 

@@ -23,7 +23,7 @@ var rdfSourcePath = System.getProperty("rdfdata")
 var file = new File(rdfSourcePath)
 
 var whelk = getWhelk()
-var context = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
+var context = whelk.storage.loadDocumentByMainId(whelk.systemContextUri).data
 
 file.withInputStream {
     var iterParser = new XmlIterParser(it)

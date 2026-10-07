@@ -3,7 +3,7 @@ import whelk.datatool.DocumentItem
 import static whelk.converter.RdfReader.readRdf
 
 List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
-    var context = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
+    var context = whelk.storage.loadDocumentByMainId(whelk.systemContextUri).data
     Map data = new File(rdfSourcePath).withInputStream {
         readRdf(it, rdfSourcePath, context, whelk.systemContextUri)
     }
