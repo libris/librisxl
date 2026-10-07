@@ -62,6 +62,9 @@ class DatasetImporter {
 
     static final int THING_ID_CACHE_SIZE = 100_000
     static final int DEPENDENCY_CHECK_BATCH_SIZE = 100
+    static final int INDEX_FLUSH_INTERVAL = 10_000
+
+    private long writesSinceIndexFlush = 0
 
     // LRU cache for whelk.storage.getThingId() results
     private Map<String, String> thingIdCache = new LinkedHashMap<String, String>(16, 0.75f, true) {
@@ -127,6 +130,15 @@ class DatasetImporter {
     }
 
     void importDataset(String sourceUrl) {
+        whelk.startDeferredIndexing()
+        try {
+            doImportDataset(sourceUrl)
+        } finally {
+            whelk.endDeferredIndexing()
+        }
+    }
+
+    private void doImportDataset(String sourceUrl) {
         long startTime = System.nanoTime()
         System.err.println("Importing from: ${sourceUrl}")
 
@@ -170,6 +182,7 @@ class DatasetImporter {
                 case WRITE_RESULT.UPDATED:
                     updatedCount++;
             }
+            countWriteAndMaybeFlushIndexing()
 
             if ( lineCount % 100 == 0 ) {
                 System.err.println("Processed " + lineCount + " input records. " + createdCount + " created, " +
@@ -187,6 +200,9 @@ class DatasetImporter {
         // Should be fixed by merging PlaceholderRecord handling?
         recalculateStaleDependencies(idsInInput)
 
+        System.err.println("Indexing remaining changes...")
+        whelk.flushDeferredIndexing()
+
         Duration elapsedTime = Duration.ofNanos(System.nanoTime() - startTime)
         String elapsed = String.format("%02dh%02dm%02ds", elapsedTime.toHours(), elapsedTime.toMinutesPart(), elapsedTime.toSecondsPart())
         System.err.println("Created: " + createdCount +" new,\n" +
@@ -200,7 +216,13 @@ class DatasetImporter {
         if (dsInfo == null) {
             dsInfo =  new DatasetInfo([(ID): datasetUri])
         }
-        long deletedCount = removeDeleted([] as Set, [])
+        long deletedCount
+        whelk.startDeferredIndexing()
+        try {
+            deletedCount = removeDeleted([] as Set, [])
+        } finally {
+            whelk.endDeferredIndexing()
+        }
         System.err.println("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
     }
 
@@ -498,9 +520,17 @@ class DatasetImporter {
         try {
             log.info("Removing " + id + " from dataset")
             whelk.remove(id, "xl", null, force)
+            countWriteAndMaybeFlushIndexing()
             return true
         } catch (LinkValidationException ignored) {
             return false
+        }
+    }
+
+    private void countWriteAndMaybeFlushIndexing() {
+        if (++writesSinceIndexFlush >= INDEX_FLUSH_INTERVAL) {
+            whelk.flushDeferredIndexing()
+            writesSinceIndexFlush = 0
         }
     }
 

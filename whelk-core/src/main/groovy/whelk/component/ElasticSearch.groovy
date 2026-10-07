@@ -667,11 +667,11 @@ class ElasticSearch {
                 }
             }
 
-            if (path && path.last() == 'classification') {
+            if (path && 'classification'.equals(path.last())) {
                 addFlattenedClassificationFields(asList(value))
             }
 
-            if (path && path.last() == RECORD_KEY) {
+            if (path && RECORD_KEY.equals(path.last())) {
                 var record = (Map) value
                 if (record.containsKey('controlNumber')) {
                     var controlNumber = value['controlNumber']
@@ -684,7 +684,7 @@ class ElasticSearch {
 
             if ('Item' != searchCard[TYPE_KEY]
                     && path
-                    && "heldBy" == path.last()
+                    && 'heldBy'.equals(path.last())
                     && !path.contains('hasComponent')
                     && value instanceof Map
                     && value[JsonLd.ID_KEY]) {
