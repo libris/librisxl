@@ -373,8 +373,13 @@ class DatasetImporter {
             }
     }
 
+    /**
+     * This method is <em>only</em> intended for initial whelk bootstrapping,
+     * to initially load systemContext (contextDocData).
+     */
     private static Map loadSelfCompactedTurtle(InputStream ins) {
         // Assuming that the Turtle *shape* follows a hard-coded system context!
+        log.warn("Using loadSelfCompactedTurtle should only happen during setup of fresh whelk installation")
         Map data = (Map) TrigToJsonLdParser.parseRaw(ins)
         if (CONTEXT in data) {
             Map ctx = [:]
@@ -393,10 +398,19 @@ class DatasetImporter {
     private Map loadTurtleAsSystemShaped(InputStream ins) {
         assert contextDocData
         Map data = TrigToJsonLdParser.parseRaw(ins)
+        if (checkedSystemShaped(data, whelk.jsonld.vocabId)) {
+            return (Map) JsonLdShapes.reCompact(data, contextDocData)
+        } else {
+            log.info("Applying target vocabulary map")
+            return (Map) getTvm().applyTargetVocabularyMap(whelk.systemContextUri, contextDocData, data)
+        }
+    }
+
+    private static boolean checkedSystemShaped(Map data, String vocabId) {
         if (data[CONTEXT] instanceof Map) {
             Map ctx = (Map) data[CONTEXT]
             int expectedSize = 0
-            if (ctx[VOCAB] == whelk.jsonld.vocabId) {
+            if (ctx[VOCAB] == vocabId) {
                 expectedSize++
                 if (ctx.containsKey(BASE)) {
                     expectedSize++
@@ -406,14 +420,14 @@ class DatasetImporter {
                 }
             }
             if (ctx.size() == expectedSize) {
-                // Forces plain string uri values to be taken as datatyped
+                // Force plain string uri value to be expanded as datatyped:
                 if ('uri' !in ctx) {
                     ctx['uri'] = [(TYPE): 'xsd:anyURI']
                 }
-                return (Map) JsonLdShapes.reCompact(data, contextDocData)
+                return true
             }
         }
-        return (Map) getTvm().applyTargetVocabularyMap(whelk.systemContextUri, contextDocData, data)
+        return false
     }
 
     private Document getDocByMainEntityId(String id) {
