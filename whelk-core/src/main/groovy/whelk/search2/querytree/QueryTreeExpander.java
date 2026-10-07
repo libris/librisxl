@@ -42,22 +42,9 @@ public class QueryTreeExpander {
             return condition;
         }
 
-        Node expanded = expandSelector(condition, jsonLd, rdfSubjectTypes)
+        return expandSelector(condition, jsonLd, rdfSubjectTypes)
                 .deepMap(QueryTreeExpander::expandRestrictions)
                 .deepMap(n -> expandType(n, jsonLd));
-
-        return condition.isFlaggedForPostFilter()
-                ? flagDescendantsForPostFilter(expanded) // Pass on post filter flag to descendants of expanded
-                : expanded;
-    }
-
-    private static Node flagDescendantsForPostFilter(Node node) {
-        return node.deepMap(n -> {
-            if (n instanceof Condition c) {
-                c.flagForPostFilter();
-            }
-            return n;
-        });
     }
 
     private static Node expandOr(Or or, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
@@ -207,9 +194,13 @@ public class QueryTreeExpander {
     private static Node expandRestrictions(Node node) {
         if (node instanceof Condition c) {
             List<Condition> restrictions = buildRestrictions(c.selector().path());
-            return restrictions.isEmpty()
-                    ? node
-                    : new And(Stream.concat(Stream.of(node), restrictions.stream()).toList());
+            if (restrictions.isEmpty()) {
+                return node;
+            }
+            if (c.isFlaggedForPostFilter()) {
+                restrictions = restrictions.stream().map(Condition::flagForPostFilter).toList();
+            }
+            return new And(Stream.concat(Stream.of(node), restrictions.stream()).toList());
         }
         return node;
     }

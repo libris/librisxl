@@ -83,11 +83,13 @@ public class SelectedFacets {
         return result;
     }
 
-    public void flagMultiOrRadioSelectedForPostFilter() {
-       getAllMultiOrRadioSelected().values()
-               .stream()
-               .flatMap(List::stream)
-               .forEach(Condition::flagForPostFilter);
+    public QueryTree flagMultiOrRadioSelectedForPostFilter(QueryTree queryTree) {
+        for (List<Condition> multiSelected : getAllMultiOrRadioSelected().values()) {
+            for (Condition condition : multiSelected) {
+                queryTree = queryTree.replace(condition, condition.flagForPostFilter());
+            }
+        }
+        return queryTree;
     }
 
     private boolean isAndSelected(String propertyKey) {

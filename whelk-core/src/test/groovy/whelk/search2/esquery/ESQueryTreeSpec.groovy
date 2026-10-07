@@ -27,7 +27,8 @@ class ESQueryTreeSpec extends Specification {
                 ]
         ]
         AppParams appParams = new AppParams(appConfig, jsonLd)
-        new SelectedFacets(qt, appParams.sliceList).flagMultiOrRadioSelectedForPostFilter()
+        SelectedFacets selectedFacets = new SelectedFacets(qt, appParams.sliceList)
+        qt = selectedFacets.flagMultiOrRadioSelectedForPostFilter(qt)
         ESQueryTree esQueryTree = new ESQueryTree(ESQueryTreeBuilder.buildFrom(qt.tree(), esSettings))
 
         expect:
@@ -90,7 +91,8 @@ class ESQueryTreeSpec extends Specification {
                 ]
         ]
         AppParams appParams = new AppParams(appConfig, jsonLd)
-        new SelectedFacets(qt, appParams.sliceList).flagMultiOrRadioSelectedForPostFilter()
+        SelectedFacets selectedFacets = new SelectedFacets(qt, appParams.sliceList)
+        qt = selectedFacets.flagMultiOrRadioSelectedForPostFilter(qt)
         ESQueryTree esQueryTree = qt.expand(jsonLd).toEsQuery(esSettings)
         Map result = esQueryTree.dslWithPostFilter()
 
@@ -130,7 +132,8 @@ class ESQueryTreeSpec extends Specification {
                 ]
         ]
         AppParams appParams = new AppParams(appConfig, jsonLd)
-        new SelectedFacets(qt, appParams.sliceList).flagMultiOrRadioSelectedForPostFilter()
+        SelectedFacets selectedFacets = new SelectedFacets(qt, appParams.sliceList)
+        qt = selectedFacets.flagMultiOrRadioSelectedForPostFilter(qt)
         ESQueryTree esQueryTree = qt.expand(jsonLd).toEsQuery(esSettings)
         Map result = esQueryTree.dslWithPostFilter()
 

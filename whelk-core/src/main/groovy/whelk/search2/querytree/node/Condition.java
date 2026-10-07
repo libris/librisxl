@@ -22,13 +22,17 @@ public non-sealed class Condition implements Node {
     private final Selector selector;
     private final Operator operator;
     private final Value value;
-
-    private boolean flaggedForPostFilter = false;
+    private final boolean postFilter;
 
     public Condition(Selector selector, Operator operator, Value value) {
+        this(selector, operator, value, false);
+    }
+
+    protected Condition(Selector selector, Operator operator, Value value, boolean postFilter) {
         this.selector = selector;
         this.operator = operator;
         this.value = value;
+        this.postFilter = postFilter;
     }
 
     public Condition(String key, Operator operator, Value value) {
@@ -84,15 +88,19 @@ public non-sealed class Condition implements Node {
     }
 
     public Condition withSelector(Selector s) {
-        return new Condition(s, operator, value);
+        return newInstance(s, operator, value, postFilter);
     }
 
     public Condition withOperator(Operator op) {
-        return new Condition(selector, op, value);
+        return newInstance(selector, op, value, postFilter);
     }
 
     public Condition withValue(Value v) {
-        return new Condition(selector, operator, v);
+        return newInstance(selector, operator, v, postFilter);
+    }
+
+    public Condition flagForPostFilter() {
+        return newInstance(selector, operator, value, true);
     }
 
     public boolean isTextQuery() {
@@ -108,15 +116,11 @@ public non-sealed class Condition implements Node {
     }
 
     public boolean isFlaggedForPostFilter() {
-        return flaggedForPostFilter;
-    }
-
-    public void flagForPostFilter() {
-        this.flaggedForPostFilter = true;
+        return postFilter;
     }
 
     public Type asTypeNode() {
-        return new Type((Property.RdfType) selector, (VocabTerm) value);
+        return new Type((Property.RdfType) selector, (VocabTerm) value, postFilter);
     }
 
     public FreeText freeTextValue() {
@@ -126,12 +130,20 @@ public non-sealed class Condition implements Node {
         throw new IllegalStateException("Value is not FreeText");
     }
 
+    protected Condition newInstance(Selector selector, Operator operator, Value value, boolean postFilter) {
+        return new Condition(selector, operator, value, postFilter);
+    }
+
     public final static class Type extends Condition {
         private final Property.RdfType rdfTypeProperty;
         private final String type;
 
         public Type(Property.RdfType rdfTypeProperty, VocabTerm value) {
-            super(rdfTypeProperty, Operator.EQUALS, value);
+            this(rdfTypeProperty, value, false);
+        }
+
+        Type(Property.RdfType rdfTypeProperty, VocabTerm value, boolean postFilter) {
+            super(rdfTypeProperty, Operator.EQUALS, value, postFilter);
             this.rdfTypeProperty = rdfTypeProperty;
             this.type = value.jsonForm();
         }
@@ -146,6 +158,16 @@ public non-sealed class Condition implements Node {
 
         public String type() {
             return type;
+        }
+
+        @Override
+        protected Condition newInstance(Selector selector, Operator operator, Value value, boolean postFilter) {
+            if (selector instanceof Property.RdfType rdfType
+                    && EQUALS.equals(operator)
+                    && value instanceof VocabTerm v) {
+                return new Type(rdfType, v, postFilter);
+            }
+            return new Condition(selector, operator, value, postFilter);
         }
     }
 }

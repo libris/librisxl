@@ -60,11 +60,10 @@ public record ESQueryDefinition(QueryTree tree,
     public Map<String, Object> dsl() {
         boolean includeAggsQuery = aggs != null;
 
-        if (includeAggsQuery) {
-            aggs.selectedFacets().flagMultiOrRadioSelectedForPostFilter();
-        }
-
-        ESQueryTree esQueryTree = tree.expand(jsonLd)
+        ESQueryTree esQueryTree = (includeAggsQuery
+                ? aggs.selectedFacets().flagMultiOrRadioSelectedForPostFilter(tree)
+                : tree)
+                .expand(jsonLd)
                 .toEsQuery(settings)
                 .add(settings.boost().getScoreFunctions());
 
