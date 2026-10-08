@@ -8,7 +8,6 @@ import whelk.search2.QueryParams
 import whelk.search2.SelectedFacets
 import whelk.search2.TestData
 import whelk.search2.querytree.QueryTree
-import whelk.search2.querytree.selector.Property
 import whelk.search2.querytree.value.Link
 
 class ESQueryDefinitionSpec extends Specification {
@@ -499,8 +498,8 @@ class ESQueryDefinitionSpec extends Specification {
         QueryParams queryParams = new QueryParams([:])
         Link object = new Link("https://libris.kb.se/fcrtpljz1qp2bdv#it")
         List<ESQueryDefinition.PredicateDefinition> predicates = [
-                new ESQueryDefinition.PredicateDefinition(Property.getProperty('p19', jsonLd), ['T2x']),
-                new ESQueryDefinition.PredicateDefinition(Property.getProperty('p20', jsonLd), ['T3'])
+                new ESQueryDefinition.PredicateDefinition(Disambiguate.getPropertyByKey('p19', jsonLd), ['T2x']),
+                new ESQueryDefinition.PredicateDefinition(Disambiguate.getPropertyByKey('p20', jsonLd), ['T3'])
         ]
         ESQueryDefinition.PAggsDefinition pAggs = new ESQueryDefinition.PAggsDefinition(object, predicates)
         ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, null, pAggs)

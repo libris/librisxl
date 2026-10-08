@@ -36,7 +36,7 @@ class QueryTreeExpanderSpec extends Specification {
         where:
         query                 | result
         "p10:v1"              | "p4.p1:v1 p4.p3:\"https://id.kb.se/x\""
-        "p11:v1"              | "p3.p4:v1 (\"p3.rdf:type\":T3 OR \"p3.rdf:type\":T3x)"
+        "p11:v1"              | "p3.p4:v1 (p3.type:T3 OR p3.type:T3x)"
         "restrictedP_p1:v1"   | "p3.p1:v1 p3.p4:\"https://id.kb.se/x\""
         "restrictedP_p1_2:v1" | "p3.p1:v1 p3.p4:\"https://id.kb.se/x\""
     }

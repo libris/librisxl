@@ -121,7 +121,7 @@ public class QueryUtil {
 //              .map(p -> new Property(p, jsonLd))
 //              .toList();
         List<Property> integralRelations = Stream.of("hasInstance", "instanceOf", "hasComponent")
-                .map(p -> Property.getProperty(p, jsonLd))
+                .map(p -> Property.buildProperty(p, jsonLd))
                 .toList();
 
         return integralRelations.stream()

@@ -10,7 +10,6 @@ import whelk.search2.querytree.selector.Key
 import whelk.search2.querytree.value.Link
 
 import whelk.search2.querytree.selector.Path
-import whelk.search2.querytree.selector.Property
 import whelk.search2.querytree.value.Token
 import whelk.search2.querytree.value.VocabTerm
 import whelk.search2.querytree.value.YearRange
@@ -25,21 +24,21 @@ class DisambiguateSpec extends Specification {
 
         where:
         s                   | result
-        'p1'                | Property.getProperty('p1', jsonLd)
-        'p1Label'           | Property.getProperty('p1', jsonLd)
+        'p1'                | Disambiguate.getPropertyByKey('p1', jsonLd)
+        'p1Label'           | Disambiguate.getPropertyByKey('p1', jsonLd)
         'unrecognizedLabel' | new Key.UnrecognizedKey(new Token.Raw('unrecognizedLabel'))
         '@id'               | new Key.RecognizedKey(new Token.Raw('@id'))
         '_str'              | new Key.RecognizedKey(new Token.Raw('_str'))
-        'p'                 | Property.getProperty('p', jsonLd)
-        'pLabel'            | Property.getProperty('p2', jsonLd)
+        'p'                 | Disambiguate.getPropertyByKey('p', jsonLd)
+        'pLabel'            | Disambiguate.getPropertyByKey('p2', jsonLd)
         'pp'                | new Key.AmbiguousKey(new Token.Raw('pp'))
-        'ctx.p'             | Property.getProperty('ctxProp', jsonLd)
-        'p3.p4'             | new Path(List.of(Property.getProperty('p3', jsonLd), Property.getProperty('p4', jsonLd)))
+        'ctx.p'             | Disambiguate.getPropertyByKey('ctxProp', jsonLd)
+        'p3.p4'             | new Path(List.of(Disambiguate.getPropertyByKey('p3', jsonLd), Disambiguate.getPropertyByKey('p4', jsonLd)))
     }
 
     def "try map string to a recognized value type for the associated property"() {
         given:
-        def res = disambiguate.mapValueForProperty(Property.getProperty(p, jsonLd), v)
+        def res = disambiguate.mapValueForProperty(Disambiguate.getPropertyByKey(p, jsonLd), v)
 
         expect:
         res == Optional.ofNullable(result)
@@ -79,5 +78,34 @@ class DisambiguateSpec extends Specification {
         'p12'      | 'xyz'                                   | InvalidValue.forbidden('xyz')
         'p12'      | '1990/01/01'                            | InvalidValue.forbidden('1990/01/01')
         'p15'      | 'XYZ'                                   | new Link('https://libris.kb.se/XYZ')
+    }
+
+    def "getPropertyByKey with a custom namespace precedence order"() {
+        given:
+        def vocab = ['@graph': [
+                ['@id': 'https://example.org/vocab/p1', '@type': 'DatatypeProperty'],
+                ['@id': 'https://example.org/ns1/p1', '@type': 'DatatypeProperty'],
+                ['@id': 'https://example.org/ns2/p2', '@type': 'DatatypeProperty']
+        ]]
+        def ctx = ['@context': [
+                'voc'   : 'https://example.org/vocab/',
+                '@vocab': 'https://example.org/vocab/',
+                'ns1'   : 'https://example.org/ns1/',
+                'ns2'   : 'https://example.org/ns2/'
+        ]]
+        def ld = new JsonLd(ctx, [:], vocab)
+
+        expect:
+        Disambiguate.getPropertyByKey(key, ld, nsPrecedenceOrder).name() == result
+
+        where:
+        key      | nsPrecedenceOrder     | result
+        'p1'     | ['ns1', 'ns2']        | 'ns1:p1'
+        'p1'     | ['ns2', 'ns1']        | 'ns1:p1'
+        'p1'     | ['voc', 'ns1', 'ns2'] | 'p1'
+        'p1'     | ['ns2', 'ns1', 'voc'] | 'ns1:p1'
+        'p2'     | ['voc', 'ns1', 'ns2'] | 'ns2:p2'
+        'p1'     | ['ns2', 'ns1', 'voc'] | 'ns1:p1'
+        'voc:p1' | ['ns1', 'ns2', 'voc'] | 'p1'
     }
 }
