@@ -2,21 +2,22 @@ package whelk.search2;
 
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
-import whelk.search2.querytree.Any;
-import whelk.search2.querytree.DateTime;
-import whelk.search2.querytree.FilterAlias;
-import whelk.search2.querytree.FreeText;
-import whelk.search2.querytree.InvalidValue;
-import whelk.search2.querytree.Key;
-import whelk.search2.querytree.Link;
-import whelk.search2.querytree.Path;
-import whelk.search2.querytree.PathElement;
-import whelk.search2.querytree.Property;
-import whelk.search2.querytree.Selector;
-import whelk.search2.querytree.Token;
-import whelk.search2.querytree.Value;
-import whelk.search2.querytree.VocabTerm;
-import whelk.search2.querytree.YearRange;
+
+import whelk.search2.querytree.selector.Path;
+import whelk.search2.querytree.selector.PathElement;
+import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.selector.Selector;
+import whelk.search2.querytree.value.Any;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.value.FreeText;
+import whelk.search2.querytree.value.DateTime;
+import whelk.search2.querytree.value.InvalidValue;
+import whelk.search2.querytree.selector.Key;
+import whelk.search2.querytree.value.Link;
+import whelk.search2.querytree.value.Token;
+import whelk.search2.querytree.value.Value;
+import whelk.search2.querytree.value.VocabTerm;
+import whelk.search2.querytree.value.YearRange;
 
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -169,7 +170,7 @@ public class Disambiguate {
         }
 
         // TODO: Get valid keys from ES index? Add totalItemsByRelation to vocab?
-        if (LD_KEYS.contains(token.value()) || token.value().startsWith("_") || "totalItemsByRelation".equals(token.value())) {
+        if (LD_KEYS.contains(token.value()) || token.value().startsWith("_") || token.value().contains("totalItemsByRelation")) {
             return new Key.RecognizedKey(token);
         }
 
@@ -181,8 +182,8 @@ public class Disambiguate {
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {
-        if (property instanceof Property.TextQuery textQuery) {
-            return Optional.of(new FreeText(textQuery, token));
+        if (property instanceof Property.TextQuery) {
+            return Optional.of(new FreeText(token));
         }
         if (value.equals(Operator.WILDCARD)) {
             return Optional.of(new Any.Wildcard());

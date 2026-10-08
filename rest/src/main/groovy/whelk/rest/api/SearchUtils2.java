@@ -6,7 +6,7 @@ import whelk.exception.WhelkRuntimeException;
 
 
 import whelk.search2.AppParams;
-import whelk.search2.ESSettings;
+import whelk.search2.esquery.ESSettings;
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
 import whelk.search2.ResourceLookup;
