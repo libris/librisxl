@@ -102,7 +102,7 @@ public class Disambiguate {
 
     public static Property getPropertyByKey(String key, JsonLd jsonLd, List<String> nsPrecedenceOrder) {
         Map<String, Map<String, Object>> vocab = jsonLd.vocabIndex;
-        String vocabPrefix = jsonLd.getVocabPrefix();
+        String vocabPrefix = ResourceLookup.getVocabPrefix(jsonLd);
 
         String[] keyParts = key.split(":");
         boolean isPrefixed = keyParts.length == 2;

@@ -39,6 +39,14 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
     public ResourceLookup(VocabMappings vocabMappings) {
         this(vocabMappings, new ExternalMappings(Map.of()));
     }
+    
+    public static String getVocabPrefix(JsonLd jsonLd) {
+        try {
+            return jsonLd.getVocabPrefix();
+        } catch (IllegalStateException e) {
+            return (String) jsonLd.context.get(JsonLd.VOCAB_KEY);
+        }
+    }
 
     public record VocabMappings(
         /*
@@ -91,7 +99,7 @@ public record ResourceLookup(VocabMappings vocabMappings, ExternalMappings exter
         private static VocabMappings getMappings(Whelk whelk) {
             var jsonLd = whelk.getJsonld();
             var vocab = jsonLd.vocabIndex;
-            var vocabPrefix = jsonLd.getVocabPrefix();
+            var vocabPrefix = getVocabPrefix(jsonLd);
 
             Map<String, Map<String, Set<String>>> properties = new HashMap<>();
             Map<String, Map<String, Set<String>>> classes = new HashMap<>();
