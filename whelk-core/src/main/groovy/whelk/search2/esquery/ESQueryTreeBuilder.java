@@ -401,15 +401,15 @@ public class ESQueryTreeBuilder {
         List<ESNode> perTokenQueries = new ArrayList<>();
 
         for (Token t : ft.tokens()) {
-            String term = t.value();
+            String s = t.value();
             List<String> finalFields = new ArrayList<>();
 
             for (String field : fields) {
-                if (mappings.hasFourDigitsKeywordField(field) && t.isDigits() && isFourDigitsFieldValue.test(term)) {
+                if (mappings.hasFourDigitsKeywordField(field) && t.isDigits() && isFourDigitsFieldValue.test(s)) {
                     finalFields.add(field + FOUR_DIGITS_KEYWORD_SUFFIX);
                 } else if (mappings.isKeywordTypeField(field)) {
                     finalFields.add(field);
-                } else if (mappings.hasKeywordSubfield(field) && !isMaskedOrTruncated(term)) {
+                } else if (mappings.hasKeywordSubfield(field) && !isMaskedOrTruncated(s)) {
                     finalFields.add(String.format("%s.%s", field, KEYWORD));
                 } else if (mappings.isLongTypeField(field) && t.isDigits()) {
                     finalFields.add(field);
@@ -422,9 +422,13 @@ public class ESQueryTreeBuilder {
             }
 
             List<ESNode> perFieldTermQueries = new ArrayList<>();
-            finalFields.stream()
-                    .map(f -> new ESNode.TermQuery(f, mappings.isLongTypeField(f) ? Long.parseLong(term) : term))
-                    .forEach(perFieldTermQueries::add);
+
+            for (String f : finalFields) {
+                var v = mappings.isLongTypeField(f)
+                        ? Long.parseLong(s)
+                        : (Unicode.looksLikeIsbn(s) ? s.replace("-", "") : s);
+                perFieldTermQueries.add(new ESNode.TermQuery(f, v));
+            }
 
             perTokenQueries.add(perFieldTermQueries.size() == 1
                     ? perFieldTermQueries.getFirst()
