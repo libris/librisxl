@@ -182,6 +182,7 @@ public class ESQueryTreeBuilder {
         return groupNested(must);
     }
 
+    // FIXME
     private static final Pattern LIBRARY_OR_ORG_FIELD =
             Pattern.compile("@reverse\\.itemOf\\.heldBy\\.(isPartOf\\.)?(@id|_str)$");
 
