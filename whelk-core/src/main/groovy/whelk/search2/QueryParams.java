@@ -222,10 +222,9 @@ public class QueryParams {
         int limit = getOptionalSingleNonEmpty(ApiParams.LIMIT, queryParameters)
                 .map(x -> parseInt(x, DEFAULT_LIMIT))
                 .orElse(DEFAULT_LIMIT);
-
-        //TODO: Copied from old SearchUtils
+        
         if (limit > MAX_LIMIT) {
-            limit = DEFAULT_LIMIT;
+            limit = MAX_LIMIT;
         }
 
         if (limit < 0) {
