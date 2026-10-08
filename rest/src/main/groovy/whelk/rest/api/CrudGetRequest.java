@@ -32,7 +32,7 @@ class CrudGetRequest {
     private CrudGetRequest(HttpServletRequest request) {
         this.request = request;
         parsePath(getPath());
-        contentType = getBestContentType(getAcceptHeader(request), dataLeaf != null ? dataLeaf : resourceId);
+        contentType = getBestContentType(getAcceptHeader(request), dataLeaf != null ? dataLeaf : "");
         lens = parseLens(request);
         profile = parseProfile(request);
 

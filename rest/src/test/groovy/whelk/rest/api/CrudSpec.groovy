@@ -187,6 +187,25 @@ class CrudSpec extends Specification {
         response.getContentType() == "application/ld+json"
     }
 
+    def "GET /<id> should display requested document if id contains a dot"() {
+        given:
+        def id = "https://id.kb.se/policy/kb/digisaml/1.0"
+        request.getPathInfo() >> {
+            '/' + id
+        }
+        request.getHeader("Accept") >> {
+            "*/*"
+        }
+        storage.load(_, _) >> {
+            new Document(["@graph": [["@id": id, "foo": "bar", 'mainEntity': ["@id": id + '#it']], ["@id": id + '#it']]])
+        }
+        when:
+        crud.doGet(request, response)
+        then:
+        response.getStatus() == HttpServletResponse.SC_OK
+        response.getContentType() == "application/ld+json"
+    }
+
     def "GET /<sameAs ID> should return 302 Found"() {
         given:
         def id = BASE_URI.resolve("/1234").toString()
