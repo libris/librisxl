@@ -534,8 +534,7 @@ class Whelk {
      * Returns tuples for ID collisions, the first entry in the tuple is the system ID of the colliding record,
      * the second is a freetext description of the reason for the collision
      */
-    List<Tuple2<String, String>> getIdCollisions(Document document, boolean includingTypedIDs) {
-
+    List<Tuple2<String, String>> getIdCollisions(Document document) {
         List<Tuple2<String, String>> collidingSystemIDs = []
 
         // Identifiers-table lookup on:
@@ -548,36 +547,6 @@ class Whelk {
                 collidingSystemIDs.add(new Tuple2(systemId, "on URI: " + uriID))
             }
         }
-
-        // Typed id queries on:
-        List<Tuple> typedIDs = document.getTypedRecordIdentifiers()
-        typedIDs.addAll(document.getTypedThingIdentifiers())
-        for (Tuple typedID : typedIDs) {
-            String type = typedID[0]
-            String value = typedID[1]
-            int graphIndex = ((Integer) typedID[2]).intValue()
-
-            // "Identifier" and "SystemNumber" are too general/meaningless to use for duplication checking.
-            if (type == "Identifier" || type == "SystemNumber")
-                continue
-
-            List<String> collisions = storage.getSystemIDsByTypedID(type, value, graphIndex)
-            if (!collisions.isEmpty()) {
-                if (includingTypedIDs) {
-                    for (String collision : collisions) {
-                        if (collision != document.getShortId())
-                            collidingSystemIDs.add(new Tuple2(collision, "on typed id: " + type + "," + graphIndex + "," + value))
-                    }
-                } else {
-
-                    // We currently are not allowed to enforce typed identifier uniqueness. :(
-                    // We can warn at least.
-                    log.debug("While testing " + document.getShortId() + " for collisions: Ignoring typed ID collision with : "
-                            + collisions + " on " + type + "," + graphIndex + "," + value)
-                }
-            }
-        }
-
         return collidingSystemIDs
     }
 
@@ -587,8 +556,7 @@ class Whelk {
     boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean handleExceptions = true) {
         normalize(document)
 
-        boolean detectCollisionsOnTypedIDs = false
-        List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
+        List<Tuple2<String, String>> collidingIDs = getIdCollisions(document)
         if (!collidingIDs.isEmpty()) {
             log.info("Refused initial store of " + document.getShortId() + ". Document considered a duplicate of : " + collidingIDs)
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)
