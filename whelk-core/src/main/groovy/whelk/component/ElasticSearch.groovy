@@ -711,8 +711,9 @@ class ElasticSearch {
         return mapper.writeValueAsString(searchCard)
     }
 
-    private static void addFlattenedClassificationFields(List<Map> classification) {
-        classification.each { Map c ->
+    private static void addFlattenedClassificationFields(List classification) {
+        classification.each { c ->
+            if (!(c instanceof Map)) return
             String type = c[TYPE_KEY]
             String code = c['code']
             if (!code || !type) return
