@@ -230,13 +230,16 @@ public class QueryTreeExpander {
 
         String baseType = v.key();
 
-        Set<String> subtypes = jsonLd.getSubClasses(baseType);
+        List<String> subtypes = jsonLd.getSubClasses(baseType)
+                .stream()
+                .filter(Predicate.not(jsonLd::isDeprecated))
+                .toList();
+
         if (subtypes.isEmpty()) {
             return node;
         }
 
         List<Condition> altTypes = Stream.concat(Stream.of(baseType), subtypes.stream())
-                .filter(Predicate.not(jsonLd::isDeprecated))
                 .sorted()
                 .map(t -> c.withValue(new VocabTerm(t, jsonLd.vocabIndex.get(t))))
                 .toList();
