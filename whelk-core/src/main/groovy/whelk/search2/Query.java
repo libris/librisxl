@@ -49,7 +49,7 @@ public class Query {
     protected final AppParams appParams;
     protected final QueryTree qTree;
     protected final QueryTree rTree;
-    protected final QueryTree sTree; // TODO: Naming
+    protected final List<QueryTree> defaultSiteFilterTrees;
     protected final ESSettings esSettings;
     protected final Disambiguate disambiguate;
 
@@ -88,7 +88,7 @@ public class Query {
         this.whelk = whelk;
         this.qTree = new QueryTree(queryParams.q, disambiguate);
         this.rTree = new QueryTree(queryParams.r, disambiguate);
-        this.sTree = new QueryTree(String.join(" ", appParams.filters.defaultFilters()), disambiguate); // FIXME
+        this.defaultSiteFilterTrees = parseDefaultSiteFilters(appParams, disambiguate);
         this.linkLoader = new LinkLoader();
         this.stats = new Stats();
     }
@@ -129,7 +129,7 @@ public class Query {
     }
 
     protected QueryTree.MergedTree getFullQueryTree(QueryTree baseTree) {
-        return mergeTrees(baseTree.reduce(whelk.getJsonld()), List.of(rTree, sTree));
+        return mergeTrees(baseTree.reduce(whelk.getJsonld()), Stream.concat(Stream.of(rTree), defaultSiteFilterTrees.stream()).toList());
     }
 
     protected List<Map<String, Object>> predicateLinks() {
@@ -247,9 +247,17 @@ public class Query {
 
         addMapping.accept(qTree, QueryParams.ApiParams.QUERY);
         addMapping.accept(rTree, QueryParams.ApiParams.CUSTOM_SITE_FILTER);
-        addMapping.accept(sTree, AppParams.DEFAULT_SITE_FILTERS);
+        // TODO: defaultSiteFilterTrees / AppParams.DEFAULT_SITE_FILTERS
 
         return mappings;
+    }
+
+    private static List<QueryTree> parseDefaultSiteFilters(AppParams appParams, Disambiguate disambiguate) throws InvalidQueryException {
+        List<QueryTree> parsed = new ArrayList<>();
+        for (String f : appParams.filters.defaultFilters()) {
+            parsed.add(new QueryTree(f, disambiguate));
+        }
+        return parsed;
     }
 
     private List<FilterAlias> collectOptionalFilters() {
