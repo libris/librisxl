@@ -90,7 +90,7 @@ public class Disambiguate {
                 List<PathElement> newPath = new ArrayList<>(path.path());
                 newPath.removeLast();
                 newPath.addAll(coerced.path());
-                yield new Path(newPath, path.token());
+                yield new Path(newPath, path.originalToken());
             }
             case Key k -> k;
         };

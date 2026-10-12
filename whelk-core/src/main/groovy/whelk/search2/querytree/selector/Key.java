@@ -16,8 +16,8 @@ public sealed abstract class Key extends PathElement permits Key.AmbiguousKey, K
     }
 
     @Override
-    public String queryKey() {
-        return token.formatted();
+    public Token token() {
+        return token;
     }
 
     @Override

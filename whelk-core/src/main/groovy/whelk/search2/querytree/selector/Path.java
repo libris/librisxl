@@ -1,7 +1,6 @@
 package whelk.search2.querytree.selector;
 
 import whelk.JsonLd;
-import whelk.search2.QueryUtil;
 import whelk.search2.querytree.value.Token;
 
 import java.util.LinkedList;
@@ -31,12 +30,13 @@ public final class Path implements Selector {
     }
 
     @Override
-    public String queryKey() {
+    public Token token() {
         if (token != null) {
-            return token.formatted();
+            return token;
         }
-        String s = path.stream().map(Selector::queryKey).collect(Collectors.joining("."));
-        return s.contains(":") ? QueryUtil.quote(s) : s;
+        List<Token> tokens = path.stream().map(PathElement::token).toList();
+        String s = tokens.stream().map(Token::value).collect(Collectors.joining("."));
+        return tokens.stream().anyMatch(Token::isQuoted) ? new Token.Quoted(s) : new Token.Raw(s);
     }
 
     @Override
@@ -116,7 +116,7 @@ public final class Path implements Selector {
         return last().range();
     }
 
-    public Token token() {
+    public Token originalToken() {
         return token;
     }
 

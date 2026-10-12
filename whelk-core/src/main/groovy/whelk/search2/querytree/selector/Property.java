@@ -149,8 +149,8 @@ public non-sealed class Property extends PathElement {
     }
 
     @Override
-    public String queryKey() {
-        return queryKey.queryKey();
+    public Token token() {
+        return queryKey.token();
     }
 
     // When a property has no query key of its own (e.g. when found internally rather than parsed from a query),
@@ -505,8 +505,8 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        public String queryKey() {
-            return superProperty.queryKey();
+        public Token token() {
+            return superProperty.token();
         }
 
         @Override
@@ -578,8 +578,8 @@ public non-sealed class Property extends PathElement {
         }
 
         @Override
-        public String queryKey() {
-            return superProperty.queryKey();
+        public Token token() {
+            return superProperty.token();
         }
 
         @Override

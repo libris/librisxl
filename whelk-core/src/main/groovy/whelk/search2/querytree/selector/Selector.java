@@ -2,12 +2,18 @@ package whelk.search2.querytree.selector;
 
 import whelk.JsonLd;
 import whelk.search2.QueryUtil;
+import whelk.search2.querytree.value.Token;
 
 import java.util.List;
 import java.util.Map;
 
 public sealed interface Selector permits Path, PathElement {
-    String queryKey();
+    Token token();
+
+    default String queryKey() {
+        return token().formatted();
+    }
+
     String esField();
 
     List<? extends PathElement> path();
