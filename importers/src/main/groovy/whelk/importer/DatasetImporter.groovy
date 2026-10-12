@@ -84,7 +84,7 @@ class DatasetImporter {
         log.info("Using system context: ${whelk.systemContextUri}")
         if (whelk.systemContextUri) {
             contextDocData = getDocByMainEntityId(whelk.systemContextUri)?.data
-          if (contextDocData.containsKey(CONTEXT)) {
+          if (contextDocData != null && contextDocData.containsKey(CONTEXT)) {
             def ctx = contextDocData.get(CONTEXT)
             if (ctx instanceof Map) log.info("Context size: ${ctx.size()}")
           } else {
