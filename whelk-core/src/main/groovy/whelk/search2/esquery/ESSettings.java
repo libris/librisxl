@@ -48,7 +48,7 @@ public class ESSettings {
     public ESSettings withBoostSettings(ESBoost boost) {
         return new ESSettings(mappings, boost, maxItems, sourceExcludes);
     }
-2
+
     private ESSettings(ESMappings mappings, ESBoost boost, int maxItems, List<String> sourceExcludes) {
         this.mappings = mappings;
         this.boost = boost;

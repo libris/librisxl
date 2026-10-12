@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static whelk.JsonLd.findInData;
+import static whelk.search.ESQuery.SITE_IDKBSE;
 import static whelk.search2.QueryParams.ApiParams.APP_CONFIG;
 import static whelk.util.Jackson.mapper;
 
@@ -125,7 +126,7 @@ class SiteSearch {
         // before they're sent further.
         if (!activeSite.equals(getDefaultSite())) {
             queryParameters.put("_site_base_uri", new String[]{activeSite});
-            if (searchSettings.get("domain") != null) {
+            if (searchSettings.get("domain") != null && SITE_IDKBSE.equals(searchSettings.get("domain"))) {
                 queryParameters.put("_boost", new String[]{(String) searchSettings.get("domain")});
             }
         }
