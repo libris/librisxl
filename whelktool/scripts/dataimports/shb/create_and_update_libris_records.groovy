@@ -1,4 +1,4 @@
-import groovy.json.JsonSlurper
+import static whelk.util.Jackson.mapper
 
 /// Functions ///
 
@@ -47,9 +47,6 @@ println "Create file: ${createFile.absolutePath}"
 // Set up reporting
 def report = getReportWriter('INFO.tsv')
 
-// Get ready to read some jsonl
-def slurper = new JsonSlurper()
-
 //// Update matched Libris records ////
 println 'Getting started updating records'
 
@@ -57,7 +54,7 @@ println 'Getting started updating records'
 Map librisToShbMap = [:]
 
 updateFile.eachLine { line ->
-    librisToShbMap.putAll(slurper.parseText(line))
+    librisToShbMap.putAll(mapper.readValue(line, Map))
 }
 
 // Get all the Libris IDs
@@ -127,7 +124,7 @@ println 'Getting started creating records'
 List<Map> createList = []
 
 createFile.eachLine { line ->
-    createList << create(slurper.parseText(line) as Map)
+    createList << create(mapper.readValue(line, Map))
 }
 
 // For each line
