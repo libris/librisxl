@@ -351,11 +351,14 @@ class ESQuery {
         return query
     }
 
+    public static String SITE_IDKBSE = 'id.kb.se'
+
     List<String> getBoostFields(String[] types, String boostMode) {
         if (boostMode?.indexOf('^') > -1) {
             return boostMode.tokenize(',')
         }
-        if (boostMode == 'id.kb.se') {
+
+        if (boostMode == SITE_IDKBSE) {
             return CONCEPT_BOOST
         }
 

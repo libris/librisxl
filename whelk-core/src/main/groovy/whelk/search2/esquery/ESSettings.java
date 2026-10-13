@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static whelk.JsonLd.SEARCH_KEY;
-import static whelk.component.ElasticSearch.SystemFields.FLATTENED_LANG_MAP_PREFIX;
 import static whelk.component.ElasticSearch.SystemFields.CARD_STR;
 import static whelk.component.ElasticSearch.SystemFields.CHIP_STR;
 import static whelk.component.ElasticSearch.SystemFields.ES_ID;
+import static whelk.component.ElasticSearch.SystemFields.FLATTENED_LANG_MAP_PREFIX;
 import static whelk.component.ElasticSearch.SystemFields.IDS;
 import static whelk.component.ElasticSearch.SystemFields.LINKS;
 import static whelk.component.ElasticSearch.SystemFields.OUTER_EMBELLISHMENTS;
@@ -42,18 +42,18 @@ public class ESSettings {
 
     // For test only
     public ESSettings(ESMappings mappings, ESBoost boost) {
-       this(mappings, boost, 1);
+       this(mappings, boost, 1, Collections.emptyList());
     }
 
     public ESSettings withBoostSettings(ESBoost boost) {
-        return new ESSettings(mappings, boost, maxItems);
+        return new ESSettings(mappings, boost, maxItems, sourceExcludes);
     }
 
-    private ESSettings(ESMappings mappings, ESBoost boost, int maxItems) {
+    private ESSettings(ESMappings mappings, ESBoost boost, int maxItems, List<String> sourceExcludes) {
         this.mappings = mappings;
         this.boost = boost;
         this.maxItems = maxItems;
-        this.sourceExcludes = Collections.emptyList();
+        this.sourceExcludes = sourceExcludes;
     }
 
     public boolean isConfigured() {
