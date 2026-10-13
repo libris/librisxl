@@ -154,13 +154,67 @@ class WhelkCopier {
         }
 
         flushSaveQueue()
-        threadPool.awaitAllAndShutdown()
+        threadPool.awaitAll()
 
-        dest.storage.reDenormalize()
+        recalculateDependencies()
+        threadPool.awaitAllAndShutdown()
+        dest.storage.withDbConnection {
+            dest.storage.clearEmbellishedCache(dest.storage.getMyConnection())
+        }
+
         if (copyVersions) {
             System.err.println("Copied ${copied} documents (from ${recordIds.size()} selected), including ${copiedVersions} historical versions.")
         } else {
             System.err.println("Copied ${copied} documents (from ${recordIds.size()} selected).")
+        }
+    }
+
+    void recalculateDependencies() {
+        System.err.println("Recalculating dependencies.")
+        def submit = { List<String> ids ->
+            threadPool.submit(() -> recalculateDependenciesBatch(ids))
+        }
+        dest.storage.withDbConnection {
+            def conn = dest.storage.getMyConnection()
+            conn.setAutoCommit(false)
+            def stmt = conn.prepareStatement("SELECT id FROM lddb WHERE deleted = false")
+            stmt.setFetchSize(1000)
+            def rs = stmt.executeQuery()
+            List<String> batch = []
+            long count = 0
+            while (rs.next()) {
+                batch << rs.getString(1)
+                if (batch.size() == SAVE_BATCH_SIZE) {
+                    submit(batch)
+                    batch = []
+                }
+                if (++count % 100000 == 0)
+                    System.err.println("Dependency recalculation queued for $count documents")
+            }
+            submit(batch)
+            System.err.println("Dependency recalculation queued for $count documents in total.")
+        }
+    }
+
+    private void recalculateDependenciesBatch(List<String> ids) {
+        dest.storage.withDbConnection {
+            Collection<Document> docs = dest.storage.bulkLoad(ids).values()
+            def conn = dest.storage.getMyConnection()
+            try {
+                conn.setAutoCommit(false)
+                docs.each { dest.storage.recalculateDependencies(it) }
+                conn.commit()
+            } catch (Exception ignored) {
+                conn.rollback()
+                conn.setAutoCommit(true)
+                for (Document doc : docs) {
+                    try {
+                        dest.storage.recalculateDependencies(doc)
+                    } catch (Exception e) {
+                        System.err.println("Could not recalculate dependencies for $doc.shortId due to: $e")
+                    }
+                }
+            }
         }
     }
 
