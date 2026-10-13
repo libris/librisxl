@@ -11,6 +11,18 @@ from collections import Counter
 
 USE_ANNOT = False
 
+# TODO Connect old Libris control number of physical volume to Libris ID of digitized volume
+OLD_LIBRIS_ID_MAP = {
+    "8208408": "https://libris.kb.se/g1cc0z94dcc53752#it",  # 1771-1874
+    "500562": "https://libris.kb.se/9v5jcs597rv55n5g#it",  # 1875-1900
+    "8201921": "https://libris.kb.se/4p0d8c2x28pc3496#it",  # 1921-1935
+    "8201923": "https://libris.kb.se/zjt8vfphwf0sztrb",  # 1936-1950
+    "8201922": "https://libris.kb.se/5q22t37j3mrr26j4#it",  # 1951-1960
+    "8347681": "https://libris.kb.se/dz9dc78tbhqssvrc#it",  # 1961-1970
+    "8347707": "https://libris.kb.se/wgstm4v2tcfljc6s#it",  # 1971-1975
+    "3685700": "https://libris.kb.se/tdqrv3w0r1tk4v5b#it",  # 1976
+}
+
 SYNTAX_ERAS = {
     "1771-1874": "early",
     "1875-1900": "early",
@@ -44,7 +56,7 @@ NON_TERMINATING_ABBREVIATIONS = [
     "kartbl.",
     "pl.-bl.",
     "facs.",
-    "th."
+    "th.",
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
@@ -112,7 +124,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     # Get the record and main entity
     graph = data["@graph"]
-    rec, instance, *remainder = graph
+    record, instance, *remainder = graph
 
     # Get work and store as a local entity in the instance
     if remainder:
@@ -133,7 +145,10 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
         publ = instance["publication"][0]
         start_year = publ.get("startYear")
         end_year = publ.get("endYear") or publ.get("year")
-        if "marc:primaryProvisionActivity" in instance and end_year == instance["marc:primaryProvisionActivity"]["year"]:
+        if (
+            "marc:primaryProvisionActivity" in instance
+            and end_year == instance["marc:primaryProvisionActivity"]["year"]
+        ):
             del instance["marc:primaryProvisionActivity"]
     else:
         anomalies.append(
@@ -141,19 +156,16 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
         )
 
     ### Some initial cleanup ###
-    # TODO Review this section - what are we doing and do we want to?
 
-    if "bibliography" in rec:
-        rec["bibliography"] = [{"@id": it["@id"]} for it in rec["bibliography"]]
-    if "marc:catalogingSource" in rec:
-        del rec["marc:catalogingSource"]  # "Annan verksamhet"
-    # Remove category ("componentPart") - new categories will be added after parsing
-    instance.pop("category", None)
+    # Remove the partOf and part information from the instance
+    # These will be used later in the record
+    shb_volume_info = instance.pop("isPartOf")
 
     # Add a Link to the SHB volume which includes the description
-    shb_host_num = instance.pop("part")[0]
+    shb_volume_number = instance.pop("part")[0]
 
-    link_to_shb_volume(instance, rec, shb_host_num, bibliographies)
+    # Remove category ("componentPart") - new categories will be added after parsing
+    instance.pop("category", None)
 
     ### Enrich the instance ###
 
@@ -174,9 +186,8 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     # Add SAO subject headings and SAB classifications
     sao_headings, sab_codes = get_mapped_sao_and_sab(
-    shb_host_num, start_year, end_year, subject_mappings
-)
-
+        shb_volume_number, start_year, end_year, subject_mappings
+    )
 
     structured_record["sao_headings"] = sao_headings
     structured_record["sab_codes"] = sab_codes
@@ -187,10 +198,15 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     instance["instanceOf"] = work
 
+    # Clean up the admin metadata record and add a link to the digitized SHB volume
+    record = clean_up_and_enrich_record(
+        record, shb_volume_info, shb_volume_number, structured_record["original_note"]
+    )
+
     # Count all properties, icnluding nested, in the final instance ###
     counters["properties"].update(walk_keys(instance))
 
-    converted_data = {"@graph": [rec, instance]}
+    converted_data = {"@graph": [record, instance]}
 
     return converted_data
 
@@ -213,22 +229,8 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
     # Responsibility statement (string) and contributors (list)
     responsibility_statement = ""
     if structured_record.get("primary_contributors"):
-        # TODO Add structured contributor property as well?
         responsibility_statement = structured_record["primary_contributors"]
-        """ "contribution": [
-          {
-            "@type": "PrimaryContribution",
-            "agent": {
-              "@type": "Person",
-              "familyName": "enamn",
-              "givenName": "fnamn"
-            },
-            "role": [
-              {
-                "@id": "https://id.kb.se/relator/author"
-              }
-            ]
-          },"""
+
     if structured_record.get("other_contributors"):
         if responsibility_statement:
             responsibility_statement = (
@@ -246,7 +248,9 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
     publication = {}
 
     if structured_record.get("place"):
-        publication["place"] = [{"@type": "Place", "label": [structured_record["place"]]}]
+        publication["place"] = [
+            {"@type": "Place", "label": [structured_record["place"]]}
+        ]
 
     if structured_record.get("year"):
         publication["year"] = structured_record["year"]
@@ -373,16 +377,6 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
         instance.setdefault("hasNote", []).append(
             {"@type": "Note", "label": [structured_record["remaining_note"]]}
         )
-
-    ### Store the full original OCR'd note as an instance note ###
-    instance.setdefault("hasNote", []).append(
-        {
-            "@type": "Note",
-            "label": [
-                f"Fullständig beskrivning (OCR) ur SHBD: {structured_record["original_note"]}"
-            ],
-        }
-    )
 
     ### Add SAO headings
     if structured_record.get("sao_headings"):
@@ -617,7 +611,7 @@ def extract_period_delimited_host_or_series(
                 host_or_series = ". ".join(part.strip(".") for part in parts[-2:])
                 remainder = ". ".join(part.strip(".") for part in parts[:-2])
 
-                return host_or_series, extent,remainder, is_component_part
+                return host_or_series, extent, remainder, is_component_part
             else:
                 # Monographs
                 # Title. Place year. Series. Number.
@@ -639,7 +633,6 @@ def extract_period_delimited_host_or_series(
         elif not extent and MONOGRAPH_VOLUMES_RE.match(parts[1]):
             extent = parts[1]
             parts = [parts[0]]
-
 
     # Or else
     remainder = ". ".join(part.strip(".") for part in parts)
@@ -915,18 +908,18 @@ def extract_other_contributors(remainder: str) -> tuple[str, str]:
         remainder, contributors = remainder.split(" / ", 1)
 
         return contributors, remainder
-    
+
     if "Utg. " in remainder:
-        parts = remainder.split('Utg. ', 1)
+        parts = remainder.split("Utg. ", 1)
         remainder = parts[0].strip()
 
         if not contributors:
-            contributors = 'Utg. ' + parts[1].strip()
+            contributors = "Utg. " + parts[1].strip()
         else:
-            contributors = contributors + ". " + 'Utg. ' + parts[1].strip()
+            contributors = contributors + ". " + "Utg. " + parts[1].strip()
 
         return contributors, remainder
-    
+
     return contributors, remainder
 
 
@@ -937,7 +930,7 @@ def extract_title_and_subtitle(
     Returns a tuple of (title, subtitle, remainder).
     """
 
-    # TODO Don't include "Utg. " in title 
+    # TODO Don't include "Utg. " in title
 
     subtitle = ""
     remainder = strip_trailing_separators(remainder)
@@ -1136,70 +1129,98 @@ def get_mapped_sao_and_sab(
     return sao_headings, sab_codes
 
 
-def link_to_shb_volume(
-    thing: dict, rec: dict, partnum: str, bibliographies: dict
-) -> None:
+def clean_up_and_enrich_record(
+    record: dict, shb_volume_info: dict, shb_volume_number: str, original_note: str
+) -> dict:
     """Moves information about SHB as bibliography, as local and linked entitites, from thing (instance) to record.
     Updates the instance and record in place with local and linked entities."""
+
+    # Remove unnecessary properties
+    record.pop("marc:catalogingSource", None)
+
+    # Simplify the Bibliography property
+    record["bibliography"] = [{"@id": "https://libris.kb.se/library/SHB"}]
+
+    # Add sourceConsulted, pointing to digitized SHB volume
+    described_by = shb_volume_info.get("describedBy")
+    control_number = described_by[0].get("controlNumber")
+
+    source_consulted = [
+        {
+            "@type": "SourceData",
+            "identifier": shb_volume_number,
+            "citationNote": f"Referensnummer i SHB: {shb_volume_number}",
+            "derivedFrom": [{"@id": f"{OLD_LIBRIS_ID_MAP[control_number]}"}],
+            "value": f"Fullständig beskrivning (OCR) ur SHBD: {original_note}",
+        }
+    ]
+
+    record["sourceConsulted"] = source_consulted
+
+    return record
+
     # TODO Review this function to make sure it does what we want and complies with the current KBV data model
 
-    if hosts := thing.pop("isPartOf"):
-        assert len(hosts) == 1
-        host = hosts[0]
+    # Clean up the instance by removing the partOf information pertaining to SHB and moving it to the admin metadata record
+    # if hosts := thing.pop("isPartOf"):
+    #     assert len(hosts) == 1
+    #     host = hosts[0]
 
-        if "associatedMedia" in thing:
-            host["associatedMedia"] = [
-                {
-                    "@id": am["uri"][0].replace(
-                        "http://regina.kb.se/shb/", "https://shb.kb.se/"
-                    )
-                }
-                for am in thing.pop("associatedMedia")
-            ]
+    #     if "associatedMedia" in thing:
+    #         host["associatedMedia"] = [
+    #             {
+    #                 "@id": am["uri"][0].replace(
+    #                     "http://regina.kb.se/shb/", "https://shb.kb.se/"
+    #                 )
+    #             }
+    #             for am in thing.pop("associatedMedia")
+    #         ]
 
-        if "publication" in thing:
-            host["hasTemporalCoverage"] = thing.pop("publication")[0]
-            host["hasTemporalCoverage"]["@type"] = "TemporalCoverage"
+    #     if "publication" in thing:
+    #         host["hasTemporalCoverage"] = thing.pop("publication")[0]
+    #         host["hasTemporalCoverage"]["@type"] = "TemporalCoverage"
 
-        hostrecs = host.pop("describedBy")
-        assert len(hostrecs) == 1
+    #     hostrecs = host.pop("describedBy")
+    #     assert len(hostrecs) == 1
 
-        if ctrlnr := hostrecs[0].get("controlNumber"):
-            iri = f"http://libris.kb.se/resource/bib/{ctrlnr}"
-            host["@id"] = iri
-            if iri in bibliographies:
-                existing_host_desc = bibliographies[iri]
-                has_biblio_repr = json.dumps(existing_host_desc, sort_keys=True)
-                new_biblio_repr = json.dumps(host, sort_keys=True)
-                if has_biblio_repr != new_biblio_repr:
-                    bigslice = int(len(has_biblio_repr) * 0.8)
-                    assert (
-                        has_biblio_repr[:bigslice] == new_biblio_repr[:bigslice]
-                    ), f"Mismatch:\n{has_biblio_repr}\n{new_biblio_repr}"
-            else:
-                bibliographies[iri] = host
+    #     # Add SHB to bibliography
+    #     # Why is there so much code here?
+    #     if ctrlnr := hostrecs[0].get("controlNumber"):
+    #         iri = f"http://libris.kb.se/resource/bib/{ctrlnr}"
+    #         host["@id"] = iri
+    #         if iri in bibliographies:
+    #             existing_host_desc = bibliographies[iri]
+    #             has_biblio_repr = json.dumps(existing_host_desc, sort_keys=True)
+    #             new_biblio_repr = json.dumps(host, sort_keys=True)
+    #             if has_biblio_repr != new_biblio_repr:
+    #                 bigslice = int(len(has_biblio_repr) * 0.8)
+    #                 assert (
+    #                     has_biblio_repr[:bigslice] == new_biblio_repr[:bigslice]
+    #                 ), f"Mismatch:\n{has_biblio_repr}\n{new_biblio_repr}"
+    #         else:
+    #             bibliographies[iri] = host
 
-            # Alternative to bibliography annotation:
-            # thing['cataloguedIn'] = {'@id': iri, "@annotation": {"part": thing.pop("part")}} # in the work...
-            for biblioref in rec["bibliography"]:
-                bibliography_shb = "https://libris.kb.se/library/SHB"
-                if biblioref["@id"] == bibliography_shb:
-                    source_id = f"{rec['@id']}#{partnum}"
-                    source = {
-                        "@id": source_id,
-                        "@type": "Source",
-                        "isPartOf": {"@id": iri},
-                        "item": partnum,
-                    }
-                    # biblios[source_id] = source
-                    rec["describes"] = source
-                    annot: dict = {"source": {"@id": source_id}}
-                    if USE_ANNOT:
-                        biblioref["@annotation"] = annot
-                    else:
-                        annot["_object"] = {"@id": bibliography_shb}
-                        rec.setdefault("_statementBy", {})["bibliography"] = annot
-                    break
+    #         # Alternative to bibliography annotation:
+    #         # thing['cataloguedIn'] = {'@id': iri, "@annotation": {"part": thing.pop("part")}} # in the work...
+    #         for biblioref in rec["bibliography"]:
+    #             bibliography_shb = "https://libris.kb.se/library/SHB"
+    #             if biblioref["@id"] == bibliography_shb:
+    #                 source_id = f"{rec['@id']}#{partnum}"
+    #                 source = {
+    #                     "@id": source_id,
+    #                     "@type": "Source",
+    #                     "isPartOf": {"@id": iri},
+    #                     "item": partnum,
+    #                 }
+    #                 # biblios[source_id] = source
+    #                 rec["describes"] = source
+    #                 annot: dict = {"source": {"@id": source_id}}
+    #                 if USE_ANNOT:
+    #                     biblioref["@annotation"] = annot
+    #                 else:
+    #                     annot["_object"] = {"@id": bibliography_shb}
+    #                     rec.setdefault("_statementBy", {})["bibliography"] = annot
+    #                 break
 
 
 ### Helper functions ###
@@ -1393,7 +1414,7 @@ def reinclude_abbreviations_after_split(parts: list) -> str:
 
 def load_subject_mappings(sheet_file: Path) -> dict:
     """Load subject mappings from the given Excel files and return a dictionary of mappings."""
-    
+
     subject_mappings: dict = {}
 
     sheets = pandas.read_excel(
