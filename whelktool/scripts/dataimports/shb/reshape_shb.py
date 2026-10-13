@@ -15,6 +15,7 @@ USE_ANNOT = False
 OLD_LIBRIS_ID_MAP = {
     "8208408": "https://libris.kb.se/g1cc0z94dcc53752#it",  # 1771-1874
     "500562": "https://libris.kb.se/9v5jcs597rv55n5g#it",  # 1875-1900
+    "219595": "https://libris.kb.se/3nzcbvq31wpvcvf4#it",  # 1901-1920
     "8201921": "https://libris.kb.se/4p0d8c2x28pc3496#it",  # 1921-1935
     "8201923": "https://libris.kb.se/zjt8vfphwf0sztrb",  # 1936-1950
     "8201922": "https://libris.kb.se/5q22t37j3mrr26j4#it",  # 1951-1960
@@ -113,7 +114,7 @@ anomalies = []
 ### Function that gathers the action (parsing data, cleaning and enriching records) ###
 
 
-def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
+def convert(data, subject_mappings) -> dict | None:
     """Convert a single SHB record into a KBV instance.
     Returns the converted record as a dictionary, or None if the record is invalid or cannot be processed.
     """
@@ -137,14 +138,19 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     instance["instanceOf"] = work
 
+    ### Some initial cleanup ###
+
     # Check which historical syntax group the record belongs to
     syntax_era = identify_syntax_era(instance)
 
-    # Prep for adding SAO
-    if "publication" in instance:
-        publ = instance["publication"][0]
-        start_year = publ.get("startYear")
-        end_year = publ.get("endYear") or publ.get("year")
+    # Remove asociatedMedia - this will be replaced with link to digitized SHB volume in record
+    instance.pop("associatedMedia")
+
+    # Get publication information that will later be used for adding SAO and SAB
+    if publications := instance.pop("publication"):
+        publication = publications[0]
+        start_year = publication.get("startYear")
+        end_year = publication.get("endYear") or publication.get("year")
         if (
             "marc:primaryProvisionActivity" in instance
             and end_year == instance["marc:primaryProvisionActivity"]["year"]
@@ -155,14 +161,12 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
             f"SKIPPING Missing publication information\t{instance['@id']}\t{instance}"
         )
 
-    ### Some initial cleanup ###
-
     # Remove the partOf and part information from the instance
     # These will be used later in the record
-    shb_volume_info = instance.pop("isPartOf")
+    shb_volume_info = instance.pop("isPartOf")[0]
 
     # Add a Link to the SHB volume which includes the description
-    shb_volume_number = instance.pop("part")[0]
+    shb_reference_number = instance.pop("part")[0]
 
     # Remove category ("componentPart") - new categories will be added after parsing
     instance.pop("category", None)
@@ -186,7 +190,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     # Add SAO subject headings and SAB classifications
     sao_headings, sab_codes = get_mapped_sao_and_sab(
-        shb_volume_number, start_year, end_year, subject_mappings
+        shb_reference_number, start_year, end_year, subject_mappings
     )
 
     structured_record["sao_headings"] = sao_headings
@@ -200,7 +204,7 @@ def convert(data, bibliographies: dict, subject_mappings) -> dict | None:
 
     # Clean up the admin metadata record and add a link to the digitized SHB volume
     record = clean_up_and_enrich_record(
-        record, shb_volume_info, shb_volume_number, structured_record["original_note"]
+        record, shb_volume_info, shb_reference_number, structured_record["original_note"]
     )
 
     # Count all properties, icnluding nested, in the final instance ###
@@ -1130,7 +1134,7 @@ def get_mapped_sao_and_sab(
 
 
 def clean_up_and_enrich_record(
-    record: dict, shb_volume_info: dict, shb_volume_number: str, original_note: str
+    record: dict, shb_volume_info: dict, shb_ref_number: str, original_note: str
 ) -> dict:
     """Moves information about SHB as bibliography, as local and linked entitites, from thing (instance) to record.
     Updates the instance and record in place with local and linked entities."""
@@ -1148,10 +1152,10 @@ def clean_up_and_enrich_record(
     source_consulted = [
         {
             "@type": "SourceData",
-            "identifier": shb_volume_number,
-            "citationNote": f"Referensnummer i SHB: {shb_volume_number}",
+            "identifier": shb_ref_number,
+            "citationNote": f"Referensnummer i SHB: {shb_ref_number}",
             "derivedFrom": [{"@id": f"{OLD_LIBRIS_ID_MAP[control_number]}"}],
-            "value": f"Fullständig beskrivning (OCR) ur SHBD: {original_note}",
+            "value": f"Fullständig beskrivning (OCR) ur SHB: {original_note}",
         }
     ]
 
@@ -1458,7 +1462,7 @@ def load_subject_mappings(sheet_file: Path) -> dict:
     return subject_mappings
 
 
-def pretty_print_sample(lines, biblios, subject_mappings, context_file):
+def pretty_print_sample(lines, subject_mappings, context_file):
     """Pretty print a sample of converted records for inspection."""
 
     with open(context_file) as f:
@@ -1474,10 +1478,8 @@ def pretty_print_sample(lines, biblios, subject_mappings, context_file):
                 continue
             else:
                 x = 0
-        if data := convert(json.loads(l), biblios, subject_mappings):
+        if data := convert(json.loads(l), subject_mappings):
             results.append(data)
-
-    results = list(biblios.values()) + results
 
     print(
         json.dumps({"@context": ctx["@context"], "@graph": results}, ensure_ascii=False)
@@ -1556,8 +1558,6 @@ if __name__ == "__main__":
         raise FileNotFoundError("No CSV files found")
     subject_mappings = load_subject_mappings(subject_files)
 
-    bibliographies: dict = {}
-
     # Open files
     with open(args.infile) as infile, open(
         args.outfile, "w", encoding="utf-8"
@@ -1568,7 +1568,7 @@ if __name__ == "__main__":
         # Optionally pretty print a sample of converted records for inspection
         if args.sample_pretty_with:
             pretty_print_sample(
-                infile, bibliographies, subject_mappings, args.sample_pretty_with
+                infile, subject_mappings, args.sample_pretty_with
             )
             sys.exit()
 
@@ -1576,7 +1576,7 @@ if __name__ == "__main__":
         for i, line in enumerate(infile):
             if i % 1000 == 0:
                 print(f"Processing record {i+1}")
-            if data := convert(json.loads(line), bibliographies, subject_mappings):
+            if data := convert(json.loads(line), subject_mappings):
                 json.dump(data, outfile, ensure_ascii=False)
                 outfile.write("\n")
 
