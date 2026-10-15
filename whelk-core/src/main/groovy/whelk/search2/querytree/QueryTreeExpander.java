@@ -232,7 +232,7 @@ public class QueryTreeExpander {
 
         List<String> subtypes = jsonLd.getSubClasses(baseType)
                 .stream()
-                .filter(Predicate.not(jsonLd::isDeprecated))
+                .filter(t -> !jsonLd.isDeprecated(t) || "Text".equals(t)) // TODO: remove the "Text" exception once all data have been type-normalized
                 .toList();
 
         if (subtypes.isEmpty()) {
