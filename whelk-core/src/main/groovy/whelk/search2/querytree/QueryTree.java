@@ -90,6 +90,12 @@ public class QueryTree {
         return copy;
     }
 
+    public QueryTree addAll(Collection<? extends Node> nodes) {
+        QueryTree copy = copy();
+        nodes.forEach(copy::_add);
+        return copy;
+    }
+
     public QueryTree replaceSimpleFreeText(String replacement) {
         return findSimpleFreeTextQueryNode()
                 .map(c -> replace(c, c.withValue(new FreeText(replacement))))

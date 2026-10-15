@@ -40,6 +40,7 @@ import java.util.stream.Stream;
 
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.QueryUtil.makeViewFindUrl;
+import static whelk.search2.querytree.QueryTreeBuilder.buildTree;
 import static whelk.search2.querytree.QueryTreeReducer.implies;
 
 public class Query {
@@ -49,7 +50,6 @@ public class Query {
     protected final AppParams appParams;
     protected final QueryTree qTree;
     protected final QueryTree rTree;
-    protected final QueryTree sTree; // TODO: Naming
     protected final ESSettings esSettings;
     protected final Disambiguate disambiguate;
 
@@ -88,7 +88,6 @@ public class Query {
         this.whelk = whelk;
         this.qTree = new QueryTree(queryParams.q, disambiguate);
         this.rTree = new QueryTree(queryParams.r, disambiguate);
-        this.sTree = new QueryTree(String.join(" ", appParams.filters.defaultFilters()), disambiguate); // FIXME
         this.linkLoader = new LinkLoader();
         this.stats = new Stats();
     }
@@ -129,7 +128,10 @@ public class Query {
     }
 
     protected QueryTree.MergedTree getFullQueryTree(QueryTree baseTree) {
-        return mergeTrees(baseTree.reduce(whelk.getJsonld()), List.of(rTree, sTree));
+        baseTree = establishSubjectTypeContext(baseTree.reduce(whelk.getJsonld()));
+        List<Node> defaultFilters = collectApplicableDefaultFilters(baseTree.getRdfSubjectType());
+
+        return (QueryTree.MergedTree) baseTree.merge(rTree, whelk.getJsonld()).addAll(defaultFilters);
     }
 
     protected List<Map<String, Object>> predicateLinks() {
@@ -247,7 +249,7 @@ public class Query {
 
         addMapping.accept(qTree, QueryParams.ApiParams.QUERY);
         addMapping.accept(rTree, QueryParams.ApiParams.CUSTOM_SITE_FILTER);
-        addMapping.accept(sTree, AppParams.DEFAULT_SITE_FILTERS);
+        // TODO: defaultSiteFilterTrees / AppParams.DEFAULT_SITE_FILTERS
 
         return mappings;
     }
@@ -256,15 +258,16 @@ public class Query {
         var queryAliased = queryParams.aliased.stream().map(FilterAlias::alias).toList();
         var filterByAlias = appParams.getFilterByAlias();
         Stream<FilterAlias> appDefined = appParams.filters.optionalFilters().stream()
+                .map(AppParams.QueryFilter::filter)
                 .filter(filterByAlias::containsKey)
                 .map(filterByAlias::get)
                 .filter(f -> !(f.isQueryFilterTemplate() && queryAliased.contains(f.alias())));
         Stream<FilterAlias.QueryDefinedAlias> queryDefined = queryParams.aliased.stream()
                 .map(f -> filterByAlias.containsKey(f.alias()) && filterByAlias.get(f.alias()).isQueryFilterTemplate() ? f.withPrefLabel(filterByAlias.get(f.alias())) : f);
-        return Stream.concat(appDefined, queryDefined).peek(this::parse).toList();
+        return Stream.concat(appDefined, queryDefined).peek(this::parseFilterAlias).toList();
     }
 
-    private void parse(FilterAlias fa) {
+    private void parseFilterAlias(FilterAlias fa) {
         try {
             fa.parse(disambiguate);
         } catch (InvalidQueryException e) {
@@ -282,26 +285,54 @@ public class Query {
         return SearchMode.STANDARD_SEARCH;
     }
 
-    private QueryTree.MergedTree mergeTrees(QueryTree baseTree, List<QueryTree> other) {
-        baseTree = establishSubjectTypeContext(baseTree, other);
-        QueryTree merged = baseTree;
-        for (QueryTree o : other) {
-            merged = merged.merge(o, whelk.getJsonld());
-        }
-        return (QueryTree.MergedTree) merged;
+    private List<Node> collectApplicableDefaultFilters(RdfSubjectType subjectType) {
+        return appParams.filters.defaultFilters()
+                .stream()
+                .filter(f -> isApplicable(f, subjectType))
+                .map(f -> parse(f.filter(), disambiguate))
+                .toList();
     }
 
-    private QueryTree establishSubjectTypeContext(QueryTree baseTree, List<QueryTree> other) {
+    private boolean isApplicable(AppParams.QueryFilter filter, RdfSubjectType establishedType) {
+        if (filter.applyTo().isEmpty()) {
+            return true;
+        }
+        if (!establishedType.hasType()) {
+            return false;
+        }
+        return establishedType.typeNames().stream()
+                .anyMatch(aType -> filter.applyTo().stream()
+                        .anyMatch(bType -> whelk.getJsonld().isSubClassOf(aType, bType)));
+    }
+
+    private QueryTree establishSubjectTypeContext(QueryTree baseTree) {
         if (baseTree.getRdfSubjectType().hasType()) {
             return baseTree;
         }
 
-        return other.stream()
-                .map(QueryTree::getRdfSubjectType)
-                .filter(RdfSubjectType::hasType)
-                .findFirst()
-                .map(type -> baseTree.add(type.typeNode()))
-                .orElse(baseTree);
+        RdfSubjectType rType = rTree.getRdfSubjectType();
+        if (rType.hasType()) {
+            return baseTree.add(rType.typeNode());
+        }
+
+        RdfSubjectType siteDefaultType = parseDefaultType(appParams, disambiguate);
+        if (siteDefaultType.hasType()) {
+            return baseTree.add(siteDefaultType.typeNode());
+        }
+
+        return baseTree;
+    }
+
+    private static RdfSubjectType parseDefaultType(AppParams appParams, Disambiguate disambiguate) {
+        return RdfSubjectType.extractFrom(parse(appParams.filters.defaultTypeFilter(), disambiguate));
+    }
+
+    private static Node parse(String q, Disambiguate disambiguate) {
+        try {
+            return buildTree(q, disambiguate);
+        } catch (InvalidQueryException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Map<String, Object> applyLens(Map<String, Object> framedThing) {

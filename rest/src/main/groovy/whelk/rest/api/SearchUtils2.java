@@ -59,7 +59,7 @@ public class SearchUtils2 {
     public Map<String, Object> buildAppConfig(Map<String, Object> findDesc) {
         Map<String, Object> config = new LinkedHashMap<>();
 
-        Stream.of("statistics", "filterAliases", "defaultSiteFilters", "optionalSiteFilters", "relationFilters")
+        Stream.of("statistics", "filterAliases", "defaultTypeFilter", "defaultSiteFilters", "optionalSiteFilters", "relationFilters")
                 .forEach(key ->
                         Optional.ofNullable(findDesc.get(key))
                                 .ifPresent(filters -> config.put(key, filters))
