@@ -42,6 +42,7 @@ class ESQuery {
     private static final List RESERVED_PARAMS = [
             'q', 'o', '_limit', '_offset', '_sort', '_statsrepr', '_site_base_uri', '_debug', '_boost', '_lens', '_stats', '_suggest', '_site', '_spell', JsonLd.Platform.COMPUTED_LABEL
     ]
+    private static final List EXCLUDED_DATASETS = ['https://id.kb.se/dataset/uppsok', 'https://id.kb.se/dataset/swepub']
     public static final String AND_PREFIX = 'and-'
     public static final String AND_MATCHES_PREFIX = 'and-matches-'
     public static final String OR_PREFIX = 'or-'
@@ -312,14 +313,18 @@ class ESQuery {
         // not-meta.@type=AdminRecord ?
         def recordFilter = [['bool': ['must_not': createBoolFilter(['@type': ['HandleAction']])]]]
 
+        def excludedDatasets = [['bool':['must_not': ['terms': ['meta.inDataset.@id': EXCLUDED_DATASETS]]]]]
+
+        def defaultFilters = recordFilter + excludedDatasets
+
         if (filters && siteFilter) {
-            query['query']['bool']['filter'] = recordFilter + filters + siteFilter
+            query['query']['bool']['filter'] = defaultFilters + filters + siteFilter
         } else if (filters) {
-            query['query']['bool']['filter'] = recordFilter + filters
+            query['query']['bool']['filter'] = defaultFilters + filters
         } else if (siteFilter) {
-            query['query']['bool']['filter'] = recordFilter + siteFilter
+            query['query']['bool']['filter'] = defaultFilters + siteFilter
         } else {
-            query['query']['bool']['filter'] = recordFilter
+            query['query']['bool']['filter'] = defaultFilters
         }
 
         if (sortBy) {
