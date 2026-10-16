@@ -134,8 +134,9 @@ public class ESQueryTreeBuilder {
                 ESNode.NestedStem nestedStem = new ESNode.NestedStem(stem.get(), includeInParent);
                 Set<ESNode.NestedField> nestedFields = fields.stream()
                         .map(f -> {
-                            boolean isRepeatable = fieldToCondition.get(f).selector().isLdSetContainer();
-                            return new ESNode.NestedField(f, isRepeatable);
+                            Condition condition = fieldToCondition.get(f);
+                            boolean isRepeatable = condition.selector().isLdSetContainer();
+                            return new ESNode.NestedField(f, isRepeatable, condition.operator());
                         })
                         .collect(Collectors.toSet());
                 result.add(new ESNode.Nested(query, nestedStem, nestedFields));
@@ -224,6 +225,11 @@ public class ESQueryTreeBuilder {
                     .flatMap(Set::stream)
                     .collect(Collectors.toSet());
 
+            Supplier<Boolean> noRepeatedNonRepeatableField = () -> fields.stream()
+                    .noneMatch(f -> !f.isRepeatable()
+                            && !f.operator().isRange() // Allow repeated range queries on same non-repeatable field
+                            && currentFields.contains(f));
+
             // FIXME: Temporary check to avoid libraries and library organizations being grouped as nested
             Supplier<Boolean> isMixOfLibraryAndLibraryOrganization = () -> Stream.concat(fields.stream(), currentFields.stream())
                         .map(ESNode.NestedField::field)
@@ -232,7 +238,7 @@ public class ESQueryTreeBuilder {
                         .count() > 1;
 
             return stem.equals(currentNestedStem.get())
-                    && fields.stream().noneMatch(f -> !f.isRepeatable() && currentFields.contains(f))
+                    && noRepeatedNonRepeatableField.get()
                     && !isMixOfLibraryAndLibraryOrganization.get();
         };
 
@@ -303,7 +309,7 @@ public class ESQueryTreeBuilder {
             boolean includeInParent = esMappings.isNestedIncludeInParentField(stem.get());
             boolean isRepeatable = c.selector().isLdSetContainer();
             ESNode.NestedStem nestedStem = new ESNode.NestedStem(stem.get(), includeInParent);
-            ESNode.NestedField nestedField = new ESNode.NestedField(f, isRepeatable);
+            ESNode.NestedField nestedField = new ESNode.NestedField(f, isRepeatable, op);
             return new ESNode.Nested(query, nestedStem, Set.of(nestedField));
         }
 

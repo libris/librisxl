@@ -232,7 +232,7 @@ public sealed interface ESNode {
     record NestedStem(String stem, boolean includeInParent) {
     }
 
-    record NestedField(String field, boolean isRepeatable) {
+    record NestedField(String field, boolean isRepeatable, Operator operator) {
     }
 
     record MatchAll() implements ESNode {

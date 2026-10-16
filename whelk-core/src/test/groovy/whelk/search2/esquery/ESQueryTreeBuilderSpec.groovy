@@ -969,6 +969,181 @@ class ESQueryTreeBuilderSpec extends Specification {
         ]
     }
 
+    def "group nested (AND, range query on non-repeatable field)"() {
+        given:
+        def mappings = [
+                'properties': [
+                        'p3'     : ['type': 'nested'],
+                        'p3.date': ['type': 'date']
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(new ESMappings(List.of(mappings)), new ESBoost([:]))
+        String q = 'p3.p1=x p3.date>2020-02 p3.date<2021-06-15'
+        Node queryTree = QueryTreeBuilder.buildTree(q, disambiguate)
+        Map result = ESQueryTreeBuilder.buildFrom(queryTree, esSettings).dsl()
+
+        expect:
+        result == [
+                "nested": [
+                        "path"           : "p3",
+                        "query"          : [
+                                "bool": [
+                                        "must": [[
+                                                         "simple_query_string": [
+                                                                 "default_operator": "AND",
+                                                                 "query"           : "x",
+                                                                 "fields"          : ["p3.p1"]
+                                                         ]
+                                                 ], [
+                                                         "bool": [
+                                                                 "filter": [
+                                                                         "range": [
+                                                                                 "p3.date": [
+                                                                                         "gt": "2020-02||/M"
+                                                                                 ]
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ], [
+                                                         "bool": [
+                                                                 "filter": [
+                                                                         "range": [
+                                                                                 "p3.date": [
+                                                                                         "lt": "2021-06-15||/d"
+                                                                                 ]
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ]]
+                                ]
+                        ],
+                        "ignore_unmapped": true
+                ]
+        ]
+    }
+
+    def "group nested (AND, range query on non-repeatable field) 2"() {
+        given:
+        def mappings = [
+                'properties': [
+                        'p3'     : ['type': 'nested'],
+                        'p3.date': ['type': 'date']
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(new ESMappings(List.of(mappings)), new ESBoost([:]))
+        String q = 'p3.date>2020-02 p3.date<2021-06-15 p3.p1=x'
+        Node queryTree = QueryTreeBuilder.buildTree(q, disambiguate)
+        Map result = ESQueryTreeBuilder.buildFrom(queryTree, esSettings).dsl()
+
+        expect:
+        result == [
+                "nested": [
+                        "path"           : "p3",
+                        "query"          : [
+                                "bool": [
+                                        "must": [[
+                                                         "bool": [
+                                                                 "filter": [
+                                                                         "range": [
+                                                                                 "p3.date": [
+                                                                                         "gt": "2020-02||/M"
+                                                                                 ]
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ], [
+                                                         "bool": [
+                                                                 "filter": [
+                                                                         "range": [
+                                                                                 "p3.date": [
+                                                                                         "lt": "2021-06-15||/d"
+                                                                                 ]
+                                                                         ]
+                                                                 ]
+                                                         ]
+                                                 ], [
+                                                         "simple_query_string": [
+                                                                 "default_operator": "AND",
+                                                                 "query"           : "x",
+                                                                 "fields"          : ["p3.p1"]
+                                                         ]
+                                                 ]]
+                                ]
+                        ],
+                        "ignore_unmapped": true
+                ]
+        ]
+    }
+
+    def "group nested (AND, range query on non-repeatable field) 3"() {
+        given:
+        def mappings = [
+                'properties': [
+                        'p3'     : ['type': 'nested'],
+                        'p3.date': ['type': 'date']
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(new ESMappings(List.of(mappings)), new ESBoost([:]))
+        String q = 'p3.p1=x p3.date>2020-02 p3.date<2021-06-15 p3.p1=y'
+        Node queryTree = QueryTreeBuilder.buildTree(q, disambiguate)
+        Map result = ESQueryTreeBuilder.buildFrom(queryTree, esSettings).dsl()
+
+        expect:
+        result == [
+                "bool": [
+                        "must": [[
+                                         "nested": [
+                                                 "ignore_unmapped": true,
+                                                 "query"          : [
+                                                         "bool": [
+                                                                 "must": [[
+                                                                                  "simple_query_string": [
+                                                                                          "default_operator": "AND",
+                                                                                          "query"           : "x",
+                                                                                          "fields"          : ["p3.p1"]
+                                                                                  ]
+                                                                          ], [
+                                                                                  "bool": [
+                                                                                          "filter": [
+                                                                                                  "range": [
+                                                                                                          "p3.date": [
+                                                                                                                  "gt": "2020-02||/M"
+                                                                                                          ]
+                                                                                                  ]
+                                                                                          ]
+                                                                                  ]
+                                                                          ], [
+                                                                                  "bool": [
+                                                                                          "filter": [
+                                                                                                  "range": [
+                                                                                                          "p3.date": [
+                                                                                                                  "lt": "2021-06-15||/d"
+                                                                                                          ]
+                                                                                                  ]
+                                                                                          ]
+                                                                                  ]
+                                                                          ]]
+                                                         ]
+                                                 ],
+                                                 "path"           : "p3"
+                                         ]
+                                 ], [
+                                         "nested": [
+                                                 "ignore_unmapped": true,
+                                                 "query"          : [
+                                                         "simple_query_string": [
+                                                                 "default_operator": "AND",
+                                                                 "query"           : "y",
+                                                                 "fields"          : ["p3.p1"]
+                                                         ]
+                                                 ],
+                                                 "path"           : "p3"
+                                         ]
+                                 ]]
+                ]
+        ]
+    }
+
     def "nested (NOT)"() {
         given:
         ESSettings esSettings = new ESSettings(esMappings, new ESBoost([:]))
