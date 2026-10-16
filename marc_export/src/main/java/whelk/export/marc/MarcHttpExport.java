@@ -21,8 +21,10 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -109,6 +111,18 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
             res.sendError(HttpServletResponse.SC_BAD_REQUEST, "Valid \"from\" and \"until\" parameters are required, for example like so: 2018-09-10T00:00:00Z");
             return;
         }
+
+        // Do not allow calls asking for changes far in the past. This is an API for incrementally staying up to date, *not* for full dumps.
+        if (
+                ZonedDateTime.parse(parameterMap.get("from")).toInstant().isBefore(Instant.now().minus(21, ChronoUnit.DAYS)) ||
+                ZonedDateTime.parse(parameterMap.get("until")).toInstant().isBefore(Instant.now().minus(21, ChronoUnit.DAYS))
+        ) {
+            failedRequests.labelValues("Requesting too far back in time",
+                    Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
+            res.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "The \"from\" and \"until\" parameters must specify a point in time no farther back than 3 weeks. This API is meant for incrementally staying up to date, not for full dumps. For full dumps contact libris customer service.");
+        }
+
 
         // Body (export profile)
         StringBuilder body = new StringBuilder();
