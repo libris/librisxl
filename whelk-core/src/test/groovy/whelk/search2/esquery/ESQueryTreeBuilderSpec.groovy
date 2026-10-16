@@ -128,6 +128,15 @@ class ESQueryTreeBuilderSpec extends Specification {
         expect:
         result == [
                 "bool": [
+                        "must"  : [[
+                                           "simple_query_string": [
+                                                   "default_operator"  : "AND",
+                                                   "query"             : "x y",
+                                                   "analyze_wildcard"  : true,
+                                                   "quote_field_suffix": ".exact",
+                                                   "fields"            : ["fieldA^10.0", "fieldA.exact^10.0"]
+                                           ]
+                                   ]],
                         "should": [[
                                            "query_string": [
                                                    "default_operator"  : "AND",
@@ -137,13 +146,51 @@ class ESQueryTreeBuilderSpec extends Specification {
                                                    "type"              : "most_fields",
                                                    "fields"            : ["fieldA^2.5", "fieldA.exact^2.5"]
                                            ]
-                                   ], [
+                                   ]]
+                ]
+        ]
+    }
+
+    def "multi-word prefix query"() {
+        given:
+        Map boostSettings = [
+                "field_boost": [
+                        "fields"              : [
+                                [
+                                        "name"        : "fieldA",
+                                        "boost"       : 10
+                                ]
+                        ],
+                        "phrase_boost_divisor": 4,
+                        "analyze_wildcard": true,
+                        "quote_field_suffix": ".exact"
+                ]
+        ]
+        ESSettings esSettings = new ESSettings(esMappings, new ESBoost(boostSettings))
+        String q = 'ab cd ef*'
+        Node queryTree = QueryTreeBuilder.buildTree(q, disambiguate)
+        Map result = ESQueryTreeBuilder.buildFrom(queryTree, esSettings).dsl()
+
+        expect:
+        result == [
+                "bool": [
+                        "must"  : [[
                                            "simple_query_string": [
                                                    "default_operator"  : "AND",
-                                                   "query"             : "x y",
+                                                   "query"             : "ab cd ef*",
                                                    "analyze_wildcard"  : true,
                                                    "quote_field_suffix": ".exact",
                                                    "fields"            : ["fieldA^10.0", "fieldA.exact^10.0"]
+                                           ]
+                                   ]],
+                        "should": [[
+                                           "query_string": [
+                                                   "default_operator"  : "AND",
+                                                   "query"             : "\"ab cd\"",
+                                                   "analyze_wildcard"  : true,
+                                                   "quote_field_suffix": ".exact",
+                                                   "type"              : "most_fields",
+                                                   "fields"            : ["fieldA^2.5", "fieldA.exact^2.5"]
                                            ]
                                    ]]
                 ]
@@ -1285,19 +1332,20 @@ class ESQueryTreeBuilderSpec extends Specification {
                                            ]
                                    ], [
                                            "bool": [
+                                                   "must"  : [[
+                                                                      "query_string": [
+                                                                              "default_operator": "AND",
+                                                                              "query"           : "x y",
+                                                                              "type"            : "cross_fields",
+                                                                              "fields"          : ["p18^400.0", "p17^400.0"]
+                                                                      ]
+                                                              ]],
                                                    "should": [[
                                                                       "query_string": [
                                                                               "default_operator": "AND",
                                                                               "query"           : "\"x y\"",
                                                                               "type"            : "cross_fields",
                                                                               "fields"          : ["p18^50.0", "p17^50.0"]
-                                                                      ]
-                                                              ], [
-                                                                      "query_string": [
-                                                                              "default_operator": "AND",
-                                                                              "query"           : "x y",
-                                                                              "type"            : "cross_fields",
-                                                                              "fields"          : ["p18^400.0", "p17^400.0"]
                                                                       ]
                                                               ]]
                                            ]

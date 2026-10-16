@@ -190,6 +190,15 @@ public sealed interface ESNode {
         }
     }
 
+    record MustWithShould(List<ESNode> must, List<ESNode> should) implements ESNode {
+        @Override
+        public Map<String, Object> dsl() {
+            return Map.of("bool", Map.of(
+                    "must", must.stream().map(ESNode::dsl).toList(),
+                    "should", should.stream().map(ESNode::dsl).toList()));
+        }
+    }
+
     record Exists(String field) implements ESNode {
         @Override
         public Map<String, Object> dsl() {

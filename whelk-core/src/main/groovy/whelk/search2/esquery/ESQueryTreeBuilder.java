@@ -549,18 +549,13 @@ public class ESQueryTreeBuilder {
                 .map(f -> f.withBoost(f.boost() / divisor))
                 .toList();
 
-        List<ESNode> queries = new ArrayList<>();
+        List<ESNode> phraseQueries = simplePhrases.stream()
+                .map(s -> new ESNode.QueryString(s, baseQuery.query().multiMatchType())) // We can't use simple_query_string for phrase query
+                .map(qs -> new ESNode.TextQuery(qs, dividedBoosts, settings))
+                .map(ESNode.class::cast)
+                .toList();
 
-        simplePhrases.forEach(s -> {
-            // We can't use simple_query_string for phrase query
-            ESNode.QueryString qs = new ESNode.QueryString(s, baseQuery.query().multiMatchType());
-            ESNode.TextQuery q = new ESNode.TextQuery(qs, dividedBoosts, settings);
-            queries.add(q);
-        });
-
-        queries.add(buildWithNormalizers(baseQuery));
-
-        return new ESNode.Should(queries);
+        return new ESNode.MustWithShould(List.of(buildWithNormalizers(baseQuery)), phraseQueries);
     }
 
     private static List<ESBoost.ScriptScoreNormalizer> collectNormalizers(List<ESBoost.Field> fields) {
