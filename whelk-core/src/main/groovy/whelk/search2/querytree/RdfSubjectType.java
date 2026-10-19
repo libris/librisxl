@@ -2,6 +2,7 @@ package whelk.search2.querytree;
 
 import whelk.search2.querytree.node.And;
 import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.node.FilterAlias;
 import whelk.search2.querytree.node.Node;
 import whelk.search2.querytree.node.Or;
 
@@ -22,6 +23,7 @@ public class RdfSubjectType {
             case Condition.Type type -> new RdfSubjectType(type);
             case And and -> extractFromAnd(and);
             case Or or -> extractFromOr(or);
+            case FilterAlias fa -> extractFrom(fa.getParsed());
             default -> noType();
         };
     }
@@ -96,6 +98,7 @@ public class RdfSubjectType {
                     .findAny()
                     .stream();
             case Or or -> or.children().stream().flatMap(RdfSubjectType::extractDescendantTypeNodes);
+            case FilterAlias fa -> extractDescendantTypeNodes(fa.getParsed());
             default -> throw new RuntimeException("couldn't map Node to Type");
         };
     }
