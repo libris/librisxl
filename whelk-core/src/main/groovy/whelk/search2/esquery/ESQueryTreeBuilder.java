@@ -53,6 +53,14 @@ import static whelk.search2.esquery.ESNode.MultiMatchType.cross_fields;
 import static whelk.search2.esquery.ESNode.MultiMatchType.most_fields;
 
 public class ESQueryTreeBuilder {
+    private enum OwlPropertyType {
+        OBJECT_PROPERTY, DATATYPE_PROPERTY;
+
+        static OwlPropertyType of(Selector selector) {
+            return selector.isObjectProperty() ? OwlPropertyType.OBJECT_PROPERTY : OwlPropertyType.DATATYPE_PROPERTY;
+        }
+    }
+
     public static ESNode buildFrom(Node queryTreeNode, ESSettings settings) {
         return switch (queryTreeNode) {
             case Condition c -> buildFromCondition(c, settings);
@@ -99,7 +107,7 @@ public class ESQueryTreeBuilder {
                     .map(n -> buildFrom(n, esSettings))
                     .collect(Collectors.toList());
 
-            subQueries.addAll(buildCombinedFields(conditions, (FreeText) v, esSettings, s.isObjectProperty()));
+            subQueries.addAll(buildCombinedFields(conditions, (FreeText) v, esSettings, OwlPropertyType.of(s)));
 
             return subQueries.size() == 1
                     ? subQueries.getFirst()
@@ -110,7 +118,7 @@ public class ESQueryTreeBuilder {
         return factorOutNested(new ESNode.DisMax(subQueries));
     }
 
-    private static List<ESNode> buildCombinedFields(List<Condition> conditions, FreeText ft, ESSettings esSettings, boolean isDatatypeText) {
+    private static List<ESNode> buildCombinedFields(List<Condition> conditions, FreeText ft, ESSettings esSettings, OwlPropertyType owlPropertyType) {
         Map<String, Condition> fieldToCondition = new LinkedHashMap<>();
         conditions.forEach(c -> fieldToCondition.put(c.esField(), c));
 
@@ -121,7 +129,7 @@ public class ESQueryTreeBuilder {
         List<ESNode> result = new ArrayList<>();
 
         fieldsGroupedByNestedStem.forEach((stem, fields) -> {
-            ESNode query = buildFieldedQuery(fields, ft, esSettings, isDatatypeText, cross_fields);
+            ESNode query = buildFieldedQuery(fields, ft, esSettings, owlPropertyType, cross_fields);
 
             if (fields.stream().map(fieldToCondition::get).anyMatch(Condition::isFlaggedForPostFilter)) {
                 query = new ESNode.PostFilter(query);
@@ -134,8 +142,9 @@ public class ESQueryTreeBuilder {
                 ESNode.NestedStem nestedStem = new ESNode.NestedStem(stem.get(), includeInParent);
                 Set<ESNode.NestedField> nestedFields = fields.stream()
                         .map(f -> {
-                            boolean isRepeatable = fieldToCondition.get(f).selector().isLdSetContainer();
-                            return new ESNode.NestedField(f, isRepeatable);
+                            Condition condition = fieldToCondition.get(f);
+                            boolean isRepeatable = condition.selector().isLdSetContainer();
+                            return new ESNode.NestedField(f, isRepeatable, condition.operator());
                         })
                         .collect(Collectors.toSet());
                 result.add(new ESNode.Nested(query, nestedStem, nestedFields));
@@ -224,6 +233,11 @@ public class ESQueryTreeBuilder {
                     .flatMap(Set::stream)
                     .collect(Collectors.toSet());
 
+            Supplier<Boolean> noRepeatedNonRepeatableField = () -> fields.stream()
+                    .noneMatch(f -> !f.isRepeatable()
+                            && !f.operator().isRange() // Allow repeated range queries on same non-repeatable field
+                            && currentFields.contains(f));
+
             // FIXME: Temporary check to avoid libraries and library organizations being grouped as nested
             Supplier<Boolean> isMixOfLibraryAndLibraryOrganization = () -> Stream.concat(fields.stream(), currentFields.stream())
                         .map(ESNode.NestedField::field)
@@ -232,7 +246,7 @@ public class ESQueryTreeBuilder {
                         .count() > 1;
 
             return stem.equals(currentNestedStem.get())
-                    && fields.stream().noneMatch(f -> !f.isRepeatable() && currentFields.contains(f))
+                    && noRepeatedNonRepeatableField.get()
                     && !isMixOfLibraryAndLibraryOrganization.get();
         };
 
@@ -284,7 +298,7 @@ public class ESQueryTreeBuilder {
         ESNode query = switch (v) {
             case Any ignored -> new ESNode.Exists(f);
             case DateTime dateTime -> buildFromDateTimeValue(f, op, dateTime, esSettings);
-            case FreeText freeText -> buildFromFreeTextValue(f, op, freeText, esSettings, c.selector().isObjectProperty());
+            case FreeText freeText -> buildFromFreeTextValue(f, op, freeText, esSettings, OwlPropertyType.of(c.selector()));
             case InvalidValue ignored -> new ESNode.MatchNone();
             case Link link -> buildFromLinkValue(f, op, link, esSettings);
             case VocabTerm vocabTerm -> new ESNode.TermQuery(f, vocabTerm.jsonForm());
@@ -303,7 +317,7 @@ public class ESQueryTreeBuilder {
             boolean includeInParent = esMappings.isNestedIncludeInParentField(stem.get());
             boolean isRepeatable = c.selector().isLdSetContainer();
             ESNode.NestedStem nestedStem = new ESNode.NestedStem(stem.get(), includeInParent);
-            ESNode.NestedField nestedField = new ESNode.NestedField(f, isRepeatable);
+            ESNode.NestedField nestedField = new ESNode.NestedField(f, isRepeatable, op);
             return new ESNode.Nested(query, nestedStem, Set.of(nestedField));
         }
 
@@ -322,13 +336,13 @@ public class ESQueryTreeBuilder {
                 case LIKE -> new ESNode.MatchNone(); // Makes no sense
             };
         }
-        return buildFieldedTextQuery(field, new FreeText(dateTime.toString()), esSettings.boost().fieldedQuerySettings());
+        return buildFromFreeTextValue(field, operator, new FreeText(dateTime.toString()), esSettings, OwlPropertyType.DATATYPE_PROPERTY);
     }
 
-    private static ESNode buildFromFreeTextValue(String field, Operator operator, FreeText ft, ESSettings esSettings, boolean isDatatypeText) {
+    private static ESNode buildFromFreeTextValue(String field, Operator operator, FreeText ft, ESSettings esSettings, OwlPropertyType owlPropertyType) {
         return switch (operator) {
             case EQUALS, LIKE ->
-                    buildFieldedQuery(List.of(field), ft, esSettings, isDatatypeText, most_fields);
+                    buildFieldedQuery(List.of(field), ft, esSettings, owlPropertyType, most_fields);
             case LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN_OR_EQUALS ->
                     buildRangeQuery(field, operator, ft, esSettings.mappings());
         };
@@ -389,10 +403,11 @@ public class ESQueryTreeBuilder {
     }
 
     private static ESNode buildFieldedQuery(List<String> fields, FreeText ft, ESSettings esSettings,
-                                             boolean isDatatypeText, ESNode.MultiMatchType matchType) {
-        return isDatatypeText
-                ? buildFieldedTextQuery(fields, ft, esSettings.boost().fieldedQuerySettings(), matchType)
-                : buildFieldedDatatypeQuery(fields, ft, esSettings, matchType);
+                                            OwlPropertyType owlPropertyType, ESNode.MultiMatchType matchType) {
+        return switch (owlPropertyType) {
+            case OBJECT_PROPERTY -> buildFieldedTextQuery(fields, ft, esSettings.boost().fieldedQuerySettings(), matchType);
+            case DATATYPE_PROPERTY -> buildFieldedDatatypeQuery(fields, ft, esSettings, matchType);
+        };
     }
 
     private static ESNode buildFieldedDatatypeQuery(List<String> fields, FreeText ft, ESSettings esSettings,
