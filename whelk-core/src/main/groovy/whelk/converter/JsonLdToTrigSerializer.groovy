@@ -17,6 +17,7 @@ class JsonLdToTrigSerializer {
     JsonLdToTrigSerializer(Map context, OutputStream ostream) {
         def settings = new Settings()
         settings.useGraphKeyword = false
+        settings.dropRdfstar = true // TODO: remove this line when we our Virtuoso supports supports this
         def out = new Output(new PrintStream(ostream))
         state = new CleanedTrigSerializerState(out, settings, context)
     }
@@ -44,6 +45,7 @@ class JsonLdToTrigSerializer {
     }
 
     static ByteArrayOutputStream serialize(Object context, Object source, String base, Settings settings) {
+        settings.dropRdfstar = true // TODO: remove this line when we our Virtuoso supports supports this
         Output out = new Output()
         CleanedTrigSerializerState state = new CleanedTrigSerializerState(out, settings, context, base)
         state.serialize(source)

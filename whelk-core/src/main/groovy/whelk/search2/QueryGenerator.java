@@ -5,12 +5,13 @@ import org.slf4j.Logger;
 import whelk.JsonLd;
 import whelk.Whelk;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.Condition;
-import whelk.search2.querytree.FreeText;
-import whelk.search2.querytree.Key;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.Path;
-import whelk.search2.querytree.Token;
+
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.value.FreeText;
+import whelk.search2.querytree.selector.Key;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.value.Token;
+
 import whelk.util.DocumentUtil;
 import whelk.util.FresnelUtil;
 
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static whelk.JsonLd.REVERSE_KEY;
 import static whelk.JsonLd.THING_KEY;
@@ -36,6 +38,11 @@ public class QueryGenerator {
             List.of(THING_KEY, "publication", "*", "agent"),
             List.of(THING_KEY, REVERSE_KEY, WORK_KEY, "*", "publication", "*", "agent")
     );
+
+    private static final Map<String, String> PATH_TO_SHORTHAND = Map.of(
+            "publication.agent", "publisher"
+    );
+
 
     /*
     TODO
@@ -80,7 +87,7 @@ public class QueryGenerator {
                     if (t instanceof String type) {
                         if (type.equals("ISSN") && !"identifiedBy".equals(path.getFirst())) {
                             if (node.containsKey("value") && node.get("value") instanceof String issn) {
-                                insert(new Condition(toKey("ISXN"), Operator.EQUALS, scopedFreeText(issn)), node);
+                                insert(new Condition(toKey("identifier"), Operator.EQUALS, scopedFreeText(issn)), node);
                             }
                         }
                         else if (type.equals("Record") && path.contains("describedBy")) {
@@ -124,24 +131,23 @@ public class QueryGenerator {
     }
 
     private static void insert(List<Object> path, Map<String, Object> node, Whelk whelk) {
-        var qPath = toQueryPath(path, whelk.jsonld);
+        var qKey = toQueryKey(path, whelk.jsonld);
 
         var text = whelk.getFresnelUtil().asString(node, FresnelUtil.Lenses.SEARCH_NEEDLE);
         if (text.isBlank()) {
             return;
         }
 
-        // TODO
-        var q = qPath.path().isEmpty()
-                ? new FreeText(text)
-                : new Condition(qPath, Operator.EQUALS, scopedFreeText(text));
+        var q = qKey.isEmpty()
+                ? new FreeText(text).asNode()
+                : new Condition(toKey(PATH_TO_SHORTHAND.getOrDefault(qKey, qKey)), Operator.EQUALS, scopedFreeText(text));
 
         insert(q, node);
     }
 
     private static void insert(Node query, Map<String, Object> node) {
         try {
-            var url = QueryUtil.makeViewFindUrl(query.toQueryString(true), new QueryParams(Collections.emptyMap()));
+            var url = QueryUtil.makeViewFindUrl(query.toQueryString(), new QueryParams(Collections.emptyMap()));
             node.put("_find", Map.of(
                     JsonLd.TYPE_KEY, "_Query",
                     JsonLd.ID_KEY, url
@@ -151,14 +157,15 @@ public class QueryGenerator {
         }
     }
 
-    private static Path toQueryPath(List<Object> docPath, JsonLd jsonLd) {
-        return new Path(docPath.stream()
+    private static String toQueryKey(List<Object> docPath, JsonLd jsonLd) {
+        return docPath.stream()
                 .filter(s -> !THING_KEY.equals(s))
                 .filter(s -> !(s instanceof Number))
                 .filter(s -> !"*".equals(s))
                 .filter(s -> !JsonLd.REVERSE_KEY.equals(s))
-                .filter(s -> !jsonLd.isIntegral(String.valueOf(s)))
-                .map(p -> toKey(String.valueOf(p))).toList());
+                .map(String::valueOf)
+                .filter(s -> !jsonLd.isIntegral(s))
+                .collect(Collectors.joining("."));
     }
 
     private static Key.UnrecognizedKey toKey(String s) {
@@ -167,7 +174,7 @@ public class QueryGenerator {
 
     private static FreeText scopedFreeText(String s) {
         var tokens = Arrays.stream(s.split("\\s")).map(t -> (Token) new Token.Raw(t)).toList();
-        return new FreeText(null, tokens, Query.Connective.AND);
+        return new FreeText(tokens, Query.Connective.AND);
     }
 
     private static boolean isBlank(Map<String, Object> node) {

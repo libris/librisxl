@@ -668,11 +668,11 @@ class ElasticSearch {
                 }
             }
 
-            if (path && path.last() == 'classification') {
+            if (path && 'classification'.equals(path.last())) {
                 addFlattenedClassificationFields(asList(value))
             }
 
-            if (path && path.last() == RECORD_KEY) {
+            if (path && RECORD_KEY.equals(path.last())) {
                 var record = (Map) value
                 if (record.containsKey('controlNumber')) {
                     var controlNumber = value['controlNumber']
@@ -695,8 +695,9 @@ class ElasticSearch {
         return mapper.writeValueAsString(searchCard)
     }
 
-    private static void addFlattenedClassificationFields(List<Map> classification) {
-        classification.each { Map c ->
+    private static void addFlattenedClassificationFields(List classification) {
+        classification.each { c ->
+            if (!(c instanceof Map)) return
             String type = c[TYPE_KEY]
             String code = c['code']
             if (!code || !type) return

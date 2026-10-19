@@ -1,5 +1,7 @@
 package whelk.importer
 
+import groovy.util.logging.Slf4j as Log
+
 import whelk.Document
 import whelk.Whelk
 import whelk.history.DocumentVersion
@@ -8,6 +10,7 @@ import whelk.util.LegacyIntegrationTools
 
 import static whelk.util.Jackson.mapper
 
+@Log
 class WhelkCopier {
 
     static final int DEFAULT_FETCH_SIZE = 100
@@ -50,7 +53,7 @@ class WhelkCopier {
             }
         }
         if (versionTypes) {
-            System.err.println("Old versions of the following types will be copied: $versionTypes")
+            log.info("Old versions of the following types will be copied: $versionTypes")
         }
 
         if (additionalTypes) {
@@ -68,7 +71,7 @@ class WhelkCopier {
             }
 
             if (whereClause) {
-                System.err.println("The following WHERE clause will be used for copying additional types: ${whereClause}")
+                log.info("The following WHERE clause will be used for copying additional types: ${whereClause}")
             }
 
             source.storage.withDbConnection {
@@ -92,7 +95,7 @@ class WhelkCopier {
             else
                 doc = source.getDocument(id)
             if (doc == null) {
-                System.err.println("Could not load document with ID: $id")
+                log.warn("Could not load document with ID: $id")
                 continue
             }
             doc.baseUri = source.baseUri
@@ -154,13 +157,67 @@ class WhelkCopier {
         }
 
         flushSaveQueue()
-        threadPool.awaitAllAndShutdown()
+        threadPool.awaitAll()
 
-        dest.storage.reDenormalize()
+        recalculateDependencies()
+        threadPool.awaitAllAndShutdown()
+        dest.storage.withDbConnection {
+            dest.storage.clearEmbellishedCache(dest.storage.getMyConnection())
+        }
+
         if (copyVersions) {
-            System.err.println("Copied ${copied} documents (from ${recordIds.size()} selected), including ${copiedVersions} historical versions.")
+            log.info("Copied ${copied} documents (from ${recordIds.size()} selected), including ${copiedVersions} historical versions.")
         } else {
-            System.err.println("Copied ${copied} documents (from ${recordIds.size()} selected).")
+            log.info("Copied ${copied} documents (from ${recordIds.size()} selected).")
+        }
+    }
+
+    void recalculateDependencies() {
+        log.info("Recalculating dependencies.")
+        def submit = { List<String> ids ->
+            threadPool.submit(() -> recalculateDependenciesBatch(ids))
+        }
+        dest.storage.withDbConnection {
+            def conn = dest.storage.getMyConnection()
+            conn.setAutoCommit(false)
+            def stmt = conn.prepareStatement("SELECT id FROM lddb WHERE deleted = false")
+            stmt.setFetchSize(1000)
+            def rs = stmt.executeQuery()
+            List<String> batch = []
+            long count = 0
+            while (rs.next()) {
+                batch << rs.getString(1)
+                if (batch.size() == SAVE_BATCH_SIZE) {
+                    submit(batch)
+                    batch = []
+                }
+                if (++count % 100000 == 0)
+                    log.info("Dependency recalculation queued for $count documents")
+            }
+            submit(batch)
+            log.info("Dependency recalculation queued for $count documents in total.")
+        }
+    }
+
+    private void recalculateDependenciesBatch(List<String> ids) {
+        dest.storage.withDbConnection {
+            Collection<Document> docs = dest.storage.bulkLoad(ids).values()
+            def conn = dest.storage.getMyConnection()
+            try {
+                conn.setAutoCommit(false)
+                docs.each { dest.storage.recalculateDependencies(it) }
+                conn.commit()
+            } catch (Exception ignored) {
+                conn.rollback()
+                conn.setAutoCommit(true)
+                for (Document doc : docs) {
+                    try {
+                        dest.storage.recalculateDependencies(doc)
+                    } catch (Exception e) {
+                        log.error("Could not recalculate dependencies for $doc.shortId due to: $e")
+                    }
+                }
+            }
         }
     }
 
@@ -193,7 +250,7 @@ class WhelkCopier {
         }
 
         if (copied % 200 == 0)
-            System.err.println "Records queued for copying: $copied"
+            log.info("Records queued for copying: $copied")
         if (saveQueue.size() >= SAVE_BATCH_SIZE) {
             flushSaveQueue()
         }
@@ -238,10 +295,10 @@ class WhelkCopier {
                     dest.quickCreateDocument(newDoc, "xl", "WhelkCopier", collection)
                 }
             } catch (Exception e) {
-                System.err.println("Could not save $doc.shortId due to: $e")
+                log.error("Could not save $doc.shortId due to: $e")
             }
         } else {
-            System.err.println "Collection could not be determined for id ${newDoc.getShortId()}, document will not be exported."
+            log.warn("Collection could not be determined for id ${newDoc.getShortId()}, document will not be exported.")
         }
     }
 

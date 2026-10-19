@@ -4,14 +4,15 @@ import groovy.util.logging.Slf4j as Log
 import groovy.transform.CompileStatic
 import whelk.exception.LinkValidationException
 
-import static groovy.transform.TypeCheckingMode.SKIP
-
 import whelk.Document
 import whelk.JsonLd
 import whelk.TargetVocabMapper
 import whelk.Whelk
 import whelk.converter.TrigToJsonLdParser
+import whelk.converter.JsonLdShapes
 import whelk.util.DocumentUtil
+
+import java.time.Duration
 
 import static whelk.JsonLd.asList
 import static whelk.JsonLd.findInData
@@ -60,14 +61,37 @@ class DatasetImporter {
     TargetVocabMapper tvm = null
     Map contextDocData = null
 
-    Map<String, String> aliasMap = [:]
+    static final int THING_ID_CACHE_SIZE = 100_000
+    static final int DEPENDENCY_CHECK_BATCH_SIZE = 100
+    static final int INDEX_FLUSH_INTERVAL = 10_000
+
+    private long writesSinceIndexFlush = 0
+
+    // LRU cache for whelk.storage.getThingId() results
+    private Map<String, String> thingIdCache = new LinkedHashMap<String, String>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+            return size() > THING_ID_CACHE_SIZE
+        }
+    }
 
     DatasetImporter(Whelk whelk, String datasetUri, Map flags=[:], Object descriptions=null) {
         this.whelk = whelk
         this.datasetUri = datasetUri
+        if (datasetUri != null) {
+          log.info("Initialized DatasetImporter for ${datasetUri}")
+        }
+        log.info("Using system context: ${whelk.systemContextUri}")
         if (whelk.systemContextUri) {
             contextDocData = getDocByMainEntityId(whelk.systemContextUri)?.data
+          if (contextDocData != null && contextDocData.containsKey(CONTEXT)) {
+            def ctx = contextDocData.get(CONTEXT)
+            if (ctx instanceof Map) log.info("Context size: ${ctx.size()}")
+          } else {
+            log.warn("Context missing ${CONTEXT}")
+          }
         }
+
         if (descriptions != null) {
             Map datasetDesc = descriptions instanceof Map ? (Map) descriptions : loadData((String) descriptions)
             givenDsData = (Map) findInData(datasetDesc, datasetUri)
@@ -84,13 +108,14 @@ class DatasetImporter {
     }
 
     static void loadDescribedDatasets(Whelk whelk, String datasetDescPath, String sourceBaseDir, Set<String> onlyDatasets=null, Map flags=[:]) {
+        log.info("Loading datasets described in: ${datasetDescPath}")
         var dsImp = new DatasetImporter(whelk, null)
         var datasets = (Map) new File(datasetDescPath).withInputStream {
             dsImp.contextDocData ? dsImp.loadTurtleAsSystemShaped(it) : loadSelfCompactedTurtle(it)
         }
         for (Map item : (List<Map>) datasets[GRAPH] ?: asList(datasets)) {
             if (onlyDatasets && item[ID] !in onlyDatasets) {
-                System.err.println("Skipping dataset: ${item[ID]}")
+                log.info("Skipping dataset: ${item[ID]}")
                 continue
             }
             if (item[TYPE] == 'Dataset' && 'sourceData' in item) {
@@ -118,7 +143,17 @@ class DatasetImporter {
     }
 
     void importDataset(String sourceUrl) {
-        System.err.println("Importing from: ${sourceUrl}")
+        whelk.startDeferredIndexing()
+        try {
+            doImportDataset(sourceUrl)
+        } finally {
+            whelk.endDeferredIndexing()
+        }
+    }
+
+    private void doImportDataset(String sourceUrl) {
+        long startTime = System.nanoTime()
+        log.info("Importing from: ${sourceUrl}")
 
         Set<String> idsInInput = []
 
@@ -160,9 +195,10 @@ class DatasetImporter {
                 case WRITE_RESULT.UPDATED:
                     updatedCount++;
             }
+            countWriteAndMaybeFlushIndexing()
 
             if ( lineCount % 100 == 0 ) {
-                System.err.println("Processed " + lineCount + " input records. " + createdCount + " created, " +
+                log.info("Processed " + lineCount + " input records. " + createdCount + " created, " +
                         updatedCount + " updated, " + (lineCount-createdCount-updatedCount) + " already up to date.")
             }
             ++lineCount
@@ -175,21 +211,32 @@ class DatasetImporter {
         // dataset links to another doc in the dataset that has not yet been imported.
         // A symptom is for example @reverse/broader not being calculated correctly.
         // Should be fixed by merging PlaceholderRecord handling?
-        idsInInput.each { whelk.storage.recalculateDependencies(whelk.getDocument(it)) }
+        recalculateStaleDependencies(idsInInput)
 
-        System.err.println("Created: " + createdCount +" new,\n" +
-                "updated: " + updatedCount + " existing and\n" +
-                "deleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
-                "out of the: " + idsInInput.size() + " records in dataset: \"" + dsInfo.uri + "\".\n" +
-                "Dataset now in sync.")
+        System.err.println("Indexing remaining changes...")
+        whelk.flushDeferredIndexing()
+
+        Duration elapsedTime = Duration.ofNanos(System.nanoTime() - startTime)
+        String elapsed = String.format("%02dh%02dm%02ds", elapsedTime.toHours(), elapsedTime.toMinutesPart(), elapsedTime.toSecondsPart())
+        log.info("Created: " + createdCount +" new,\n" +
+                "\tupdated: " + updatedCount + " existing and\n" +
+                "\tdeleted: " + deletedCount + " old records (should have been: " + (deletedCount + needsRetry.size()) + "),\n" +
+                "\tout of the: " + idsInInput.size() + " records in dataset: \"" + dsInfo.uri + "\".\n" +
+                "\tDataset now in sync in ${elapsed}.")
     }
 
     void dropDataset() {
         if (dsInfo == null) {
             dsInfo =  new DatasetInfo([(ID): datasetUri])
         }
-        long deletedCount = removeDeleted([] as Set, [])
-        System.err.println("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
+        long deletedCount
+        whelk.startDeferredIndexing()
+        try {
+            deletedCount = removeDeleted([] as Set, [])
+        } finally {
+            whelk.endDeferredIndexing()
+        }
+        log.info("Deleted dataset ${dsInfo.uri} with ${deletedCount} existing records")
     }
 
     private void processDataset(String sourceUrl, Closure processItem) {
@@ -217,16 +264,16 @@ class DatasetImporter {
         Map selfDescribedDsData = findInData(data, datasetUri)
         String dsId = null
         if (selfDescribedDsData != null) {
-            System.err.println("Using self-described dataset description")
+            log.info("Using self-described dataset description")
             setDatasetInfo(datasetUri, data)
         } else if (givenDsData != null) {
-            System.err.println("Using given dataset description")
+            log.info("Using given dataset description")
             setDatasetInfo(datasetUri, givenDsData)
             dsRecord = completeRecord(givenDsData, JsonLd.SYSTEM_RECORD_TYPE)
             createOrUpdateDocument(dsRecord)
             dsId = dsRecord.getShortId()
         } else if (useExistingDatasetDescription) {
-            System.err.println("Using existing dataset description")
+            log.info("Using existing dataset description")
             lookupDatasetInfo(datasetUri)
         }
         return dsId
@@ -238,7 +285,7 @@ class DatasetImporter {
             throw new RuntimeException("Provided dataset ${givenData[ID]} does not match: ${datasetUri}")
         }
         dsInfo = new DatasetInfo(dsData)
-        System.err.println("Using new dataset: ${dsInfo.uri}")
+        log.info("Using new dataset: ${dsInfo.uri}")
     }
 
     protected void lookupDatasetInfo(String datasetUri) {
@@ -249,7 +296,7 @@ class DatasetImporter {
         Map datasetData = ((List) datasetRecord.data[GRAPH])[1]
         assert datasetData[ID] == datasetUri
         dsInfo = new DatasetInfo(datasetData)
-        System.err.println("Using already defined dataset: ${dsInfo.uri}")
+        log.info("Using already defined dataset: ${dsInfo.uri}")
     }
 
     protected Document completeRecord(Map data, String recordType, boolean remap = false) {
@@ -305,18 +352,26 @@ class DatasetImporter {
         }
     }
 
-    @CompileStatic(SKIP)
     protected void normalizeLinks(Map data) {
-        DocumentUtil.findKey(data[GRAPH][1], ID) { id, path ->
+        DocumentUtil.findKey(((List) data[GRAPH])[1], ID) { Object id, List<Object> path ->
             if ('sameAs' in path) {
-                return
+                return DocumentUtil.NOP
             }
-            def canonical = aliasMap.get(id) ?: whelk.storage.getThingId(id)
+            String canonical = getThingId((String) id)
             if (canonical && id != canonical) {
-                aliasMap[id] = canonical
                 return new DocumentUtil.Replace(canonical)
             }
+            return DocumentUtil.NOP
         }
+    }
+
+    private String getThingId(String id) {
+        if (thingIdCache.containsKey(id)) {
+            return thingIdCache[id]
+        }
+        String thingId = whelk.storage.getThingId(id)
+        thingIdCache[id] = thingId
+        return thingId
     }
 
     private Map loadData(String path) {
@@ -330,9 +385,14 @@ class DatasetImporter {
             }
     }
 
+    /**
+     * This method is <em>only</em> intended for initial whelk bootstrapping,
+     * to initially load systemContext (contextDocData).
+     */
     private static Map loadSelfCompactedTurtle(InputStream ins) {
         // Assuming that the Turtle *shape* follows a hard-coded system context!
-        Map data = (Map) TrigToJsonLdParser.parse(ins)
+        log.warn("Using loadSelfCompactedTurtle should only happen during setup of fresh whelk installation")
+        Map data = (Map) TrigToJsonLdParser.parseRaw(ins)
         if (CONTEXT in data) {
             Map ctx = [:]
             ctx.putAll((Map) data[CONTEXT])
@@ -342,18 +402,27 @@ class DatasetImporter {
             ctx['xsd'] = XSD_NS
             // Assumes VOCAB + created in source actually means this!
             ctx['created'] = [(TYPE): 'xsd:dateTime']
-            data = (Map) TrigToJsonLdParser.compact(data, [(CONTEXT): ctx])
+            data = (Map) JsonLdShapes.reCompact(data, [(CONTEXT): ctx])
         }
         return data
     }
 
     private Map loadTurtleAsSystemShaped(InputStream ins) {
         assert contextDocData
-        Map data = TrigToJsonLdParser.parse(ins)
+        Map data = TrigToJsonLdParser.parseRaw(ins)
+        if (checkedSystemShaped(data, whelk.jsonld.vocabId)) {
+            return (Map) JsonLdShapes.reCompact(data, contextDocData)
+        } else {
+            log.info("Applying target vocabulary map")
+            return (Map) getTvm().applyTargetVocabularyMap(whelk.systemContextUri, contextDocData, data)
+        }
+    }
+
+    private static boolean checkedSystemShaped(Map data, String vocabId) {
         if (data[CONTEXT] instanceof Map) {
             Map ctx = (Map) data[CONTEXT]
             int expectedSize = 0
-            if (ctx[VOCAB] == whelk.jsonld.vocabId) {
+            if (ctx[VOCAB] == vocabId) {
                 expectedSize++
                 if (ctx.containsKey(BASE)) {
                     expectedSize++
@@ -363,14 +432,15 @@ class DatasetImporter {
                 }
             }
             if (ctx.size() == expectedSize) {
-                // Forces plain string uri values to be taken as datatyped
+                // TODO: remove this hack when definitions consistently use `:uri ""^^xsd:anyURI`!
+                // Force plain string uri value to be expanded as datatyped:
                 if ('uri' !in ctx) {
                     ctx['uri'] = [(TYPE): 'xsd:anyURI']
                 }
-                return (Map) TrigToJsonLdParser.compact(data, contextDocData)
+                return true
             }
         }
-        return (Map) getTvm().applyTargetVocabularyMap(whelk.systemContextUri, contextDocData, data)
+        return false
     }
 
     private Document getDocByMainEntityId(String id) {
@@ -378,10 +448,11 @@ class DatasetImporter {
     }
 
     private WRITE_RESULT createOrUpdateDocument(Document incomingDoc) {
-        Document storedDoc = whelk.getDocument(incomingDoc.getShortId())
+        Set<String> storedIds = new HashSet<>()
         WRITE_RESULT result
-        if (storedDoc != null) {
-            boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, false, "xl", null, { doc ->
+        if (whelk.storage.exists(incomingDoc.getShortId())) {
+            boolean updated = whelk.storeAtomicUpdate(incomingDoc.getShortId(), true, false, false, "xl", null, { Document doc ->
+                storedIds = identifiers(doc)
                 doc.data = incomingDoc.data
             })
             if (updated) {
@@ -393,7 +464,32 @@ class DatasetImporter {
             whelk.createDocument(incomingDoc, "xl", null, collection, false)
             result = WRITE_RESULT.CREATED
         }
+        if (result != WRITE_RESULT.ALREADY_UP_TO_DATE) {
+            thingIdCache.keySet().removeAll(storedIds)
+            thingIdCache.keySet().removeAll(identifiers(incomingDoc))
+        }
         return result
+    }
+
+    private static Set<String> identifiers(Document doc) {
+        Set<String> ids = new HashSet<>(doc.getRecordIdentifiers())
+        ids.addAll(doc.getThingIdentifiers())
+        return ids
+    }
+
+    private void recalculateStaleDependencies(Set<String> idsInInput) {
+        long recalculated = 0
+        for (List<String> batch : new ArrayList<String>(idsInInput).collate(DEPENDENCY_CHECK_BATCH_SIZE)) {
+            Map<String, Document> docs = whelk.storage.bulkLoad(batch)
+            Map<String, Set<String>> stale = whelk.storage.findStaleDependencies(docs.values())
+            stale.each { String id, Set<String> changedDependencies ->
+                whelk.storage.recalculateDependencies(docs[id])
+                recalculated++
+            }
+        }
+        if (recalculated > 0) {
+            System.err.println("Recalculated stale dependencies of ${recalculated} records.")
+        }
     }
 
     private long removeDeleted(Set<String> idsInInput, List<String> needsRetry) {
@@ -409,7 +505,7 @@ class DatasetImporter {
                 } else {
                     deletedCount++
                     if (deletedCount % 50 == 0) {
-                        System.err.println("Cleaning up: " + deletedCount + " records deleted (they are no longer in the dataset).")
+                        log.info("Cleaning up: " + deletedCount + " records deleted (they are no longer in the dataset).")
                     }
                 }
             }
@@ -452,9 +548,17 @@ class DatasetImporter {
         try {
             log.info("Removing " + id + " from dataset")
             whelk.remove(id, "xl", null, force)
+            countWriteAndMaybeFlushIndexing()
             return true
         } catch (LinkValidationException ignored) {
             return false
+        }
+    }
+
+    private void countWriteAndMaybeFlushIndexing() {
+        if (++writesSinceIndexFlush >= INDEX_FLUSH_INTERVAL) {
+            whelk.flushDeferredIndexing()
+            writesSinceIndexFlush = 0
         }
     }
 

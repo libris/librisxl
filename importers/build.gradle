@@ -89,6 +89,8 @@ dependencies {
 shadowJar {
     archiveBaseName = "xlimporter"
     archiveClassifier = null // removes `-all` in the filename of the created .jar
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    mergeServiceFiles()
 }
 
 jar {

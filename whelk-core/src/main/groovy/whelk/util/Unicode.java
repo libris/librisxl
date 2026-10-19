@@ -134,7 +134,19 @@ public class Unicode {
     }
 
     public static String trim(String s) {
+        // Skip the regexes if the string cannot match
+        if (s.isEmpty() || (isNeverTrimmed(s.charAt(0)) && isNeverTrimmed(s.charAt(s.length() - 1)))) {
+            return s;
+        }
         return TRAILING_SPACE.matcher(LEADING_SPACE.matcher(s).replaceFirst("")).replaceFirst("");
+    }
+
+    /**
+     * True for characters that are not matched by LEADING_SPACE nor TRAILING_SPACE,
+     * i.e., that are not whitespace, WORD JOINER or line breaks.
+     */
+    private static boolean isNeverTrimmed(char c) {
+        return (c > ' ' && c < '\u007f') || Character.isLetterOrDigit(c);
     }
 
     public static String stripPrefix(String s, String prefix) {
@@ -143,6 +155,32 @@ public class Unicode {
 
     public static String stripSuffix(String s, String suffix) {
         return s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s;
+    }
+
+    public static String truncate(String s, int length) {
+        if (length < 0) {
+            throw new IllegalArgumentException("length cannot be negative");
+        }
+        if (s == null) {
+            return "";
+        }
+        if (s.length() <= length) {
+            return s;
+        }
+        return s.substring(0, length);
+    }
+
+    public static String ellipsis(String s, int length) {
+        if (length < 0) {
+            throw new IllegalArgumentException("length cannot be negative");
+        }
+        if (s == null) {
+            return "";
+        }
+        if (s.length() > length) {
+            return truncate(s, length) + "…";
+        }
+        return s;
     }
 
     public static boolean isRtl(Character.UnicodeScript script) {

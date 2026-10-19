@@ -2,7 +2,9 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.exception.InvalidQueryException;
-import whelk.search2.querytree.FilterAlias;
+import whelk.search2.esquery.ESSettings;
+import whelk.search2.esquery.ESBoost;
+import whelk.search2.querytree.node.FilterAlias;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,7 +55,7 @@ public class QueryParams {
     public final String computedLabelLocale;
     public final List<FilterAlias.QueryDefinedAlias> aliased;
     public final int cursor;
-    public final ESSettings.Boost boost;
+    public final ESBoost boost;
 
     public final String q;
     public final String r;
@@ -220,10 +222,9 @@ public class QueryParams {
         int limit = getOptionalSingleNonEmpty(ApiParams.LIMIT, queryParameters)
                 .map(x -> parseInt(x, DEFAULT_LIMIT))
                 .orElse(DEFAULT_LIMIT);
-
-        //TODO: Copied from old SearchUtils
+        
         if (limit > MAX_LIMIT) {
-            limit = DEFAULT_LIMIT;
+            limit = MAX_LIMIT;
         }
 
         if (limit < 0) {

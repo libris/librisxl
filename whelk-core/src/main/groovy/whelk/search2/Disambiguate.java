@@ -2,17 +2,34 @@ package whelk.search2;
 
 import groovy.transform.PackageScope;
 import whelk.JsonLd;
-import whelk.search2.querytree.*;
+
+import whelk.search2.querytree.selector.Path;
+import whelk.search2.querytree.selector.PathElement;
+import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.selector.Selector;
+import whelk.search2.querytree.value.Any;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.value.FreeText;
+import whelk.search2.querytree.value.DateTime;
+import whelk.search2.querytree.value.InvalidValue;
+import whelk.search2.querytree.selector.Key;
+import whelk.search2.querytree.value.Link;
+import whelk.search2.querytree.value.Token;
+import whelk.search2.querytree.value.Value;
+import whelk.search2.querytree.value.VocabTerm;
+import whelk.search2.querytree.value.YearRange;
 
 import java.time.format.DateTimeParseException;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static whelk.JsonLd.ID_KEY;
 import static whelk.JsonLd.LD_KEYS;
-import static whelk.JsonLd.VOCAB_KEY;
 import static whelk.JsonLd.looksLikeIri;
 import static whelk.search2.Query.NONE_CATEGORY;
 import static whelk.search2.Query.WORK_CATEGORY;
@@ -25,13 +42,12 @@ public class Disambiguate {
     private final ResourceLookup resourceLookup;
     private final Map<String, FilterAlias> filterAliasMappings;
 
-    private final List<String> nsPrecedenceOrder;
+    private static final List<String> defaultNsPrecedenceOrder = List.of("rdf", "librissearch", "kbv", "bibdb", "bulk", "marc"); // TODO: Get from configuration
 
     public Disambiguate(ResourceLookup resourceLookup, Collection<FilterAlias> appFilterAliases, Collection<FilterAlias.QueryDefinedAlias> queryFilterAliases, JsonLd jsonLd) {
         this.resourceLookup = resourceLookup;
         this.filterAliasMappings = getFilterAliasMappings(appFilterAliases, queryFilterAliases);
         this.jsonLd = jsonLd;
-        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "bulk", "marc"); // FIXME
     }
 
     // For test only
@@ -40,7 +56,6 @@ public class Disambiguate {
         this.resourceLookup = resourceLookup;
         this.filterAliasMappings = getFilterAliasMappings(filterAliasMappings, List.of());
         this.jsonLd = jsonLd;
-        this.nsPrecedenceOrder = List.of("rdf", "librissearch", (String) jsonLd.context.get(VOCAB_KEY), "bibdb", "bulk", "marc"); // FIXME
     }
 
     public Selector mapQueryKey(Token token) {
@@ -75,10 +90,38 @@ public class Disambiguate {
                 List<PathElement> newPath = new ArrayList<>(path.path());
                 newPath.removeLast();
                 newPath.addAll(coerced.path());
-                yield new Path(newPath, path.token());
+                yield new Path(newPath, path.originalToken());
             }
             case Key k -> k;
         };
+    }
+
+    public static Property getPropertyByKey(String key, JsonLd jsonLd) {
+        return getPropertyByKey(key, jsonLd, defaultNsPrecedenceOrder);
+    }
+
+    public static Property getPropertyByKey(String key, JsonLd jsonLd, List<String> nsPrecedenceOrder) {
+        Map<String, Map<String, Object>> vocab = jsonLd.vocabIndex;
+        String vocabPrefix = ResourceLookup.getVocabPrefix(jsonLd);
+
+        String[] keyParts = key.split(":");
+        boolean isPrefixed = keyParts.length == 2;
+
+        if (isPrefixed) {
+            String vocabKey = vocabPrefix.equals(keyParts[0]) ? keyParts[1] : key;
+            if (vocab.containsKey(vocabKey)) {
+                return Property.buildProperty(vocabKey, jsonLd, new Key.RecognizedKey(new Token.Quoted(key)));
+            }
+        } else {
+            for (String ns : nsPrecedenceOrder) {
+                String vocabKey = vocabPrefix.equals(ns) ? key : String.format("%s:%s", ns, key);
+                if (vocab.containsKey(vocabKey)) {
+                    return Property.buildProperty(vocabKey, jsonLd, new Key.RecognizedKey(new Token.Raw(key)));
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("No such property key: " + key);
     }
 
     private boolean isRestrictedByValue(String propertyKey) {
@@ -126,22 +169,22 @@ public class Disambiguate {
     }
 
     private PathElement mapSingleKey(Token token) {
-        for (String ns : nsPrecedenceOrder) {
+        for (String ns : defaultNsPrecedenceOrder) {
             Set<String> mappedProperties = resourceLookup.vocabMappings().properties()
                     .getOrDefault(token.value().toLowerCase(), Map.of())
                     .getOrDefault(ns, Set.of());
             if (mappedProperties.size() == 1) {
                 String p = getUnambiguous(mappedProperties);
-                return getProperty(p, token);
+                return buildProperty(p, token);
             }
             if (mappedProperties.size() > 1) {
                 // Ambiguous
                 Optional<String> equalPropertyKey = mappedProperties.stream().filter(token.value()::equalsIgnoreCase).findFirst();
                 if (equalPropertyKey.isPresent()) {
-                    return getProperty(equalPropertyKey.get(), token);
+                    return buildProperty(equalPropertyKey.get(), token);
                 }
                 Optional<Property> propertyWithCode = mappedProperties.stream()
-                        .map(pKey -> getProperty(pKey, token))
+                        .map(pKey -> buildProperty(pKey, token))
                         .filter(property -> property.definition().containsKey("librisQueryCode"))
                         .findFirst();
                 if (propertyWithCode.isPresent()) {
@@ -152,20 +195,20 @@ public class Disambiguate {
         }
 
         // TODO: Get valid keys from ES index? Add totalItemsByRelation to vocab?
-        if (LD_KEYS.contains(token.value()) || token.value().startsWith("_") || "totalItemsByRelation".equals(token.value())) {
+        if (LD_KEYS.contains(token.value()) || token.value().startsWith("_") || token.value().contains("totalItemsByRelation")) {
             return new Key.RecognizedKey(token);
         }
 
         return new Key.UnrecognizedKey(token);
     }
 
-    private Property getProperty(String propertyKey, Token token) {
-        return Property.getProperty(propertyKey, jsonLd, new Key.RecognizedKey(token));
+    private Property buildProperty(String propertyKey, Token token) {
+        return Property.buildProperty(propertyKey, jsonLd, new Key.RecognizedKey(token));
     }
 
     private Optional<Value> mapValueForProperty(Property property, String value, Token token) {
-        if (property instanceof Property.TextQuery textQuery) {
-            return Optional.of(new FreeText(textQuery, token));
+        if (property instanceof Property.TextQuery) {
+            return Optional.of(new FreeText(token));
         }
         if (value.equals(Operator.WILDCARD)) {
             return Optional.of(new Any.Wildcard());
@@ -182,7 +225,7 @@ public class Disambiguate {
             }
         }
         if (property.isType() || property.isVocabTerm()) {
-            for (String ns : nsPrecedenceOrder) {
+            for (String ns : defaultNsPrecedenceOrder) {
                 var vocabMappings = resourceLookup.vocabMappings();
                 var mappings = property.isType() ? vocabMappings.classes() : vocabMappings.enums();
                 Set<String> mappedClasses = mappings.getOrDefault(value.toLowerCase(), Map.of()).getOrDefault(ns, Set.of());
@@ -239,7 +282,21 @@ public class Disambiguate {
     }
 
     private Map<String, FilterAlias> getFilterAliasMappings(Collection<FilterAlias> appFilterAliases, Collection<FilterAlias.QueryDefinedAlias> queryFilterAliases) {
-        return Stream.concat(appFilterAliases.stream(), queryFilterAliases.stream())
-                .collect(Collectors.toMap(fa -> fa.alias().toLowerCase(), Function.identity()));
+        // query filter aliases may override
+        var result = new HashMap<String, FilterAlias>();
+        for (var f : appFilterAliases) {
+            result.put(f.alias().toLowerCase(), f);
+        }
+        for (var f : queryFilterAliases) {
+            var k = f.alias().toLowerCase();
+            if (result.containsKey(k)) {
+                if (result.get(k).isQueryFilterTemplate()) {
+                    f = f.withPrefLabel(result.get(k));
+                }
+            }
+
+            result.put(f.alias().toLowerCase(), f);
+        }
+        return result;
     }
 }

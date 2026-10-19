@@ -261,13 +261,17 @@ public class Term {
     }
     if ((dfn.containsKey(LANGUAGE) && !dfn.containsKey(TYPE))) {
       Object lang = (Object) dfn.get(LANGUAGE);
-      if ((!(lang instanceof String) && lang != null)) {
-        throw new InvalidLanguageMappingError();
+      if (lang != null) {
+        if (!(lang instanceof String)) {
+          throw new InvalidLanguageMappingError();
+        }
+        if (!(isLangTag((String) lang))) {
+          warning("Language tag " + lang + " in term " + term + " is not well-formed");
+        }
+        assert lang instanceof String;
+        lang = ((String) lang).toLowerCase();
       }
-      if (!(isLangTag((String) lang))) {
-        warning("Language tag " + lang + " in term " + term + " is not well-formed");
-      }
-      this.language = (lang == null ? NULL : ((String) lang).toLowerCase());
+      this.language = (lang == null ? NULL : ((String) lang));
     }
     if ((dfn.containsKey(DIRECTION) && !dfn.containsKey(TYPE))) {
       Object dir = (Object) dfn.get(DIRECTION);

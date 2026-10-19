@@ -56,7 +56,12 @@ class UnicodeSpec extends Specification {
         'CARRIAGE RETURN\r\r\r'                                     | 'CARRIAGE RETURN'
         'line breaks\u000A\u000B\u000C\u000D\u0085\u2028\u2029'     | 'line breaks'
         '\r\nkeep leading line breaks'                              | '\r\nkeep leading line breaks'
-        
+        ''                                                          | ''
+        'nothing to trim.'                                          | 'nothing to trim.'
+        'Åre och Östersund'                                         | 'Åre och Östersund'
+        '١٢٣ Arabic-Indic digits ٣'                                  | '١٢٣ Arabic-Indic digits ٣'
+        'x'                                                         | 'x'
+
     }
 
     def "stripPrefix"() {
@@ -83,6 +88,34 @@ class UnicodeSpec extends Specification {
         "sss" | "ss"   || "s"
         "sss" | "s"    || "ss"
         "sss" | "xx"   || "sss"
+    }
+
+    def "truncate"() {
+        expect:
+        Unicode.truncate(s, len) == result
+        where:
+        s     | len    || result
+        "abc" | 0      || ""
+        "abc" | 1      || "a"
+        "abc" | 2      || "ab"
+        "abc" | 3      || "abc"
+        "abc" | 4      || "abc"
+        "abc" | 5      || "abc"
+        null  | 5      || ""
+    }
+
+    def "ellipsis"() {
+        expect:
+        Unicode.ellipsis(s, len) == result
+        where:
+        s     | len    || result
+        "abc" | 0      || "…"
+        "abc" | 1      || "a…"
+        "abc" | 2      || "ab…"
+        "abc" | 3      || "abc"
+        "abc" | 4      || "abc"
+        "abc" | 5      || "abc"
+        null  | 5      || ""
     }
 
     def "double quotation marks"() {

@@ -1,13 +1,11 @@
 package whelk.search2;
 
-import whelk.search2.querytree.And;
-import whelk.search2.querytree.Condition;
-import whelk.search2.querytree.Node;
-import whelk.search2.querytree.Or;
+import whelk.search2.querytree.node.Condition;
+import whelk.search2.querytree.node.Node;
+import whelk.search2.querytree.node.Or;
 import whelk.search2.querytree.QueryTree;
-import whelk.search2.querytree.YearRange;
+import whelk.search2.querytree.value.YearRange;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -85,17 +83,13 @@ public class SelectedFacets {
         return result;
     }
 
-    public static QueryTree buildMultiSelectedTree(Collection<? extends List<? extends Node>> multiSelected) {
-        if (multiSelected.isEmpty()) {
-            return QueryTree.newEmpty();
+    public QueryTree flagMultiOrRadioSelectedForPostFilter(QueryTree queryTree) {
+        for (List<Condition> multiSelected : getAllMultiOrRadioSelected().values()) {
+            for (Condition condition : multiSelected) {
+                queryTree = queryTree.replace(condition, condition.flagForPostFilter());
+            }
         }
-        List<Node> orGrouped = multiSelected.stream()
-                .map(selected -> selected.size() > 1
-                        ? new Or(selected)
-                        : selected.getFirst())
-                .toList();
-
-        return new QueryTree(orGrouped.size() == 1 ? orGrouped.getFirst() : new And(orGrouped));
+        return queryTree;
     }
 
     private boolean isAndSelected(String propertyKey) {

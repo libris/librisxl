@@ -6,7 +6,7 @@ import whelk.exception.WhelkRuntimeException;
 
 
 import whelk.search2.AppParams;
-import whelk.search2.ESSettings;
+import whelk.search2.esquery.ESSettings;
 import whelk.search2.Query;
 import whelk.search2.QueryParams;
 import whelk.search2.ResourceLookup;
@@ -59,7 +59,7 @@ public class SearchUtils2 {
     public Map<String, Object> buildAppConfig(Map<String, Object> findDesc) {
         Map<String, Object> config = new LinkedHashMap<>();
 
-        Stream.of("statistics", "filterAliases", "defaultSiteFilters", "optionalSiteFilters", "relationFilters")
+        Stream.of("statistics", "filterAliases", "defaultTypeFilter", "defaultSiteFilters", "optionalSiteFilters", "relationFilters")
                 .forEach(key ->
                         Optional.ofNullable(findDesc.get(key))
                                 .ifPresent(filters -> config.put(key, filters))
