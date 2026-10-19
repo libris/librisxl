@@ -7,7 +7,6 @@ import whelk.search2.querytree.node.Node;
 import whelk.search2.querytree.node.Or;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 public class RdfSubjectType {
     private final Node typeNode;
@@ -83,23 +82,11 @@ public class RdfSubjectType {
     }
 
     private static RdfSubjectType extractFromOr(Or or) {
-        return or.children().stream()
+        List<RdfSubjectType> childrenTypes = or.children().stream()
                 .map(RdfSubjectType::extractFrom)
-                .allMatch(RdfSubjectType::hasType)
-                ? new RdfSubjectType(new Or(or.children().stream().flatMap(RdfSubjectType::extractDescendantTypeNodes).toList()))
+                .toList();
+        return childrenTypes.stream().allMatch(RdfSubjectType::hasType)
+                ? new RdfSubjectType(new Or(childrenTypes.stream().flatMap(r -> r.types().stream()).toList()))
                 : RdfSubjectType.noType();
-    }
-
-    private static Stream<Node> extractDescendantTypeNodes(Node n) {
-        return switch(n) {
-            case Condition.Type t -> Stream.of(t);
-            case And and -> and.children().stream()
-                    .filter(Condition.Type.class::isInstance)
-                    .findAny()
-                    .stream();
-            case Or or -> or.children().stream().flatMap(RdfSubjectType::extractDescendantTypeNodes);
-            case FilterAlias fa -> extractDescendantTypeNodes(fa.getParsed());
-            default -> throw new RuntimeException("couldn't map Node to Type");
-        };
     }
 }
