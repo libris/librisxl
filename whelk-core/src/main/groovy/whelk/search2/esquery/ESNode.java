@@ -145,12 +145,26 @@ public sealed interface ESNode {
     }
 
     sealed interface Disjunction extends Group {
+        Map<String, Object> wrapDsl(List<ESNode> significantSubQueries);
+
+        @Override
+        default Map<String, Object> dsl() {
+            List<ESNode> significantSubQueries = subQueries().stream()
+                    .filter(q -> !(q instanceof MatchNone))
+                    .toList();
+
+            return switch (significantSubQueries.size()) {
+                case 0 -> new MatchNone().dsl();
+                case 1 -> significantSubQueries.getFirst().dsl();
+                default -> wrapDsl(significantSubQueries);
+            };
+        }
     }
 
     record Should(List<ESNode> subQueries) implements Disjunction {
         @Override
-        public Map<String, Object> dsl() {
-            return Map.of("bool", Map.of("should", subQueries.stream().map(ESNode::dsl).toList()));
+        public Map<String, Object> wrapDsl(List<ESNode> significantSubQueries) {
+            return Map.of("bool", Map.of("should", significantSubQueries.stream().map(ESNode::dsl).toList()));
         }
 
         @Override
@@ -161,8 +175,8 @@ public sealed interface ESNode {
 
     record DisMax(List<ESNode> subQueries) implements Disjunction {
         @Override
-        public Map<String, Object> dsl() {
-            return Map.of("dis_max", Map.of("queries", subQueries.stream().map(ESNode::dsl).toList()));
+        public Map<String, Object> wrapDsl(List<ESNode> significantSubQueries) {
+            return Map.of("dis_max", Map.of("queries", significantSubQueries.stream().map(ESNode::dsl).toList()));
         }
 
         @Override
