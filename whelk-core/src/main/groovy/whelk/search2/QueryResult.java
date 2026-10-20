@@ -2,6 +2,7 @@ package whelk.search2;
 
 import whelk.Document;
 import whelk.JsonLd;
+import whelk.component.ElasticSearch;
 import whelk.util.DocumentUtil;
 
 import java.net.URLEncoder;
@@ -21,6 +22,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static whelk.component.ElasticSearch.IS_SYNTHETIC_ID;
 import static whelk.search2.QueryParams.ApiParams.PREDICATES;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.esquery.ESQueryDefinition.NESTED_AGG_NAME;
@@ -174,8 +176,9 @@ public class QueryResult {
         private Map<String, Object> toLd(Function<Map<String, Object>, Map<String, Object>> applyLens) {
             LdItem ldItem = new LdItem(applyLens.apply(map));
 
-            // ISNIs and ORCIDs are indexed with and without spaces, remove the one with spaces.
-            ldItem.normalizeIsniAndOrcid();
+            // Remove synthetic identifier forms. Added to index for searchability
+            ldItem.removeSyntheticIdentifiers();
+
             // reverseLinks must be re-added because they might get filtered out in applyLens().
             var reverseLinks = getReverseLinks();
             if (!reverseLinks.isEmpty()) {
@@ -227,21 +230,21 @@ public class QueryResult {
             this.map = map;
         }
 
-        private void normalizeIsniAndOrcid() {
-            Function<Object, String> toStr = s -> s != null ? s.toString() : "";
-            List<Map<String, Object>> identifiedBy = getIdentifiedBy();
-            if (!identifiedBy.isEmpty()) {
-                identifiedBy.removeIf(id -> (Document.isIsni(id) || Document.isOrcid(id))
-                        && toStr.apply(id.get("value")).length() == 16 + 3);
-                map.put("identifiedBy", identifiedBy);
-            }
-        }
+        // FIXME: don't hardcode paths.
+        private static final List<List<String>> ID_PATHS = List.of(
+                List.of("identifiedBy"),
+                List.of(JsonLd.REVERSE_KEY, "instanceOf", "*", "identifiedBy"),
+                List.of(JsonLd.RECORD_KEY, "identifiedBy"),
+                List.of("itemOf", "identifiedBy")
+        );
 
-        private List<Map<String, Object>> getIdentifiedBy() {
-            return ((List<?>) map.getOrDefault("identifiedBy", Collections.emptyList()))
-                    .stream()
-                    .map(QueryUtil::castToStringObjectMap)
-                    .collect(Collectors.toList());
+        private void removeSyntheticIdentifiers() {
+            for (var p : ID_PATHS) {
+                List<?> identifiedBy = (List<?>) DocumentUtil.getAtPath(map, p);
+                if (identifiedBy != null) {
+                    identifiedBy.removeIf(id -> castToStringObjectMap(id).containsKey(IS_SYNTHETIC_ID));
+                }
+            }
         }
 
         private void addReverseLinks(Map<String, Object> reverseLinks) {

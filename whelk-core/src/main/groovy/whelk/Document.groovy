@@ -287,16 +287,8 @@ class Document {
     List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", thingIndirectTypedIDsPath, "value") }
     List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", thingTypedIDsPath, "marc:canceledIssn") }
 
-    List<String> getIsniValues() {
-        return getTypedIDValues(this.&isIsni, thingTypedIDsPath, "value")
-    }
-    
     static boolean isIsni(Map identifier) { 
          identifier['@type'] == 'ISNI' || identifier.typeNote?.with{ (it as String).toLowerCase() } == 'isni'
-    }
-
-    List<String> getOrcidValues() {
-        return getTypedIDValues(this.&isOrcid, thingTypedIDsPath, "value")
     }
 
     static boolean isOrcid(Map identifier) {
