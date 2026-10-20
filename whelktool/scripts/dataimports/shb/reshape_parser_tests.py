@@ -132,9 +132,11 @@ PARSE_NOTE_TEST_CASES = {
         {
             "primary_contributors": "Meyerson, Å.",
             "title": "Ett besök vid Stora Kopparberget och Sala gruva år 1662",
+            "year": "1938",
             "host": {
                 "title": "BBV",
                 "part_number": "23 (1938)",
+                "part_year": "1938",
                 "extent": "s. 325-343",
             },
             "is_component_part": True,
@@ -148,9 +150,11 @@ PARSE_NOTE_TEST_CASES = {
             "primary_contributors": "Davidsson, Åke",
             "title": '"En hoop Discantzböcker i godt förhwar..."',
             "subtitle": "någotom Strängnäsgymnasiets musiksamling under 1600-talet",
+            "year": "1976",
             "host": {
                 "title": "Frånbiskop Rogge till Roggebiblioteket. Nyköping",
                 "part_number": "1976",
+                "part_year": "1976",
                 "extent": "s. 48-62",
             },
             "is_component_part": True,
@@ -164,11 +168,13 @@ PARSE_NOTE_TEST_CASES = {
         {
             "primary_contributors": "Barton, H. Arnold",
             "title": "A bibliography of writings in English by or onrecent Swedish emigration historians",
+            "year": "1976",
             "host": {
                 "title": "The Swedish pioneer",
                 "part_number": "27, 1976:3",
                 "issn": "0039-7326",
                 "extent": "s. 215-221",
+                "part_year": "1976"
             },
             "is_component_part": True,
             "original_note": "Barton, H. Arnold, A bibliography of writings in English by or onrecent Swedish emigration historians. - I: The Swedish pioneer, ISSN0039-7326, 27, 1976:3, s. 215-221"
@@ -206,6 +212,7 @@ PARSE_NOTE_TEST_CASES = {
                 "publisher": "Bibliotekshögskolan",
                 "part_number": "1976:158",
                 "issn": "0347-1128",
+                "part_year": "1976"
             },
             "is_component_part": False,
             "original_note": "Fries, Elias, Hembygdsperiodika : förteckning över periodiskaskrifter samt skriftserier utgivna t. o. m. 1974 av hembygds- ochfornminnesföreningar samt länsmuseer m. fl. - Borås, 1976. - 40 bl. -(Specialarbete / Bibliotekshögskolan, ISSN 0347-1128 ; 1976:158)"
@@ -274,10 +281,12 @@ PARSE_NOTE_TEST_CASES = {
         {
             "primary_contributors": "Odéen, Axel",
             "title": "Händelser och personer i Herrestads och Ljunits häraderåren 1658-1713",
+            "year": "1973",
             "host": {
                 "title": "Våra härader",
                 "part_number": "6(1973)",
-                "extent": "s. 9-14"
+                "extent": "s. 9-14",
+                "part_year": "1973"
             },
             "remaining_note": "Även utg. i YstadsA15.4, 22.4, 29.4 1972",
             "is_component_part": True,
@@ -314,9 +323,11 @@ def test_parse_note_1771_1874_Bidrag_tidningsartikel():
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Holm, C. J."
     assert result["title"] == "Också några ord om slaget vid Porosalmiden 12 juni 1789"
+    assert result["year"] == "1853"
     assert result["host"] == {
         "title": "Svenska Tidningen",
         "part_number": "1853, N:o 72 (81/8)",
+        "part_year": "1853"
     }
 
 
@@ -332,9 +343,11 @@ def test_parse_note_1875_1900_Bidrag_tidningsartikel():
     assert result["primary_contributors"] == "Hagemann, A."
     assert result["title"] == "Et historisk Minde i Höifjeldet"
     assert result["subtitle"] == "[1657.]"
+    assert result["year"] == "1897"
     assert result["host"] == {
         "title": "Aftenposten (Kristiania)",
         "part_number": "1897, N:r 186",
+        "part_year": "1897"
     }
 
 
@@ -350,7 +363,8 @@ def test_parse_note_1936_1950_Bidrag_tidningsartikel():
     assert result["primary_contributors"] == "Ahnlund, N."
     assert result["title"] == "Rikskanslerns titlar"
     assert result["subtitle"] == "[Axel Oxenstierna.]"
-    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939"}
+    assert result["year"] == "1939"
+    assert result["host"] == {"title": "SvD", "part_number": "14/7 1939", "part_year": "1939"}
 
 
 def test_parse_note_1936_1950_Bidrag():
@@ -365,10 +379,12 @@ def test_parse_note_1936_1950_Bidrag():
     assert result["primary_contributors"] == "Walde, O."
     assert result["title"] == "Bielkeättens insatser i svensk bibliofili"
     assert result["subtitle"] == "Med särskild hänsyn till Bielkebiblioteket på Skokloster"
+    assert result["year"] == "1940"
     assert result["host"] == {
         "title": "NTBB",
         "part_number": "27 (1940)",
         "extent": "s. 1-45",
+        "part_year": "1940"
     }
 
 
@@ -392,7 +408,7 @@ def test_parse_note_1936_1950_Monografi():
         == "Rec. i HT 70 (1950), s. 69-70 av T. [T:son] H[öjer]; i SvD 21/11 1949 av dens.; i SDS 25/11 1949 av K.-E. L[öfqvist]; i FT 148 (1950), s. 59-61 av 0. M[usteli]n; i StT 1/12 1949 av S. U. Palme; i GHT 7/12 1949 av K[nut] P[etersson]"
     )
     assert result["host"] == {
-        "title": "Göteborgs högskola. Forskningar och föreläsningar"
+        "title": "Göteborgs högskola. Forskningar och föreläsningar",
     }
 
 
@@ -410,6 +426,7 @@ def test_parse_note_1901_1920_Bidrag_tidningsartikel():
     assert result["host"] == {
         "title": "Svenska Dagbladet",
         "part_number": "1908, N:o 127 (n/6)",
+        "part_year": "1908"
     }
 
 def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag():
@@ -419,7 +436,6 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag():
     }
 
     result = parse_note(record["sample"], "early")
-    
 
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Staven OW, L."
@@ -427,8 +443,9 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag():
         result["title"]
         == "Om förhållandet mellan politisk historia och kultur- historia"
     )
-    assert result["host"] == {"title": "Hist, Tidskr", "part_number": "1895"}
+    assert result["host"] == {"title": "Hist, Tidskr", "part_number": "1895", "part_year": "1895"}
     assert result["extent"] == "s. 415-430"
+    assert result["year"] == "1895"
 
 # TODO Try extracting period-delimited (non-journal) host publication/series 
 def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi():
@@ -448,6 +465,7 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi():
     assert result["host"] == {"title": "Skrifter och handlingar utgifna genom Svenska Autografsällskapet", "part_number": "4"}
 
 def test_parse_note_1971_1975_Bidrag_tidningsartikel():
+    # '1073' not recognized as a year, since it's outside of the SHB range of years (1771-1975). It looks like an OCR mistake.
     record = {
         "pattern": "Efternamn, Förnamn, Titel : undertitel. - I: Publ-titel DD.MM YYYY",
         "sample": "Bramstång, Mats, Glimtar av ett helgon [Birgitta]. - I: HbgD 6.10 1073",
@@ -470,7 +488,8 @@ def test_parse_note_1976_Bidrag_tidningsartikel():
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Palm, Sixten"
     assert result["title"] == "Apropå slaget vid Lund"
-    assert result["host"] == {"title": "SDS", "part_number": "14.3.1976"}
+    assert result["year"] == "1976"
+    assert result["host"] == {"title": "SDS", "part_number": "14.3.1976", "part_year": "1976"}
 
 
 def test_parse_note_1971_1975_Bidrag():
@@ -483,9 +502,11 @@ def test_parse_note_1971_1975_Bidrag():
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Jansson, Bror"
     assert result["title"] == "Helsjön - en berömd kuranstalt vid Västgötagränsen"
+    assert result["year"] == "1973"
     assert result["host"] == {
         "title": "Vår bygd",
         "part_number": "56(1973)",
+        "part_year": "1973",
         "extent": "s. 49-59 : ill.",
     }
 
@@ -501,11 +522,13 @@ def test_parse_note_1976_Bidrag():
     assert result["primary_contributors"] == "Seitz, Heribert"
     assert result["title"] == "Ett hundraårigt beslut"
     assert result["subtitle"] == "hur Armémuseumgrundades"
+    assert result["year"] == "1976, 1977"
     assert result["host"] == {
         "title": "Meddelande",
         "publisher": "Armémuseum",
         "issn": "0349-1048",
         "part_number": "37,1976/1977",
+        "part_year": "1976, 1977",
         "extent": "s. 117-123",
     }
 
@@ -562,7 +585,8 @@ def test_parse_note_1961_1970_Bidrag_tidningsartikel():
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Jansson, Leonard"
     assert result["title"] == "Ivar Axelsson Tott"
-    assert result["host"] == {"title": "ÖresP", "part_number": "2.6 1962"}
+    assert result["year"] == "1962"
+    assert result["host"] == {"title": "ÖresP", "part_number": "2.6 1962", "part_year": "1962"}
 
 
 def test_parse_note_1961_1970_Bidrag():
@@ -576,9 +600,11 @@ def test_parse_note_1961_1970_Bidrag():
     assert result["primary_contributors"] == "Lagerroth, Fredrik"
     assert result["title"] == "Positiv rätt eller naturrätt? Ett statsrattsligt dilemma från svenskt 1700-tal"
     assert result["subtitle"] == "[Zusammenfassung.]"
+    assert result["year"] == "1967"
     assert result["host"] == {
         "title": "Scandia",
         "part_number": "33 (1967)",
+        "part_year": "1967",
         "extent": "s. 270-312",
     }
 
@@ -593,7 +619,8 @@ def test_parse_note_1951_1960_Bidrag_tidningsartikel():
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Ennermark, S."
     assert result["title"] == "Brasks boktryckare en pionjär i Malmö"
-    assert result["host"] == {"title": "SDS", "part_number": "31/8 1952"}
+    assert result["year"] == "1952"
+    assert result["host"] == {"title": "SDS", "part_number": "31/8 1952", "part_year": "1952"}
 
 
 def test_parse_note_1921_1935_Bidrag_tidningsartikel():
@@ -606,7 +633,8 @@ def test_parse_note_1921_1935_Bidrag_tidningsartikel():
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Steckzén, B."
     assert result["title"] == "Med svärdet och plogen"
-    assert result["host"] == {"title": "SvD", "part_number": "1935: 2/9"}
+    assert result["year"] == "1935"
+    assert result["host"] == {"title": "SvD", "part_number": "1935: 2/9", "part_year": "1935"}
 
 
 def test_parse_note_1921_1935_1951_1960_Bidrag():
@@ -620,10 +648,12 @@ def test_parse_note_1921_1935_1951_1960_Bidrag():
     assert result["primary_contributors"] == "Berg, Gösta"
     assert result["title"]== "Svensk folklivskännedom"
     assert result["subtitle"] == "En översikt av de senare årenslitteratur"
+    assert result["year"] == "1927"
     assert result["host"] == {
         "title": "Hävd och hembygd",
         "part_number": "2 (1927)",
         "extent": "s. 76-95",
+        "part_year": "1927"
     }
 
 
@@ -715,9 +745,11 @@ def test_parse_note_1971_1975_Bidrag_utan_författare():
         == "sammanställningar av F. W. Grönwall.; komplettrade och utgivna av Sven Carlquist."
     )
     assert result["title"] == "Ystadsläkter under trenne sekel"
+    assert result["year"] == "1974, 1975"
     assert result["host"] == {
         "title": "Ystadiana",
         "part_number": "19(1974),s. 73-123 ; 20(1975), s. 45-91.",
+        "part_year": "1974, 1975"
     }
 
 
@@ -732,11 +764,13 @@ def test_parse_note_1976_Bidrag_utan_författare():
     assert result["other_contributors"] == "Lars Frendel ..."
     assert result["title"] == "Arbetare! Kamrater!"
     assert result["subtitle"] == "dokument kring första maj 1890"
+    assert result["year"] == "1976"
     assert result["host"] == {
         "title": "Meddelanden från Arkivet för folkets historia",
         "issn": "0345-7605",
         "part_number": "4, 1976:2",
         "extent": "s. 2-7",
+        "part_year": "1976"
     }
 
 
@@ -794,10 +828,12 @@ def test_parse_note_1961_1970_Bidrag_utan_författare():
     
     assert result["is_component_part"] == True
     assert result["title"] == "Arkivinventering i Södermanlands län 1958-1959"
+    assert result["year"] == "1963"
     assert result["host"] == {
         "title": "Kommissionen för riksinven- tering av de enskilda arkiven. Bulletin",
         "part_number": "1 (1963)",
         "extent": "s. 5-18",
+        "part_year": "1963"
     }
 
 
@@ -812,10 +848,12 @@ def test_parse_note_1921_1935_1936_1950_Bidrag_utan_författare():
     assert result["is_component_part"] == True
     assert result["title"] == "Mo kyrka"
     assert result["subtitle"] == "Med anledning af dess hundraårsjubileum. Norgren, N., Gamlakyrkan. - Norbeck, O., Nya kyrkan"
+    assert result["year"] == "1922"
     assert result["host"] == {
         "title": "Julhälsn. till församl. i ärkestiftet",
         "part_number": "1922",
         "extent": "s. 142-151",
+        "part_year": "1922"
     }
 
 
@@ -873,7 +911,8 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag_utan_författare():
         result["title"]
         == "Diarium eller journal på hans maj:ts resa åt Danzig anno1623.Historiskt archivum (Loenbom)"
     )
-    assert result["host"] == {"title": "St", "part_number": "2 (1774)"}
+    assert result["year"] == "1774"
+    assert result["host"] == {"title": "St", "part_number": "2 (1774)", "part_year": "1774"}
     assert result["extent"] == "s. 23-29"
 
 # TODO Move "Red: " to other_contributors
@@ -967,6 +1006,19 @@ def test_no_primary_contributor_one_comma_in_title():
     assert result["year"] == "1919"
     assert result["remaining_note"] == "Innehåller bl. a. uppsatser af: G. Björkman, W. Skarstedt, J. Bergman, J. Edv. Herrlander o. P. Johnsson"
 
+
+def test_resure_part_year_as_publication_year():
+    record = {
+        "sample": "Hennel, Lennart, Flottningsföreningarna och deras arkiv. - I: Arkiv, samhälle och forskning 1971, s. 21-40.",
+    }
+    result = parse_note(record["sample"], "isbd")
+
+    assert result["is_component_part"] == True
+    assert result["title"] == "Flottningsföreningarna och deras arkiv"
+    assert result["year"] == "1971"
+    assert result["host"] == {"title": "Arkiv, samhälle och forskning", "part_number": "1971", "extent": "s. 21-40", "part_year": "1971"}
+
+
 @pytest.mark.xfail(
     reason="Primary contributor mistaken for title as (atypically) delimited by period instead of comma"
 )
@@ -979,7 +1031,10 @@ def test_incorrect_period_after_author_name():
     assert result["is_component_part"] == True
     assert result["title"] == "Ingeborg Bååts brev till sin syster Karin"
     assert result["primary_contributors"] == "Bååt, Ingeborg"
-    assert result["host"] == {"title": "Arte et marte", "part_number": "53 (1957)", "extent": "s. 28-36"}
+    assert result["year"] == "1957"
+    assert result["host"] == {"title": "Arte et marte", "part_number": "53 (1957)", "extent": "s. 28-36", "part_year": "1957"}
+
+
 
 
 ### Known failing tests ###

@@ -204,7 +204,10 @@ def convert(data, subject_mappings) -> dict | None:
 
     # Clean up the admin metadata record and add a link to the digitized SHB volume
     record = clean_up_and_enrich_record(
-        record, shb_volume_info, shb_reference_number, structured_record["original_note"]
+        record,
+        shb_volume_info,
+        shb_reference_number,
+        structured_record["original_note"],
     )
 
     # Count all properties, icnluding nested, in the final instance ###
@@ -481,6 +484,8 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         remainder, syntax_era, True, is_component_part
     )
 
+    # Reuse publication year from part
+
     remaining_note = (
         ". ".join(
             part
@@ -510,8 +515,7 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         structured_record["subtitle"] = strip_trailing_separators(subtitle)
     if place:
         structured_record["place"] = place.strip()
-    if year:
-        structured_record["year"] = year.strip()
+
     if remaining_note:
         structured_record["remaining_note"] = remaining_note.strip().rstrip(".,-;")
 
@@ -527,6 +531,11 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
             host_or_series, syntax_era, is_component_part
         )
 
+    if year:
+        structured_record["year"] = year.strip()
+    elif host_or_series and "part_year" in structured_record.get("host", {}):
+        structured_record["year"] = structured_record["host"]["part_year"].strip()
+
     structured_record["is_component_part"] = is_component_part
     return structured_record
 
@@ -538,7 +547,14 @@ def extract_host_or_series_values(
     Returns a tuple of (title, subtitle, issn)."""
 
     host = {}
-    title, issn, part_remainder = None, None, None
+    title, issn, part_remainder, part_number, part_year, extent = (
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
 
     # Extract ISSN
     issn, remainder = extract_issn(host_note)
@@ -551,6 +567,9 @@ def extract_host_or_series_values(
     part_number, remainder = extract_part_number(remainder)
 
     publisher, remainder = extract_other_contributors(remainder)
+
+    if part_number:
+        part_year = extract_part_year(part_number)
 
     # Extract title and subtitle
     title, _subtitle, remainder = extract_title_and_subtitle(
@@ -574,7 +593,8 @@ def extract_host_or_series_values(
         host["issn"] = issn.strip()
     if part_number:
         host["part_number"] = part_number.strip()
-
+    if part_year:
+        host["part_year"] = part_year.strip()
     if extent:
         host["extent"] = extent.strip()
     else:
@@ -720,6 +740,25 @@ def extract_part_number(remainder: str) -> str:
     remainder = match["title"].rstrip(" ,.;-")
 
     return number, remainder
+
+
+def extract_part_year(remainder: str):
+    """If the part number value also contains a year, also store this as a part_year."""
+    part_year = None
+
+    # YEar regex limited to the SHB publication years (1771-1980)
+    PART_YEAR_RE = re.compile(
+        r"\b(?:177[1-9]|17[89]\d|18\d{2}|19[0-7]\d)",
+        re.X,
+    )
+    remainder = strip_trailing_separators(remainder)
+
+    parts = re.findall(PART_YEAR_RE, remainder)
+
+    if parts:
+        part_year = ", ".join(part for part in parts)
+
+    return part_year
 
 
 def extract_place_year(remainder: str) -> tuple[str, str, str]:
@@ -1567,9 +1606,7 @@ if __name__ == "__main__":
 
         # Optionally pretty print a sample of converted records for inspection
         if args.sample_pretty_with:
-            pretty_print_sample(
-                infile, subject_mappings, args.sample_pretty_with
-            )
+            pretty_print_sample(infile, subject_mappings, args.sample_pretty_with)
             sys.exit()
 
         # Process each line in the input file
