@@ -760,7 +760,7 @@ def extract_part_year(remainder: str):
     parts = re.findall(PART_YEAR_RE, remainder)
 
     if parts:
-        part_year = ", ".join(part for part in set(parts))
+        part_year = ", ".join(part for part in sorted(set(parts)))
 
     return part_year
 
