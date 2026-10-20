@@ -83,6 +83,8 @@ class ElasticSearch {
     static final String BULK_CONTENT_TYPE = "application/x-ndjson"
     static final String SEARCH_TYPE = "dfs_query_then_fetch"
 
+    public static final String IS_SYNTHETIC_ID = "_s"
+
     public int maxResultWindow = 10000 // Elasticsearch default (fallback value)
     public int maxTermsCount = 65536 // Elasticsearch default (fallback value)
     
@@ -967,7 +969,7 @@ class ElasticSearch {
         var values = ids
                 .findAll { (it instanceof Map && it[JsonLd.TYPE_KEY] == type) }
                 .findResults{ it['value'] }
-        ids.addAll(transform(values).collect { [(JsonLd.TYPE_KEY): type, value: it] })
+        ids.addAll(transform(values).collect { [(JsonLd.TYPE_KEY): type, value: it, (IS_SYNTHETIC_ID): true] })
     }
 
     private static Collection<String> getOtherIsbns(Collection<String> isbns) {
