@@ -294,13 +294,21 @@ def prepare_record(instance: dict) -> dict:
         # For some Libris records, we need to get the contributor from the agent entity instead
         responsibility_statement = instance.get("responsibilityStatement", "")
 
+        # Account for the agent property sometimes containing a list instead of a dict
+        # Pick the first agent in the list if that's the case - there typically seems to be just one
         if not responsibility_statement and instance.get("instanceOf", {}).get(
             "contribution"
         ):
             agent = instance["instanceOf"]["contribution"][0].get("agent", {})
-            responsibility_statement = (
-                agent.get("familyName", "") + ", " + agent.get("givenName", "")
-            )
+            if isinstance(agent, dict):
+                responsibility_statement = (
+                    agent.get("familyName", "") + ", " + agent.get("givenName", "")
+                )
+            elif isinstance(agent, list):
+                    agent = agent[0]
+                    responsibility_statement = (
+                        agent.get("familyName", "") + ", " + agent.get("givenName", "")
+                    )
 
         prepped["responsibility_statement"] = responsibility_statement
 
