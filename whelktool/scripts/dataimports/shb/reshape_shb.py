@@ -781,9 +781,11 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
         )
         [, ]+
         (?P<year>
+            \[?
             \d{4}
             (?:-\d{2,4})?
             (?:,\s*(?:\d{4}(?:-\d{2,4})?|\d{2}(?:-\d{2})?))*
+            \]?
         )
         \.?
         $
@@ -809,9 +811,7 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
             )
             remainder = f"{left_parts}. {right_parts}".strip()
 
-            return place, year, remainder
-
-    return None, None, remainder
+    return place, year, remainder
 
 
 def extract_review_diss_or_content_note(note: str) -> tuple[str, str]:
