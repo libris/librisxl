@@ -34,10 +34,9 @@ class ResourceCache {
     ResourceCache(Whelk whelk, LanguageLinker languageLinker, BlankNodeLinker relatorLinker) {
         this.whelk = whelk
         this.jsonld = whelk.jsonld
-        // TODO: use getByType and no need for elasticFind!
         relatorResources = whelk.elasticFind ? new ResourceCache.RelatorResources(
                   relatorLinker: relatorLinker,
-                  relators: whelk.elasticFind.find(['@type': ['Role']])
+                  relators: relatorLinker.getDefinitions()
           ) : null
         languageResources = new ResourceCache.LanguageResources(
                 languageLinker: languageLinker,
