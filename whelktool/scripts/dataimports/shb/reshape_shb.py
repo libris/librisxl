@@ -533,8 +533,12 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
 
     if year:
         structured_record["year"] = year.strip()
+        counters["various"].update(["Publication year extracted from main note"])
+
     elif host_or_series and "part_year" in structured_record.get("host", {}):
         structured_record["year"] = structured_record["host"]["part_year"].strip()
+        counters["various"].update(["Publication year from part number"])
+
 
     structured_record["is_component_part"] = is_component_part
     return structured_record
@@ -756,7 +760,7 @@ def extract_part_year(remainder: str):
     parts = re.findall(PART_YEAR_RE, remainder)
 
     if parts:
-        part_year = ", ".join(part for part in parts)
+        part_year = ", ".join(part for part in set(parts))
 
     return part_year
 
