@@ -1,3 +1,17 @@
+# Tydliggör hantering av särtryck och andra speciella beskrivningar
+# 9 av 10 stickprov under 0.8 var korrekta matchningar
+# Funder på att sänka score till 0.75 ev tweaka scoring
+# TODO
+# https://libris-qa.kb.se/dataset/shb/1240#it Utförligare författarinfo på Libris-sidan
+# DONE https://libris-qa.kb.se/dataset/shb/2062#it	Utgivningsår saknas i SHB men finns i part (var är praxis att lägga år i Libris?)
+# https://libris-qa.kb.se/dataset/shb/2690#it   Bästa match motsvarar tevtydig post i Libris, är nog bäst att inte matcha, men skullt må bra av publ.år
+# https://libris-qa.kb.se/dataset/shb/4884#it   År och utgivsort har hamnat i titeln i SHB
+# https://libris-qa.kb.se/dataset/shb/7610#it   Icke-matchande responsibilityStatement pga svårtydd beskrivning i Libris
+# https://libris-qa.kb.se/dataset/shb/23456#it Sidor saknas i Libris, finns i SHB. Kan detta förlåtas?
+# https://libris-qa.kb.se/dataset/shb/27622#it Borde ev matcha, men årtal diffar av oklar anledning
+# https://libris-qa.kb.se/dataset/shb/29115#it Serietitel felaktigt tolkad som utgivningsort i SHB-parsning
+
+
 import argparse
 import json
 import re
@@ -300,15 +314,16 @@ def prepare_record(instance: dict) -> dict:
             "contribution"
         ):
             agent = instance["instanceOf"]["contribution"][0].get("agent", {})
-            if isinstance(agent, dict):
+            
+            if isinstance(agent, list):
+                agent = agent[0]
+
+            if agent["@type"] == "Person":
                 responsibility_statement = (
                     agent.get("familyName", "") + ", " + agent.get("givenName", "")
                 )
-            elif isinstance(agent, list):
-                    agent = agent[0]
-                    responsibility_statement = (
-                        agent.get("familyName", "") + ", " + agent.get("givenName", "")
-                    )
+            else:
+                responsibility_statement = agent.get("computedLabel", "")
 
         prepped["responsibility_statement"] = responsibility_statement
 
