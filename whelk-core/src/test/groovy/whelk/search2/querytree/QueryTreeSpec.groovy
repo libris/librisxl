@@ -18,6 +18,8 @@ class QueryTreeSpec extends Specification {
         null                                               | ""
         "()"                                               | "()"
         ""                                                 | ""
+        " "                                                | ""
+        "  \t "                                            | ""
         "*"                                                | "*"
         "x ()"                                             | "x ()"
         "x OR ()"                                          | "x OR ()"

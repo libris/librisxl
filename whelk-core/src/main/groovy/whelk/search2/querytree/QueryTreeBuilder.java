@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 
 public class QueryTreeBuilder {
     public static Node buildTree(String queryString, Disambiguate disambiguate) throws InvalidQueryException {
-        if (queryString == null || queryString.isEmpty()) {
+        if (queryString == null || queryString.isBlank()) {
             return new Any.EmptyString().asNode();
         } else if (queryString.equals(Operator.WILDCARD)) {
             return new Any.Wildcard().asNode();
