@@ -459,7 +459,11 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         remainder, is_component_part, is_main_entity_note=True
     )
 
-    place, year, remainder = extract_place_year(remainder)
+    # Place and year is only present for monographs
+    if is_component_part:
+        place, year = None, None
+    else:
+        place, year, remainder = extract_place_year(remainder)
 
     # If there is not already a host note, check remaining parentheses for information about series/publichation membership
     if remainder and not host_or_series:
@@ -538,6 +542,13 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     elif host_or_series and "part_year" in structured_record.get("host", {}):
         structured_record["year"] = structured_record["host"]["part_year"].strip()
         counters["various"].update(["Publication year from part number"])
+
+    # Special case - assume that extent extracted from host note acutally belongs to the component part
+    if is_component_part and extent:
+        part_number = structured_record.get("host", {}).get("part_number", "")
+        structured_record["host"]["part_number"] =  f"{part_number}, {structured_record.get('extent')}"
+        del structured_record["extent"]
+        counters["various"].update(["Main extent appended to componentPart part_number"])
 
 
     structured_record["is_component_part"] = is_component_part
@@ -632,6 +643,13 @@ def extract_period_delimited_host_or_series(
             return host_or_series, extent, remainder, is_component_part
 
         # The remainder could be host/series info!
+        # Title Year.
+        elif len(parts) == 2 and re.match(r"\b\w+\s+\d+\.", parts[1]):
+            host_or_series = parts[1]
+            remainder = parts[0]
+
+            return host_or_series, extent, remainder, is_component_part
+
         elif len(parts) > 2:
             if is_component_part:
                 # Other component parts
@@ -1110,7 +1128,10 @@ def extract_extent(
             right_part = (
                 right_part[: extra_match.start()] + right_part[extra_match.end() :]
             )
-            extent = extent.replace("<DOT>", "").strip() + ". " + extra_extent_info
+            extent = extent.replace("<DOT>", ".").strip() + ". " + extra_extent_info
+
+            # Remove any double periods caused by the concatenation
+            extent = extent.replace("..", ".")
 
         # Put everything back together
         probable_publication_area = (

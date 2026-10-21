@@ -449,6 +449,7 @@ def test_parse_note_1901_1920_Bidrag_tidningsartikel_ovanligt_omfång():
     assert result["is_component_part"] == True
     assert result["primary_contributors"] == "Keyland, N."
     assert result["title"] == "Själnätbindning och själfångst på Harön"
+    assert result["year"] == "1914"
     assert result["host"] == {
         "title": "Fataburen",
         "part_number": "1914, s. 156-172. Med 31 fig.",
@@ -472,10 +473,9 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag():
     )
     assert result["host"] == {
         "title": "Hist, Tidskr",
-        "part_number": "1895",
+        "part_number": "1895, s. 415-430",
         "part_year": "1895",
     }
-    assert result["extent"] == "s. 415-430"
     assert result["year"] == "1895"
 
 
