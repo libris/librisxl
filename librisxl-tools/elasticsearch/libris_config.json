@@ -191,24 +191,6 @@
                     }
                 }
             },
-            "hasTitle": {
-                "type": "nested",
-                "include_in_parent": true,
-                "properties": {
-                    "@type": {"type": "keyword"},
-                    "__mainTitle": {
-                        "type": "text",
-                        "analyzer": "softmatcher",
-                        "copy_to": "_all",
-                        "fields": {
-                            "keyword": {
-                                "type": "icu_collation_keyword",
-                                "language": "sv"
-                            }
-                        }
-                    }
-                }
-            },
             "reverseLinks": {
               "properties": {
                 "@type": {
@@ -408,14 +390,60 @@
                         "contribution",
                         "instanceOf.contribution",
                         "@reverse.instanceOf.contribution",
+
                         "hasPart.contribution",
                         "instanceOf.hasPart.contribution",
+
                         "relationship.entity.contribution",
                         "instanceOf.relationship.entity.contribution"
                     ],
                     "mapping": {
                         "type": "nested",
                         "include_in_parent": true
+                    }
+                }
+            },
+            {
+                "hasTitle_template": {
+                    "path_match": [
+                        "hasTitle",
+                        "instanceOf.hasTitle",
+                        "@reverse.instanceOf.hasTitle",
+
+                        "translationOf.hasTitle",
+                        "instanceOf.translationOf.hasTitle",
+
+                        "hasPart.hasTitle",
+                        "instanceOf.hasPart.hasTitle",
+                        "@reverse.instanceOf.hasPart.hasTitle",
+
+                        "hasPart.translationOf.hasTitle",
+                        "instanceOf.hasPart.translationOf.hasTitle",
+
+                        "relationship.entity.hasTitle",
+                        "instanceOf.relationship.entity.hasTitle",
+                        "@reverse.instanceOf.relationship.entity.hasTitle",
+
+                        "seriesMembership.inSeries.instanceOf.hasTitle",
+                        "@reverse.instanceOf.seriesMembership.inSeries.instanceOf.hasTitle"
+                    ],
+                    "mapping": {
+                        "type": "nested",
+                        "include_in_parent": true,
+                        "properties": {
+                            "@type": {"type": "keyword"},
+                            "__mainTitle": {
+                                "type": "text",
+                                "analyzer": "softmatcher",
+                                "copy_to": "_all",
+                                "fields": {
+                                    "keyword": {
+                                        "type": "icu_collation_keyword",
+                                        "language": "sv"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             },

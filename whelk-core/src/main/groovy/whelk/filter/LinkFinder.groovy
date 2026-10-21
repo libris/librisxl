@@ -1,5 +1,6 @@
 package whelk.filter
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import whelk.Document
 import whelk.JsonLd
@@ -121,39 +122,51 @@ class LinkFinder {
         // "Frame" temporarily to avoid cumbersome rewriting of property paths
         Map thing = doc.getThing()
         thing.put(RECORD_KEY, doc.getRecord())
-        replaceSameAsLinksWithPrimaries(thing, [])
+        List<Map> links = []
+        collectNonWeakLinks(thing, "", links)
         // "Unframe"
         thing.remove(RECORD_KEY)
+
+        if (links.isEmpty()) {
+            return
+        }
+
+        Map<String, String> primaryIds = postgres.getMainIds(links.collect { (String) it[ID_KEY] }.toSet())
+        for (Map link : links) {
+            String primaryId = primaryIds[(String) link[ID_KEY]]
+            if (primaryId != null) {
+                link.put(ID_KEY, primaryId)
+            }
+        }
     }
 
-    private void replaceSameAsLinksWithPrimaries(data, List<String> propertyPath) {
+    @CompileStatic
+    private static void collectNonWeakLinks(Object data, String propertyPath, List<Map> links) {
         if (data instanceof List) {
-            for (def element : data) {
-                replaceSameAsLinksWithPrimaries(element, propertyPath)
+            for (Object element : (List) data) {
+                collectNonWeakLinks(element, propertyPath, links)
             }
         }
         if (data instanceof Map) {
-            if (isLink(data)) {
-                if (!JsonLd.isWeak(propertyPath.join("."))) {
-                    String primaryId = postgres.getMainId((String) data[ID_KEY])
-                    if (primaryId != null) {
-                        data.put(ID_KEY, primaryId)
-                    }
+            Map map = (Map) data
+            if (isLink(map)) {
+                if (!JsonLd.isWeak(propertyPath)) {
+                    links.add(map)
                 }
                 return
             }
 
             // Keep looking for more links
-            for (Object key : data.keySet()) {
+            for (Object key : map.keySet()) {
 
                 // sameAs objects are not links per se, and must not be replaced
                 String keyString = (String) key
                 if (keyString == SAME_AS)
                     continue
 
-                Object value = data.get(key)
+                Object value = map.get(key)
 
-                replaceSameAsLinksWithPrimaries(value, propertyPath + keyString)
+                collectNonWeakLinks(value, propertyPath.isEmpty() ? keyString : propertyPath + "." + keyString, links)
             }
         }
     }
@@ -165,18 +178,41 @@ class LinkFinder {
      */
     private void clearReferenceAmbiguities(Document document) {
         List graphList = document.data.get(JsonLd.GRAPH_KEY)
+        Set<String> ambiguousIds = []
         for (Object entry : graphList) {
-            clearReferenceAmbiguities_internal(entry, true)
+            collectAmbiguousIds(entry, true, ambiguousIds)
+        }
+        Set<String> existingIds = postgres.getExistingIris(ambiguousIds)
+        for (Object entry : graphList) {
+            clearReferenceAmbiguities_internal(entry, true, existingIds)
         }
     }
 
-    private void clearReferenceAmbiguities_internal(Map data, boolean isRootEntry) {
+    @CompileStatic
+    private static void collectAmbiguousIds(Object data, boolean isRootEntry, Set<String> ids) {
+        if (data instanceof Map) {
+            Map map = (Map) data
+            Object id = map.get("@id")
+            if (!isRootEntry && id != null && map.size() > 1) {
+                ids.add(id.toString())
+            }
+            for (Object value : map.values()) {
+                collectAmbiguousIds(value, false, ids)
+            }
+        } else if (data instanceof List) {
+            for (Object element : (List) data) {
+                collectAmbiguousIds(element, false, ids)
+            }
+        }
+    }
+
+    private void clearReferenceAmbiguities_internal(Map data, boolean isRootEntry, Set<String> existingIds) {
         if (!isRootEntry) {
             Object id = data.get("@id")
             // If we have both @id and data (which is bad)
             if (id != null && data.size() > 1) {
 
-                if (postgres.getSystemIdByIri(id) != null) { // If we have such a record, then the link (@id) is enough.
+                if (existingIds.contains(id.toString())) { // If we have such a record, then the link (@id) is enough.
                     data.clear()
                     data.put("@id", id)
                 } else if (id.startsWith(LegacyIntegrationTools.BASE_LIBRARY_URI)) {
@@ -205,18 +241,18 @@ class LinkFinder {
             Object value = data.get(key)
 
             if (value instanceof List)
-                clearReferenceAmbiguities_internal( (List) value )
+                clearReferenceAmbiguities_internal( (List) value, existingIds )
             if (value instanceof Map)
-                clearReferenceAmbiguities_internal( (Map) value, false )
+                clearReferenceAmbiguities_internal( (Map) value, false, existingIds )
         }
     }
 
-    private void clearReferenceAmbiguities_internal(List data) {
+    private void clearReferenceAmbiguities_internal(List data, Set<String> existingIds) {
         for (Object element : data){
             if (element instanceof List)
-                clearReferenceAmbiguities_internal( (List) element )
+                clearReferenceAmbiguities_internal( (List) element, existingIds )
             else if (element instanceof Map)
-                clearReferenceAmbiguities_internal( (Map) element, false )
+                clearReferenceAmbiguities_internal( (Map) element, false, existingIds )
         }
     }
 }

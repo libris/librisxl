@@ -2,7 +2,6 @@ package whelk.util
 
 import spock.lang.Specification
 import whelk.JsonLd
-import whelk.component.ElasticSearch
 
 import static whelk.component.ElasticSearch.DerivedLenses.CARD_ONLY
 import static whelk.component.ElasticSearch.DerivedLenses.SEARCH_CARD_ONLY
@@ -1316,7 +1315,7 @@ class FresnelUtilSpec extends Specification {
         ]
         var fresnel = new FresnelUtil(ld)
         var searchCardBatch = fresnel.mapBatchThroughLens([thing], FresnelUtil.Lenses.SEARCH_CARD, [FresnelUtil.Options.TAKE_ALL_ALTERNATE], ['https://id.kb.se/x'])
-        var searchCard = searchCardBatch.lensedThings().first()
+        var searchCard = searchCardBatch.shapedThings().first()
         searchCardBatch.restoreLinks(searchCard)
 
         expect:
@@ -1376,5 +1375,97 @@ class FresnelUtilSpec extends Specification {
             "mainTitle" : "Titel",
             "z" : [ "a", "b", "c" ]
         ]
+    }
+
+    def "find link in the middle of an FSL path"() {
+        given:
+        Map displayData = [
+                "@context"  : [],
+                "lensGroups": [
+                        "search-chips": ["lenses": [
+                                "Contribution": [
+                                        "@type"          : "fresnel:Lens",
+                                        "classLensDomain": "Contribution",
+                                        "showProperties" : [
+                                                ["@type": "fresnel:fslselector", "@value": "agent/*/givenName"]
+                                        ]
+                                ]
+                        ]]
+                ]
+        ]
+        var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
+        var linkedAgent = ["@id": "https://libris.kb.se/agent1"]
+        var thing = [
+                "@type": "Contribution",
+                "agent": [linkedAgent]
+        ]
+
+        expect:
+        fresnel.findFslMidPathLinks(thing, FresnelUtil.Lenses.SEARCH_CHIP).any { it.is(linkedAgent) }
+    }
+
+    def "find link several steps into an FSL path"() {
+        given:
+        Map displayData = [
+                "@context"  : [],
+                "lensGroups": [
+                        "search-chips": ["lenses": [
+                                "Work": [
+                                        "@type"          : "fresnel:Lens",
+                                        "classLensDomain": "Work",
+                                        "showProperties" : [
+                                                ["@type": "fresnel:fslselector", "@value": "contribution/*/agent/*/givenName"]
+                                        ]
+                                ]
+                        ]]
+                ]
+        ]
+        var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
+        var linkedAgent = ["@id": "https://libris.kb.se/agent1"]
+        var thing = [
+                "@type"       : "Work",
+                "contribution": [
+                        "@type": "Contribution",
+                        "agent": [linkedAgent]
+                ]
+        ]
+
+        expect:
+        fresnel.findFslMidPathLinks(thing, FresnelUtil.Lenses.SEARCH_CHIP).any { it.is(linkedAgent) }
+    }
+
+    def "find link in an FSL path on a nested entity"() {
+        given:
+        Map displayData = [
+                "@context"  : [],
+                "lensGroups": [
+                        "search-chips": ["lenses": [
+                                "Work": [
+                                        "@type"          : "fresnel:Lens",
+                                        "classLensDomain": "Work",
+                                        "showProperties" : ["contribution"]
+                                ],
+                                "Contribution": [
+                                        "@type"          : "fresnel:Lens",
+                                        "classLensDomain": "Contribution",
+                                        "showProperties" : [
+                                                ["@type": "fresnel:fslselector", "@value": "agent/*/givenName"]
+                                        ]
+                                ]
+                        ]]
+                ]
+        ]
+        var fresnel = new FresnelUtil(new JsonLd(CONTEXT_DATA, displayData, VOCAB_DATA))
+        var linkedAgent = ["@id": "https://libris.kb.se/agent1"]
+        var thing = [
+                "@type"       : "Work",
+                "contribution": [
+                        "@type": "Contribution",
+                        "agent": [linkedAgent]
+                ]
+        ]
+
+        expect:
+        fresnel.findFslMidPathLinks(thing, FresnelUtil.Lenses.SEARCH_CHIP).any { it.is(linkedAgent) }
     }
 }

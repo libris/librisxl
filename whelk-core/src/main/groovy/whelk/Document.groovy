@@ -8,7 +8,6 @@ import whelk.util.LegacyIntegrationTools
 import whelk.util.PropertyLoader
 import whelk.util.Unicode
 
-import java.lang.reflect.Type
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -288,16 +287,8 @@ class Document {
     List<String> getIsbnHiddenValues() { return getTypedIDValues("ISBN", thingIndirectTypedIDsPath, "value") }
     List<String> getIssnHiddenValues() { return getTypedIDValues("ISSN", thingTypedIDsPath, "marc:canceledIssn") }
 
-    List<String> getIsniValues() {
-        return getTypedIDValues(this.&isIsni, thingTypedIDsPath, "value")
-    }
-    
     static boolean isIsni(Map identifier) { 
          identifier['@type'] == 'ISNI' || identifier.typeNote?.with{ (it as String).toLowerCase() } == 'isni'
-    }
-
-    List<String> getOrcidValues() {
-        return getTypedIDValues(this.&isOrcid, thingTypedIDsPath, "value")
     }
 
     static boolean isOrcid(Map identifier) {
@@ -606,7 +597,7 @@ class Document {
         return null
     }
 
-    Set<String> getEmbellishments() {
+    Set<String> getEmbellishmentIds() {
         Set<String> result = new HashSet<>()
         data[JsonLd.GRAPH_KEY].eachWithIndex{ def entry, int i ->
             if (i > 1 && entry[JsonLd.GRAPH_KEY]) {
