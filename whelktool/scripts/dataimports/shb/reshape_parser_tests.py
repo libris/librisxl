@@ -439,6 +439,22 @@ def test_parse_note_1901_1920_Bidrag_tidningsartikel():
         "part_year": "1908",
     }
 
+def test_parse_note_1901_1920_Bidrag_tidningsartikel_ovanligt_omfång():
+    record = {
+        "pattern": "Efternamn, Förnamn [initial]., Titel. undertitel. Publ-titel YYYY, numrering (DD/MM).",
+        "sample": "Keyland, N., Själnätbindning och själfångst på Harön. Fataburen 1914, s. 156-172. Med 31 fig.",
+    }
+    result = parse_note(record["sample"], "early")
+
+    assert result["is_component_part"] == True
+    assert result["primary_contributors"] == "Keyland, N."
+    assert result["title"] == "Själnätbindning och själfångst på Harön"
+    assert result["host"] == {
+        "title": "Fataburen",
+        "part_number": "1914, s. 156-172. Med 31 fig.",
+        "part_year": "1914",
+    }
+
 
 def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag():
     record = {
@@ -463,7 +479,7 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag():
     assert result["year"] == "1895"
 
 
-# TODO Try extracting period-delimited (non-journal) host publication/series
+
 def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi():
     record = {
         "key": "Efternamn, Förnamn [initial]., Titel. undertitel. sid. Ort år. Serietillhörighet. numrering.",

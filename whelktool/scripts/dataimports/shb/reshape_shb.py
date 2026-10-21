@@ -1101,7 +1101,7 @@ def extract_extent(
 
         # Pick up special illustration info
         EXTRA_EXTENT_INFO_RE = (
-            r"(?:\[Med\b.*?(?:i texten\.)?\]|\bMed\b.*?(?:i texten\.)?\.)"
+            r"(?:\[Med\b.*?(?:i texten\.)?\]|\bMed\b.*?(?:i texten\.)?\.|\bMed\b.*?(\.)?\.)"
         )
         extra_match = re.search(EXTRA_EXTENT_INFO_RE, right_part)
 
