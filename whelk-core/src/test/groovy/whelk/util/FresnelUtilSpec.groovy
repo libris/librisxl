@@ -1335,6 +1335,30 @@ class FresnelUtilSpec extends Specification {
         ]
     }
 
+    def "search card mainTitleByLang"() {
+        given:
+        var thing = [
+                '@id': 'https://libris.kb.se/1234',
+                '@type'       : 'Work',
+                'hasTitle'    : [
+                        ['@type': 'Title', 'mainTitleByLang': ['yo': 'Titel']],
+                ]
+        ]
+        var fresnel = new FresnelUtil(ld)
+        var searchCardBatch = fresnel.mapBatchThroughLens([thing], FresnelUtil.Lenses.SEARCH_CARD, [FresnelUtil.Options.TAKE_ALL_ALTERNATE], [])
+        var searchCard = searchCardBatch.shapedThings().first()
+        searchCardBatch.restoreLinks(searchCard)
+
+        expect:
+        searchCard == [
+                "@id"         : "https://libris.kb.se/1234",
+                "@type"       : "Work",
+                'hasTitle'    : [
+                        ['@type': 'Title', 'mainTitleByLang': ['yo': 'Titel']],
+                ]
+        ]
+    }
+
     def "merge properties"() {
         given:
         def displayData = [

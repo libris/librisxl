@@ -557,7 +557,7 @@ public class FresnelUtil {
             Map<String, Object> mergedThing = new LinkedHashMap<>();
             for (Node n : nodes) {
                 if (n instanceof LanguageContainer l) {
-                    mergedThing.putAll(l.filteredLangMap(fallbackLocales));
+                    mergedThing.putAll(l.filteredLangMap(fallbackLocales)); // <-- languages not from transliteration or local are eliminated here
                 }
                 n.orderedSelection.forEach(s -> insert(mergedThing, s));
             }
@@ -1008,7 +1008,7 @@ public class FresnelUtil {
         }
 
         Map<String, Object> filteredLangMap(List<LangCode> fallbackLocales) {
-            return (isTransliterated() ? languages() : fallbackLocales)
+            return (isTransliterated() ? languages() : fallbackLocales) // <-- changing to "return languages()" makes new test pass
                     .stream()
                     .map(LangCode::code)
                     .filter(thing::containsKey)
