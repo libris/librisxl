@@ -40,7 +40,9 @@ class LinkFinder {
     List<URI> findLinks(List<Map> entities, List<String> recordIds) {
         return postgres.withDbConnection { notIt -> // Otherwise compliler error with: The current scope already contains a variable of the name it
             if(recordIds.any() && entities.any()) {
-                log.debug "Finding links for ${entities.size()} entities and ${recordIds.size()} record Ids"
+                if (log.isDebugEnabled()) {
+                    log.debug "Finding links for ${entities.size()} entities and ${recordIds.size()} record Ids"
+                }
 
                 def paramsQuery = ENTITY_QUERY.replace('€', recordIds.collect { it -> '?' }.join(','))
                 def connection = postgres.getMyConnection()
@@ -55,7 +57,9 @@ class LinkFinder {
                     }
 
                     def id
-                    log.trace stmt.toString()
+                    if (log.isTraceEnabled()) {
+                        log.trace stmt.toString()
+                    }
                     ResultSet rs = stmt.executeQuery()
                     if (rs.next()) {
                         id = rs.getString("thingUri") // set id to record id, as fallback
@@ -66,7 +70,9 @@ class LinkFinder {
 
                     return id ? Document.BASE_URI.resolve(id) : null
                 }
-                log.debug "Found ${foundLinks.count { it -> it }} links to replace in entities"
+                if (log.isDebugEnabled()) {
+                    log.debug "Found ${foundLinks.count { it -> it }} links to replace in entities"
+                }
                 return foundLinks
             }
             else{
