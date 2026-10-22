@@ -1,3 +1,5 @@
+# TODO Report (with row number) on notes starting with other than uppercase letter - a sign of OCR trouble
+
 from io import TextIOBase
 import csv
 import json
@@ -544,12 +546,11 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
         counters["various"].update(["Publication year from part number"])
 
     # Special case - assume that extent extracted from host note acutally belongs to the component part
-    if is_component_part and extent:
-        part_number = structured_record.get("host", {}).get("part_number", "")
+    if is_component_part and extent and structured_record.get("host", {}):
+        part_number = structured_record["host"].get("part_number", "")
         structured_record["host"]["part_number"] =  f"{part_number}, {structured_record.get('extent')}"
         del structured_record["extent"]
         counters["various"].update(["Main extent appended to componentPart part_number"])
-
 
     structured_record["is_component_part"] = is_component_part
     return structured_record
