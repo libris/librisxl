@@ -1,15 +1,15 @@
+# TODO
 # Tydliggör hantering av särtryck och andra speciella beskrivningar
 # 9 av 10 stickprov under 0.8 var korrekta matchningar
 # Funder på att sänka score till 0.75 ev tweaka scoring
-# TODO
 # https://libris-qa.kb.se/dataset/shb/1240#it Utförligare författarinfo på Libris-sidan
 # DONE https://libris-qa.kb.se/dataset/shb/2062#it	Utgivningsår saknas i SHB men finns i part (var är praxis att lägga år i Libris?)
-# https://libris-qa.kb.se/dataset/shb/2690#it   Bästa match motsvarar tevtydig post i Libris, är nog bäst att inte matcha, men skullt må bra av publ.år
-# https://libris-qa.kb.se/dataset/shb/4884#it   År och utgivsort har hamnat i titeln i SHB
+# https://libris-qa.kb.se/dataset/shb/2690#it   Bästa match motsvarar tevtydig post i Libris, är nog bäst att inte matcha, men skulle må bra av publ.år
+# DONE https://libris-qa.kb.se/dataset/shb/4884#it   År och utgivsort har hamnat i titeln i SHB
 # https://libris-qa.kb.se/dataset/shb/7610#it   Icke-matchande responsibilityStatement pga svårtydd beskrivning i Libris
 # https://libris-qa.kb.se/dataset/shb/23456#it Sidor saknas i Libris, finns i SHB. Kan detta förlåtas?
 # https://libris-qa.kb.se/dataset/shb/27622#it Borde ev matcha, men årtal diffar av oklar anledning
-# https://libris-qa.kb.se/dataset/shb/29115#it Serietitel felaktigt tolkad som utgivningsort i SHB-parsning
+# DONE https://libris-qa.kb.se/dataset/shb/29115#it Serietitel felaktigt tolkad som utgivningsort i SHB-parsning
 
 
 import argparse
@@ -138,6 +138,9 @@ def analyze_matches(shbd_prepepd, matches: list) -> dict:
 
 
 def get_match_score(shb_prepped: dict, match_prepped: dict):
+    # TODO Create alternate scorings for monograph / component part
+    # Place + extent / Part
+
     weighted_scores = {}
     weights = []
     title_score = 0
@@ -148,6 +151,8 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     issn_score = 0
     extent_score = 0
     part_score = 0
+
+    ## Shared properties for monographs and serials ##
 
     # Ttile should match almost verbatim
     title_score = (
@@ -166,51 +171,19 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             / 100
         )
 
-    # Auhtor names are often inverted on one or the other side
+    # Responsibility statement should have similar content, but not necessarily the same length or order
     if shb_prepped.get("responsibility_statement") and match_prepped.get(
         "responsibility_statement"
     ):
         contributor_score = (
-            fuzz.token_sort_ratio(
+            fuzz.token_set_ratio(
                 shb_prepped["responsibility_statement"],
                 match_prepped["responsibility_statement"],
             )
             / 100
         )
 
-    # Part should have similar content, but not necessarily the same length or order
-    if shb_prepped.get("part") and match_prepped.get("part"):
-        part_score = (
-            fuzz.token_set_ratio(
-                shb_prepped["part"],
-                match_prepped["part"],
-            )
-            / 100
-        )
-
-    # Place should have similar content, but not necessarily the same length or order
-    if shb_prepped.get("place") and match_prepped.get("place"):
-        place_score = (
-            fuzz.ratio(
-                shb_prepped["place"],
-                match_prepped["place"],
-            )
-            / 100
-        )
-
-    # Extent should have similar content, but not necessarily the same length or order
-    if shb_prepped.get("extent") and match_prepped.get("extent"):
-        extent_score = (
-            fuzz.token_set_ratio(
-                shb_prepped["extent"],
-                match_prepped["extent"],
-            )
-            / 100
-        )
-
-    # Year and ISSN (normalized to numeric only) are dealbreakers
-    # If they are present and don't match, it's not the same record
-
+    # Year (normalized to numeric only) is a dealbreaker for serials and monographs
     if shb_prepped.get("year") and match_prepped.get("year"):
         if normalize_numeric(shb_prepped["year"]) != normalize_numeric(
             match_prepped["year"]
@@ -221,6 +194,8 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     else:
         year_score = 0
 
+
+    # ISSN (normalized to numeric only) is a dealbreaker for serials
     if shb_prepped.get("host_or_series_issn") and match_prepped.get(
         "host_or_series_issn"
     ):
@@ -233,31 +208,69 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     else:
         issn_score = 0
 
+
+    ## Only for serial components ##
+    if shb_prepped["is_component_part"]:
+        # Part should have similar content, but not necessarily the same length or order
+        if shb_prepped.get("part") and match_prepped.get("part"):
+            part_score = (
+                fuzz.token_set_ratio(
+                    shb_prepped["part"],
+                    match_prepped["part"],
+                )
+                / 100
+            )
+    
+    ## Only for monographs ##
+    else:
+        # Place should have similar content, but not necessarily the same length or order
+        if shb_prepped.get("place") and match_prepped.get("place"):
+            place_score = (
+                fuzz.ratio(
+                    shb_prepped["place"],
+                    match_prepped["place"],
+                )
+                / 100
+            )
+
+        # Extent should have similar content, but not necessarily the same length or order
+        if shb_prepped.get("extent") and match_prepped.get("extent"):
+            extent_score = (
+                fuzz.token_set_ratio(
+                    shb_prepped["extent"],
+                    match_prepped["extent"],
+                )
+                / 100
+            )
+
+
     # Calculate the overall score
-    ## Properites that describe the thign itself
-    weighted_scores["title"] = 0.40 * title_score
-    weights.append(0.40)
+    ## Properites used for monographs and componentParts ##
+    weighted_scores["title"] = 0.45 * title_score
+    weights.append(0.45)
 
     weighted_scores["contributor"] = 0.30 * contributor_score
     weights.append(0.30)
 
-    weighted_scores["year"] = 0.125 * year_score
-    weights.append(0.125)
-
-    weighted_scores["place"] = 0.075 * place_score
+    weighted_scores["year"] = 0.075 * year_score
     weights.append(0.075)
 
-    weighted_scores["extent"] = 0.025 * extent_score
-    weights.append(0.025)
-
-    ## Properites that describe the thing itself
     weighted_scores["host_or_series_issn"] = 0.025 * issn_score
     weights.append(0.025)
 
-    weighted_scores["host_or_series_title"] = 0.025 * host_or_series_title_score
+    weighted_scores["host_or_series_title"] = 0.05 * host_or_series_title_score
+    weights.append(0.05)
+
+    ## Property mostly used for componentPart ##
+
+    weighted_scores["part"] = 0.05 * part_score
+    weights.append(0.05)
+
+    ## Properites used only for monographs ## 
+    weighted_scores["place"] = 0.025 * place_score
     weights.append(0.025)
 
-    weighted_scores["part"] = 0.025 * part_score
+    weighted_scores["extent"] = 0.025 * extent_score
     weights.append(0.025)
 
     assert sum(weights) == 1, f"Weights must add up to 1. Actual sum: {sum(weights)}"
@@ -291,7 +304,13 @@ def prepare_record(instance: dict) -> dict:
             "year": "",
             "host_or_series_title": "",
             "host_or_series_issn": "",
+            "is_component_part": False
         }
+
+        component_part_uri = "https://id.kb.se/term/saobf/ComponentPart"
+        if any([cat["@id"] == component_part_uri for cat in instance.get("category", [])]):
+            prepped["is_component_part"] = True
+
 
         if has_title := instance.get("hasTitle", []):
             prepped["full_title"] = (
