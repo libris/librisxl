@@ -41,6 +41,10 @@ class LinkFinder {
     }
 
     void initAddExactMatches(Map definition) {
+        if (!definition[ID_KEY]) {
+            return
+        }
+
         for (var match : asList(definition['exactMatch'])) {
             if (match[ID_KEY]) {
                 exactMatches[match[ID_KEY] as String] = definition[ID_KEY] as String
