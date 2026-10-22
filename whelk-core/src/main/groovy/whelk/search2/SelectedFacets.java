@@ -4,6 +4,7 @@ import whelk.search2.querytree.node.Condition;
 import whelk.search2.querytree.node.Node;
 import whelk.search2.querytree.node.Or;
 import whelk.search2.querytree.QueryTree;
+import whelk.search2.querytree.selector.Property;
 import whelk.search2.querytree.value.YearRange;
 
 import java.util.HashMap;
@@ -125,7 +126,9 @@ public class SelectedFacets {
             addSlice(slice.subSlice(), queryTree);
         }
 
-        Predicate<Node> isProperty = n -> n instanceof Condition c && slice.getProperty().equals(c.selector());
+        Predicate<Node> isProperty = n -> n instanceof Condition c
+                && (slice.getProperty().equals(c.selector())
+                    || c.selector() instanceof Property.CoercingSubProperty cs && slice.getProperty().equals(cs.getSuperProperty()));
 
         List<Condition> selected = queryTree.getTopNodes().stream()
                 .filter(isProperty)
