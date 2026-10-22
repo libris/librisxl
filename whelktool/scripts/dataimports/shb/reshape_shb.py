@@ -140,6 +140,23 @@ def convert(data, subject_mappings) -> dict | None:
 
     instance["instanceOf"] = work
 
+    ### Only proceed if there is a hasNote property ###
+    if "hasNote" not in instance:
+        anomalies.append(
+            f"SKIPPING Missing hasNote property - no information to parse\t{instance['@id']}\t{instance}"
+        )
+        return None
+    else:
+        assert len(instance["hasNote"]) == 1
+        note = instance.pop("hasNote")[0]["label"]
+        if note == "TABORT":
+            return None
+
+    # If the note doesn't start with an uppercase letter or an opening bracket, this is an indication of an OCR issue
+    # Report for later cleanup
+    if not(note[0].isupper() or note[0] == "["):
+        anomalies.append(f"SUSPICIOUS NOTE\t{instance["associatedMedia"][0]["marc:linkText"][0][8:-6]}\t{instance["part"][0]}\t{note}")
+
     ### Some initial cleanup ###
 
     # Check which historical syntax group the record belongs to
@@ -174,19 +191,7 @@ def convert(data, subject_mappings) -> dict | None:
     instance.pop("category", None)
 
     ### Enrich the instance ###
-
-    # Only proceed if there is a note
-    if "hasNote" not in instance:
-        anomalies.append(
-            f"SKIPPING Missing hasNote property - no information to parse\t{instance['@id']}\t{instance}"
-        )
-        return None
-    else:
-        assert len(instance["hasNote"]) == 1
-        note = instance.pop("hasNote")[0]["label"]
-        if note == "TABORT":
-            return None
-
+    
     # Parse notes for structured bibliographic data
     structured_record = parse_note(note, syntax_era)
 
@@ -351,6 +356,15 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
                     }
                 ]
 
+            # Identified by (list)
+            if structured_record["host"].get("issn"):
+                host["identifiedBy"] = [
+                    {
+                        "@type": "ISSN",
+                        "value": structured_record["host"]["issn"],
+                    }
+                ]
+
             # Responsibility statement (list)
             if structured_record["host"].get("publisher"):
                 host["responsibilityStatement"] = structured_record["host"]["publisher"]
@@ -431,6 +445,7 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     host_or_series = ""
 
     # Some inital cleanup of OCR messiness
+
     note = normalize_spacing_and_punctuation(note)
     note = normalize_special_cases(note)
     structured_record["original_note"] = note
