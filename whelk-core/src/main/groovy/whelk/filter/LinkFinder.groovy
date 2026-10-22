@@ -13,6 +13,7 @@ import java.sql.ResultSet
 import static whelk.JsonLd.ID_KEY
 import static whelk.JsonLd.Owl.SAME_AS
 import static whelk.JsonLd.RECORD_KEY
+import static whelk.JsonLd.asList
 import static whelk.JsonLd.isLink
 import static whelk.util.Jackson.mapper
 
@@ -22,6 +23,8 @@ class LinkFinder {
     PostgreSQLComponent postgres
 
     static String ENTITY_QUERY
+
+    Map<String, String> exactMatches = [:]
 
     LinkFinder(PostgreSQLComponent pgsql) {
         postgres = pgsql
@@ -35,6 +38,18 @@ class LinkFinder {
                                      FROM lddb__identifiers
                                      WHERE iri IN (€))
                         ORDER BY ids2.graphindex;"""
+    }
+
+    void initAddExactMatches(Map definition) {
+        if (!definition[ID_KEY]) {
+            return
+        }
+
+        for (var match : asList(definition['exactMatch'])) {
+            if (match[ID_KEY]) {
+                exactMatches[match[ID_KEY] as String] = definition[ID_KEY] as String
+            }
+        }
     }
 
     List<URI> findLinks(List<Map> entities, List<String> recordIds) {
@@ -105,13 +120,13 @@ class LinkFinder {
         }
 
         clearReferenceAmbiguities(document)
-        replaceSameAsLinksWithPrimaries(document)
+        replaceSameAsAndExactMatchLinksWithPrimaries(document)
         // TODO: check what happens in the sameas table when id:s are changed and changed back!
         restoreNewCanonicalMainEntityUri(document.data)
     }
 
     /**
-     * When {@link #replaceSameAsLinksWithPrimaries} is used, the mainEntity
+     * When {@link #replaceSameAsAndExactMatchLinksWithPrimaries} is used, the mainEntity
      * reference is replaced by any already existing primary id. This collides
      * with purposefully changing the primary id, which is therefore restored
      * here.
@@ -124,7 +139,7 @@ class LinkFinder {
         items[0][JsonLd.THING_KEY]['@id'] = items[1]['@id']
     }
 
-    private void replaceSameAsLinksWithPrimaries(Document doc) {
+    private void replaceSameAsAndExactMatchLinksWithPrimaries(Document doc) {
         // "Frame" temporarily to avoid cumbersome rewriting of property paths
         Map thing = doc.getThing()
         thing.put(RECORD_KEY, doc.getRecord())
@@ -138,10 +153,16 @@ class LinkFinder {
         }
 
         Map<String, String> primaryIds = postgres.getMainIds(links.collect { (String) it[ID_KEY] }.toSet())
+
         for (Map link : links) {
             String primaryId = primaryIds[(String) link[ID_KEY]]
             if (primaryId != null) {
                 link.put(ID_KEY, primaryId)
+            } else {
+                var id = exactMatches[(String) link[ID_KEY]]
+                if (id != null && id != thing[ID_KEY]) {
+                    link.put(ID_KEY, id)
+                }
             }
         }
     }

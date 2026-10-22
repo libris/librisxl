@@ -15,9 +15,9 @@ import whelk.converter.marc.MarcFrameConverter
 import whelk.exception.LinkValidationException
 import whelk.exception.StorageCreateFailedException
 import whelk.exception.WhelkException
+import whelk.filter.BlankNodeLinker
 import whelk.filter.LanguageLinker
 import whelk.filter.LinkFinder
-import whelk.filter.BlankNodeLinker
 import whelk.filter.NormalizerChain
 import whelk.meta.WhelkConstants
 import whelk.search.ESQuery
@@ -285,6 +285,9 @@ class Whelk {
 
         def relatorLinker = heuristicLinkers.findResult { it.getLinker()?.types == ['Role'] ? it.getLinker() : null }
         resourceCache = new ResourceCache(this, languageLinker, (BlankNodeLinker) relatorLinker)
+        for (var definition : resourceCache?.relatorResources?.relators) {
+            storage.linkFinder.initAddExactMatches(definition)
+        }
     }
 
     Document getDocument(String id) {
