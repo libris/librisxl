@@ -1,26 +1,15 @@
-# TODO
-# Tydliggör hantering av särtryck och andra speciella beskrivningar
-# 9 av 10 stickprov under 0.8 var korrekta matchningar
-# Funder på att sänka score till 0.75 ev tweaka scoring
-# https://libris-qa.kb.se/dataset/shb/1240#it Utförligare författarinfo på Libris-sidan
-# DONE https://libris-qa.kb.se/dataset/shb/2062#it	Utgivningsår saknas i SHB men finns i part (var är praxis att lägga år i Libris?)
-# https://libris-qa.kb.se/dataset/shb/2690#it   Bästa match motsvarar tevtydig post i Libris, är nog bäst att inte matcha, men skulle må bra av publ.år
-# DONE https://libris-qa.kb.se/dataset/shb/4884#it   År och utgivsort har hamnat i titeln i SHB
-# https://libris-qa.kb.se/dataset/shb/7610#it   Icke-matchande responsibilityStatement pga svårtydd beskrivning i Libris
-# https://libris-qa.kb.se/dataset/shb/23456#it Sidor saknas i Libris, finns i SHB. Kan detta förlåtas?
-# https://libris-qa.kb.se/dataset/shb/27622#it Borde ev matcha, men årtal diffar av oklar anledning
-# DONE https://libris-qa.kb.se/dataset/shb/29115#it Serietitel felaktigt tolkad som utgivningsort i SHB-parsning
-
-
 import argparse
 import json
 import re
-import requests
 import time
-from rapidfuzz import fuzz
 import traceback
 from urllib.parse import urlparse
 
+from rapidfuzz import fuzz
+from requests import Session
+from requests.adapters import HTTPAdapter
+from requests.exceptions import HTTPError
+from urllib3.util import Retry
 
 THRESHOLD = 0.80
 
@@ -30,6 +19,16 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
     """
     Given an SHBD record, finds matching records already in LIBRIS.
     """
+
+    # Prepare to make API requests
+    session = Session()
+    retries = Retry(
+        total=10,
+        status_forcelist=[502, 503, 504],
+        allowed_methods={"HEAD", "GET", "OPTIONS"},
+    )
+    session.mount("https://", HTTPAdapter(max_retries=retries))
+
     headers = {"Accept": "application/ld+json"}
 
     # Title - free text with search code
@@ -69,7 +68,7 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
     }
 
     try:
-        res = requests.get(f"{base_url}/find?", params=params, headers=headers)
+        res = session.get(f"{base_url}/find?", params=params, headers=headers)
         res.raise_for_status()
 
         time.sleep(0.001)
@@ -96,7 +95,7 @@ def find_matches(shbd_prepepd: dict, match_counts: dict) -> tuple:
         )
         return matches
 
-    except requests.exceptions.HTTPError as he:
+    except HTTPError as he:
         report.write(f"\n{he}\t{query_string}\n")
 
 
@@ -194,7 +193,6 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     else:
         year_score = 0
 
-
     # ISSN (normalized to numeric only) is a dealbreaker for serials
     if shb_prepped.get("host_or_series_issn") and match_prepped.get(
         "host_or_series_issn"
@@ -208,7 +206,6 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     else:
         issn_score = 0
 
-
     ## Only for serial components ##
     if shb_prepped["is_component_part"]:
         # Part should have similar content, but not necessarily the same length or order
@@ -220,7 +217,7 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
                 )
                 / 100
             )
-    
+
     ## Only for monographs ##
     else:
         # Place should have similar content, but not necessarily the same length or order
@@ -242,7 +239,6 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
                 )
                 / 100
             )
-
 
     # Calculate the overall score
     ## Properites used for monographs and componentParts ##
@@ -266,7 +262,7 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     weighted_scores["part"] = 0.05 * part_score
     weights.append(0.05)
 
-    ## Properites used only for monographs ## 
+    ## Properites used only for monographs ##
     weighted_scores["place"] = 0.025 * place_score
     weights.append(0.025)
 
@@ -304,13 +300,14 @@ def prepare_record(instance: dict) -> dict:
             "year": "",
             "host_or_series_title": "",
             "host_or_series_issn": "",
-            "is_component_part": False
+            "is_component_part": False,
         }
 
         component_part_uri = "https://id.kb.se/term/saobf/ComponentPart"
-        if any([cat["@id"] == component_part_uri for cat in instance.get("category", [])]):
+        if any(
+            [cat["@id"] == component_part_uri for cat in instance.get("category", [])]
+        ):
             prepped["is_component_part"] = True
-
 
         if has_title := instance.get("hasTitle", []):
             prepped["full_title"] = (
@@ -333,7 +330,7 @@ def prepare_record(instance: dict) -> dict:
             "contribution"
         ):
             agent = instance["instanceOf"]["contribution"][0].get("agent", {})
-            
+
             if isinstance(agent, list):
                 agent = agent[0]
 
@@ -449,9 +446,10 @@ def remove_problematic_punctuation(text: str) -> str:
 
     return text
 
+
 def write_instance_to_json_lines(record, file):
-        json.dump(record, file, ensure_ascii=False)
-        file.write("\n")
+    json.dump(record, file, ensure_ascii=False)
+    file.write("\n")
 
 
 ### Main action ###
@@ -482,9 +480,7 @@ if __name__ == "__main__":
     search_result_path = (
         f"{args.reports_folder}/{date}_api_search_result_{args.search_codes}.tsv"
     )
-    match_map_path = (
-        f"{args.reports_folder}/{date}_match_map_{args.search_codes}.json"
-    )
+    match_map_path = f"{args.reports_folder}/{date}_match_map_{args.search_codes}.json"
     report_path = f"{args.reports_folder}/{date}_report_{args.search_codes}.tsv"
 
     perfect_matches = []
@@ -498,11 +494,16 @@ if __name__ == "__main__":
     print(f"Getting started! Matching against records in {base_url}")
 
     with open(args.shbd_file, "r") as source_file, open(
-        matched_shb_path, "w", encoding="utf-8") as matched_shb_file, open(
-        unmatched_shb_path, "w", encoding="utf-8") as unmatched_shb_file, open(
-        search_result_path, "w") as search_result_file, open(
-        match_map_path, "w", encoding="utf-8") as match_map_file, open(
-        report_path, "w", encoding="utf-8") as report:
+        matched_shb_path, "w", encoding="utf-8"
+    ) as matched_shb_file, open(
+        unmatched_shb_path, "w", encoding="utf-8"
+    ) as unmatched_shb_file, open(
+        search_result_path, "w"
+    ) as search_result_file, open(
+        match_map_path, "w", encoding="utf-8"
+    ) as match_map_file, open(
+        report_path, "w", encoding="utf-8"
+    ) as report:
         search_result_file.write("id\tnumber_of_matches\tquery_string\tmatches\n")
 
         match_summary = {}
@@ -539,26 +540,25 @@ if __name__ == "__main__":
                 best_match = match_summary.get("best_match")
                 # If there is a best match and the score reaches the threshold, save full SHB graph to file of matched
                 if best_match and best_match["total_score"] >= THRESHOLD:
-                        libris_short_id = urlparse(best_match["libris_id"]).path.rsplit("/", 1)[-1]
-                        match_dict = {
-                            libris_short_id: shb_graph,
-                        }
-                        write_instance_to_json_lines(match_dict, matched_shb_file)
+                    libris_short_id = urlparse(best_match["libris_id"]).path.rsplit(
+                        "/", 1
+                    )[-1]
+                    match_dict = {
+                        libris_short_id: shb_graph,
+                    }
+                    write_instance_to_json_lines(match_dict, matched_shb_file)
 
                 # If the the score does not reach the threshold, or there is no best match at all,
                 # save full SHB graph to file of
                 else:
                     write_instance_to_json_lines(shb_graph, unmatched_shb_file)
-                        
+
                     if best_match:
-                            report.write(
+                        report.write(
                             f"\nMATCHING\t{shbd_prepepd['@id']}\tBest match score below threshold {THRESHOLD}\t{best_match['libris_id']}\tMatch score: {best_match['total_score']}"
                         )
-
 
         # Finally, print full match maps
         json.dump(match_map, match_map_file, ensure_ascii=False)
 
     print(f"\nTotal matches:\n{match_counts}")
-
-
