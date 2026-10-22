@@ -305,7 +305,7 @@ def prepare_record(instance: dict) -> dict:
 
         component_part_uri = "https://id.kb.se/term/saobf/ComponentPart"
         if any(
-            [cat["@id"] == component_part_uri for cat in instance.get("category", [])]
+            cat["@id"] == component_part_uri for cat in instance.get("category", [])
         ):
             prepped["is_component_part"] = True
 
@@ -410,7 +410,7 @@ def prepare_record(instance: dict) -> dict:
     return prepped
 
 
-### Helper function ###
+### Helper functions ###
 
 
 def normalize_text(value: str):
