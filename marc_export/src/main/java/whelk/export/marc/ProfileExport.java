@@ -15,6 +15,7 @@ import whelk.Whelk;
 import whelk.converter.marc.JsonLD2MarcXMLConverter;
 import whelk.exception.WhelkRuntimeException;
 import whelk.util.BlockingThreadPool;
+import whelk.util.FresnelUtil;
 import whelk.util.LegacyIntegrationTools;
 import whelk.util.MarcExport;
 import whelk.util.ThreadDumper;
@@ -42,6 +43,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static whelk.util.FresnelUtil.NestedLenses.CHIP_TO_TOKEN;
 
 public class ProfileExport
 {
@@ -312,17 +315,31 @@ public class ProfileExport
     }
 
     private boolean hasChipChanged(String id, Timestamp from, Timestamp until) {
+        if (m_whelk.getLocales().isEmpty()) {
+            throw new IllegalStateException("whelk locales is empty");
+        }
+
         Document currentVersion = m_whelk.getStorage().loadAsOf(id, until);
         Document previousVersion = m_whelk.getStorage().loadAsOf(id, from);
         if (previousVersion == null) {
             return true;
         }
 
-        var jsonLd = m_whelk.getJsonld();
-        var oldChip = jsonLd.toChip(previousVersion.data);
-        var newChip = jsonLd.toChip(currentVersion.data);
-        return !oldChip.equals(newChip);
+        try {
+            var locale = m_whelk.getLocales().getFirst();
+            var oldChip = m_whelk.getFresnelUtil().asFormattedString(previousVersion.getThing(), CHIP_TO_TOKEN, locale);
+            var newChip = m_whelk.getFresnelUtil().asFormattedString(currentVersion.getThing(), CHIP_TO_TOKEN, locale);
+            return !oldChip.equals(newChip);
+        } catch (Exception e) {
+            logger.warn("failed to generate chip string for {}, falling back to chip: {}", id, e, e);
+            var jsonLd = m_whelk.getJsonld();
+            var oldChip = jsonLd.toChip(previousVersion.data);
+            var newChip = jsonLd.toChip(currentVersion.data);
+            return !oldChip.equals(newChip);
+        }
     }
+
+
 
     private List<String> getAffectedBibIdsForAuth(String authId, ExportProfile profile) {
         List<String> allIds = m_whelk.getStorage()

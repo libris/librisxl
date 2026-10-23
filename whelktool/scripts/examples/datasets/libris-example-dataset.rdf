@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [
+  <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#">
+]>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="https://id.kb.se/vocab/">
+  <Record rdf:about="https://libris.kb.se/fnurgel">
+    <mainEntity>
+      <PhysicalResource rdf:about="https://libris.kb.se/fnurgel#it">
+      </PhysicalResource>
+    </mainEntity>
+  </Record>
+  <Record rdf:about="https://libris.kb.se/gnarly">
+    <mainEntity>
+      <DigitalResource rdf:about="https://libris.kb.se/gnarly#it">
+      </DigitalResource>
+    </mainEntity>
+  </Record>
+</rdf:RDF>

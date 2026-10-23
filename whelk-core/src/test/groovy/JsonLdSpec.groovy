@@ -1144,6 +1144,48 @@ class JsonLdSpec extends Specification {
         thing['thatWay'] == [['@id': '2'], ['@id': '3']]
     }
 
+    def "should ignore inverses lacking an id"() {
+        given: 'a vocab where the inverse is an anonymous node with only labels'
+        def vocabData = [
+                "@graph": [
+                        ["@id": "http://example.org/ns/isIssueOf",
+                         "inverseOf": ["labelByLang": ["en": "Has issue"]]],
+                ]
+        ]
+        def ld = new JsonLd(CONTEXT_DATA, [:], vocabData)
+
+        expect:
+        ld.getInverseProperty("isIssueOf") == null
+    }
+
+    def "should apply inverses when vocab has an inverse lacking an id"() {
+        given:
+        def vocabData = [
+                "@graph": [
+                        ["@id": "http://example.org/ns/isIssueOf",
+                         "inverseOf": ["labelByLang": ["en": "Has issue"]]],
+                        ["@id": "http://example.org/ns/broader",
+                         "inverseOf": ["@id": "http://example.org/ns/narrower"]],
+                        ["@id": "http://example.org/ns/narrower"]
+                ]
+        ]
+        def ld = new JsonLd(CONTEXT_DATA, [:], vocabData)
+
+        def thing = [
+                '@id': '1',
+                '@reverse': [
+                        'isIssueOf': [['@id': '2']],
+                        'broader': [['@id': '3']]
+                ]
+        ]
+
+        when:
+        ld.applyInverses(thing)
+        then: 'the broken one is skipped, the rest still applies'
+        thing['narrower'] == [['@id': '3']]
+        !thing.containsKey('hasIssue')
+    }
+
     static Map readMap(String filename) {
         return mapper.readValue(readFile(filename), Map)
     }

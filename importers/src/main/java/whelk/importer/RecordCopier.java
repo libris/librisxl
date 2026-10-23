@@ -297,8 +297,8 @@ public class RecordCopier {
     }
 
     /**
-     * Refresh the derivative tables for the copied. WhelkCopier() does storage.reDenormalize()
-     * but we don't want to do that for the *entire* database here.
+     * Refresh the derivative tables for the copied documents, rather than storage.reDenormalize()
+     * which does it for the *entire* database.
      */
     private void reDenormalizeCopied() {
         System.err.println("Re-denormalizing " + copiedIds.size() + " copied documents.");

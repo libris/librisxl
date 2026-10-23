@@ -1,9 +1,10 @@
 package whelk.converter
 
+import groovy.transform.CompileStatic
 import org.apache.commons.io.IOUtils
 import org.apache.jena.rdf.model.Model
 import org.apache.jena.rdf.model.ModelFactory
-import org.apache.jena.rdf.model.RDFWriter
+import org.apache.jena.rdf.model.RDFWriterI
 import whelk.Document
 import whelk.JsonLd
 import whelk.Whelk
@@ -12,6 +13,7 @@ import whelk.util.PropertyLoader
 
 import static whelk.util.Jackson.mapper
 
+@CompileStatic
 class JsonLD2N3Converter implements FormatConverter {
 
     Map m_context = null
@@ -34,7 +36,7 @@ class JsonLD2N3Converter implements FormatConverter {
         Model model = ModelFactory.createDefaultModel()
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
         model = model.read(input, Document.BASE_URI.toString(), "JSONLD")
-        RDFWriter writer = model.getWriter("N3")
+        RDFWriterI writer = model.getWriter("N3")
         writer.setProperty("allowBadURIs","true")
         writer.write(model, baos, "")
 

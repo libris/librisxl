@@ -1,5 +1,6 @@
 package whelk.converter
 
+import groovy.transform.CompileStatic
 import whelk.Document
 import whelk.JsonLd
 
@@ -9,6 +10,7 @@ import javax.xml.stream.XMLStreamWriter
 /**
  * An extremely minimal and very lossy converter from jsonld to dublin core. Only identifiers are included.
  */
+@CompileStatic
 class JsonLD2DublinCoreConverter implements FormatConverter
 {
     Map convert(Map originaldata, String id) {

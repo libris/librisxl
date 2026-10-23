@@ -1,5 +1,6 @@
 package whelk.filter
 
+import groovy.transform.CompileStatic
 import com.google.common.collect.Iterables
 import whelk.JsonLd
 import whelk.Whelk
@@ -21,6 +22,7 @@ import static whelk.util.DocumentUtil.Remove
 import static whelk.util.DocumentUtil.findKey
 import static whelk.util.DocumentUtil.link
 
+@CompileStatic
 class BlankNodeLinker implements DocumentUtil.Linker {
     static final String DELETE = '/dev/null'
 
@@ -135,7 +137,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
                 List<String> links = findLinks(blank[key], existingLinks)
                 if (links) {
                     incrementCounter('mapped', blank[key])
-                    return links.collect { [(JsonLd.ID_KEY): it] }
+                    return links.collect { (Map) [(JsonLd.ID_KEY): it] }
                 }
             }
         }
@@ -146,7 +148,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
             }
         }
 
-        if (blank['sameAs'] && !blank['sameAs'].any { knownId(it[JsonLd.ID_KEY]) }) {
+        if (blank['sameAs'] && !((List) blank['sameAs']).any { knownId((String) ((Map) it)[JsonLd.ID_KEY]) }) {
             incrementCounter('sameAs 404 - removed', blank['sameAs'])
             Map r = new HashMap(blank)
             r.remove('sameAs')
@@ -162,7 +164,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
         List<String> links = findLinks(blank, existingLinks)
         if (links) {
             incrementCounter('mapped', blank)
-            return links.collect { [(JsonLd.ID_KEY): it] }
+            return links.collect { (Map) [(JsonLd.ID_KEY): it] }
         } else {
             incrementCounter('not mapped (canonized values)', canonize(blank))
         }
@@ -175,7 +177,7 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
         List multiple = split(value)
         if (multiple && multiple.every { findLinks(it, existingLinks) != null }) {
-            return multiple.collect { findLinks(it, existingLinks) }.flatten()
+            return (List<String>) multiple.collect { findLinks(it, existingLinks) }.flatten()
         }
 
         return null

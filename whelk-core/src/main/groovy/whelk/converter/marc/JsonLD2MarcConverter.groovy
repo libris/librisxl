@@ -1,9 +1,11 @@
 package whelk.converter.marc
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import whelk.converter.FormatConverter
 
 @Log
+@CompileStatic
 class JsonLD2MarcConverter implements FormatConverter {
 
     protected MarcFrameConverter marcFrameConverter

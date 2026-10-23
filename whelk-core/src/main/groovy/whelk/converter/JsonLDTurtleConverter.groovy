@@ -1,5 +1,6 @@
 package whelk.converter
 
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import whelk.JsonLd
 import whelk.Whelk
@@ -7,11 +8,12 @@ import whelk.Whelk
 import static java.nio.charset.StandardCharsets.UTF_8
 
 @Log
+@CompileStatic
 class JsonLDTurtleConverter implements FormatConverter {
 
     String resultContentType = "text/turtle"
     String requiredContentType = "application/ld+json"
-    def base
+    String base
 
     JsonLDTurtleConverter(String base = null, Whelk whelk = null) {
         this.base = base
@@ -26,8 +28,8 @@ class JsonLDTurtleConverter implements FormatConverter {
         return withoutPrefixes(toTurtle(source, context, null))
     }
 
-    private static String toTurtle(source, Map context, base) {
-        def bytes = JsonLdToTrigSerializer.toTurtle(context, source, base).toByteArray()
+    private static String toTurtle(Object source, Map context, String base) {
+        byte[] bytes = JsonLdToTrigSerializer.toTurtle(context, source, base).toByteArray()
         return new String(bytes, UTF_8)
     }
 

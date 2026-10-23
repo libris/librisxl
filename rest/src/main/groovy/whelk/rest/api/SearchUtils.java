@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import whelk.Document;
 import whelk.JsonLd;
 import whelk.Whelk;
+import whelk.component.ElasticSearch;
 import whelk.exception.InvalidQueryException;
 import whelk.exception.WhelkRuntimeException;
 import whelk.search.ESQuery;
@@ -127,6 +128,14 @@ public class SearchUtils {
                 : removeSystemInternalProperties(framedThing);
     }
 
+    // FIXME: don't hardcode paths.
+    private static final List<List<String>> ID_PATHS = List.of(
+            List.of("identifiedBy"),
+            List.of(JsonLd.REVERSE_KEY, "instanceOf", "*", "identifiedBy"),
+            List.of(JsonLd.RECORD_KEY, "identifiedBy"),
+            List.of("itemOf", "identifiedBy")
+    );
+
     private Map<String, Object> queryElasticSearch(Map<String, String[]> queryParameters,
                                                     Map<String, Object> pageParams,
                                                     int limit,
@@ -175,17 +184,15 @@ public class SearchUtils {
         if (esResult.get("items") != null) {
             List<Map<String, Object>> esItems = (List<Map<String, Object>>) esResult.get("items");
             for (Map<String, Object> it : esItems) {
-                Map<String, Object> item = applyLens(it, lens, reverseObject);
-
-                // ISNIs and ORCIDs are indexed with and without spaces, remove the one with spaces.
-                List<Map<String, Object>> identifiedBy = (List<Map<String, Object>>) item.get("identifiedBy");
-                if (identifiedBy != null) {
-                    identifiedBy.removeIf(id ->
-                        (Document.isIsni(id) || Document.isOrcid(id)) &&
-                        id.get("value") != null &&
-                        ((String) id.get("value")).length() == 16 + 3
-                    );
+                // Remove synthetic identifier forms. Added to index for searchability
+                for (var p : ID_PATHS) {
+                    List<Map<?,?>> identifiedBy = (List<Map<?,?>>) DocumentUtil.getAtPath(it, p);
+                    if (identifiedBy != null) {
+                        identifiedBy.removeIf(id -> id.containsKey(ElasticSearch.IS_SYNTHETIC_ID));
+                    }
                 }
+
+                Map<String, Object> item = applyLens(it, lens, reverseObject);
 
                 // This object must be re-added because it might get filtered out in applyLens().
                 item.put("reverseLinks", it.get("reverseLinks"));

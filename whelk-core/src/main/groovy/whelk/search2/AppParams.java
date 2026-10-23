@@ -2,8 +2,8 @@ package whelk.search2;
 
 import whelk.JsonLd;
 import whelk.Whelk;
-import whelk.search2.querytree.FilterAlias;
-import whelk.search2.querytree.Property;
+import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.selector.Property;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -36,7 +36,13 @@ public class AppParams {
         return filterAliases.stream().collect(Collectors.toMap(FilterAlias::alias, Function.identity()));
     }
 
-    public record Filters(List<String> defaultFilters, List<String> optionalFilters, List<RelationFilter> relationFilter) {
+    public record Filters(String defaultTypeFilter,
+                          List<QueryFilter> defaultFilters,
+                          List<QueryFilter> optionalFilters,
+                          List<RelationFilter> relationFilter) {
+    }
+
+    public record QueryFilter(String filter, List<String> applyTo) {
     }
 
     public record RelationFilter(String objectType, Collection<String> predicates) {
@@ -67,7 +73,7 @@ public class AppParams {
             this.defaultConnective = parseConnective(settings);
             this.subSlice = parseSubSlice(settings, jsonLd);
             this.showIf = parseShowIf(settings);
-            this.property = Property.getProperty(String.join(".", chain), jsonLd);
+            this.property = Disambiguate.getPropertyByKey(String.join(".", chain), jsonLd);
             this.propertyKey = property.name();
             this.shouldCountTopLevelDocs = parseShouldCountTopLevelDocs(settings);
         }
@@ -165,7 +171,6 @@ public class AppParams {
         }
     }
 
-
     private List<Slice> parseSliceList(Map<String, Object> appConfig, JsonLd jsonLd) {
         if (appConfig.containsKey("statistics")) {
             var s = (Map<?, ?>) appConfig.get("statistics");
@@ -187,15 +192,16 @@ public class AppParams {
     }
 
     private static Filters parseFilters(Map<String, Object> appConfig) {
-        return new Filters(parseFilter(appConfig, DEFAULT_SITE_FILTERS),
+        return new Filters((String) appConfig.get("defaultTypeFilter"),
+                parseFilter(appConfig, DEFAULT_SITE_FILTERS),
                 parseFilter(appConfig, "optionalSiteFilters"),
                 parseRelationFilters(appConfig)
         );
     }
 
-    private static List<String> parseFilter(Map<String, Object> appConfig, String key) {
+    private static List<QueryFilter> parseFilter(Map<String, Object> appConfig, String key) {
         return getAsListOfMap(appConfig, key).stream()
-                .map(m -> (String) m.get("filter"))
+                .map(m -> new QueryFilter((String) m.get("filter"), getAsListOfString(m, "applyTo")))
                 .toList();
     }
 
@@ -212,6 +218,10 @@ public class AppParams {
 
     private static List<Map<String, Object>> getAsListOfMap(Map<String, Object> appConfig, String key) {
         return getAsList(appConfig, key).stream().map(QueryUtil::castToStringObjectMap).toList();
+    }
+
+    private static List<String> getAsListOfString(Map<String, Object> appConfig, String key) {
+        return getAsList(appConfig, key).stream().map(String.class::cast).toList();
     }
 
     private static Map<String, Object> loadConfig(String appId, Whelk whelk) {

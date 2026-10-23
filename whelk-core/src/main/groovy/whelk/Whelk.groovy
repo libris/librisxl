@@ -30,6 +30,10 @@ import whelk.util.Unicode
 
 import java.time.Instant
 import java.time.ZoneId
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 import static whelk.FeatureFlags.Flag.EXPERIMENTAL_CATEGORY_COLLECTION
 import static whelk.FeatureFlags.Flag.INDEX_BLANK_WORKS
@@ -79,6 +83,9 @@ class Whelk {
     boolean skipIndex = false
     boolean skipIndexDependers = false
     boolean skipSparql = false
+
+    private Set<String> deferredIndexIds = null
+    private Set<String> deferredAffectedIris = null
 
     enum EsMode {
         ELASTIC_ENABLED,
@@ -326,10 +333,9 @@ class Whelk {
 
     private void reindexUpdated(Document updated, Document preUpdateDoc) {
         indexAsyncOrSync {
-            elastic.index(updated, this)
+            indexDocAndVirtual(updated)
             if (features.isEnabled(INDEX_BLANK_WORKS)) {
                 (preUpdateDoc.getVirtualRecordIds() - updated.getVirtualRecordIds()).each { elastic.remove(it) }
-                updated.getVirtualRecordIds().each {elastic.index(updated.getVirtualRecord(it), this) }
             }
             if (!skipIndexDependers) {
                 if (hasChangedMainEntityId(updated, preUpdateDoc)) {
@@ -360,7 +366,7 @@ class Whelk {
             }
         }
 
-        if (isBatchJobThread()) {
+        if (isBatchJobThread() || isDeferringIndexing()) {
             // Update them synchronously
             reindex.run()
         } else {
@@ -382,8 +388,12 @@ class Whelk {
         removedLinks.each { link ->
             String id = storage.getSystemIdByIri(link.iri)
             if (id) {
-                Document doc = storage.load(id)
-                elastic.decrementReverseLinks(doc, link.relation)
+                if (isDeferringIndexing()) {
+                    deferredIndexIds.add(id)
+                } else {
+                    Document doc = storage.load(id)
+                    elastic.decrementReverseLinks(doc, link.relation)
+                }
             }
         }
 
@@ -401,6 +411,8 @@ class Whelk {
                     // TODO this should be calculated in a more general fashion. We depend on the fact that indexed
                     // TODO docs are embellished one level (cards, chips) -> everything else must be integral relations
                     reindexAffectedReverseIntegral(doc)
+                } else if (isDeferringIndexing()) {
+                    deferredIndexIds.add(doc.getShortId())
                 } else {
                     // just update link counter
                     elastic.incrementReverseLinks(doc, link.relation)
@@ -411,7 +423,11 @@ class Whelk {
         // FIXME don't hardcode Item...
         // TODO isCardChangedOrNonexistent is no longer sufficient to know if other records are affected
         if ("Item" == document.getThingType() || storage.isCardChangedOrNonexistent(document.getShortId())) {
-            bulkIndex(elastic.getAffectedIds(document.getThingIdentifiers() + document.getRecordIdentifiers()))
+            if (isDeferringIndexing()) {
+                deferredAffectedIris.addAll(document.getThingIdentifiers() + document.getRecordIdentifiers())
+            } else {
+                bulkIndex(elastic.getAffectedIds(document.getThingIdentifiers() + document.getRecordIdentifiers()))
+            }
         }
     }
 
@@ -435,24 +451,90 @@ class Whelk {
     }
 
     private void bulkIndex(Iterable<String> ids) {
+        if (isDeferringIndexing()) {
+            deferredIndexIds.addAll(ids)
+            return
+        }
         Iterables.partition(ids, 100).each {
             elastic.bulkIndexWithRetry(it, this)
         }
     }
 
     void indexDocAndVirtual(Document document) {
+        if (isDeferringIndexing()) {
+            deferredIndexIds.add(document.getShortId())
+            return
+        }
         elastic.index(document, this)
         if (features.isEnabled(INDEX_BLANK_WORKS)) {
             document.getVirtualRecordIds().each {elastic.index(document.getVirtualRecord(it), this) }
         }
     }
 
+    boolean isDeferringIndexing() {
+        return deferredIndexIds != null
+    }
+
+    // For use with DatasetImporter only (for now!)
+    void startDeferredIndexing() {
+        deferredIndexIds = ConcurrentHashMap.newKeySet()
+        deferredAffectedIris = ConcurrentHashMap.newKeySet()
+    }
+
+    void flushDeferredIndexing() {
+        if (!isDeferringIndexing()) {
+            return
+        }
+        Set<String> ids = deferredIndexIds
+        Set<String> iris = deferredAffectedIris
+        deferredIndexIds = ConcurrentHashMap.newKeySet()
+        deferredAffectedIris = ConcurrentHashMap.newKeySet()
+
+        if (skipIndex || !elastic) {
+            return
+        }
+
+        long startTime = System.currentTimeMillis()
+        int numChanged = ids.size()
+        Iterables.partition(iris, 250).each { List<String> chunk ->
+            try {
+                ids.addAll(elastic.getAffectedIds(chunk))
+            } catch (Exception e) {
+                log.error("Error finding documents affected by changes in $chunk: $e", e)
+            }
+        }
+        long affectedLookupTime = System.currentTimeMillis() - startTime
+        ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+        try {
+            Iterables.partition(ids, 100).each { List<String> batch ->
+                pool.execute {
+                    try {
+                        elastic.bulkIndexWithRetry(batch, this)
+                    } catch (Exception e) {
+                        log.error("Error bulk indexing $batch: $e", e)
+                    }
+                }
+            }
+        } finally {
+            pool.shutdown()
+            pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS)
+        }
+        log.info("Deferred indexing: indexed ${ids.size()} documents (${numChanged} changed or linked, " +
+                "${ids.size() - numChanged} affected) in ${System.currentTimeMillis() - startTime} ms " +
+                "(finding affected: ${affectedLookupTime} ms)")
+    }
+
+    void endDeferredIndexing() {
+        flushDeferredIndexing()
+        deferredIndexIds = null
+        deferredAffectedIris = null
+    }
+
     /**
      * Returns tuples for ID collisions, the first entry in the tuple is the system ID of the colliding record,
      * the second is a freetext description of the reason for the collision
      */
-    List<Tuple2<String, String>> getIdCollisions(Document document, boolean includingTypedIDs) {
-
+    List<Tuple2<String, String>> getIdCollisions(Document document) {
         List<Tuple2<String, String>> collidingSystemIDs = []
 
         // Identifiers-table lookup on:
@@ -465,36 +547,6 @@ class Whelk {
                 collidingSystemIDs.add(new Tuple2(systemId, "on URI: " + uriID))
             }
         }
-
-        // Typed id queries on:
-        List<Tuple> typedIDs = document.getTypedRecordIdentifiers()
-        typedIDs.addAll(document.getTypedThingIdentifiers())
-        for (Tuple typedID : typedIDs) {
-            String type = typedID[0]
-            String value = typedID[1]
-            int graphIndex = ((Integer) typedID[2]).intValue()
-
-            // "Identifier" and "SystemNumber" are too general/meaningless to use for duplication checking.
-            if (type == "Identifier" || type == "SystemNumber")
-                continue
-
-            List<String> collisions = storage.getSystemIDsByTypedID(type, value, graphIndex)
-            if (!collisions.isEmpty()) {
-                if (includingTypedIDs) {
-                    for (String collision : collisions) {
-                        if (collision != document.getShortId())
-                            collidingSystemIDs.add(new Tuple2(collision, "on typed id: " + type + "," + graphIndex + "," + value))
-                    }
-                } else {
-
-                    // We currently are not allowed to enforce typed identifier uniqueness. :(
-                    // We can warn at least.
-                    log.debug("While testing " + document.getShortId() + " for collisions: Ignoring typed ID collision with : "
-                            + collisions + " on " + type + "," + graphIndex + "," + value)
-                }
-            }
-        }
-
         return collidingSystemIDs
     }
 
@@ -504,8 +556,7 @@ class Whelk {
     boolean createDocument(Document document, String changedIn, String changedBy, String collection, boolean deleted, boolean handleExceptions = true) {
         normalize(document)
 
-        boolean detectCollisionsOnTypedIDs = false
-        List<Tuple2<String, String>> collidingIDs = getIdCollisions(document, detectCollisionsOnTypedIDs)
+        List<Tuple2<String, String>> collidingIDs = getIdCollisions(document)
         if (!collidingIDs.isEmpty()) {
             log.info("Refused initial store of " + document.getShortId() + ". Document considered a duplicate of : " + collidingIDs)
             throw new StorageCreateFailedException(document.getShortId(), "Document considered a duplicate of : " + collidingIDs)

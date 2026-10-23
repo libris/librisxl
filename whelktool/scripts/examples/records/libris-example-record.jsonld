@@ -1,0 +1,84 @@
+{
+  "@context": {
+    "@vocab": "https://id.kb.se/vocab/",
+    "marc": "https://id.kb.se/marc/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@graph": [
+    {
+      "@id": "local001#it",
+      "@type": "PhysicalResource",
+      "category": [
+        {"@id": "https://id.kb.se/term/rda/Volume"},
+        {"@id": "https://id.kb.se/term/saobf/Print"}
+      ],
+      "contribution": {
+        "@type": "Contribution",
+        "agent": {"@id": "https://libris.kb.se/wt79bh6f2j46dtr#it"},
+        "role": {"@id": "https://id.kb.se/relator/illustrator"}
+      },
+      "editionStatement": "14. uppl.",
+      "editionStatementRemainder": "illustrationer av Tove Jansson",
+      "extent": {
+        "@type": "Extent",
+        "label": "308 s."
+      },
+      "hasDimensions": {
+        "@type": "Dimensions",
+        "label": "24 cm"
+      },
+      "hasNote": {
+        "@type": "Note",
+        "label": "Första svenska uppl. 1947. Första uppl. i denna version 1962. - Även utg. med titeln: Hompen"
+      },
+      "hasTitle": {
+        "@type": "Title",
+        "mainTitle": "Bilbo",
+        "subtitle": "en hobbits äventyr"
+      },
+      "identifiedBy": {
+        "@type": "ISBN",
+        "acquisitionTerms": "202:00",
+        "qualifier": "INB.",
+        "value": "9151827271"
+      },
+      "illustrativeContent": {"@id": "marc:Illustration"},
+      "instanceOf": {"@id": "https://libris.kb.se/l3crh1z1j8xdfqmg#it"},
+      "manufacture": {
+        "@type": "Manufacture",
+        "agent": {
+          "@type": "Agent",
+          "label": "Scandbook"
+        },
+        "place": {
+          "@type": "Place",
+          "label": "Falun"
+        }
+      },
+      "publication": {
+        "@type": "PrimaryPublication",
+        "agent": {
+          "@type": "Agent",
+          "label": "Rabén Prisma"
+        },
+        "country": {"@id": "https://id.kb.se/country/sw"},
+        "place": {
+          "@type": "Place",
+          "label": "Stockholm"
+        },
+        "year": "1994"
+      },
+      "responsibilityStatement": "J.R.R. Tolkien ; översättning av Britt G. Hallqvist",
+      "meta": {
+        "@type": "Record",
+        "bibliography": {"@id": "https://libris.kb.se/library/NB"},
+        "created": {
+          "@type": "xsd:dateTime",
+          "@value": "2026-09-29T09:16:44Z"
+        },
+        "descriptionCreator": {"@id": "https://libris.kb.se/library/S"},
+        "encodingLevel": {"@id": "marc:MinimalLevel"}
+      }
+    }
+  ]
+}

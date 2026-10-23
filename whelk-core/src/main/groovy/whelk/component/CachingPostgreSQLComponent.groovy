@@ -1,5 +1,6 @@
 package whelk.component
 
+import groovy.transform.CompileStatic
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
@@ -13,6 +14,7 @@ import java.sql.ResultSet
 import static whelk.util.Jackson.mapper
 
 @Log
+@CompileStatic
 class CachingPostgreSQLComponent extends PostgreSQLComponent {
     private static final int CARD_CACHE_MAX_SIZE = 250_000
     private static final int DOC_CACHE_MAX_SIZE = 250_000

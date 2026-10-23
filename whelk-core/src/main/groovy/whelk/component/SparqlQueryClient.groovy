@@ -3,7 +3,6 @@ package whelk.component
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 import org.apache.jena.query.QueryExecution
-import org.apache.jena.query.QueryExecutionFactory
 import org.apache.jena.query.ResultSet
 import whelk.Document
 import whelk.JsonLd
@@ -48,9 +47,11 @@ class SparqlQueryClient {
 
         log.info(queryString)
 
-        QueryExecution qe = QueryExecutionFactory.sparqlService(sparqlEndpoint, queryString)
-        ResultSet res = qe.execSelect()
-        var ids = res.collect { it.get(GRAPH_VAR).toString() }
+        List<String> ids
+        try (QueryExecution qe = QueryExecution.service(sparqlEndpoint, queryString)) {
+            ResultSet res = qe.execSelect()
+            ids = res.collect { it.get(GRAPH_VAR).toString() }
+        }
 
         // for experimenting without a local Virtuoso installation
         if ("true" == System.getProperty("xl.test.rewriteSparqlResultIds")) {

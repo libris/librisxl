@@ -134,7 +134,19 @@ public class Unicode {
     }
 
     public static String trim(String s) {
+        // Skip the regexes if the string cannot match
+        if (s.isEmpty() || (isNeverTrimmed(s.charAt(0)) && isNeverTrimmed(s.charAt(s.length() - 1)))) {
+            return s;
+        }
         return TRAILING_SPACE.matcher(LEADING_SPACE.matcher(s).replaceFirst("")).replaceFirst("");
+    }
+
+    /**
+     * True for characters that are not matched by LEADING_SPACE nor TRAILING_SPACE,
+     * i.e., that are not whitespace, WORD JOINER or line breaks.
+     */
+    private static boolean isNeverTrimmed(char c) {
+        return (c > ' ' && c < '\u007f') || Character.isLetterOrDigit(c);
     }
 
     public static String stripPrefix(String s, String prefix) {
