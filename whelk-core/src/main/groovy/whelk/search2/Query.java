@@ -189,7 +189,7 @@ public class Query {
         view.put("maxItems", esSettings.maxItems());
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_QUERY)) {
-            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, prepareEsQuery().dsl()));
+            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQuery().dsl()));
         }
 
         linkLoader.loadChips();
