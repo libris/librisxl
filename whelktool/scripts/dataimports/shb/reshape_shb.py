@@ -1235,7 +1235,7 @@ def clean_up_and_enrich_record(
             "identifier": shb_ref_number,
             "citationNote": f"Referensnummer i SHB: {shb_ref_number}",
             "derivedFrom": [{"@id": f"{OLD_LIBRIS_ID_MAP[control_number]}"}],
-            "value": f"Fullständig beskrivning (OCR) ur SHB: {original_note}",
+            "value": f"{original_note}",
         }
     ]
 
