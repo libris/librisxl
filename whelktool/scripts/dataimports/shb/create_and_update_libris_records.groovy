@@ -34,12 +34,18 @@ Map updateWork(Map work, List classifications, List subjects) {
 /// Main action ///
 
 // Get data folder from system properties
-def dataFolder = System.properties['dataFolder']
+def dataPath = System.properties['dataFolder']
+def dataFolder = new File(dataPath)
 
-// Open update file
-def updateFile = new File(dataFolder, 'update.jsonl')
-// Open create file
-def createFile = new File(dataFolder, 'create.jsonl')
+// Find update file
+def updateFile = dataFolder.listFiles()?.find {
+    it.isFile() && it.name ==~ /.*_update\.json(l)?/
+}
+
+// Find create file
+def createFile = dataFolder.listFiles()?.find {
+    it.isFile() && it.name ==~ /.*_create\.json(l)?/
+}
 
 println "Update file: ${updateFile.absolutePath}"
 println "Create file: ${createFile.absolutePath}"
@@ -60,9 +66,7 @@ updateFile.eachLine { line ->
 // Get all the Libris IDs
 Set librisIds = librisToShbMap.keySet()
 
-println librisIds
-
-// Fetch Libris record from Libris
+// For each ID, fetch Libris record from Libris
 selectByIds(librisIds) { instanceDoc ->
     def (librisRecord, librisInstance) = instanceDoc.graph
 
@@ -70,40 +74,36 @@ selectByIds(librisIds) { instanceDoc ->
 
     def (shbRecord, shbInstance) = librisToShbMap[librisId]['@graph']
 
-    println "Libris ID ${librisId} -> ${shbRecord['@id']}"
+    // Add fields and values from SHB to Libris record and work //
+    // Skip and report if object already present in Lirbis record //
 
-    // Add fields and values from SHB to Libris record
-    println "Updating the admin record..."
-
-    // bibliography:SHB -- skip and report if bibliography:SHB already in record
+    // bibliography:SHB 
     Map shbBibliography = [
         '@id': 'https://libris.kb.se/library/SHB'
     ]
     addObjectsToList(librisRecord, 'bibliography', [shbBibliography])
 
+    // sourceConsulted
+    Map shbSourceConsulted = shbRecord["sourceConsulted"][0]
+    addObjectsToList(librisRecord, 'sourceConsulted', [shbSourceConsulted])
 
-    // Anything else? Metadata source?
-
-    // Add fields and values from SHB to Libris work
-    println "Updating the work..."
+    // Work: classification and subject
+    // Get the Libris work
+    Map instanceOf = librisInstance.get('instanceOf', {})
 
     def classifications = shbInstance.get('instanceOf').get('classification',[])
     def subjects = shbInstance.get('instanceOf').get('subjects',[])
 
-    // Find the Libris work
-    Map instanceOf = librisInstance.get('instanceOf', {})
-
-    // Local
+    // If the work is local
     if ('@id' !in instanceOf) {
-        println "Using local work..."
         Map work = instanceOf
         librisInstance.instanceOf = updateWork(work, classifications, subjects)
     }
 
-    // Linked
+    // If the work is linked
     else {
         println "Fetching linked work..."
-        workId = instanceOf["@id"] 
+        String workId = instanceOf["@id"] 
         selectByIds([workId]) { workDoc ->
         Map work = workDoc.graph[1]
 
