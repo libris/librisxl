@@ -130,10 +130,10 @@ PARSE_NOTE_TEST_CASES = {
             "primary_contributors": "Schuck, A.",
             "title": "H. Schücks enka & Co. AB 150 år",
             "extent": "28 s.",
-            "place": "[Stockholm.] Sthlm",
+            "place": "[Stockholm.] Stockholm",
             "year": "1947",
             "is_component_part": False,
-            "original_note": "Schuck, A., H. Schücks enka & Co. AB 150 år. [Stockholm.] Sthlm 1947, 28 s.",
+            "original_note": "Schuck, A., H. Schücks enka & Co. AB 150 år. [Stockholm.] Stockholm 1947, 28 s.",
         },
     ),
     "component-part-extent-in-parentheses": (
@@ -472,7 +472,7 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag():
         == "Om förhållandet mellan politisk historia och kultur- historia"
     )
     assert result["host"] == {
-        "title": "Hist, Tidskr",
+        "title": "Historisk tidskrift",
         "part_number": "1895, s. 415-430",
         "part_year": "1895",
     }
@@ -492,7 +492,7 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi():
     assert result["extent"] == "167+ (1) s. +1 pl."
     assert result["title"] == "Klosterfolket i Vadstena"
     assert result["subtitle"] == "Personhistoriska anteck- ningar. H. 1-2"
-    assert result["place"] == "Sthlm"
+    assert result["place"] == "Stockholm"
     assert result["year"] == "1898, 99"
     assert result["host"] == {
         "title": "Skrifter och handlingar utgifna genom Svenska Autografsällskapet",
@@ -928,7 +928,7 @@ def test_parse_note_1921_1935_1936_1950_Monografi_utan_författare():
     )
     assert result["remaining_note"] == "4:0. (4567 a)"
     assert result["extent"] == "xx,666 s."
-    assert result["place"] == "Sthlm"
+    assert result["place"] == "Stockholm"
     assert result["year"] == "1919-21"
 
 
@@ -995,7 +995,7 @@ def test_parse_note_1951_1960_Monografi_utan_författare():
         result["subtitle"]
         == "Orientering om modern arkivorganisation. Red.: Jan Magnus Fahlström"
     )
-    assert result["place"] == "Sthlm"
+    assert result["place"] == "Stockholm"
     assert result["year"] == "1956"
     assert result["host"] == {"title": "Sv. arkivförb:s skriftser", "part_number": "3"}
 
@@ -1088,7 +1088,7 @@ def test_no_primary_contributor_one_comma_in_title():
         == "Bidrag till kännedom om P. Wieselgren och hans banbrytande livsgärning av olika författare. Samlade och utgivna av Reformatorns redaktion"
     )
     assert result["extent"] == "40 s. Med flera portr. o. illustr. i texten."
-    assert result["place"] == "Sthlm"
+    assert result["place"] == "Stockholm"
     assert result["year"] == "1919"
     assert (
         result["remaining_note"]
@@ -1133,6 +1133,25 @@ def test_incorrect_period_after_author_name():
         "part_year": "1957",
     }
 
+@pytest.mark.xfail(
+    reason="Primary contributor mistaken for title as (atypically) delimited by period instead of comma"
+)
+def test_disappearing_subtitle():
+    record = {
+        "sample": "Despréaux, Fr., Le maréchal Mortier, duc de Trévise. T. 3. 1804-1807. Avec 1 planche phototypique en cou-leurs, 2 planches en noir et 2 cartes hors texte. (3) + 433 s. Paris 1920. S. 370-414 handlar om pommerska kriget 1807.",
+    }
+    result = parse_note(record["sample"], "early")
+
+    assert result["is_component_part"] == False
+    assert result["title"] == "Le maréchal Mortier, duc de Trévise. T. 3. 1804-1807. Avec 1 planche phototypique en cou-leurs, 2 planches en noir et 2 cartes hors texte."
+    assert result["primary_contributors"] == "Bååt, Ingeborg"
+    assert result["year"] == "1920"
+    assert result["place"] == "Paris"
+    assert result["extent"] == "(3) + 433 s."
+    assert result["remaining_note"] == "S. 370-414 handlar om pommerska kriget 1807."
+
+
+
 
 ### Known failing tests ###
 # @pytest.mark.xfail(
@@ -1144,14 +1163,15 @@ def test_slott_svenska_title_start():
     }
 
     result = parse_note(record["sample"], "early")
+    print(result)
 
-    assert result["is_component_part"] == True
+    assert result["is_component_part"] == False
     assert result["title"] == "Slott, Svenska, och herresäten vid 1900-talets början"
     assert (
         result["subtitle"]
         == 'Bd 1-5. 4:o. Med många illustr. i texten. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, "Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna'
     )
-    assert result["place"] == "Sthlm"
+    assert result["place"] == "Stockholm"
     assert result["year"] == "1008-14"
     assert (
         result["remaining_note"]

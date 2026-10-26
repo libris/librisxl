@@ -60,6 +60,7 @@ NON_TERMINATING_ABBREVIATIONS = [
     "pl.-bl.",
     "facs.",
     "th.",
+    "tidskr."
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
@@ -84,7 +85,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
         )
         (?:\s*(?:,|\+)\s*)?
     )+
-    \s*(?:s|bl|pl)(<DOT>)?
+    \s*\b(?:s|bl|pl)\b(<DOT>)?
 
     (?:
         \s*(?:\+|,)\s*
@@ -97,7 +98,7 @@ MONOGRAPH_EXTENT_RE = re.compile(
             )
             (?:,\s*)?
         )+
-        \s*(?:kartbl|pl<DOT>-bl|facs<DOT>\spl|facs|pl|bl|s|portr|ill|illustr)(<DOT>)?
+        \s*\b(?:kartbl|pl<DOT>-bl|facs<DOT>\spl|facs|pl|bl|s|portr|ill|illustr)\b(<DOT>)?
     )*
 
     (?:\s*:?\s*ill(<DOT>)?)?
@@ -660,13 +661,13 @@ def extract_period_delimited_host_or_series(
 
         # The remainder could be host/series info!
         # Title Year.
-        elif len(parts) == 2 and re.match(r"\b\w+\s+\d+\.", parts[1]):
+        elif len(parts) == 2 and re.match(r"^\w+(?:\s+\w+)*\s+\d+\.", parts[1]):
             host_or_series = parts[1]
             remainder = parts[0]
 
             return host_or_series, extent, remainder, is_component_part
 
-        elif len(parts) > 2:
+        elif len(parts) > 2 and re.match(r"^\w+(\s+)?", parts[-2]) and re.match(r"(\w+\s+)?\d+", parts[-1]):
             if is_component_part:
                 # Other component parts
                 # Title. Journal. Number.
@@ -1061,9 +1062,10 @@ def extract_title_and_subtitle(
             title = ". ".join(part for part in parts)
             remainder = ""
         else:
+            # Let's arbitrarily say that the subtitle can have a maximum of three parts
             title = parts[0]
-            subtitle = ". ".join(part for part in parts[1:])
-            remainder = ""
+            subtitle = ". ".join(part for part in parts[1:4])
+            remainder = ". ".join(part for part in parts[4:])
 
     return title, subtitle, remainder
 
@@ -1243,72 +1245,8 @@ def clean_up_and_enrich_record(
 
     return record
 
-    # TODO Review this function to make sure it does what we want and complies with the current KBV data model
-
-    # Clean up the instance by removing the partOf information pertaining to SHB and moving it to the admin metadata record
-    # if hosts := thing.pop("isPartOf"):
-    #     assert len(hosts) == 1
-    #     host = hosts[0]
-
-    #     if "associatedMedia" in thing:
-    #         host["associatedMedia"] = [
-    #             {
-    #                 "@id": am["uri"][0].replace(
-    #                     "http://regina.kb.se/shb/", "https://shb.kb.se/"
-    #                 )
-    #             }
-    #             for am in thing.pop("associatedMedia")
-    #         ]
-
-    #     if "publication" in thing:
-    #         host["hasTemporalCoverage"] = thing.pop("publication")[0]
-    #         host["hasTemporalCoverage"]["@type"] = "TemporalCoverage"
-
-    #     hostrecs = host.pop("describedBy")
-    #     assert len(hostrecs) == 1
-
-    #     # Add SHB to bibliography
-    #     # Why is there so much code here?
-    #     if ctrlnr := hostrecs[0].get("controlNumber"):
-    #         iri = f"http://libris.kb.se/resource/bib/{ctrlnr}"
-    #         host["@id"] = iri
-    #         if iri in bibliographies:
-    #             existing_host_desc = bibliographies[iri]
-    #             has_biblio_repr = json.dumps(existing_host_desc, sort_keys=True)
-    #             new_biblio_repr = json.dumps(host, sort_keys=True)
-    #             if has_biblio_repr != new_biblio_repr:
-    #                 bigslice = int(len(has_biblio_repr) * 0.8)
-    #                 assert (
-    #                     has_biblio_repr[:bigslice] == new_biblio_repr[:bigslice]
-    #                 ), f"Mismatch:\n{has_biblio_repr}\n{new_biblio_repr}"
-    #         else:
-    #             bibliographies[iri] = host
-
-    #         # Alternative to bibliography annotation:
-    #         # thing['cataloguedIn'] = {'@id': iri, "@annotation": {"part": thing.pop("part")}} # in the work...
-    #         for biblioref in rec["bibliography"]:
-    #             bibliography_shb = "https://libris.kb.se/library/SHB"
-    #             if biblioref["@id"] == bibliography_shb:
-    #                 source_id = f"{rec['@id']}#{partnum}"
-    #                 source = {
-    #                     "@id": source_id,
-    #                     "@type": "Source",
-    #                     "isPartOf": {"@id": iri},
-    #                     "item": partnum,
-    #                 }
-    #                 # biblios[source_id] = source
-    #                 rec["describes"] = source
-    #                 annot: dict = {"source": {"@id": source_id}}
-    #                 if USE_ANNOT:
-    #                     biblioref["@annotation"] = annot
-    #                 else:
-    #                     annot["_object"] = {"@id": bibliography_shb}
-    #                     rec.setdefault("_statementBy", {})["bibliography"] = annot
-    #                 break
-
 
 ### Helper functions ###
-
 
 def normalize_special_cases(text: str) -> str:
     """
@@ -1325,6 +1263,22 @@ def normalize_special_cases(text: str) -> str:
 
     # "1" misread as "l"
     text = re.sub(r"\bl(-\d+)", r"1\1", text)
+
+    # Historisk tidskrift - drygt 1700 förekomster
+    text = re.sub(
+        r"Hist(?:,|\.?)?\s*Tidskr\.",
+        "Historisk tidskrift",
+        text,
+        flags=re.IGNORECASE,
+)
+
+    # Tidskrift
+    text = re.sub(r"tidskr\.", r"tidskrift", text,  flags=re.IGNORECASE)
+
+    # Place names
+    text = re.sub(r"Sthlm", r"Stockholm", text, flags=re.IGNORECASE)
+    text = re.sub(r"Gbg", r"Göteborg", text, flags=re.IGNORECASE)
+
 
     return text
 
