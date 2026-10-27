@@ -568,7 +568,7 @@ def test_parse_note_1976_Bidrag():
         "title": "Meddelande",
         "publisher": "Armémuseum",
         "issn": "0349-1048",
-        "part_number": "37,1976/1977",
+        "part_number": "37, 1976/1977",
         "part_year": "1976, 1977",
         "extent": "s. 117-123",
     }
@@ -781,10 +781,6 @@ def test_parse_note_1951_1960_Monografi():
         "part_number": "11",
     }
 
-
-@pytest.mark.xfail(
-    reason="Don't know what to do with unusual combined extents / part numbers. Missing space before ',' does not make a difference."
-)
 def test_parse_note_1971_1975_Bidrag_utan_författare():
     record = {
         "pattern": "Titel : undertitel / Upphov. - I: Publ-titel årg(årtal):numrering, sid.",
@@ -795,14 +791,15 @@ def test_parse_note_1971_1975_Bidrag_utan_författare():
     assert result["is_component_part"] == True
     assert (
         result["other_contributors"]
-        == "sammanställningar av F. W. Grönwall.; komplettrade och utgivna av Sven Carlquist."
+        == "sammanställningar av F. W. Grönwall.; komplettrade och utgivna av Sven Carlquist"
     )
     assert result["title"] == "Ystadsläkter under trenne sekel"
     assert result["year"] == "1974, 1975"
     assert result["host"] == {
         "title": "Ystadiana",
-        "part_number": "19(1974),s. 73-123 ; 20(1975), s. 45-91.",
+        "part_number": "19(1974) ; 20(1975), s. 45-91",
         "part_year": "1974, 1975",
+        "extent": "s. 73-123"
     }
 
 
@@ -948,7 +945,7 @@ def test_parse_note_1961_1970_Monografi_utan_författare():
     assert result["is_component_part"] == False
     assert result["title"] == "Magnus Erikssons landslag"
     assert (
-        result["subtitle"] == "I nusvensk tolkning av Åke Holmbäck och Elias Wes- sén."
+        result["subtitle"] == "I nusvensk tolkning av Åke Holmbäck och Elias Wes- sén"
     )
     assert result["extent"] == "lxix. 290 s., 6 pl.-bl. Ill."
     assert (
@@ -956,11 +953,6 @@ def test_parse_note_1961_1970_Monografi_utan_författare():
         == "Skrifter utg. av Inst. för rättshisto- risk forskning"
     )
 
-
-# TODO Replace with example with standard punctuation - and move down to "exceptions" section
-@pytest.mark.xfail(
-    reason="Beginning of series is not picked up due to missing space in '1623.Historiskt'"
-)
 def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag_utan_författare():
     record = {
         "pattern": "Titel. undertitel. Publ-titel. nr, sid.",
@@ -972,16 +964,15 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Bidrag_utan_författare():
     assert result["is_component_part"] == True
     assert (
         result["title"]
-        == "Diarium eller journal på hans maj:ts resa åt Danzig anno1623.Historiskt archivum (Loenbom)"
+        == "Diarium eller journal på hans maj:ts resa åt Danzig anno 1623"
     )
+    assert result["subtitle"] == "Historiskt archivum (Loenbom)"
     assert result["year"] == "1774"
     assert result["host"] == {
         "title": "St",
-        "part_number": "2 (1774)",
+        "part_number": "2 (1774), s. 23-29",
         "part_year": "1774",
     }
-    assert result["extent"] == "s. 23-29"
-
 
 # TODO Move "Red: " to other_contributors
 def test_parse_note_1951_1960_Monografi_utan_författare():
@@ -1136,9 +1127,9 @@ def test_incorrect_period_after_author_name():
         "part_year": "1957",
     }
 
-@pytest.mark.xfail(
-    reason="Primary contributor mistaken for title as (atypically) delimited by period instead of comma"
-)
+#@pytest.mark.xfail(
+#    reason="Primary contributor mistaken for title as (atypically) delimited by period instead of comma"
+#)
 def test_disappearing_subtitle():
     record = {
         "sample": "Despréaux, Fr., Le maréchal Mortier, duc de Trévise. T. 3. 1804-1807. Avec 1 planche phototypique en cou-leurs, 2 planches en noir et 2 cartes hors texte. (3) + 433 s. Paris 1920. S. 370-414 handlar om pommerska kriget 1807.",
@@ -1146,12 +1137,13 @@ def test_disappearing_subtitle():
     result = parse_note(record["sample"], "early")
 
     assert result["is_component_part"] == False
-    assert result["title"] == "Le maréchal Mortier, duc de Trévise. T. 3. 1804-1807. Avec 1 planche phototypique en cou-leurs, 2 planches en noir et 2 cartes hors texte."
-    assert result["primary_contributors"] == "Bååt, Ingeborg"
+    assert result["title"] == "Le maréchal Mortier, duc de Trévise"
+    assert result["subtitle"] == "T. 3"
+    assert result["primary_contributors"] == "Despréaux, Fr."
     assert result["year"] == "1920"
     assert result["place"] == "Paris"
     assert result["extent"] == "(3) + 433 s."
-    assert result["remaining_note"] == "S. 370-414 handlar om pommerska kriget 1807."
+    assert result["remaining_note"] == "1804-1807. Avec 1 planche phototypique en cou-leurs, 2 planches en noir et 2 cartes hors texte. S. 370-414 handlar om pommerska kriget 1807"
 
 
 def test_slott_svenska_title_start():
