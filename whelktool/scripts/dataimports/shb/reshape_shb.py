@@ -695,7 +695,7 @@ def extract_period_delimited_host_or_series(
         # Lastly, if the second part looks like a monograph volume number, treat it as such
         elif not extent and MONOGRAPH_VOLUMES_RE.match(parts[1]):
             extent = parts[1]
-            parts = [parts[0]]
+            parts = parts[:1] + parts[2:]
 
     # Or else
     remainder = ". ".join(part.strip(".") for part in parts)
@@ -1064,8 +1064,8 @@ def extract_title_and_subtitle(
         else:
             # Let's arbitrarily say that the subtitle can have a maximum of three parts
             title = parts[0]
-            subtitle = ". ".join(part for part in parts[1:4])
-            remainder = ". ".join(part for part in parts[4:])
+            subtitle = ". ".join(part for part in parts[1:2])
+            remainder = ". ".join(part for part in parts[2:])
 
     return title, subtitle, remainder
 

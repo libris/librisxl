@@ -491,9 +491,10 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi():
     assert result["primary_contributors"] == "Silfverstolpe, C"
     assert result["extent"] == "167+ (1) s. +1 pl."
     assert result["title"] == "Klosterfolket i Vadstena"
-    assert result["subtitle"] == "Personhistoriska anteck- ningar. H. 1-2"
+    assert result["subtitle"] == "Personhistoriska anteck- ningar"
     assert result["place"] == "Stockholm"
     assert result["year"] == "1898, 99"
+    assert result["remaining_note"] == "H. 1-2"
     assert result["host"] == {
         "title": "Skrifter och handlingar utgifna genom Svenska Autografsällskapet",
         "part_number": "4",
@@ -901,8 +902,9 @@ def test_parse_note_1921_1935_1936_1950_Bidrag_utan_författare():
     assert result["title"] == "Mo kyrka"
     assert (
         result["subtitle"]
-        == "Med anledning af dess hundraårsjubileum. Norgren, N., Gamlakyrkan. - Norbeck, O., Nya kyrkan"
+        == "Med anledning af dess hundraårsjubileum"
     )
+    assert result["remaining_note"] == "Norgren, N., Gamlakyrkan. - Norbeck, O., Nya kyrkan"
     assert result["year"] == "1922"
     assert result["host"] == {
         "title": "Julhälsn. till församl. i ärkestiftet",
@@ -993,10 +995,11 @@ def test_parse_note_1951_1960_Monografi_utan_författare():
     assert result["title"] == "Företagsarkiven"
     assert (
         result["subtitle"]
-        == "Orientering om modern arkivorganisation. Red.: Jan Magnus Fahlström"
+        == "Orientering om modern arkivorganisation"
     )
     assert result["place"] == "Stockholm"
     assert result["year"] == "1956"
+    assert result["remaining_note"] == "Red.: Jan Magnus Fahlström"
     assert result["host"] == {"title": "Sv. arkivförb:s skriftser", "part_number": "3"}
 
 
@@ -1085,14 +1088,14 @@ def test_no_primary_contributor_one_comma_in_title():
     assert result["title"] == "Hundraårsminne, Den svenska nykterhetsrörelsens"
     assert (
         result["subtitle"]
-        == "Bidrag till kännedom om P. Wieselgren och hans banbrytande livsgärning av olika författare. Samlade och utgivna av Reformatorns redaktion"
+        == "Bidrag till kännedom om P. Wieselgren och hans banbrytande livsgärning av olika författare"
     )
     assert result["extent"] == "40 s. Med flera portr. o. illustr. i texten."
     assert result["place"] == "Stockholm"
     assert result["year"] == "1919"
     assert (
         result["remaining_note"]
-        == "Innehåller bl. a. uppsatser af: G. Björkman, W. Skarstedt, J. Bergman, J. Edv. Herrlander o. P. Johnsson"
+        == "Samlade och utgivna av Reformatorns redaktion. Innehåller bl. a. uppsatser af: G. Björkman, W. Skarstedt, J. Bergman, J. Edv. Herrlander o. P. Johnsson"
     )
 
 
@@ -1163,19 +1166,19 @@ def test_slott_svenska_title_start():
     }
 
     result = parse_note(record["sample"], "early")
-    print(result)
 
     assert result["is_component_part"] == False
     assert result["title"] == "Slott, Svenska, och herresäten vid 1900-talets början"
     assert (
         result["subtitle"]
-        == 'Bd 1-5. 4:o. Med många illustr. i texten. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, "Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna'
+        == "4:o. Med många illustr. i texten"
     )
     assert result["place"] == "Stockholm"
     assert result["year"] == "1008-14"
+    assert result["extent"] == "Bd 1-5."
     assert (
         result["remaining_note"]
-        == "Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland"
+        == 'Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, "Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskrift (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Stockholm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland'
     )
 
 
