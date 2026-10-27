@@ -22,7 +22,7 @@ The xlsx file contains a mapping from SHB section headings to SAOGF terms and SA
 
 
 ### 3. Find out what's already in Libris
-Use identify_matches.py to match the enriched KBV instances against instances in Libris. 
+Use identify_matches.py to match the enriched KBV instances against instances in Libris. It uses the Libris search API, as well as a custom match scoring function, to identify "good enough" matches.
 
 In the designated results folder, the script creates
 - One file of KBV instances which will be used to create new instances in Libris
