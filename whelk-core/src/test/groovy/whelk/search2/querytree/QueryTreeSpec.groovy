@@ -22,13 +22,13 @@ class QueryTreeSpec extends Specification {
         "  \t "                                            | ""
         "*"                                                | "*"
         "x ()"                                             | "x ()"
-        "x OR ()"                                          | "x OR ()"
+        "x OR ()"                                          | "(x OR ())"
         "p1:()"                                            | "p1:()"
         "p1:*"                                             | "p1:*"
         "x y"                                              | "x y"
         "\"x y\""                                          | "\"x y\""
         "\"x y\" z"                                        | "\"x y\" z"
-        "x OR y z"                                         | "x OR y z"
+        "x OR y z"                                         | "(x OR y z)"
         "x OR \"y z\""                                     | "x OR \"y z\""
         "NOT x y"                                          | "NOT x y"
         "NOT (x y)"                                        | "NOT (x y)"
@@ -38,15 +38,15 @@ class QueryTreeSpec extends Specification {
         "p1:\"x OR y\""                                    | "p1:\"x OR y\""
         "p1:(x y)"                                         | "p1:(x y)"
         "p1:(x OR y)"                                      | "p1:(x OR y)"
-        "p1:(x OR y z)"                                    | "p1:x OR p1:(y z)"
+        "p1:(x OR y z)"                                    | "(p1:x OR p1:(y z))"
         "NOT p1:(x OR y)"                                  | "NOT p1:(x OR y)"
         "NOT p1:(NOT x)"                                   | "p1:x"
         "p2:e1"                                            | "p2:e1"
         "p2:(e1 e2)"                                       | "p2:e1 p2:e2"
-        "p2:(e1 OR e2)"                                    | "p2:e1 OR p2:e2"
-        "NOT p2:(e1 e2)"                                   | "NOT p2:e1 OR NOT p2:e2"
+        "p2:(e1 OR e2)"                                    | "(p2:e1 OR p2:e2)"
+        "NOT p2:(e1 e2)"                                   | "(NOT p2:e1 OR NOT p2:e2)"
         "NOT p2:(e1 OR e2)"                                | "NOT p2:e1 NOT p2:e2"
-        "type:(t1 OR t2)"                                  | "type:t1 OR type:t2"
+        "type:(t1 OR t2)"                                  | "(type:t1 OR type:t2)"
         "p3:x"                                             | "p3:x"
         "p3:\"https://id.kb.se/x\""                        | "p3:\"https://id.kb.se/x\""
         "p3:\"sao:x\""                                     | "p3:\"sao:x\""
@@ -54,7 +54,7 @@ class QueryTreeSpec extends Specification {
         "p3:(\"x y\" z \"sao:x\" \"sao:y\")"               | "p3:(\"x y\" z) p3:\"sao:x\" p3:\"sao:y\""
         "p3:(x (\"sao:x\" OR \"sao:y\"))"                  | "p3:x (p3:\"sao:x\" OR p3:\"sao:y\")"
         "NOT p3:(NOT x)"                                   | "p3:x"
-        "NOT p3:(x y (\"sao:x\" OR NOT \"sao:y\"))"        | "NOT p3:(x y) OR (NOT p3:\"sao:x\" p3:\"sao:y\")"
+        "NOT p3:(x y (\"sao:x\" OR NOT \"sao:y\"))"        | "(NOT p3:(x y) OR (NOT p3:\"sao:x\" p3:\"sao:y\"))"
         "_x._y:z"                                          | "_x._y:z"
         "x p1:y includeA"                                  | "x p1:y includeA"
         "p1>1990"                                          | "p1>1990"
@@ -123,7 +123,7 @@ class QueryTreeSpec extends Specification {
         'p1:v1 p2:v2 p3:v3'            | ['p1:v1 p2:v2 p3:v3 p4:v4']          | 'p1:v1 p2:v2 p3:v3'
         'p1:v1 p2:v2 p3:v3'            | ['p1:v1', 'p2:v2', 'p3:v3', 'p4:v4'] | ''
         'p1:v1 p2:v2 p3:v3 p4:v4'      | ['p1:v1', 'p2:v2', 'p3:v3']          | 'p4:v4'
-        'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p1:v1', 'p4:v4']                   | 'p2:v2 OR p3:v3'
+        'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p1:v1', 'p4:v4']                   | '(p2:v2 OR p3:v3)'
         'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p1:v1', 'p2:v2 OR p3:v3']          | 'p4:v4'
         'p1:v1 (p2:v2 OR p3:v3) p4:v4' | ['p3:v3']                            | 'p1:v1 p2:v2 p4:v4'
     }
