@@ -36,6 +36,12 @@ The argument search_codes specifiecs which values should be queried with a searc
 ### 4. Create/update in Libris
 Use create_and_update_libris_records.groovy to create and update entities in Libris.
 
+```
+time java -Xmx2G -Dxl.secret.properties=../secret.properties-{ENV} -DdataFolder=$HOME/data/import_test_data -jar build/libs/whelktool.jar --report reports/fmt-370_$(date +%Y%m%d) --allow-loud scripts/dataimports/shb/create_and_update_libris_records.groovy
+```
+
+The --allow-loud flag is needed to create new instances.
+
 ## Other files
 ### Testing
 - Tests covering typical SHB syntaxes and some special cases
