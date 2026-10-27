@@ -1,7 +1,7 @@
 # SHB to Libris - overview
 
 ## Running the full transformation and import process
-### 1. MARC -> KBV
+### 1. Transform data from MARC to KBV
 Use ConvertSHB.java to convert the SHBd source file (MARC) into a JSONLD file containing KBV entities (named graphs).
 KBV entities contain an instance (with an embedded work) and an admin metadata record.
 
