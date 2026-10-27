@@ -914,22 +914,22 @@ def test_parse_note_1921_1935_1936_1950_Bidrag_utan_författare():
     }
 
 
-@pytest.mark.xfail(reason="Not sure what to do with 4:0 (probably misspelled quarto)")
 def test_parse_note_1921_1935_1936_1950_Monografi_utan_författare():
     record = {
         "pattern": "Titel. undertitel. Ort år. sid. (Serietillhörighet. numrering.)",
         "sample": "Sveriges sjöfart. Sjöfartsväsendet, skeppsbyggeriet och handelsflottan. Enskildring under medverkan av fackmän utg. av Nils Gustaf Nilsson ochGustav Åsbrink med förord av K. A. Fryxell. Sthlm 1919-21. 4:0. xx,666 s. (4567 a)",
     }
     result = parse_note(record["sample"], "parenthesized")
+    print(*result.items(), sep="\n")
 
     assert result["is_component_part"] == False
     assert result["title"] == "Sveriges sjöfart"
     assert (
         result["subtitle"]
-        == "Sjöfartsväsendet, skeppsbyggeriet och handelsflottan. Enskildring under medverkan av fackmän utg. av Nils Gustaf Nilsson ochGustav Åsbrink med förord av K. A. Fryxell"
+        == "Sjöfartsväsendet, skeppsbyggeriet och handelsflottan"
     )
-    assert result["remaining_note"] == "4:0. (4567 a)"
-    assert result["extent"] == "xx,666 s."
+    assert result["remaining_note"] == "Enskildring under medverkan av fackmän utg. av Nils Gustaf Nilsson och Gustav Åsbrink med förord av K. A. Fryxell. 4:o. (4567 a)"
+    assert result["extent"] == "xx, 666 s."
     assert result["place"] == "Stockholm"
     assert result["year"] == "1919-21"
 
@@ -1154,12 +1154,6 @@ def test_disappearing_subtitle():
     assert result["remaining_note"] == "S. 370-414 handlar om pommerska kriget 1807."
 
 
-
-
-### Known failing tests ###
-# @pytest.mark.xfail(
-#    reason="Surname-like title beginning is currently misidentified as author"
-# )
 def test_slott_svenska_title_start():
     record = {
         "sample": 'Slott, Svenska, och herresäten vid 1900-talets början. Bd l-5. 4;o. Med många illustr. i texten. Sthlm 1008-14. Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, "Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskr. (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Sthlm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland.'
@@ -1181,6 +1175,8 @@ def test_slott_svenska_title_start():
         == 'Arbetet omfattar följande landskap: Blekinge, Halland. Nerike, Skåne, Småland, Södermanland, Uppland, "Värmland, Västergötland, Västmanland o. Östergötland. För öfrigt hänvisas till de årliga bibliografierna som upptaga fullständiga förteckningar öfver alla slotten och dem som författat uppsatserna. Rec. i Nord. tidskrift (Letterst.) 1910, s. 75-80 af L. Looström. - Ny följd. H. 1-13. Stockholm 1918-20. De utkomna häftena omfatta följande landskap: Nerike, Skåne, Småland, Södermanland, Uppland, Västmanland o. Östej götland'
     )
 
+
+### Known failing tests ###
 
 @pytest.mark.xfail(
     reason="If removing a year that has been confused with extent leads to the extent just being 's', give up on extrating the extent."

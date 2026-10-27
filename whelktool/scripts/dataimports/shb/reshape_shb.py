@@ -727,6 +727,7 @@ def extract_parenthesis_delimited_host_or_series(remainder, syntax_era) -> tuple
     If the description comes from an SHB volume where parentheses were used for host publication,
     return the note with the parentheses removed, and the extracted part-of information.
     """
+    unchanged_remainder = remainder
 
     end = remainder.rfind(")")
     if end == -1 or syntax_era not in PARENTHESIS_ERAS:
@@ -755,7 +756,8 @@ def extract_parenthesis_delimited_host_or_series(remainder, syntax_era) -> tuple
         if len(alpha_chars) > 1:
             return remainder.replace(" .", "").rstrip(" -"), host_or_series
 
-    return remainder, None
+    # If there is no publication/series info
+    return unchanged_remainder, None
 
 
 def extract_part_number(remainder: str) -> str:
@@ -1308,6 +1310,9 @@ def normalize_spacing_and_punctuation(text: str) -> str:
 
     # Always have a space between "," and any letter
     text = re.sub(r",(?=[A-Za-zÅÄÖåäö])", ", ", text)
+
+    # Always have a space between "," and any digit
+    text = re.sub(r",(?=[\d])", ", ", text)
 
     # Always have a space between any letter and one uppercase letter followed by a lowercase letter
     # DNAnders - DN Anders, enAnders -> en Anders
