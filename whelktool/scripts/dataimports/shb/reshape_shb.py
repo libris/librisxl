@@ -1,15 +1,11 @@
-# TODO Report (with row number) on notes starting with other than uppercase letter - a sign of OCR trouble
-
-from io import TextIOBase
-import csv
 import json
+import pandas
 import re
 import sys
-import pandas
-from pathlib import Path
+import time
 from collections import Counter
-
-# Formatting of isPartOf: https://metadatabyran.kb.se/arbetsfloden/bidrag/instans---bidrag#h-Vardpublikationsomlokalentitet
+from io import TextIOBase
+from pathlib import Path
 
 USE_ANNOT = False
 
@@ -1577,9 +1573,9 @@ if __name__ == "__main__":
     argp.add_argument("--sample-pretty-with")
     argp.add_argument("infile")
     argp.add_argument("sao_sab_mapping_sheet")
-    argp.add_argument("outfile")
-    argp.add_argument("report_file")
-    argp.add_argument("info_and_errors_file")
+    argp.add_argument("results_folder")
+    argp.add_argument("reports_folder")
+
     args = argp.parse_args()
 
     if args.test:
@@ -1587,6 +1583,9 @@ if __name__ == "__main__":
 
         doctest.testmod()
         sys.exit(0)
+
+    start = time.time()
+    date = time.strftime("%Y%m%d_%H%M%S")
 
     print("Getting started!")
 
@@ -1598,11 +1597,16 @@ if __name__ == "__main__":
     subject_mappings = load_subject_mappings(subject_files)
 
     # Open files
+    result_path = f"{args.results_folder}/{date}_reshape_result.jsonld.lines"
+    report_path = f"{args.reports_folder}/{date}_reshape_report.md"
+    info_and_errors_path = f"{args.reports_folder}/{date}_reshape_info_and_errors.tsv"
+    
+
     with open(args.infile) as infile, open(
-        args.outfile, "w", encoding="utf-8"
-    ) as outfile, open(args.report_file, "w", encoding="utf-8") as report_file, open(
-        args.info_and_errors_file, "w", encoding="utf-8"
-    ) as anomalies_file:
+        result_path, "w", encoding="utf-8"
+    ) as result_file, open(report_path, "w", encoding="utf-8") as report_file, open(
+        info_and_errors_path, "w", encoding="utf-8"
+    ) as info_and_errors_file:
 
         # Optionally pretty print a sample of converted records for inspection
         if args.sample_pretty_with:
@@ -1614,8 +1618,8 @@ if __name__ == "__main__":
             if i % 1000 == 0:
                 print(f"Processing record {i+1}")
             if data := convert(json.loads(line), subject_mappings):
-                json.dump(data, outfile, ensure_ascii=False)
-                outfile.write("\n")
+                json.dump(data, result_file, ensure_ascii=False)
+                result_file.write("\n")
 
         # Write some reports
-        write_reports(counters, anomalies, report_file, anomalies_file)
+        write_reports(counters, anomalies, report_file, info_and_errors_file)
