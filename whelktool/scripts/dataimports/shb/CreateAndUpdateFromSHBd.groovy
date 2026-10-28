@@ -102,7 +102,7 @@ selectByIds(librisIds) { instanceDoc ->
 
     // If the work is linked
     else {
-        println "Fetching linked work..."
+        report.println("Fetching linked work for instance ${instanceOf['@id']}...")
         String workId = instanceOf["@id"] 
         selectByIds([workId]) { workDoc ->
         Map work = workDoc.graph[1]
