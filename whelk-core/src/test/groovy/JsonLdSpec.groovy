@@ -1186,6 +1186,19 @@ class JsonLdSpec extends Specification {
         !thing.containsKey('hasIssue')
     }
 
+    def "should not register language container without @id as alias"() {
+        given:
+        def context = ['@context': [
+                'labelByLang'           : ['@id': 'label', '@container': '@language'],
+                'bibdb:someLanguageTerm': ['@container': '@language'],
+        ]]
+        def ld = new JsonLd(context, [:], [:])
+
+        expect:
+        ld.langContainerAlias == ['label': 'labelByLang']
+        !ld.langContainerAlias.containsKey(null)
+    }
+
     static Map readMap(String filename) {
         return mapper.readValue(readFile(filename), Map)
     }
