@@ -237,12 +237,22 @@ public class Patch {
             return null;
         String[] tokens;
         if (pointer.equals("/")) { // Cant split "/" on /, it just gives empty array.
-            tokens = new String[] {"", ""};
+            tokens = new String[] {""};
         } else {
             tokens = pointer.split("/");
         }
+
+        // A path ending with a / means it actually ends with an empty string (an empty string key).
+        // String.split() discards this final empty string, which is not ok.
+        if (pointer.endsWith("/")) {
+            ArrayList<String> list = new ArrayList<>( Arrays.asList(tokens) ); // double creation, because Arrays.asList() creates only immutable lists.
+            list.add("");
+            tokens = list.toArray(new String[0]);
+        }
+
         // Skip the initial empty string, artifact of String.split
-        return Arrays.copyOfRange(tokens, 1, tokens.length);
+        String[] result = Arrays.copyOfRange(tokens, 1, tokens.length);
+        return result;
     }
 
     private static Integer parseArrayIndex(String candidate) {
