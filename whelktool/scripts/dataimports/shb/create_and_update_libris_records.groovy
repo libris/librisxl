@@ -20,7 +20,7 @@ Map updateWork(Map work, List classifications, List subjects) {
 
     if (subjects) {
         // SAO headings -- skip and report if heading already in record
-        addObjectsToList(work, 'subjects', subjects)
+        addObjectsToList(work, 'subject', subjects)
     }
 
     if (classifications) {
@@ -92,7 +92,7 @@ selectByIds(librisIds) { instanceDoc ->
     Map instanceOf = librisInstance.get('instanceOf', {})
 
     def classifications = shbInstance.get('instanceOf').get('classification',[])
-    def subjects = shbInstance.get('instanceOf').get('subjects',[])
+    def subjects = shbInstance.get('instanceOf').get('subject',[])
 
     // If the work is local
     if ('@id' !in instanceOf) {
