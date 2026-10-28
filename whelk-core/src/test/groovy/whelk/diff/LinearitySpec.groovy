@@ -223,6 +223,38 @@ class LinearitySpec extends Specification {
         recreatedVersions.equals(versions)
     }
 
+    def "empty string key"() {
+        given:
+
+        def json_versions = [
+                """{"responsibilityStatementByLang":{"": "Reedz AI motor", "th": "แคล นิวพอร์ต", "th-Latn-t-th-Thai-m0-alaloc": "khlae Niuphot"}}"""
+                ,
+                """{"responsibilityStatementByLang":{"th": "แคล นิวพอร์ต", "th-Latn-t-th-Thai-m0-alaloc": "khlae Niuphot"}}"""
+                ,
+                """{"responsibilityStatementByLang":{"th": "แคล นิวพอร์ต", "th-Latn-t-th-Thai-m0-alaloc": "khlae Niuphot"}}"""
+        ]
+        def versions = []
+        for (int i = 0; i < json_versions.size()-1; ++i) { {
+        }
+            versions.add( mapper.readValue(json_versions[i], Map.class) )
+        }
+
+        // Common for all tests:
+        def diffs = []
+        for (int i = 0; i < versions.size()-1; ++i) {
+            diffs.add( Diff.diff(versions[i], versions[i+1]) )
+        }
+        def recreatedVersions = [versions[0]]
+        //System.err.println("VERSION:\n\t" + mapper.writeValueAsString(versions[0]))
+        for (int i = 0; i < diffs.size(); ++i) {
+            System.err.println(mapper.writeValueAsString(diffs[i]))
+            //System.err.println("VERSION:\n\t" + mapper.writeValueAsString(Patch.patch( versions[i], mapper.writeValueAsString(diffs[i]))))
+            recreatedVersions.add( Patch.patch( versions[i], mapper.writeValueAsString(diffs[i])) )
+        }
+        expect:
+        recreatedVersions.equals(versions)
+    }
+
     def "linearity with nulls"() {
         given:
 
