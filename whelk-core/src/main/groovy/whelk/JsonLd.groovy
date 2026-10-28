@@ -270,7 +270,7 @@ class JsonLd {
     private void buildLangContainerAliasMap() {
         for (ctx in [displayData.get(CONTEXT_KEY), context]) {
             ctx.each { k, v ->
-                if (isLangContainer(v)) {
+                if (isLangContainer(v) && v[ID_KEY]) {
                     langContainerAlias[v[ID_KEY]] = k
                 }
             }
