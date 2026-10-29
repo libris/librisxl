@@ -60,11 +60,11 @@ selectBySqlWhere(where) { data ->
                 List notes = mainEntity["hasNote"]
 
                 if (scn == null) {
-                    notes.add(value)
+                    notes.add(Map.of("@type", "Note", "label", value))
                 } else {
                     if (scn instanceof List)
                         scn = scn[0]
-                    notes.add(scn + ": " + value)
+                    notes.add(Map.of("@type", "Note", "label", scn + ": " + value))
                 }
 
                 //System.err.println(property + ": " + value + " to hasNote paired with " + scn + ". Result: " + mainEntity["hasNote"] + " from " + mainEntity["@id"])
@@ -108,10 +108,10 @@ selectBySqlWhere(where) { data ->
 
             if (value instanceof List) {
                 for (String s : value) {
-                    notes.add(s)
+                    notes.add(Map.of("@type", "Note", "label", s))
                 }
             } else {
-                notes.add(value)
+                notes.add(Map.of("@type", "Note", "label", value))
             }
 
             mainEntity.remove(property)
