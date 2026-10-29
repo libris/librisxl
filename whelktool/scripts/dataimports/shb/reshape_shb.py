@@ -1035,8 +1035,12 @@ def extract_title_and_subtitle(
     if syntax_era in DASH_ERAS and ". -" in remainder:
         title_and_contributor_area, remainder = remainder.split(". -", 1)
 
+        # Divide title into title and subtitle
+        if syntax_era in ["isbd", "isbd_transition"] and " : " in title_and_contributor_area:
+            title, subtitle = title_and_contributor_area.split(" : ", 1)
+
         # If the title is directly followed by a ". -", signalling other publication information is next
-        if re.search(r"[0-9].?\(", title_and_contributor_area):
+        elif re.search(r"[0-9].?\(", title_and_contributor_area):
             counters["various"].update(
                 ["STRUCTURE\t note doesn't start with author/title'"]
             )
@@ -1459,6 +1463,9 @@ def exclude_abbreviations_before_split(remainder: str) -> str:
         )
     # Initials
     remainder = re.sub(r"\b([A-Z])\.\s+(?=[A-Z])", r"\1<DOT> ", remainder)
+
+    # Make an exception if the period is followed by a dash ". -" (an ISBD delimiter)
+    remainder = re.sub(r"<DOT> -", r". -", remainder)
 
     return remainder
 
