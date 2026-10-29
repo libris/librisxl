@@ -292,7 +292,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
             # Title (list) - move to series statement ?
             if structured_record["host"].get("title"):
                 series["instanceOf"] = {
-                    "@type": "Series",
+                    "@type": "Serial",
                     "hasTitle": [
                         {
                             "@type": "Title",
