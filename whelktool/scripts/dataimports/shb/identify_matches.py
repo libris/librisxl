@@ -266,7 +266,7 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
         weighted_scores["extent"] = 0.025 * extent_score
         weights.append(0.025)
 
-    assert sum(weights) == 1, f"Weights for monographs must add up to 1. Actual sum: {sum(weights)}"
+        assert sum(weights) == 1, f"Weights for monographs must add up to 1. Actual sum: {sum(weights)}"
 
     # Dividing by the sum of weights will compensate slightly for the lack of place / extent in componentParts
     overall_score = sum(weighted_scores.values()) / sum(weights)
