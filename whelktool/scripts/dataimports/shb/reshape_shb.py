@@ -57,7 +57,8 @@ NON_TERMINATING_ABBREVIATIONS = [
     "facs.",
     "th.",
     "tidskr.",
-    "kongl."
+    "kongl.",
+    "tr."
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
@@ -812,7 +813,8 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
         -?\s*
         (?P<place>
             (?:\[[^\]]+\]\s*)?
-            [A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]*?
+            [A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]*
+            (?:\s*\(tr\. [^)]*\))?
             |
             \[[^\]]+\]
         )
@@ -831,8 +833,11 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
     )
     remainder = strip_trailing_separators(remainder)
 
+    temp_remainder = exclude_abbreviations_before_split(remainder)
     # Split by period followed by space and thereafter dash or capital letter
-    parts = re.split(r"(?<=\.) -?\s?", remainder)
+    parts = re.split(r"(?<=\.) -?\s?", temp_remainder)
+
+    parts = reinclude_abbreviations_after_split(parts)
 
     for i in range(len(parts) - 1, 0, -1):
         candidate = parts[i]
@@ -1329,6 +1334,15 @@ def normalize_spacing_and_punctuation(text: str) -> str:
 
     # Always have a space between a letter followed by a period and a digit (e.g., "B.1" -> "B. 1")
     text = re.sub(r"([a-zåäöA-ZÅÄÖ]\.)(\d)", r"\1 \2", text)
+
+    # Always have a space a closing parenthesis, preceeded by a letter, and a digit 
+    text = re.sub(r"([a-zåäöA-ZÅÄÖ]\))(\d)", r"\1 \2", text)
+
+    # Always have a space a letter and an opening parenthesis
+    text = re.sub(r"([a-zåäöA-ZÅÄÖ])(\()", r"\1 \2", text)
+
+    # Always have a space a closing parenthesis and a letter
+    text = re.sub(r"(\))([a-zåäöA-ZÅÄÖ])", r"\1 \2", text)
 
     # \\ Double backslashes, aka one backslash escaped with another, seem to be a common misreading of brackets
     # Get the opening and closing
