@@ -56,7 +56,8 @@ NON_TERMINATING_ABBREVIATIONS = [
     "pl.-bl.",
     "facs.",
     "th.",
-    "tidskr."
+    "tidskr.",
+    "kongl."
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
@@ -638,6 +639,8 @@ def extract_period_delimited_host_or_series(
     # ". " coulmay be followed by either subtitle or series/host publication
     # Perhaps we can assume there is a publication title if is_component_part == Ttue?
 
+    CONTENT_NOTE_RE = re.compile(r'\b[s]\.\s[\d]*-[\d]*:', re.IGNORECASE)
+
     # Exclude initials while splitting....
     remainder = exclude_abbreviations_before_split(remainder)
 
@@ -671,7 +674,8 @@ def extract_period_delimited_host_or_series(
                 remainder = ". ".join(part.strip(".") for part in parts[:-2])
 
                 return host_or_series, extent, remainder, is_component_part
-            else:
+            # Avoid interpreting extra extent info as series title
+            elif not CONTENT_NOTE_RE.search(parts[-2]):
                 # Monographs
                 # Title. Place year. Series. Number.
                 # Similar structure with series info in the two furthest right positions
