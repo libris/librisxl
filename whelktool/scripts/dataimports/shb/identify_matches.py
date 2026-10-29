@@ -215,27 +215,25 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
                 / 100
             )
 
-    ## Only for monographs ##
-    if not shb_prepped["is_component_part"]:
-        # Place should have similar content, but not necessarily the same length or order
-        if shb_prepped.get("place") and match_prepped.get("place"):
-            place_score = (
-                fuzz.ratio(
-                    shb_prepped["place"],
-                    match_prepped["place"],
-                )
-                / 100
+    # Place should have similar content, but not necessarily the same length or order
+    if shb_prepped.get("place") and match_prepped.get("place"):
+        place_score = (
+            fuzz.ratio(
+                shb_prepped["place"],
+                match_prepped["place"],
             )
+            / 100
+        )
 
-        # Extent should have similar content, but not necessarily the same length or order
-        if shb_prepped.get("extent") and match_prepped.get("extent"):
-            extent_score = (
-                fuzz.token_set_ratio(
-                    shb_prepped["extent"],
-                    match_prepped["extent"],
-                )
-                / 100
+    # Extent should have similar content, but not necessarily the same length or order
+    if shb_prepped.get("extent") and match_prepped.get("extent"):
+        extent_score = (
+            fuzz.token_set_ratio(
+                shb_prepped["extent"],
+                match_prepped["extent"],
             )
+            / 100
+        )
 
 
 
@@ -268,7 +266,7 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
         weighted_scores["extent"] = 0.025 * extent_score
         weights.append(0.025)
 
-        assert sum(weights) == 1, f"Weights for monographs must add up to 1. Actual sum: {sum(weights)}"
+    assert sum(weights) == 1, f"Weights for monographs must add up to 1. Actual sum: {sum(weights)}"
 
     # Dividing by the sum of weights will compensate slightly for the lack of place / extent in componentParts
     overall_score = sum(weighted_scores.values()) / sum(weights)
