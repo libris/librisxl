@@ -260,8 +260,8 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     weighted_scores["place"] = 0.025 * place_score
     weights.append(0.025)
 
-    ## Only count this one for monographs
-    if not shb_prepped["is_component_part"]:
+    # Count extent if either of the compared records is a monograph
+    if (not shb_prepped["is_component_part"]) or (not match_prepped["is_component_part"]):
 
         weighted_scores["extent"] = 0.025 * extent_score
         weights.append(0.025)
