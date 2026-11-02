@@ -89,8 +89,16 @@ selectBySqlWhere(where) { data ->
                     if (! (mainEntity.get(property) instanceof List)) {
                         mainEntity.put(property, [mainEntity.get(property)])
                     }
-                    ( (List)mainEntity.get(property) ).add(value)
+                    if (value instanceof List) {
+                        for ( Object element : (List)value ) {
+                            ((List) mainEntity.get(property)).add(element)
+                            //System.err.println("After adding, before dedup: " + property + " now: " + mainEntity.get(property))
+                        }
+                    } else {
+                        ((List) mainEntity.get(property)).add(value)
+                    }
                     mainEntity.put(property, dedup(mainEntity.get(property)))
+                    //System.err.println("After adding, after dedup: " + property + " now: " + mainEntity.get(property))
                 }
                 changed = true
             }
