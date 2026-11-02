@@ -58,7 +58,8 @@ NON_TERMINATING_ABBREVIATIONS = [
     "th.",
     "tidskr.",
     "kongl.",
-    "tr."
+    "tr.",
+    "t."
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
@@ -835,7 +836,7 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
 
     temp_remainder = exclude_abbreviations_before_split(remainder)
     # Split by period followed by space and thereafter dash or capital letter
-    parts = re.split(r"(?<=\.) -?\s?", temp_remainder)
+    parts = split_outside_brackets(temp_remainder)
 
     parts = reinclude_abbreviations_after_split(parts)
 
@@ -1061,22 +1062,19 @@ def extract_title_and_subtitle(
         # Exclude initials and abbreviations during the splitting steå....
         remainder = exclude_abbreviations_before_split(remainder)
 
-        parts = re.split(
-            r"(?<!\b[A-Z])\.\s+",
-            remainder,
-        )
+        parts = split_outside_brackets(remainder)
 
         # Reintroduce abbreviations...
         parts = reinclude_abbreviations_after_split(parts)
 
         if len(parts) < 2:
-            title = ". ".join(part for part in parts)
+            title = " ".join(part for part in parts)
             remainder = ""
         else:
             # Let's arbitrarily say that the subtitle can have a maximum of three parts
             title = parts[0]
-            subtitle = ". ".join(part for part in parts[1:2])
-            remainder = ". ".join(part for part in parts[2:])
+            subtitle = " ".join(part for part in parts[1:2])
+            remainder = " ".join(part for part in parts[2:])
 
     return title, subtitle, remainder
 
@@ -1473,6 +1471,49 @@ def exclude_abbreviations_before_split(remainder: str) -> str:
 def reinclude_abbreviations_after_split(parts: list) -> str:
     # Reintroduce initials and abbreviations
     parts = [p.replace("<DOT>", ".") for p in parts]
+    return parts
+
+
+def split_outside_brackets(text):
+    parts = []
+    start = 0
+    round_depth = 0
+    square_depth = 0
+    square_start = None
+
+    for i, char in enumerate(text):
+        if char == '(':
+            round_depth += 1
+        elif char == ')':
+            round_depth = max(0, round_depth - 1)
+        elif char == '[':
+            square_depth += 1
+            if square_depth == 1:
+                square_start = i
+
+        elif char == ']':
+            square_depth = max(0, square_depth - 1)
+
+            # Split after closing bracket if it contains additional title info
+            if square_depth == 0 and round_depth == 0:
+                bracket_content = text[square_start:i + 1]
+
+                if re.search(r'\[[^\[\]]*\.\s+[^\[\]]*\.\]', bracket_content):
+                    match = re.match(r'\s+', text[i + 1:])
+                    if match:
+                        parts.append(text[start:i + 1])
+                        start = i + 1 + match.end()
+
+                square_start = None
+
+        # Split after a period outside brackets
+        elif char == '.' and round_depth == 0 and square_depth == 0:
+            match = re.match(r' (?=-)|\s+', text[i + 1:])
+            if match:
+                parts.append(text[start:i + 1])
+                start = i + 1 + match.end()
+
+    parts.append(text[start:])
     return parts
 
 
