@@ -779,7 +779,7 @@ public class XSearchServlet extends WhelkHttpServlet {
     }
 
     private static String getLegacyWebbsokType(Map<?, ?> item) {
-        var workType = (String) ((Map<?, ?>) item.get(WORK_KEY)).get(TYPE_KEY);
+        var workType = (String) getAtPath(item, List.of(WORK_KEY, TYPE_KEY), null);
         var instanceType = (String) asList(item.get(TYPE_KEY)).getFirst();
 
         var workCategories = new HashSet<String>();
