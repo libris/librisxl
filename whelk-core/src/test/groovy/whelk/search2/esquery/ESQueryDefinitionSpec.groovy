@@ -6,6 +6,7 @@ import whelk.search2.AppParams
 import whelk.search2.Disambiguate
 import whelk.search2.QueryParams
 import whelk.search2.SelectedFacets
+import whelk.search2.Sort
 import whelk.search2.TestData
 import whelk.search2.querytree.QueryTree
 import whelk.search2.querytree.value.Link
@@ -490,6 +491,19 @@ class ESQueryDefinitionSpec extends Specification {
                         ]
                 ]
         ]
+    }
+
+    def "build sort clauses"() {
+        expect:
+        ESQueryDefinition.buildSortClauses(Sort.fromString(sort), esSettings.mappings(), jsonLd) == result
+
+        where:
+        sort            | result
+        ''              | []
+        'p2'            | [['p2': ['order': Sort.Order.asc, 'missing': '_last']]]
+        '-p2,p3.p4.@id' | [['p2': ['order': Sort.Order.desc, 'missing': '_last']],
+                           ['p3.p4.@id': ['order': Sort.Order.asc, 'missing': '_last', 'nested': ['path': 'p3']]]]
+        'p15.p16'       | [['p15.p16': ['order': Sort.Order.asc, 'missing': '_last']]]
     }
 
     def "build aggs query with curated predicates"() {

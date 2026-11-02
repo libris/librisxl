@@ -296,11 +296,15 @@ public record ESQueryDefinition(QueryTree tree,
     }
 
     private static Map<String, Object> buildSortClause(Sort.Key k, ESMappings mappings, JsonLd jsonLd) {
-        // TODO nested?
         String field = getSortField(k.key(), mappings, jsonLd);
-        return Map.of(field,
-                Map.of("order", k.order(),
-                        "missing", "_last"));
+        Map<String, Object> sort = new LinkedHashMap<>();
+        sort.put("order", k.order());
+        sort.put("missing", "_last");
+        // Nested fields with include_in_parent are also indexed on the parent document
+        ESQueryTreeBuilder.getNestedStem(field, mappings)
+                .filter(stem -> !mappings.isNestedIncludeInParentField(stem))
+                .ifPresent(stem -> sort.put("nested", Map.of("path", stem)));
+        return Map.of(field, sort);
     }
 
     private static String getSortField(String field, ESMappings mappings, JsonLd jsonLd) {
