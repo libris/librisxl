@@ -5,6 +5,7 @@ import whelk.search2.AppParams;
 import whelk.search2.Operator;
 import whelk.search2.QueryParams;
 import whelk.search2.SelectedFacets;
+import whelk.search2.Sort;
 import whelk.search2.Spell;
 import whelk.search2.querytree.QueryTree;
 import whelk.search2.querytree.QueryTreeExpander;
@@ -73,7 +74,7 @@ public record ESQueryDefinition(QueryTree tree,
 
         dsl.put("size", queryParams.limit);
         dsl.put("from", queryParams.offset);
-        dsl.put("sort", queryParams.sortBy.getSortClauses(this::getSortField));
+        dsl.put("sort", buildSortClauses(queryParams.sortBy, settings.mappings(), jsonLd));
 
         if (queryParams.spell.suggest && settings.mappings().spellFieldExists()) {
             var spellQuery = Spell.getSpellQuery(tree);
@@ -221,7 +222,7 @@ public record ESQueryDefinition(QueryTree tree,
         var q = Map.of("terms",
                 Map.of("field", field,
                         "size", slice.size(),
-                        "order", Map.of(slice.bucketSortKey(), slice.sortOrder())));
+                        "order", buildBucketOrder(slice.bucketSort())));
 
         if (slice.subSlice() != null) {
             q = new LinkedHashMap<>(q);
@@ -254,6 +255,11 @@ public record ESQueryDefinition(QueryTree tree,
         return castToStringObjectMap(q);
     }
 
+    private static Map<String, String> buildBucketOrder(Sort.Key k) {
+        // count -> _count, key -> _key
+        return Map.of("_" + k.key(), k.order().name());
+    }
+
     private Map<String, Object> buildNestedAggQuery(String field, AppParams.Slice slice, String nestedStem) {
         return Map.of("nested", Map.of("path", nestedStem),
                 "aggs", Map.of(NESTED_AGG_NAME, buildCoreAqqQuery(field, slice, true)));
@@ -283,19 +289,33 @@ public record ESQueryDefinition(QueryTree tree,
                 "filter", filter);
     }
 
-    private String getSortField(String termPath) {
-        var path = expandLangMapKeys(termPath);
-        if (settings.mappings().hasFourDigitsShortField(path)) {
-            return String.format("%s%s", path, FOUR_DIGITS_SHORT_SUFFIX);
+    private static List<Map<String, Object>> buildSortClauses(Sort sort, ESMappings mappings, JsonLd jsonLd) {
+        return sort.keys().stream()
+                .map(k -> buildSortClause(k, mappings, jsonLd))
+                .toList();
+    }
+
+    private static Map<String, Object> buildSortClause(Sort.Key k, ESMappings mappings, JsonLd jsonLd) {
+        // TODO nested?
+        String field = getSortField(k.key(), mappings, jsonLd);
+        return Map.of(field,
+                Map.of("order", k.order(),
+                        "missing", "_last"));
+    }
+
+    private static String getSortField(String field, ESMappings mappings, JsonLd jsonLd) {
+        field = expandLangMapKeys(field, jsonLd);
+        if (mappings.hasFourDigitsShortField(field)) {
+            return String.format("%s%s", field, FOUR_DIGITS_SHORT_SUFFIX);
         }
-        else if (settings.mappings().hasKeywordSubfield(path)) {
-            return String.format("%s.%s", path, KEYWORD);
+        else if (mappings.hasKeywordSubfield(field)) {
+            return String.format("%s.%s", field, KEYWORD);
         } else {
-            return termPath;
+            return field;
         }
     }
 
-    private String expandLangMapKeys(String field) {
+    private static String expandLangMapKeys(String field, JsonLd jsonLd) {
         var parts = field.split("\\.");
         if (parts.length > 0) {
             var lastIx = parts.length - 1;
