@@ -34,7 +34,7 @@ class ResourceCache {
     ResourceCache(Whelk whelk, LanguageLinker languageLinker, BlankNodeLinker relatorLinker) {
         this.whelk = whelk
         this.jsonld = whelk.jsonld
-        relatorResources = whelk.elasticFind ? new ResourceCache.RelatorResources(
+        relatorResources = whelk.elasticFind && relatorLinker ? new ResourceCache.RelatorResources(
                   relatorLinker: relatorLinker,
                   relators: relatorLinker.getDefinitions()
           ) : null
