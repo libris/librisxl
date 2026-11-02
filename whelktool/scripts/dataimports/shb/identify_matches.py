@@ -137,8 +137,6 @@ def analyze_matches(shbd_prepepd, matches: list) -> dict:
 
 
 def get_match_score(shb_prepped: dict, match_prepped: dict):
-    # TODO Create alternate scorings for monograph / component part
-    # Place + extent / Part
 
     weighted_scores = {}
     weights = []
@@ -248,25 +246,27 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     weighted_scores["year"] = 0.075 * year_score
     weights.append(0.075)
 
-    weighted_scores["host_or_series_issn"] = 0.025 * issn_score
-    weights.append(0.025)
-
-    weighted_scores["host_or_series_title"] = 0.05 * host_or_series_title_score
-    weights.append(0.05)
-
-    weighted_scores["part_or_enumeration"] = 0.05 * part_score
-    weights.append(0.05)
-
     weighted_scores["place"] = 0.025 * place_score
     weights.append(0.025)
 
-    # Count extent if either of the compared records is a monograph
+    # Count extent ony if either of the compared records is a monograph
     if (not shb_prepped["is_component_part"]) or (not match_prepped["is_component_part"]):
 
         weighted_scores["extent"] = 0.025 * extent_score
         weights.append(0.025)
 
-        assert sum(weights) == 1, f"Weights for monographs must add up to 1. Actual sum: {sum(weights)}"
+
+    # Count extent only if either of the compared records is a is part of a series/main publication
+    if shb_prepped["host_or_series_title"] or match_prepped["host_or_series_title"]:
+
+        weighted_scores["host_or_series_issn"] = 0.025 * issn_score
+        weights.append(0.025)
+
+        weighted_scores["host_or_series_title"] = 0.05 * host_or_series_title_score
+        weights.append(0.05)
+
+        weighted_scores["part_or_enumeration"] = 0.05 * part_score
+        weights.append(0.05)
 
     # Dividing by the sum of weights will compensate slightly for the lack of place / extent in componentParts
     overall_score = sum(weighted_scores.values()) / sum(weights)
