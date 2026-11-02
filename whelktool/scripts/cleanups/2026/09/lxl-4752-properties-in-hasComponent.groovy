@@ -21,8 +21,10 @@ selectBySqlWhere(where) { data ->
 
     boolean changed = false
 
+    // Default "empty" new component
+    Map primaryComponent = ["@type":"Item", "heldBy":mainEntity.get("heldBy")]
+
     // Find the primary component to manipulate
-    Map primaryComponent = ["@type":"Item"]
     if (mainEntity.containsKey("hasComponent")) {
         if (! mainEntity.hasComponent instanceof List )
             mainEntity.hasComponent = [mainEntity.hasComponent]
@@ -32,8 +34,10 @@ selectBySqlWhere(where) { data ->
         else
             components.add(primaryComponent)
     }
-    else
+    else {
+        //System.err.println(" FRESH component: " + mainEntity)
         mainEntity.put("hasComponent", [primaryComponent])
+    }
 
     // Stuff in (-to primary component only)
     for (String property : moveIntoComponent) {
