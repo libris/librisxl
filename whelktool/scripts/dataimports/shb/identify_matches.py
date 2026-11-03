@@ -303,7 +303,7 @@ def prepare_record(instance: dict) -> dict:
 
         component_part_uri = "https://id.kb.se/term/saobf/ComponentPart"
         if any(
-            cat["@id"] == component_part_uri for cat in instance.get("category", [])
+            cat.get("@id", "") == component_part_uri for cat in instance.get("category", [])
         ):
             prepped["is_component_part"] = True
 
@@ -441,7 +441,7 @@ def normalize_numeric(year):
 
 def remove_problematic_punctuation(text: str) -> str:
     # Remove punctuation that might cause a 400 Client Error
-    text = text.replace("(", "").replace(")", "").replace('"', "").replace("'", "").replace("+", "")
+    text = text.replace("(", "").replace(")", "").replace('"', "").replace("'", "").replace("+", "").lstrip(":")
 
     return text
 
