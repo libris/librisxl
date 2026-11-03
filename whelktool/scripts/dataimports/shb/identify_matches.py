@@ -179,6 +179,11 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             )
             / 100
         )
+    # Award points if neither has a responsibility statement
+    elif not shb_prepped.get("responsibility_statement") and not match_prepped.get(
+        "responsibility_statement"
+    ):
+        contributor_score = 0.5
 
     # Year (normalized to numeric only) is a dealbreaker for serials and monographs
     if shb_prepped.get("year") and match_prepped.get("year"):
@@ -188,8 +193,7 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             return 0, {"Dealbreaker": "Year present and not a match"}
         else:
             year_score = 1
-    else:
-        year_score = 0
+
 
     # ISSN (normalized to numeric only) is a dealbreaker for serials
     if shb_prepped.get("host_or_series_issn") and match_prepped.get(
@@ -201,8 +205,6 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             return 0, {"Dealbreaker": "ISSN present and not a match"}
         else:
             issn_score = 1
-    else:
-        issn_score = 0
 
     if shb_prepped.get("part_or_enumeration") and match_prepped.get("part_or_enumeration"):
             part_score = (
@@ -249,20 +251,20 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     weighted_scores["title"] = 0.45 * title_score
     weights.append(0.45)
 
-    weighted_scores["contributor"] = 0.30 * contributor_score
-    weights.append(0.30)
+    weighted_scores["contributor"] = 0.2 * contributor_score
+    weights.append(0.25)
 
-    weighted_scores["year"] = 0.075 * year_score
-    weights.append(0.075)
+    weighted_scores["year"] = 0.1 * year_score
+    weights.append(0.1)
 
-    weighted_scores["place"] = 0.025 * place_score
-    weights.append(0.025)
+    weighted_scores["place"] = 0.1 * place_score
+    weights.append(0.1)
 
     # Count extent ony if either of the compared records is a monograph
     if (not shb_prepped["is_component_part"]) or (not match_prepped["is_component_part"]):
 
-        weighted_scores["extent"] = 0.025 * extent_score
-        weights.append(0.025)
+        weighted_scores["extent"] = 0.15 * extent_score
+        weights.append(0.15)
 
     # Count extent only if either of the compared records is a is part of a series/main publication
     if shb_prepped["host_or_series_title"] or match_prepped["host_or_series_title"]:
