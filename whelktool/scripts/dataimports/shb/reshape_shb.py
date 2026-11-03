@@ -862,7 +862,7 @@ def extract_review_diss_or_content_note(note: str) -> tuple[str, str]:
     Returns a tuple of (review_note, remainder)."""
 
     match = re.search(
-        r"Rec\.\s+i\b|\.\s[\d-]* rec. i|\bSummary:\s*|\s*-\s*Diss\b|\s*-\s*Oiss\b|Innehåller b|Innehåller:",
+        r"Rec\.\s\b|\.\s[\d-]* rec. i|\bSummary:\s*|\s*-\s*Diss\b|\s*-\s*Oiss\b|Innehåller b|Innehåller:",
         note,
     )
 
