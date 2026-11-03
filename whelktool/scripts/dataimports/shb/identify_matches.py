@@ -233,10 +233,19 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             / 100
         )
 
+    # Normally both should be/not be componentPart
+    if shb_prepped["is_component_part"] == match_prepped["is_component_part"]:
+        component_part_score = 1
+    else:
+        component_part_score = 0
+
 
 
     # Calculate the overall score
     ## Properites used for monographs and componentParts ##
+    weighted_scores["component_part"] = 0.1 * component_part_score
+    weights.append(0.1)
+
     weighted_scores["title"] = 0.45 * title_score
     weights.append(0.45)
 
@@ -255,7 +264,6 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
         weighted_scores["extent"] = 0.025 * extent_score
         weights.append(0.025)
 
-
     # Count extent only if either of the compared records is a is part of a series/main publication
     if shb_prepped["host_or_series_title"] or match_prepped["host_or_series_title"]:
 
@@ -270,6 +278,7 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
 
     # Dividing by the sum of weights will compensate slightly for the lack of place / extent in componentParts
     overall_score = sum(weighted_scores.values()) / sum(weights)
+
     return overall_score, weighted_scores
 
 
