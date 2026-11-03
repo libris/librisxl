@@ -441,7 +441,7 @@ def normalize_numeric(year):
 
 def remove_problematic_punctuation(text: str) -> str:
     # Remove punctuation that might cause a 400 Client Error
-    text = text.replace("(", "").replace(")", "").replace('"', "").replace("'", "")
+    text = text.replace("(", "").replace(")", "").replace('"', "").replace("'", "").replace("+", "")
 
     return text
 
