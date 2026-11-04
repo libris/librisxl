@@ -9,6 +9,7 @@ void addObjectsToList(Map librisRecord, String property, List objects) {
     for (object in objects) {
         if (!thisProperty.contains(object)) {
         thisProperty << object
+        incrementStats('Enriched from SHB', property)
         }
 
     librisRecord[property] = thisProperty
@@ -21,6 +22,7 @@ Map updateWork(Map work, List classifications, List subjects) {
     if (subjects) {
         // SAO headings -- skip and report if heading already in record
         addObjectsToList(work, 'subject', subjects)
+
     }
 
     if (classifications) {
@@ -76,6 +78,27 @@ selectByIds(librisIds) { instanceDoc ->
 
     // Add fields and values from SHB to Libris record and work //
     // Skip and report if object already present in Lirbis record //
+
+    // Extent
+    def shbExtent = shbInstance.get('extent', [])
+    if (shbExtent && !librisInstance.get('extent', [])) {
+        librisInstance['extent'] = shbExtent
+        incrementStats('Enriched from SHB', 'Extent')
+    }
+
+    // publication
+    def shbPublication = shbInstance.get('publication')
+    if (shbPublication && !librisInstance.get('publication')) {
+        librisInstance['publication'] = shbPublication
+        incrementStats('Enriched from SHB', 'Publication')
+    }
+
+    // Note
+    def shbHasNote = shbInstance.get('hasNote', [])
+    if (shbHasNote) {
+        addObjectsToList(librisInstance, 'hasNote', shbHasNote)
+    }
+
 
     // bibliography:SHB 
     Map shbBibliography = [
