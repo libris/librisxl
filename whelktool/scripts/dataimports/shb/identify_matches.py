@@ -167,19 +167,32 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             )
             / 100
         )
+    elif not shb_prepped.get("host_or_series_title") and not match_prepped.get(
+        "host_or_series_title"
+    ):
+        host_or_series_title_score = 0.5
 
-    # Responsibility statement should have similar content, but not necessarily the same length or order
+    # Both sides should include the same tokens
+    # If one contains more the score is slightly decreased
     if shb_prepped.get("responsibility_statement") and match_prepped.get(
         "responsibility_statement"
     ):
         contributor_score = (
-            fuzz.token_set_ratio(
-                shb_prepped["responsibility_statement"],
-                match_prepped["responsibility_statement"],
+            (
+                0.9
+                * fuzz.token_set_ratio(
+                    shb_prepped["responsibility_statement"],
+                    match_prepped["responsibility_statement"],
+                )
             )
-            / 100
-        )
-    # Award points if neither has a responsibility statement
+            + (
+                0.1
+                * fuzz.token_sort_ratio(
+                    shb_prepped["responsibility_statement"],
+                    match_prepped["responsibility_statement"],
+                )
+            )
+        ) / 100
     elif not shb_prepped.get("responsibility_statement") and not match_prepped.get(
         "responsibility_statement"
     ):
@@ -193,7 +206,8 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             return 0, {"Dealbreaker": "Year present and not a match"}
         else:
             year_score = 1
-
+    elif not shb_prepped.get("year") and not match_prepped.get("year"):
+        year_score = 0.5
 
     # ISSN (normalized to numeric only) is a dealbreaker for serials
     if shb_prepped.get("host_or_series_issn") and match_prepped.get(
@@ -205,17 +219,27 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             return 0, {"Dealbreaker": "ISSN present and not a match"}
         else:
             issn_score = 1
+    elif not shb_prepped.get("host_or_series_issn") and not match_prepped.get(
+        "host_or_series_issn"
+    ):
+        issn_score = 0.5
 
-    if shb_prepped.get("part_or_enumeration") and match_prepped.get("part_or_enumeration"):
-            part_score = (
-                fuzz.token_set_ratio(
-                    shb_prepped["part_or_enumeration"],
-                    match_prepped["part_or_enumeration"],
-                )
-                / 100
+    if shb_prepped.get("part_or_enumeration") and match_prepped.get(
+        "part_or_enumeration"
+    ):
+        part_score = (
+            fuzz.token_set_ratio(
+                shb_prepped["part_or_enumeration"],
+                match_prepped["part_or_enumeration"],
             )
+            / 100
+        )
+    elif not shb_prepped.get("part_or_enumeration") and not match_prepped.get(
+        "part_or_enumeration"
+    ):
+        part_score = 0.5
 
-    # Place should have similar content, but not necessarily the same length or order
+    # Place should have similar content
     if shb_prepped.get("place") and match_prepped.get("place"):
         place_score = (
             fuzz.ratio(
@@ -224,8 +248,10 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             )
             / 100
         )
+    elif not shb_prepped.get("place") and not match_prepped.get("place"):
+        place_score = 0.5
 
-    # Extent should have similar content, but not necessarily the same length or order
+    # Both sides should include the same tokens, but one side may contain more
     if shb_prepped.get("extent") and match_prepped.get("extent"):
         extent_score = (
             fuzz.token_set_ratio(
@@ -234,6 +260,8 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
             )
             / 100
         )
+    elif not shb_prepped.get("extent") and not match_prepped.get("extent"):
+        extent_score = 0.5
 
     # Normally both should be/not be componentPart
     if shb_prepped["is_component_part"] == match_prepped["is_component_part"]:
@@ -241,44 +269,37 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     else:
         component_part_score = 0
 
-
-
     # Calculate the overall score
     ## Properites used for monographs and componentParts ##
     weighted_scores["component_part"] = 0.1 * component_part_score
     weights.append(0.1)
 
-    weighted_scores["title"] = 0.45 * title_score
-    weights.append(0.45)
+    weighted_scores["title"] = 0.4 * title_score
+    weights.append(0.4)
 
-    weighted_scores["contributor"] = 0.2 * contributor_score
+    weighted_scores["contributor"] = 0.25 * contributor_score
     weights.append(0.25)
 
-    weighted_scores["year"] = 0.1 * year_score
-    weights.append(0.1)
+    weighted_scores["year"] = 0.05 * year_score
+    weights.append(0.05)
 
-    weighted_scores["place"] = 0.1 * place_score
-    weights.append(0.1)
+    weighted_scores["place"] = 0.025 * place_score
+    weights.append(0.025)
 
-    # Count extent ony if either of the compared records is a monograph
-    if (not shb_prepped["is_component_part"]) or (not match_prepped["is_component_part"]):
+    weighted_scores["extent"] = 0.05 * extent_score
+    weights.append(0.05)
 
-        weighted_scores["extent"] = 0.15 * extent_score
-        weights.append(0.15)
+    weighted_scores["host_or_series_issn"] = 0.025 * issn_score
+    weights.append(0.025)
 
-    # Count extent only if either of the compared records is a is part of a series/main publication
-    if shb_prepped["host_or_series_title"] or match_prepped["host_or_series_title"]:
+    weighted_scores["host_or_series_title"] = 0.05 * host_or_series_title_score
+    weights.append(0.05)
 
-        weighted_scores["host_or_series_issn"] = 0.025 * issn_score
-        weights.append(0.025)
+    weighted_scores["part_or_enumeration"] = 0.05 * part_score
+    weights.append(0.05)
 
-        weighted_scores["host_or_series_title"] = 0.05 * host_or_series_title_score
-        weights.append(0.05)
-
-        weighted_scores["part_or_enumeration"] = 0.05 * part_score
-        weights.append(0.05)
-
-    # Dividing by the sum of weights will compensate slightly for the lack of place / extent in componentParts
+    assert sum(weights) == 1.0, f"Weights do not sum to 1: {sum(weights)}"
+    # Dividing by sum of weights is redundand since the weights sum to 1, but for now just in case
     overall_score = sum(weighted_scores.values()) / sum(weights)
 
     return overall_score, weighted_scores
@@ -314,7 +335,8 @@ def prepare_record(instance: dict) -> dict:
 
         component_part_uri = "https://id.kb.se/term/saobf/ComponentPart"
         if any(
-            cat.get("@id", "") == component_part_uri for cat in instance.get("category", [])
+            cat.get("@id", "") == component_part_uri
+            for cat in instance.get("category", [])
         ):
             prepped["is_component_part"] = True
 
@@ -352,7 +374,14 @@ def prepare_record(instance: dict) -> dict:
 
         prepped["responsibility_statement"] = responsibility_statement
 
-        prepped["extent"] = instance.get("extent", [{}])[0].get("label", [""])[0]
+        prepped["extent"] = (
+            instance.get("extent", [{}])[0]
+            .get("label", [""])[0]
+            .replace("[", "")
+            .replace("]", "")
+            .replace("(", "")
+            .replace(")", "")
+        )
 
         if publication := instance.get("publication"):
             place = publication[0].get("place")
@@ -381,14 +410,14 @@ def prepare_record(instance: dict) -> dict:
             if host_has_issn := host_or_series.get("identifiedBy", []):
                 prepped["host_or_series_issn"] = host_has_issn[0].get("value", "")
 
-            title = None
-            if has_title := host_or_series.get("hasTitle"):
-                title = has_title[0].get("mainTitle")
+            hs_title = None
+            if hs_has_title := host_or_series.get("hasTitle"):
+                hs_title = hs_has_title[0].get("mainTitle")
 
             elif instance_of := host_or_series.get("instanceOf", {}):
                 # Get series title from work
                 if isinstance(instance_of, dict):
-                    has_title = (
+                    hs_title = (
                         host_or_series["instanceOf"]
                         .get("hasTitle", [{}])[0]
                         .get("mainTitle")
@@ -398,8 +427,8 @@ def prepare_record(instance: dict) -> dict:
                         f"\nDATA ISSUE\t{instance['@id']}\tUnexpected instanceOf type\t{json.dumps(instance_of, ensure_ascii=False)}\n"
                     )
 
-            if title:
-                prepped["host_or_series_title"] = title
+            if hs_title:
+                prepped["host_or_series_title"] = hs_title
 
         # Don't try to match if the instance has only one property
         if len(prepped) < 2:
@@ -452,7 +481,14 @@ def normalize_numeric(year):
 
 def remove_problematic_punctuation(text: str) -> str:
     # Remove punctuation that might cause a 400 Client Error
-    text = text.replace("(", "").replace(")", "").replace('"', "").replace("'", "").replace("+", "").lstrip(":")
+    text = (
+        text.replace("(", "")
+        .replace(")", "")
+        .replace('"', "")
+        .replace("'", "")
+        .replace("+", "")
+        .lstrip(":")
+    )
 
     return text
 
