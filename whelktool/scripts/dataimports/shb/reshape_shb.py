@@ -280,7 +280,7 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
         ]
 
     if structured_record.get("edition"):
-        publication["edition"] = [structured_record["editionStatement"]]
+        instance["editionStatement"] = [structured_record["edition"]]
 
     # Extent (list) > label (list)
     if structured_record.get("extent"):
