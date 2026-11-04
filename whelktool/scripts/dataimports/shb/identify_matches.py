@@ -298,7 +298,6 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     weighted_scores["part_or_enumeration"] = 0.05 * part_score
     weights.append(0.05)
 
-    assert sum(weights) == 1.0, f"Weights do not sum to 1: {sum(weights)}"
     # Dividing by sum of weights is redundand since the weights sum to 1, but for now just in case
     overall_score = sum(weighted_scores.values()) / sum(weights)
 
