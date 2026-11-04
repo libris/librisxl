@@ -1015,6 +1015,23 @@ def test_parse_note_1771_1874_1875_1900_1901_1920_Monografi_utan_författare():
 ### Special and edge cases ###
 
 
+def test_extract_extra_publication_info():
+    record = {
+        "sample": "Matz, Edvard, Mälardalens sällsamheter : en bok om saga och sägen,historisk verklighet och diktarmiljöer kring Mälaren och Hjälmaren.Stockholm 1973. 243 s. : ill. - 1. uppl. 2. tr. 1975Rec. i VestmLT 11.10.1973 av G. Garpe; i HP 9.11.1973 av G. Sellberg;i UNT 19.11.1973 av J. Måsner; i SkD 15.12.1973 av G. A. E. Horn; i VD11.2.1974 av Greger Sellberg; i SvD 5.4.1974 av Alf Åberg; i Arbbl20.6.1974 av Karl-H. Sandberg",
+    }
+    result = parse_note(record["sample"], "isbd")
+    assert result["is_component_part"] == False
+    assert result["title"] == "Mälardalens sällsamheter"
+    assert result["subtitle"] == "en bok om saga och sägen, historisk verklighet och diktarmiljöer kring Mälaren och Hjälmaren"
+    assert result["place"] == "Stockholm"
+    assert result["year"] == "1973"
+    assert result["extent"] == "243 s. : ill"
+    assert result["edition"] == "1. uppl. 2. tr. 1975"
+    assert (
+        result["remaining_note"]
+        == "Rec. i VestmLT 11.10.1973 av G. Garpe; i HP 9.11.1973 av G. Sellberg;i UNT 19.11.1973 av J. Måsner; i SkD 15.12.1973 av G. A. E. Horn; i VD11.2.1974 av Greger Sellberg; i SvD 5.4.1974 av Alf Åberg; i Arbbl 20.6.1974 av Karl-H. Sandberg")
+
+
 def test_parse_note_multi_volume_monograph():
     record = {
         "sample": "Arndt, E. M., Reise durch Schweden im Jahr 1804. Th.1-4. Berlin 1806.Rec. i Göttingische gelehrte Anzeigen 1807. Bd 1, s. 673-680.Th. 1-2 rec. i Neueste critische Nachrichten 1806. Bd 32, s.161-165.",

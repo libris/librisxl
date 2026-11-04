@@ -59,7 +59,7 @@ NON_TERMINATING_ABBREVIATIONS = [
     "tidskr.",
     "kongl.",
     "tr.",
-    "t."
+    "t.",
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
@@ -154,8 +154,10 @@ def convert(data, subject_mappings) -> dict | None:
 
     # If the note doesn't start with an uppercase letter or an opening bracket, this is an indication of an OCR issue
     # Report for later cleanup
-    if not(note[0].isupper() or note[0] == "["):
-        anomalies.append(f"SUSPICIOUS NOTE\t{instance["associatedMedia"][0]["marc:linkText"][0][8:-6]}\t{instance["part"][0]}\t{note}")
+    if not (note[0].isupper() or note[0] == "["):
+        anomalies.append(
+            f"SUSPICIOUS NOTE\t{instance["associatedMedia"][0]["marc:linkText"][0][8:-6]}\t{instance["part"][0]}\t{note}"
+        )
 
     ### Some initial cleanup ###
 
@@ -191,7 +193,7 @@ def convert(data, subject_mappings) -> dict | None:
     instance.pop("category", None)
 
     ### Enrich the instance ###
-    
+
     # Parse notes for structured bibliographic data
     structured_record = parse_note(note, syntax_era)
 
@@ -276,6 +278,9 @@ def enrich_instance(instance: dict, work: dict, structured_record: dict) -> dict
                 **publication,
             }
         ]
+
+    if structured_record.get("edition"):
+        publication["edition"] = [structured_record["editionStatement"]]
 
     # Extent (list) > label (list)
     if structured_record.get("extent"):
@@ -455,6 +460,8 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
 
     also_in_note, remainder = extract_also_in_note(remainder)
 
+    edition, remainder = extract_edition_info(remainder)
+
     # Distinguish part/article from publication/series
     if syntax_era in ["isbd", "isbd_transition"] and " - I:" in remainder:
         remainder, host_or_series = remainder.split(" - I:", 1)
@@ -537,6 +544,9 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     if place:
         structured_record["place"] = place.strip()
 
+    if edition:
+        structured_record["edition"] = edition.strip()
+
     if remaining_note:
         structured_record["remaining_note"] = remaining_note.strip().rstrip(".,-;")
 
@@ -563,9 +573,13 @@ def parse_note(note: dict, syntax_era: str) -> tuple:
     # Special case - assume that extent extracted from host note acutally belongs to the component part
     if is_component_part and extent and structured_record.get("host", {}):
         part_number = structured_record["host"].get("part_number", "")
-        structured_record["host"]["part_number"] =  f"{part_number}, {structured_record.get('extent')}"
+        structured_record["host"][
+            "part_number"
+        ] = f"{part_number}, {structured_record.get('extent')}"
         del structured_record["extent"]
-        counters["various"].update(["Main extent appended to componentPart part_number"])
+        counters["various"].update(
+            ["Main extent appended to componentPart part_number"]
+        )
 
     structured_record["is_component_part"] = is_component_part
     return structured_record
@@ -641,7 +655,7 @@ def extract_period_delimited_host_or_series(
     # ". " coulmay be followed by either subtitle or series/host publication
     # Perhaps we can assume there is a publication title if is_component_part == Ttue?
 
-    CONTENT_NOTE_RE = re.compile(r'\b[s]\.\s[\d]*-[\d]*:', re.IGNORECASE)
+    CONTENT_NOTE_RE = re.compile(r"\b[s]\.\s[\d]*-[\d]*:", re.IGNORECASE)
 
     # Exclude initials while splitting....
     remainder = exclude_abbreviations_before_split(remainder)
@@ -668,7 +682,11 @@ def extract_period_delimited_host_or_series(
 
             return host_or_series, extent, remainder, is_component_part
 
-        elif len(parts) > 2 and re.match(r"^\w+(\s+)?", parts[-2]) and re.match(r"(\w+\s+)?\d+", parts[-1]):
+        elif (
+            len(parts) > 2
+            and re.match(r"^\w+(\s+)?", parts[-2])
+            and re.match(r"(\w+\s+)?\d+", parts[-1])
+        ):
             if is_component_part:
                 # Other component parts
                 # Title. Journal. Number.
@@ -760,6 +778,21 @@ def extract_parenthesis_delimited_host_or_series(remainder, syntax_era) -> tuple
 
     # If there is no publication/series info
     return unchanged_remainder, None
+
+
+def extract_edition_info(remainder: str) -> tuple[str, str]:
+    """Extract edition information from the remainder of the note, if present.
+    Returns a tuple of (edition_info, remainder)."""
+
+    EDITION_RE = re.compile(r"""(?<!\S)(?=(?:\d+\.? uppl\.?|\d+\.? tr\.?))(?:(\d+)\.? uppl\.?)?(?: )?(?:(\d+)\.? tr\.?)?(?: \d{4})?(?=\s|$)""")
+
+    match = EDITION_RE.search(remainder)
+    if match:
+        edition_info = match.group(0).strip()
+        remainder = remainder[: match.start()] + remainder[match.end() :]
+        return edition_info, remainder
+
+    return None, remainder
 
 
 def extract_part_number(remainder: str) -> str:
@@ -1037,7 +1070,10 @@ def extract_title_and_subtitle(
         title_and_contributor_area, remainder = remainder.split(". -", 1)
 
         # Divide title into title and subtitle
-        if syntax_era in ["isbd", "isbd_transition"] and " : " in title_and_contributor_area:
+        if (
+            syntax_era in ["isbd", "isbd_transition"]
+            and " : " in title_and_contributor_area
+        ):
             title, subtitle = title_and_contributor_area.split(" : ", 1)
 
         # If the title is directly followed by a ". -", signalling other publication information is next
@@ -1145,9 +1181,7 @@ def extract_extent(
                 extent = ""
 
         # Pick up special illustration info
-        EXTRA_EXTENT_INFO_RE = (
-            r"(?:\[Med\b.*?(?:i texten\.)?\]|\bMed\b.*?(?:i texten\.)?\.|\bMed\b.*?(\.)?\.)"
-        )
+        EXTRA_EXTENT_INFO_RE = r"(?:\[Med\b.*?(?:i texten\.)?\]|\bMed\b.*?(?:i texten\.)?\.|\bMed\b.*?(\.)?\.)"
         extra_match = re.search(EXTRA_EXTENT_INFO_RE, right_part)
 
         if extra_match:
@@ -1257,6 +1291,7 @@ def clean_up_and_enrich_record(
 
 ### Helper functions ###
 
+
 def normalize_special_cases(text: str) -> str:
     """
     Clean up recurring anomalies in OCR'd text. Return the cleaned up text.
@@ -1279,15 +1314,14 @@ def normalize_special_cases(text: str) -> str:
         "Historisk tidskrift",
         text,
         flags=re.IGNORECASE,
-)
+    )
 
     # Tidskrift
-    text = re.sub(r"tidskr\.", r"tidskrift", text,  flags=re.IGNORECASE)
+    text = re.sub(r"tidskr\.", r"tidskrift", text, flags=re.IGNORECASE)
 
     # Place names
     text = re.sub(r"Sthlm", r"Stockholm", text, flags=re.IGNORECASE)
     text = re.sub(r"Gbg", r"Göteborg", text, flags=re.IGNORECASE)
-
 
     return text
 
@@ -1337,7 +1371,7 @@ def normalize_spacing_and_punctuation(text: str) -> str:
     # Always have a space between a letter followed by a period and a digit (e.g., "B.1" -> "B. 1")
     text = re.sub(r"([a-zåäöA-ZÅÄÖ]\.)(\d)", r"\1 \2", text)
 
-    # Always have a space a closing parenthesis, preceeded by a letter, and a digit 
+    # Always have a space a closing parenthesis, preceeded by a letter, and a digit
     text = re.sub(r"([a-zåäöA-ZÅÄÖ]\))(\d)", r"\1 \2", text)
 
     # Always have a space a letter and an opening parenthesis
@@ -1482,35 +1516,35 @@ def split_outside_brackets(text):
     square_start = None
 
     for i, char in enumerate(text):
-        if char == '(':
+        if char == "(":
             round_depth += 1
-        elif char == ')':
+        elif char == ")":
             round_depth = max(0, round_depth - 1)
-        elif char == '[':
+        elif char == "[":
             square_depth += 1
             if square_depth == 1:
                 square_start = i
 
-        elif char == ']':
+        elif char == "]":
             square_depth = max(0, square_depth - 1)
 
             # Split after closing bracket if it contains additional title info
             if square_depth == 0 and round_depth == 0:
-                bracket_content = text[square_start:i + 1]
+                bracket_content = text[square_start : i + 1]
 
-                if re.search(r'\[[^\[\]]*\.\s+[^\[\]]*\.\]', bracket_content):
-                    match = re.match(r'\s+', text[i + 1:])
+                if re.search(r"\[[^\[\]]*\.\s+[^\[\]]*\.\]", bracket_content):
+                    match = re.match(r"\s+", text[i + 1 :])
                     if match:
-                        parts.append(text[start:i + 1])
+                        parts.append(text[start : i + 1])
                         start = i + 1 + match.end()
 
                 square_start = None
 
         # Split after a period outside brackets
-        elif char == '.' and round_depth == 0 and square_depth == 0:
-            match = re.match(r' (?=-)|\s+', text[i + 1:])
+        elif char == "." and round_depth == 0 and square_depth == 0:
+            match = re.match(r" (?=-)|\s+", text[i + 1 :])
             if match:
-                parts.append(text[start:i + 1])
+                parts.append(text[start : i + 1])
                 start = i + 1 + match.end()
 
     parts.append(text[start:])
@@ -1666,7 +1700,6 @@ if __name__ == "__main__":
     result_path = f"{args.results_folder}/{date}_reshape_result.jsonld.lines"
     report_path = f"{args.reports_folder}/{date}_reshape_report.md"
     info_and_errors_path = f"{args.reports_folder}/{date}_reshape_info_and_errors.tsv"
-    
 
     with open(args.infile) as infile, open(
         result_path, "w", encoding="utf-8"
