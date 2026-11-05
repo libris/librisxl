@@ -62,15 +62,15 @@ public class PredicateObjectQuery extends ObjectQuery {
                     .merge(getFullQueryTree(), ld);
         }
 
-        ESQueryDefinition.AggsDefinition aggsDefinition = null;
-        if (queryParams.stats.on) {
-            Set<String> subjectTypes = Stream.concat(queryTree.getRdfSubjectType().typeNames().stream(),
-                            predicatesByInferredSubjectType.keySet().stream())
-                    .collect(Collectors.toSet());
-            aggsDefinition = new ESQueryDefinition.AggsDefinition(appParams.sliceList, getSelectedFacets(), subjectTypes);
-        }
+        Set<String> subjectTypes = Stream.concat(queryTree.getRdfSubjectType().typeNames().stream(),
+                        predicatesByInferredSubjectType.keySet().stream())
+                .collect(Collectors.toSet());
 
-        return new ESQueryDefinition(queryTree, esSettings, queryParams, ld, aggsDefinition, null);
+        ESQueryDefinition.AggsDefinition aggsDefinition = queryParams.stats.on
+                ? new ESQueryDefinition.AggsDefinition(appParams.sliceList, getSelectedFacets())
+                : null;
+
+        return new ESQueryDefinition(queryTree, esSettings, queryParams, ld, subjectTypes, aggsDefinition, null);
     }
 
     private Node predicateObjectFilter(Collection<Property> predicates) {

@@ -43,8 +43,8 @@ class ESQueryDefinitionSpec extends Specification {
         QueryTree queryTree = QueryTree.newEmpty()
         QueryParams queryParams = new QueryParams([:])
         SelectedFacets selectedFacets = new SelectedFacets(queryTree, appParams1.sliceList)
-        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams1.sliceList, selectedFacets, [])
-        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, aggs, null)
+        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams1.sliceList, selectedFacets)
+        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, [], aggs, null)
 
         expect:
         queryDefinition.buildAggsQuery() == [
@@ -103,8 +103,8 @@ class ESQueryDefinitionSpec extends Specification {
         QueryTree queryTree = new QueryTree("type:(T1x OR T2x)", disambiguate)
         QueryParams queryParams = new QueryParams([:])
         SelectedFacets selectedFacets = new SelectedFacets(queryTree, appParams1.sliceList)
-        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams1.sliceList, selectedFacets, [])
-        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, aggs, null)
+        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams1.sliceList, selectedFacets)
+        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, [], aggs, null)
 
         expect:
         queryDefinition.buildAggsQuery() == [
@@ -207,8 +207,8 @@ class ESQueryDefinitionSpec extends Specification {
         QueryTree queryTree = new QueryTree("type:((T1x OR T2x) T3)", disambiguate)
         QueryParams queryParams = new QueryParams([:])
         SelectedFacets selectedFacets = new SelectedFacets(queryTree, appParams1.sliceList)
-        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams1.sliceList, selectedFacets, [])
-        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, aggs, null)
+        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams1.sliceList, selectedFacets)
+        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, [], aggs, null)
 
         expect:
         queryDefinition.buildAggsQuery() == [
@@ -253,8 +253,8 @@ class ESQueryDefinitionSpec extends Specification {
         QueryTree queryTree = QueryTree.newEmpty()
         QueryParams queryParams = new QueryParams([:])
         SelectedFacets selectedFacets = new SelectedFacets(queryTree, appParams2.sliceList)
-        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams2.sliceList, selectedFacets, ['T2'])
-        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, aggs, null)
+        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams2.sliceList, selectedFacets)
+        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, ['T2'], aggs, null)
 
         expect:
         queryDefinition.buildAggsQuery() == [
@@ -316,8 +316,8 @@ class ESQueryDefinitionSpec extends Specification {
         QueryTree queryTree = new QueryTree('workCategory:"https://id.kb.se/term/ktg/X"', disambiguate)
         QueryParams queryParams = new QueryParams([:])
         SelectedFacets selectedFacets = new SelectedFacets(queryTree, appParams2.sliceList)
-        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams2.sliceList, selectedFacets, ['T2'])
-        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, aggs, null)
+        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams2.sliceList, selectedFacets)
+        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, ['T2'], aggs, null)
 
         expect:
         queryDefinition.buildAggsQuery() == [
@@ -407,8 +407,8 @@ class ESQueryDefinitionSpec extends Specification {
         QueryTree queryTree = new QueryTree('workCategory:"https://id.kb.se/term/ktg/Y"', disambiguate)
         QueryParams queryParams = new QueryParams([:])
         SelectedFacets selectedFacets = new SelectedFacets(queryTree, appParams2.sliceList)
-        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams2.sliceList, selectedFacets, ['T1'])
-        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, aggs, null)
+        ESQueryDefinition.AggsDefinition aggs = new ESQueryDefinition.AggsDefinition(appParams2.sliceList, selectedFacets)
+        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, ['T1'], aggs, null)
 
         expect:
         queryDefinition.buildAggsQuery() == [
@@ -495,7 +495,7 @@ class ESQueryDefinitionSpec extends Specification {
 
     def "build sort clauses"() {
         expect:
-        ESQueryDefinition.buildSortClauses(Sort.fromString(sort), esSettings.mappings(), jsonLd) == result
+        ESQueryDefinition.buildSortClauses(Sort.fromString(sort), [], esSettings.mappings(), jsonLd) == result
 
         where:
         sort            | result
@@ -504,6 +504,23 @@ class ESQueryDefinitionSpec extends Specification {
         '-p2,p3.p4.@id' | [['p2': ['order': Sort.Order.desc, 'missing': '_last']],
                            ['p3.p4.@id': ['order': Sort.Order.asc, 'missing': '_last', 'nested': ['path': 'p3']]]]
         'p15.p16'       | [['p15.p16': ['order': Sort.Order.asc, 'missing': '_last']]]
+    }
+
+    def "build sort clauses, expand sort key by subject types"() {
+        expect:
+        ESQueryDefinition.buildSortClauses(Sort.fromString(sort), types, esSettings.mappings(), jsonLd)
+                == [[(field): ['order': Sort.Order.asc, 'missing': '_last']]]
+
+        where:
+        sort            | types        | field
+        // p21 is a sort key with domain T2, reachable from T1 through instanceOf
+        'p21'           | []           | 'p21'
+        'p21'           | ['T2']       | 'p21'
+        'p21'           | ['T1']       | 'instanceOf.p21'
+        // ambiguous, incompatible or not defined as sort key -> raw key
+        'p21'           | ['T1', 'T2'] | 'p21'
+        'p21'           | ['T3']       | 'p21'
+        'p8'            | ['T1']       | 'p8'
     }
 
     def "build aggs query with curated predicates"() {
@@ -516,7 +533,7 @@ class ESQueryDefinitionSpec extends Specification {
                 new ESQueryDefinition.PredicateDefinition(Disambiguate.getPropertyByKey('p20', jsonLd), ['T3'])
         ]
         ESQueryDefinition.PAggsDefinition pAggs = new ESQueryDefinition.PAggsDefinition(object, predicates)
-        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, null, pAggs)
+        ESQueryDefinition queryDefinition = new ESQueryDefinition(queryTree, esSettings, queryParams, jsonLd, [], null, pAggs)
 
         expect:
         queryDefinition.buildPAggsQuery() == [

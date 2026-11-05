@@ -14,6 +14,7 @@ import whelk.search2.querytree.node.Condition;
 import whelk.search2.querytree.node.Node;
 import whelk.search2.querytree.node.Or;
 import whelk.search2.querytree.selector.Property;
+import whelk.search2.querytree.selector.Selector;
 import whelk.search2.querytree.value.Any;
 import whelk.search2.querytree.value.Link;
 
@@ -28,6 +29,7 @@ import java.util.function.Consumer;
 
 import static whelk.component.ElasticSearch.SystemFields.ES_ID;
 import static whelk.component.ElasticSearch.flattenedLangMapKey;
+import static whelk.search2.Disambiguate.getPropertyByKey;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.esquery.ESMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
 import static whelk.search2.esquery.ESMappings.FOUR_DIGITS_SHORT_SUFFIX;
@@ -37,6 +39,7 @@ public record ESQueryDefinition(QueryTree tree,
                                 ESSettings settings,
                                 QueryParams queryParams,
                                 JsonLd jsonLd,
+                                Collection<String> rdfSubjectTypes,
                                 AggsDefinition aggs,
                                 PAggsDefinition pAggs)
 {
@@ -48,8 +51,7 @@ public record ESQueryDefinition(QueryTree tree,
     private static final String NONE_CATEGORY = "librissearch:noneCategory";
 
     public record AggsDefinition(List<AppParams.Slice> slices,
-                                 SelectedFacets selectedFacets,
-                                 Collection<String> rdfSubjectTypes) {
+                                 SelectedFacets selectedFacets) {
     }
 
     public record PAggsDefinition(Link object, List<PredicateDefinition> predicates) {
@@ -74,7 +76,7 @@ public record ESQueryDefinition(QueryTree tree,
 
         dsl.put("size", queryParams.limit);
         dsl.put("from", queryParams.offset);
-        dsl.put("sort", buildSortClauses(queryParams.sortBy, settings.mappings(), jsonLd));
+        dsl.put("sort", buildSortClauses(queryParams.sortBy, rdfSubjectTypes, settings.mappings(), jsonLd));
 
         if (queryParams.spell.suggest && settings.mappings().spellFieldExists()) {
             var spellQuery = Spell.getSpellQuery(tree);
@@ -169,7 +171,7 @@ public record ESQueryDefinition(QueryTree tree,
             throw new RuntimeException("Can't handle combined fields in aggs query");
         }
 
-        QueryTreeExpander.expandProperty(property, jsonLd, aggs.rdfSubjectTypes(), false)
+        QueryTreeExpander.expandProperty(property, jsonLd, rdfSubjectTypes, false)
                 .forEach(selector -> {
                     String field = selector.esField();
                     if (settings.mappings().hasFourDigitsKeywordField(field)) {
@@ -208,7 +210,7 @@ public record ESQueryDefinition(QueryTree tree,
                             : selectedFacets.getAllMultiOrRadioSelected();
 
                     Node multiSelectedTree = buildMultiSelectedTree(mSelected.values());
-                    Map<String, Object> filter = toEs(multiSelectedTree, aggs.rdfSubjectTypes()).dsl();
+                    Map<String, Object> filter = toEs(multiSelectedTree, rdfSubjectTypes).dsl();
 
                     query.put(field, filterWrap(aggQuery, property.name(), filter));
                 });
@@ -289,22 +291,46 @@ public record ESQueryDefinition(QueryTree tree,
                 "filter", filter);
     }
 
-    private static List<Map<String, Object>> buildSortClauses(Sort sort, ESMappings mappings, JsonLd jsonLd) {
+    private static List<Map<String, Object>> buildSortClauses(Sort sort,
+                                                              Collection<String> rdfSubjectTypes,
+                                                              ESMappings mappings,
+                                                              JsonLd jsonLd) {
         return sort.keys().stream()
-                .map(k -> buildSortClause(k, mappings, jsonLd))
+                .map(k -> buildSortClause(k, rdfSubjectTypes, mappings, jsonLd))
                 .toList();
     }
 
-    private static Map<String, Object> buildSortClause(Sort.Key k, ESMappings mappings, JsonLd jsonLd) {
-        String field = getSortField(k.key(), mappings, jsonLd);
+    private static Map<String, Object> buildSortClause(Sort.Key k,
+                                                       Collection<String> rdfSubjectTypes,
+                                                       ESMappings mappings,
+                                                       JsonLd jsonLd) {
+        String field = getSortField(tryExpandSortKey(k.key(), rdfSubjectTypes, jsonLd), mappings, jsonLd);
         Map<String, Object> sort = new LinkedHashMap<>();
         sort.put("order", k.order());
         sort.put("missing", "_last");
-        // Nested fields with include_in_parent are also indexed on the parent document
         ESQueryTreeBuilder.getNestedStem(field, mappings)
                 .filter(stem -> !mappings.isNestedIncludeInParentField(stem))
                 .ifPresent(stem -> sort.put("nested", Map.of("path", stem)));
         return Map.of(field, sort);
+    }
+
+    private static String tryExpandSortKey(String key, Collection<String> rdfSubjectTypes, JsonLd jsonLd) {
+        Property property;
+        try {
+            property = getPropertyByKey(key, jsonLd);
+        } catch (IllegalArgumentException e) {
+            return key;
+        }
+        if (!property.isSortKey()) {
+            return key;
+        }
+        List<Selector> expanded = QueryTreeExpander.expandProperty(property, jsonLd, rdfSubjectTypes, false);
+        // TODO: Validate sort keys in general and report invalid ones to the client instead of passing them on
+        //  to Elastic. For now, a sort key that is ambiguous (e.g. [p, instanceOf.p]) or incompatible with the
+        //  queried types is passed on as is, just like any other unrecognized sort key.
+        return expanded.size() == 1
+                ? expanded.getFirst().esField()
+                : key;
     }
 
     private static String getSortField(String field, ESMappings mappings, JsonLd jsonLd) {

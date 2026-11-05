@@ -213,11 +213,13 @@ public class Query {
                 ? esSettings.withBoostSettings(queryParams.boost)
                 : esSettings;
 
+        List<String> subjectTypes = queryTree.getRdfSubjectType().typeNames();
+
         ESQueryDefinition.AggsDefinition aggsDefinition = queryParams.stats.on
-                ? new ESQueryDefinition.AggsDefinition(appParams.sliceList, getSelectedFacets(), queryTree.getRdfSubjectType().typeNames())
+                ? new ESQueryDefinition.AggsDefinition(appParams.sliceList, getSelectedFacets())
                 : null;
 
-        return new ESQueryDefinition(queryTree, currentEsSettings, queryParams, ld, aggsDefinition, null);
+        return new ESQueryDefinition(queryTree, currentEsSettings, queryParams, ld, subjectTypes, aggsDefinition, null);
     }
 
     private List<String> findIndexNames() {
