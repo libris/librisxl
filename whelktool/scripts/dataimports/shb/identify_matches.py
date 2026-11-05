@@ -486,6 +486,9 @@ def remove_problematic_punctuation(text: str) -> str:
         .replace('"', "")
         .replace("'", "")
         .replace("+", "")
+        .replace("~", "")
+        .replace("<", "")
+        .replace(">", "")
         .lstrip(":")
     )
 
