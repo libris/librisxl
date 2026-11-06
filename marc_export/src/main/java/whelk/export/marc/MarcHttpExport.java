@@ -121,6 +121,7 @@ public class MarcHttpExport extends CoreWhelkHttpServlet
                     Integer.toString(HttpServletResponse.SC_BAD_REQUEST)).inc();
             res.sendError(HttpServletResponse.SC_BAD_REQUEST,
                     "The \"from\" and \"until\" parameters must specify a point in time no farther back than 3 weeks. This API is meant for incrementally staying up to date, not for full dumps. For full dumps contact libris customer service.");
+            return;
         }
 
 
