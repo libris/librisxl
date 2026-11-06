@@ -19,6 +19,7 @@ import whelk.util.Restrictions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -113,11 +114,27 @@ public class QueryTreeExpander {
     }
 
     private static List<Selector> expandCompositeProperty(Property.CompositeProperty property, JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
-        return property.getComponents(jsonLd)
-                .stream()
+        List<Selector> components = property.getComponents(jsonLd);
+        Optional<Property> coerced = coerceByType(components, jsonLd, rdfSubjectTypes);
+        if (coerced.isPresent()) {
+            return expandProperty(coerced.get(), jsonLd, rdfSubjectTypes, allowIncompatible);
+        }
+        return components.stream()
                 .flatMap(s -> expandSelector(s, jsonLd, rdfSubjectTypes, allowIncompatible).stream())
                 .distinct()
                 .toList();
+    }
+
+    private static Optional<Property> coerceByType(List<Selector> components, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        if (rdfSubjectTypes.isEmpty()) {
+            return Optional.empty();
+        }
+        List<Property> matching = components.stream()
+                .filter(s -> s instanceof Property.CoercingSubProperty csp && csp.isCoercingByDomain())
+                .map(Property.class::cast)
+                .filter(p -> rdfSubjectTypes.stream().allMatch(t -> p.appliesToType(t, jsonLd)))
+                .toList();
+        return matching.size() == 1 ? Optional.of(matching.getFirst()) : Optional.empty();
     }
 
     private static List<Selector> expandShorthandProperty(Property.ShorthandProperty property, JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {

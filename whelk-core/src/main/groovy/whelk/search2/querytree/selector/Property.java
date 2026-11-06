@@ -225,6 +225,10 @@ public non-sealed class Property extends PathElement {
                 .anyMatch(relation -> relation.range().stream().anyMatch(t -> appearsOnType(t, jsonLd)));
     }
 
+    public boolean appliesToType(String type, JsonLd jsonLd) {
+        return domain.stream().anyMatch(d -> jsonLd.isSubClassOf(type, d));
+    }
+
     @Override
     public List<String> domain() {
         return domain != null ? domain : List.of();
@@ -563,6 +567,10 @@ public non-sealed class Property extends PathElement {
         @Override
         public Map<String, Object> definition() {
             return superProperty.definition();
+        }
+
+        public boolean isCoercingByDomain() {
+            return isCoercing(definition) && definition.containsKey(DOMAIN);
         }
 
         @Override

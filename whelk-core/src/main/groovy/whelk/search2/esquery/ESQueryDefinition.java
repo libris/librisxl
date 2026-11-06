@@ -38,7 +38,7 @@ import static whelk.search2.esquery.ESMappings.KEYWORD;
 public record ESQueryDefinition(QueryTree tree,
                                 ESSettings settings,
                                 QueryParams queryParams,
-                                JsonLd jsonLd,
+                                JsonLd jsonLd, // TODO: Move the JsonLd-dependent logic out of this class
                                 Collection<String> rdfSubjectTypes,
                                 AggsDefinition aggs,
                                 PAggsDefinition pAggs)
