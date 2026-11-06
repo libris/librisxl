@@ -148,7 +148,7 @@ public class QueryTreeExpander {
                 .collect(Collectors.toSet());
 
         Predicate<Property> followIntegralRelation = integralProp ->
-                integralProp.range().stream().anyMatch(irRangeType -> property.mayAppearOnType(irRangeType, jsonLd));
+                integralProp.range().stream().anyMatch(irRangeType -> property.mayBeCompatibleWithType(irRangeType, jsonLd));
 
         List<List<Property>> altPaths = new ArrayList<>();
 
@@ -159,7 +159,7 @@ public class QueryTreeExpander {
                 .forEach(altPaths::add);
 
         // Include the original property too, if compatible with the queried subject types
-        if (rdfSubjectTypes.stream().anyMatch(t -> property.mayAppearOnType(t, jsonLd))) {
+        if (rdfSubjectTypes.stream().anyMatch(t -> property.mayBeCompatibleWithType(t, jsonLd))) {
             altPaths.add(List.of(property));
         }
 

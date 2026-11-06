@@ -135,8 +135,8 @@ public class QueryTreeMerger {
     }
 
     private static Node retainCompatibleByDomain(String rdfSubjectType, Node tree, JsonLd jsonLd) {
-        Predicate<Condition> isCompatibleByDomain = c -> c.selector().appearsOnType(rdfSubjectType, jsonLd)
-                || c.selector().indirectlyAppearsOnType(rdfSubjectType, jsonLd);
+        Predicate<Condition> isCompatibleByDomain = c -> c.selector().isCompatibleWithType(rdfSubjectType, jsonLd)
+                || c.selector().isIndirectlyCompatibleWithType(rdfSubjectType, jsonLd);
 
         Predicate<Node> isIncompatible = node -> switch (node) {
             case Condition c -> !isCompatibleByDomain.test(c);
