@@ -119,7 +119,7 @@ public class SuggestQuery extends Query {
 
     private ESQueryDefinition prepareEsQuery() {
         QueryTree.MergedTree queryTree = getFullQueryTree(suggestQueryTree);
-        return new ESQueryDefinition(queryTree, esSettings, queryParams, whelk.getJsonld(), null, null);
+        return new ESQueryDefinition(queryTree, esSettings, queryParams, whelk.getJsonld(), List.of(), null, null);
     }
 
     private List<Selector> getApplicablePredicates(Map<?, ?> item, Map<String, Property> propertyByKey) {
