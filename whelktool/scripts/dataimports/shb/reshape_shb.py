@@ -846,7 +846,7 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
         r"""
         -?\s*
         (?P<place>
-            (?:\[[^\]]+\]\s*)?
+            (?:\[[A-ZÅÄÖ][A-Za-zÅÄÖåäö.\-]*\]\s*)?
             [A-ZÅÄÖ][A-Za-zÅÄÖåäö.\-]*
             (?:\s+[A-ZÅÄÖ][A-Za-zÅÄÖåäö.\-]*)?
             |
@@ -1532,7 +1532,7 @@ def split_outside_brackets(text):
             if square_depth == 0 and round_depth == 0:
                 bracket_content = text[square_start : i + 1]
 
-                if re.search(r"\[[^\[\]]*\.\s+[^\[\]]*\.\]", bracket_content):
+                if re.search(r"\[[^\[\]]*\.\s+[^\[\]]*\.\]", bracket_content) or bracket_content.count(" ") >= 2:
                     match = re.match(r"\s+", text[i + 1 :])
                     if match:
                         parts.append(text[start : i + 1])
