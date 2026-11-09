@@ -847,8 +847,8 @@ def extract_place_year(remainder: str) -> tuple[str, str, str]:
         -?\s*
         (?P<place>
             (?:\[[^\]]+\]\s*)?
-            [A-ZÅÄÖ][A-Za-zÅÄÖåäö.\- ]*
-            (?:\s*\(tr\. [^)]*\))?
+            [A-ZÅÄÖ][A-Za-zÅÄÖåäö.\-]*
+            (?:\s+[A-ZÅÄÖ][A-Za-zÅÄÖåäö.\-]*)?
             |
             \[[^\]]+\]
         )
@@ -1107,7 +1107,7 @@ def extract_title_and_subtitle(
             title = " ".join(part for part in parts)
             remainder = ""
         else:
-            # Let's arbitrarily say that the subtitle can have a maximum of three parts
+            # Let's arbitrarily say that the subtitle can have a maximum of one part
             title = parts[0]
             subtitle = " ".join(part for part in parts[1:2])
             remainder = " ".join(part for part in parts[2:])
