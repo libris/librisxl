@@ -196,7 +196,7 @@ def get_match_score(shb_prepped: dict, match_prepped: dict):
     elif not shb_prepped.get("responsibility_statement") and not match_prepped.get(
         "responsibility_statement"
     ):
-        contributor_score = 0.5
+        contributor_score = 0.6
 
     # Year (normalized to numeric only) is a dealbreaker for serials and monographs
     if shb_prepped.get("year") and match_prepped.get("year"):
