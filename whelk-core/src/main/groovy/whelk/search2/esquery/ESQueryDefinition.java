@@ -28,7 +28,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import static whelk.component.ElasticSearch.SystemFields.ES_ID;
-import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.search2.Disambiguate.getPropertyByKey;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.esquery.ESMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
@@ -304,7 +303,7 @@ public record ESQueryDefinition(QueryTree tree,
                                                        Collection<String> rdfSubjectTypes,
                                                        ESMappings mappings,
                                                        JsonLd jsonLd) {
-        String field = getSortField(tryExpandSortKey(k.key(), rdfSubjectTypes, jsonLd), mappings, jsonLd);
+        String field = getSortField(tryExpandSortKey(k.key(), rdfSubjectTypes, jsonLd), mappings);
         Map<String, Object> sort = new LinkedHashMap<>();
         sort.put("order", k.order());
         sort.put("missing", "_last");
@@ -333,8 +332,7 @@ public record ESQueryDefinition(QueryTree tree,
                 : key;
     }
 
-    private static String getSortField(String field, ESMappings mappings, JsonLd jsonLd) {
-        field = expandLangMapKeys(field, jsonLd);
+    private static String getSortField(String field, ESMappings mappings) {
         if (mappings.hasFourDigitsShortField(field)) {
             return String.format("%s%s", field, FOUR_DIGITS_SHORT_SUFFIX);
         }
@@ -343,18 +341,6 @@ public record ESQueryDefinition(QueryTree tree,
         } else {
             return field;
         }
-    }
-
-    private static String expandLangMapKeys(String field, JsonLd jsonLd) {
-        var parts = field.split("\\.");
-        if (parts.length > 0) {
-            var lastIx = parts.length - 1;
-            if (jsonLd.langContainerAlias.containsKey(parts[lastIx])) {
-                parts[lastIx] = flattenedLangMapKey(parts[lastIx]);
-                return String.join(".", parts);
-            }
-        }
-        return field;
     }
 
     private static <T> T with(T t, Consumer<T> f) {
