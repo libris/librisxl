@@ -17,6 +17,7 @@ skipped = getReportWriter("skipped")
 info = getReportWriter("info")
 modified_flerband = getReportWriter("modified-flerband")
 modified_huvudpost = getReportWriter("modified-huvudpost")
+kept_technicalnote = getReportWriter("kept-technicalnote")
 
 def whelk = getWhelk()
 Set processedTargets = ConcurrentHashMap.newKeySet()
@@ -156,8 +157,45 @@ selectBySqlWhere(where) { doc ->
 
 processedTargets.removeAll(processedTargetsToSkip)
 
+// Re-scan: collect every control number still referenced from a supplementTo after phase 1
+// (whatever the reason it was skipped, including records excluded by the where clause above).
+// A target keeps its TechnicalNote if any of its LibrisIIINumbers is still referenced.
+Set remainingControlNumbers = ConcurrentHashMap.newKeySet()
+selectBySqlWhere("""
+    collection = 'bib' and deleted = false
+    and jsonb_path_exists(data, '\$."@graph"[1].supplementTo[*].describedBy[*].controlNumber')
+""") { doc ->
+    asList(doc.graph[1]["supplementTo"]).each { supplementTo ->
+        if (!(supplementTo instanceof Map)) {
+            return
+        }
+        asList(supplementTo["describedBy"]).each { describedBy ->
+            if (!(describedBy instanceof Map)) {
+                return
+            }
+            asList(describedBy["controlNumber"]).each { controlNumber ->
+                if (controlNumber instanceof String) {
+                    remainingControlNumbers.add(normalizeControlNumber(controlNumber))
+                }
+            }
+        }
+    }
+}
+
 selectByIds(processedTargets) { doc ->
     def record = doc.graph[0]
+
+    def libris3Numbers = asList(record.identifiedBy)
+        .findAll { it instanceof Map && it["@type"] == "LibrisIIINumber" }
+        .collectMany { asList(it["value"]) }
+        .findAll { it instanceof String }
+        .collect { normalizeControlNumber(it) }
+    def stillReferenced = libris3Numbers.findAll { it in remainingControlNumbers }
+    if (stillReferenced) {
+        kept_technicalnote.println("${doc.doc.getShortId()}: still referenced from supplementTo via ${stillReferenced}")
+        return
+    }
+
     def technicalNotes = asList(record.technicalNote)
 
     technicalNotes.removeIf {
@@ -227,6 +265,11 @@ boolean isOtherMainEntityId(String ctrlNumber) {
 
 static String sanitize(String value) {
     return value.replaceAll(/(?U)[\s\p{Cntrl}\p{Cf}]/, '')
+}
+
+// Same normalization as used for the lookup in phase 1 (sanitize + findMainEntityIds quote stripping)
+static String normalizeControlNumber(String value) {
+    return sanitize(value).replaceAll(/['"\\]/, '')
 }
 
 static List isSeeminglySameTitle(String sourceTitle, String targetTitle, String targetProperUri) {
