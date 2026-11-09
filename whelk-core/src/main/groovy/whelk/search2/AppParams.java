@@ -49,11 +49,12 @@ public class AppParams {
     }
 
     public static class Slice {
-        public static final Integer DEFAULT_BUCKET_SIZE = 10;
+        private enum BucketSortBy { count, key }
+        private static final String DEFAULT_BUCKET_SORT = "-" + BucketSortBy.count;
+        private static final Integer DEFAULT_BUCKET_SIZE = 10;
 
         private final String propertyKey;
-        private final Sort.Order sortOrder;
-        private final Sort.BucketSortKey bucketSortKey;
+        private final Sort.Key bucketSort;
         private final int itemLimit;
         private final boolean isRange;
         private final Query.Connective defaultConnective;
@@ -66,8 +67,7 @@ public class AppParams {
 
         public Slice(Map<?, ?> settings, JsonLd jsonLd) {
             var chain = ((List<?>) settings.get("dimensionChain")).stream().map(String::valueOf).toList();
-            this.sortOrder = parseSortOrder(settings);
-            this.bucketSortKey = parseBucketSortKey(settings);
+            this.bucketSort = parseBucketSort(settings);
             this.itemLimit = parseItemLimit(settings);
             this.isRange = parseRangeFlag(settings);
             this.defaultConnective = parseConnective(settings);
@@ -87,12 +87,8 @@ public class AppParams {
             return propertyKey;
         }
 
-        public String sortOrder() {
-            return sortOrder.name();
-        }
-
-        public String bucketSortKey() {
-            return bucketSortKey.esKey;
+        public Sort.Key bucketSort() {
+            return bucketSort;
         }
 
         public int size() {
@@ -127,16 +123,12 @@ public class AppParams {
             return showIf;
         }
         
-        private Sort.Order parseSortOrder(Map<?, ?> settings) {
-            return Optional.ofNullable((String) settings.get("sortOrder"))
-                    .map(Sort.Order::valueOf)
-                    .orElse(Sort.Order.desc);
-        }
-
-        private Sort.BucketSortKey parseBucketSortKey(Map<?, ?> settings) {
-            return Optional.ofNullable((String) settings.get("sort"))
-                    .map(Sort.BucketSortKey::valueOf)
-                    .orElse(Sort.BucketSortKey.count);
+        private Sort.Key parseBucketSort(Map<?, ?> settings) {
+            var key = Sort.fromString(Optional.ofNullable((String) settings.get("sort")).orElse(DEFAULT_BUCKET_SORT))
+                    .keys()
+                    .getFirst();
+            BucketSortBy.valueOf(key.key());
+            return key;
         }
 
         private int parseItemLimit(Map<?, ?> settings) {

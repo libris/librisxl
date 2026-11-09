@@ -624,7 +624,7 @@ public class ESQueryTreeBuilder {
         if (esMappings.isNestedTypeField(field)) {
             return Optional.of(field);
         }
-        return esMappings.getNestedTypeFields().stream().filter(field::startsWith).findFirst();
+        return esMappings.getNestedTypeFields().stream().filter(stem -> field.startsWith(stem + ".")).findFirst();
     }
 
     private static ESNode.TextQueryMode chooseTextQueryMode(String s, ESNode.MultiMatchType matchType) {
