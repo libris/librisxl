@@ -89,4 +89,19 @@ class CleanedTrigSerializerState extends SerializerState {
         return super.refRepr(cleanedIriString)
     }
 
+    // [144s] LANGTAG ::= '@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
+    // https://www.w3.org/TR/turtle/#grammar-production-LANGTAG
+    private static final java.util.regex.Pattern VALID_LANGTAG = ~/^[a-zA-Z]+(-[a-zA-Z0-9]+)*$/
+
+    // TODO: Remove once data with invalid language tags (e.g. "9kd") has been cleaned up
+    // (see https://github.com/libris/definitions/pull/639).
+    @Override
+    String toStr(Object v, String datatype, Object lang) {
+        if (lang instanceof String && !((String) lang).isEmpty() && !VALID_LANGTAG.matcher((String) lang).matches()) {
+            log.warn("Invalid language tag ${lang}, dropping it")
+            lang = null
+        }
+        return super.toStr(v, datatype, lang)
+    }
+
 }
