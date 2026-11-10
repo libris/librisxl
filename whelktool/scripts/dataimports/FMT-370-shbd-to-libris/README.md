@@ -9,14 +9,14 @@ KBV entities contain an instance (with an embedded work) and an admin metadata r
 The result is saved to the designated results folder.
 
 ```
-java -cp importers/build/libs/xlimporter.jar -Dxl.secret.properties={ENV}-secret.properties whelktool/scripts/dataimports/shb/ConvertSHB.java $HOME/data/shb.mrc > $HOME/data/shb.jsonld.lines
+java -cp importers/build/libs/xlimporter.jar -Dxl.secret.properties={ENV}-secret.properties whelktool/scripts/dataimports/FMT-370-shbd-to-libris/ConvertSHB.java $HOME/data/shb.mrc > $HOME/data/shb.jsonld.lines
 ```
 
 ### 2. Improve the KBV data
 Use reshape_shb.py to parse unstructured data and enrich as well as reshape the KBV instances and records. 
 
 ```
-python3 whelktool/scripts/dataimports/shb/reshape_shb.py $HOME/data/joined_shb.jsonld.lines "$HOME/code/libris/data/register SHB 2026_08_25_SAO_SAB.xlsx" $HOME/data/results $HOME/data/reports
+python3 whelktool/scripts/dataimports/FMT-370-shbd-to-libris/reshape_shb.py $HOME/data/joined_shb.jsonld.lines "$HOME/data/SHB-SAB_SAO-mapping.xlsx" $HOME/data/results $HOME/data/reports
 ```
 
 The xlsx file contains a mapping from SHB section headings to SAOGF terms and SAB codes.
@@ -35,10 +35,10 @@ SEARCH_CODES=title ; time python3 whelktool/scripts/dataimports/shb/identify_mat
 The argument search_codes specifiecs which values should be queried with a search code (for example *title = (Pippi Långstrump)*) rather than as free text. `SEARCH_CODES=title` seems to return a result that is sufficiently broad but not too noisy.
 
 ### 4. Create/update in Libris
-Use create_and_update_libris_records.groovy to create and update entities in Libris.
+Use CreateAndUpdateFromSHBd.groovy to create and update entities in Libris.
 
 ```
-time java -Xmx2G -Dxl.secret.properties=../secret.properties-{ENV} -DdataFolder=$HOME/data/import_test_data -jar build/libs/whelktool.jar --report reports/fmt-370_$(date +%Y%m%d) --allow-loud scripts/dataimports/shb/create_and_update_libris_records.groovy
+time java -Xmx2G -Dxl.secret.properties=../secret.properties-{ENV} -DdataFolder=$HOME/data/import_test_data -jar build/libs/whelktool.jar --report reports/fmt-370_$(date +%Y%m%d) --allow-loud scripts/dataimports/FMT-370-shbd-to-libris/CreateAndUpdateFromSHBd.groovy
 ```
 
 The --allow-loud flag is needed to create new instances.
