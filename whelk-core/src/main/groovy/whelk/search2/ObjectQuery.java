@@ -105,19 +105,27 @@ public class ObjectQuery extends Query {
             queryTree = new QueryTree(new Or(altTrees));
         }
 
-        ESQueryDefinition.AggsDefinition aggsDefinition = null;
-        if (queryParams.stats.on) {
-            List<String> subjectTypes = Stream.concat(givenSubjectTypes.stream(), inferredSubjectTypes.stream()).toList();
-            aggsDefinition = new ESQueryDefinition.AggsDefinition(appParams.sliceList, getSelectedFacets(), subjectTypes);
-        }
+        List<String> subjectTypes = Stream.concat(givenSubjectTypes.stream(), inferredSubjectTypes.stream()).toList();
+
+        ESQueryDefinition.AggsDefinition aggsDefinition = queryParams.stats.on
+                ? new ESQueryDefinition.AggsDefinition(appParams.sliceList, getSelectedFacets())
+                : null;
 
         ESQueryDefinition.PAggsDefinition pAggsDefinition = new ESQueryDefinition.PAggsDefinition(object, predicateDefs);
 
-        return new ESQueryDefinition(queryTree, esSettings, queryParams, ld, aggsDefinition, pAggsDefinition);
+        return new ESQueryDefinition(queryTree, esSettings, queryParams, ld, subjectTypes, aggsDefinition, pAggsDefinition);
     }
 
-    private Condition objectFilter() {
-        return new Condition(LINKS, Operator.EQUALS, new Term(object.iri()));
+    private Node objectFilter() {
+        Condition _links = new Condition(LINKS, Operator.EQUALS, new Term(object.iri()));
+        if (curatedPredicates.isEmpty()) {
+            return _links;
+        }
+        List<Condition> relations = new ArrayList<>(List.of(_links));
+        for (Property p : curatedPredicates) {
+            relations.add(new Condition(p, Operator.EQUALS, new Link(object.iri())));
+        }
+        return new Or(relations);
     }
 
     private Link loadObject() throws InvalidQueryException {

@@ -1,5 +1,6 @@
 package whelk.search2.querytree;
 
+import whelk.search2.querytree.node.And;
 import whelk.search2.querytree.node.Condition;
 import whelk.search2.querytree.node.FilterAlias;
 import whelk.search2.querytree.value.FreeText;
@@ -43,7 +44,9 @@ public class QueryStringBuilder {
         String s = group.children().stream()
                 .map(child -> buildString(child, false))
                 .collect(Collectors.joining(group.delimiter()));
-        return topLevel ? s : parenthesize(s);
+        return group instanceof And && topLevel
+                ? s
+                : parenthesize(s);
     }
 
     private static String buildFromNot(Not not) {

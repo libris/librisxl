@@ -353,9 +353,7 @@ class ElasticSearch {
         if (docs) {
             String bulkString = docs.findResults{ doc ->
                 try {
-                    String shapedData = getShapeForIndex(doc, whelk)
-                    String action = createActionRow(doc)
-                    return "${action}\n${shapedData}\n"
+                    return createBulkRows(doc, whelk)
                 } catch (Exception e) {
                     if (doc.getShortId() == null) {
                         log.error("Document has null shortId, something is wrong. Some details: " + doc.toVerboseString(), e);
@@ -372,9 +370,7 @@ class ElasticSearch {
                         .flatten()
                         .findResults{ Document doc ->
                             try {
-                                String shapedData = getShapeForIndex(doc, whelk)
-                                String action = createActionRow(doc)
-                                return "${action}\n${shapedData}\n"
+                                return createBulkRows(doc, whelk)
                             } catch (Exception e) {
                                 if (doc.getShortId() == null) {
                                     log.error("Document has null shortId, something is wrong. Some details: " + doc.toVerboseString(), e);
@@ -394,9 +390,10 @@ class ElasticSearch {
                 int numFailedDueToESError = 0
                 if (responseMap.errors) {
                     responseMap.items?.each { item ->
-                        if (item.index?.error) {
-                            log.error("Failed indexing document: ${item.index}")
-                            if (item.index.status >= 500) {
+                        Map result = (Map) (item.index ?: item.delete)
+                        if (result?.error) {
+                            log.error("Failed indexing document: ${result}")
+                            if (result.status >= 500) {
                                 numFailedDueToESError++
                             } else {
                                 numFailedDueToDocError++
@@ -436,10 +433,17 @@ class ElasticSearch {
         }
     }
 
-    String createActionRow(Document doc) {
-        def action = ["index" : [ "_index" : getIndexForDoc(doc),
-                                  "_id" : toElasticId(doc.getShortId()) ]]
-        return mapper.writeValueAsString(action)
+    String createBulkRows(Document doc, Whelk whelk) {
+        String index = getIndexForDoc(doc)
+        if (doc.getDeleted()) {
+            return "${actionRow('delete', index, doc)}\n"
+        }
+        String shapedData = getShapeForIndex(doc, whelk)
+        return "${actionRow('index', index, doc)}\n${shapedData}\n"
+    }
+
+    private static String actionRow(String action, String index, Document doc) {
+        return mapper.writeValueAsString([(action) : [ "_index" : index, "_id" : toElasticId(doc.getShortId()) ]])
     }
 
     void index(Document doc, Whelk whelk) {

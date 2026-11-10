@@ -10,6 +10,7 @@ import whelk.search2.esquery.ESSettings;
 import whelk.search2.querytree.node.And;
 import whelk.search2.querytree.node.Condition;
 import whelk.search2.querytree.node.FilterAlias;
+import whelk.search2.querytree.selector.Selector;
 import whelk.search2.querytree.value.FreeText;
 import whelk.search2.querytree.value.Link;
 import whelk.search2.querytree.node.Node;
@@ -188,7 +189,7 @@ public class Query {
         view.put("maxItems", esSettings.maxItems());
 
         if (queryParams.debug.contains(QueryParams.Debug.ES_QUERY)) {
-            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, prepareEsQuery().dsl()));
+            view.put(QueryParams.ApiParams.DEBUG, Map.of(QueryParams.Debug.ES_QUERY, getEsQuery().dsl()));
         }
 
         linkLoader.loadChips();
@@ -212,11 +213,13 @@ public class Query {
                 ? esSettings.withBoostSettings(queryParams.boost)
                 : esSettings;
 
+        List<String> subjectTypes = queryTree.getRdfSubjectType().typeNames();
+
         ESQueryDefinition.AggsDefinition aggsDefinition = queryParams.stats.on
-                ? new ESQueryDefinition.AggsDefinition(appParams.sliceList, getSelectedFacets(), queryTree.getRdfSubjectType().typeNames())
+                ? new ESQueryDefinition.AggsDefinition(appParams.sliceList, getSelectedFacets())
                 : null;
 
-        return new ESQueryDefinition(queryTree, currentEsSettings, queryParams, ld, aggsDefinition, null);
+        return new ESQueryDefinition(queryTree, currentEsSettings, queryParams, ld, subjectTypes, aggsDefinition, null);
     }
 
     private List<String> findIndexNames() {
@@ -479,8 +482,12 @@ public class Query {
                             String bucketKey = entry.getKey();
                             var o = entry.getValue();
                             int count = entry.getValue().count();
+                            // TODO: Consolidate with QueryTreeBuilder.buildCondition(..)
                             Value v = disambiguate.mapValueForProperty(property, bucketKey).orElse(new FreeText(bucketKey));
-                            var c = new Condition(property, Operator.EQUALS, v);
+                            Selector s = v instanceof Resource r && disambiguate.isRestrictedByValue(property)
+                                    ? disambiguate.restrictByValue(property, r.jsonForm())
+                                    : property;
+                            Condition c = new Condition(s, Operator.EQUALS, v);
 
                             if (c.value() instanceof Link l && l.iri().equals(queryParams.object)) {
                                 // TODO: This check won't be needed if/when we remove facets from resource page.

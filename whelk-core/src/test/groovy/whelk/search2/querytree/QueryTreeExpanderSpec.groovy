@@ -21,9 +21,9 @@ class QueryTreeExpanderSpec extends Specification {
 
         where:
         query       | subjectTypes | result
-        "type:T1"   | []           | "type:T1 OR type:T1x"
-        "t1Type:T1" | ['T1']       | "t1Type:T1 OR t1Type:T1x"
-        "t1Type:T1" | ['T2']       | "hasInstance.t1Type:T1 OR hasInstance.t1Type:T1x"
+        "type:T1"   | []           | "(type:T1 OR type:T1x)"
+        "t1Type:T1" | ['T1']       | "(t1Type:T1 OR t1Type:T1x)"
+        "t1Type:T1" | ['T2']       | "(hasInstance.t1Type:T1 OR hasInstance.t1Type:T1x)"
     }
 
     def "expand restrictions"() {
@@ -51,14 +51,14 @@ class QueryTreeExpanderSpec extends Specification {
         where:
         query               | subjectTypes | result
         "p1:v1"             | []           | "p1:v1"
-        "p1:v1"             | ["T1"]       | "instanceOf.p1:v1 OR p1:v1"
-        "p1:v1"             | ["T2"]       | "hasInstance.p1:v1 OR p1:v1"
+        "p1:v1"             | ["T1"]       | "(instanceOf.p1:v1 OR p1:v1)"
+        "p1:v1"             | ["T2"]       | "(hasInstance.p1:v1 OR p1:v1)"
         "p1:v1"             | ["T3"]       | "p1:v1"
         "hasInstance.p7:v7" | ["T2"]       | "hasInstance.p7:v7"
         "instanceOf.p8:v8"  | ["T1"]       | "instanceOf.p8:v8"
         "p3.p1:x"           | []           | "p3.p1:x"
-        "p3p1:x"            | ["T1"]       | "instanceOf.p3.p1:x OR p3.p1:x"
-        "p3p1:x"            | ["T2"]       | "hasInstance.p3.p1:x OR p3.p1:x"
+        "p3p1:x"            | ["T1"]       | "(instanceOf.p3.p1:x OR p3.p1:x)"
+        "p3p1:x"            | ["T2"]       | "(hasInstance.p3.p1:x OR p3.p1:x)"
         "p3p1:x"            | ["T3"]       | "p3.p1:x"
         "t1p3p1:x"          | ["T1"]       | "p3.p1:x"
         "t1p3p1:x"          | ["T2"]       | "hasInstance.p3.p1:x"
@@ -92,11 +92,11 @@ class QueryTreeExpanderSpec extends Specification {
         "p7:v7 p8:v8 p9:v9"                  | ["T2"]       | "hasInstance.p7:v7 p8:v8 p9:v9"
         "p7:v7 p8:v8 p9:v9"                  | ["T3"]       | "p7:v7 p8:v8 p9:v9"
         "p7:v7 p8:v8 p9:v9"                  | ["T1", "T2"] | "(hasInstance.p7:v7 OR p7:v7) (instanceOf.p8:v8 OR p8:v8) p9:v9"
-        "(type:T1 p7:v7) OR (type:T2 p8:v8)" | []           | "((type:T1 OR type:T1x) p7:v7) OR ((type:T2 OR type:T2x) p8:v8)"
-        "(type:T2 p7:v7) OR (type:T1 p8:v8)" | []           | "((type:T2 OR type:T2x) hasInstance.p7:v7) OR ((type:T1 OR type:T1x) instanceOf.p8:v8)"
-        "(type:T1 p7:v7) OR (type:T2 p8:v8)" | ["T3"]       | "((type:T1 OR type:T1x) p7:v7) OR ((type:T2 OR type:T2x) p8:v8)"
-        "(type:T2 p7:v7) OR (type:T2 p8:v8)" | ["T1"]       | "((type:T2 OR type:T2x) hasInstance.p7:v7) OR ((type:T2 OR type:T2x) p8:v8)"
-        "(type:T2 p7:v7) OR p8:v8"           | ["T1"]       | "((type:T2 OR type:T2x) hasInstance.p7:v7) OR instanceOf.p8:v8"
+        "(type:T1 p7:v7) OR (type:T2 p8:v8)" | []           | "(((type:T1 OR type:T1x) p7:v7) OR ((type:T2 OR type:T2x) p8:v8))"
+        "(type:T2 p7:v7) OR (type:T1 p8:v8)" | []           | "(((type:T2 OR type:T2x) hasInstance.p7:v7) OR ((type:T1 OR type:T1x) instanceOf.p8:v8))"
+        "(type:T1 p7:v7) OR (type:T2 p8:v8)" | ["T3"]       | "(((type:T1 OR type:T1x) p7:v7) OR ((type:T2 OR type:T2x) p8:v8))"
+        "(type:T2 p7:v7) OR (type:T2 p8:v8)" | ["T1"]       | "(((type:T2 OR type:T2x) hasInstance.p7:v7) OR ((type:T2 OR type:T2x) p8:v8))"
+        "(type:T2 p7:v7) OR p8:v8"           | ["T1"]       | "(((type:T2 OR type:T2x) hasInstance.p7:v7) OR instanceOf.p8:v8)"
     }
 
     def "expand selector"() {

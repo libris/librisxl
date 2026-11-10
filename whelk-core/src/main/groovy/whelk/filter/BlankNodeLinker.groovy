@@ -32,6 +32,8 @@ class BlankNodeLinker implements DocumentUtil.Linker {
     Map substitutions = [:]
     Statistics stats
 
+    List<Map> definitions = []
+
     List<String> fields = []
 
     BlankNodeLinker(Collection<String> types, Collection<String> fields, Statistics stats = null) {
@@ -50,6 +52,10 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
     boolean linkAll(data, String key) {
         return findKey(data, key, link(this)) && removeDeleted(data)
+    }
+
+    Iterable<Map> getDefinitions() {
+        return definitions
     }
 
     static boolean removeDeleted(data) {
@@ -93,6 +99,8 @@ class BlankNodeLinker implements DocumentUtil.Linker {
 
         String id = definition.isReplacedBy ? definition.isReplacedBy[JsonLd.ID_KEY] : definition[JsonLd.ID_KEY]
         identifiers.each { addMapping(it, id) }
+
+        definitions.add(definition)
     }
 
     void addMapping(String from, String to) {

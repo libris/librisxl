@@ -16,6 +16,9 @@ selectBySqlWhere(where) { bib ->
     def titles = getAtPath(thing, ['hasTitle', '*'], [])
     
     titles.each { Map title ->
+        if (!(title.mainTitle instanceof String)) {
+            return
+        }
         String mainTitle = title.mainTitle
         def clean = fixChars(mainTitle)
         if (clean != mainTitle) {

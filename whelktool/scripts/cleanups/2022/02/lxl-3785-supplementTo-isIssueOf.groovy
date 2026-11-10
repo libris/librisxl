@@ -101,7 +101,7 @@ notMimer = getReportWriter("not-mimer.txt")
 String now = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
 String lastRunOpt = System.getProperty('last-run-file', '')
-def lastRunTimestamp = new File(lastRunOpt).with { if (it.exists()) it.readLines()?.first() }
+def lastRunTimestamp = lastRunOpt ? new File(lastRunOpt).with { if (it.isFile()) it.readLines()?.first() } : null
 println("Using lastRunTimestamp: ${lastRunTimestamp ?: '<NO>'}")
 
 def where = """

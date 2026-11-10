@@ -14,9 +14,9 @@ class AndSpec extends Specification {
 
         where:
         and                   | result
-        'p1:v1 p2:v2'         | 'NOT p1:v1 OR NOT p2:v2'
-        'NOT p1:v1 p2:v2'     | 'p1:v1 OR NOT p2:v2'
-        'NOT p1:v1 NOT p2:v2' | 'p1:v1 OR p2:v2'
-        'p1:v1 p2>v2'         | 'NOT p1:v1 OR p2<=v2'
+        'p1:v1 p2:v2'         | '(NOT p1:v1 OR NOT p2:v2)'
+        'NOT p1:v1 p2:v2'     | '(p1:v1 OR NOT p2:v2)'
+        'NOT p1:v1 NOT p2:v2' | '(p1:v1 OR p2:v2)'
+        'p1:v1 p2>v2'         | '(NOT p1:v1 OR p2<=v2)'
     }
 }

@@ -15,6 +15,18 @@ class ESQueryTreeBuilderSpec extends Specification {
     JsonLd jsonLd = TestData.getJsonLd()
     ESMappings esMappings = TestData.getEsMappings()
 
+    def "get nested stem"() {
+        expect:
+        ESQueryTreeBuilder.getNestedStem(field, esMappings) == Optional.ofNullable(stem)
+
+        where:
+        field       | stem
+        'p3'        | 'p3'
+        'p3.p4.@id' | 'p3'
+        'p30.p4'    | null
+        'p2'        | null
+    }
+
     def "mixed query with boosted fields"() {
         given:
         Map boostSettings = [

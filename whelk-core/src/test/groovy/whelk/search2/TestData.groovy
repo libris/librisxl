@@ -226,6 +226,12 @@ class TestData {
                         'domain': ['@id': 'T3']
                 ],
                 [
+                        '@id'     : 'p21',
+                        '@type'   : 'DatatypeProperty',
+                        'domain'  : ['@id': 'T2'],
+                        'category': ['@id': "https://id.kb.se/ns/librissearch/sortKey"]
+                ],
+                [
                         '@id'  : 'ctxProp',
                         '@type': 'DatatypeProperty',
                         'domain': ['@id': 'T4']
