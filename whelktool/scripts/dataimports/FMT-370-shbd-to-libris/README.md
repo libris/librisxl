@@ -1,4 +1,5 @@
-# SHB to Libris - overview
+# SHBd to Libris - overview
+A set of scripts used to transform SHBd MARC data records, created from digitized print volumes, into KBV entities and import them into Libris, either matching and updating existing entities in Libris or creating new ones.  
 
 ## Running the full transformation and import process
 ### 1. Transform data from MARC to KBV
@@ -45,15 +46,13 @@ The --allow-loud flag is needed to create new instances.
 ## Other files
 ### Testing
 - Tests covering typical SHB syntaxes and some special cases
-    - reshape_parser_tests.py
+    - test_reshape_shb.py
 
 
 - Scripts evaluating comparison between SHB and Libris data
-    - evaluate_matching.py
-    - evaluate_matching_test_cases.py
+    - test_matching_logic.py
+    - test_matching_logic_cases.py
 
-### Exploratory analysis
-analyze_shb.ipynb
 
 ### The data folder
 Contains a set of test records, good for debugging, and reports from manual analyses.
