@@ -60,6 +60,7 @@ NON_TERMINATING_ABBREVIATIONS = [
     "kongl.",
     "tr.",
     "t.",
+    "ser."
 ]
 
 PARENTHESIS_ERAS = ["transition", "parenthesized", "isbd_transition", "isbd"]
