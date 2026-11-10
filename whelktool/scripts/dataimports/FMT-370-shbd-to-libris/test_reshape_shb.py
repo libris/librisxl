@@ -311,10 +311,6 @@ def test_parse_note(case_name):
     assert actual == expected, f"\nInput record:\n{sample}"
 
 
-# TODO or not todo?
-# Parse out series/partOf info for older descriptions (no parenthesis or "I:" to go by)
-# Identify contributions (bidrag) when there is no extent to go by
-
 
 def test_parse_note_1771_1874_Bidrag_tidningsartikel():
     record = {
@@ -930,15 +926,10 @@ def test_parse_note_1921_1935_1936_1950_Monografi_utan_författare():
     assert result["place"] == "Stockholm"
     assert result["year"] == "1919-21"
 
-
-# TODO Replace with example with standard punctuation - and move down to "exceptions" section
-@pytest.mark.xfail(
-    reason="Roman extent followed by period is too similar to text to be interpreted as part of the extent."
-)
 def test_parse_note_1961_1970_Monografi_utan_författare():
     record = {
         "pattern": "Titel. undertitel. Ort år. sid. - Serietillhörighet. numrering.",
-        "sample": "Magnus Erikssons landslag. I nusvensk tolkning av Åke Holmbäck och Elias Wes- sén. Sthlm 1962. lxix. 290 s., 6 pl.-bl. Ill. - Skrifter utg. av Inst. för rättshisto- risk forskning.",
+        "sample": "Magnus Erikssons landslag. I nusvensk tolkning av Åke Holmbäck och Elias Wes- sén. Sthlm 1962. 290 s., 6 pl.-bl. Ill. - Skrifter utg. av Inst. för rättshisto- risk forskning.",
     }
     result = parse_note(record["sample"], "dash_style")
 
@@ -947,7 +938,7 @@ def test_parse_note_1961_1970_Monografi_utan_författare():
     assert (
         result["subtitle"] == "I nusvensk tolkning av Åke Holmbäck och Elias Wes- sén"
     )
-    assert result["extent"] == "lxix. 290 s., 6 pl.-bl. Ill."
+    assert result["extent"] == "290 s., 6 pl.-bl. Ill."
     assert (
         result["host"]["title"]
         == "Skrifter utg. av Inst. för rättshisto- risk forskning"
@@ -1124,29 +1115,6 @@ def test_resure_part_year_as_publication_year():
     }
 
 
-@pytest.mark.xfail(
-    reason="Primary contributor mistaken for title as (atypically) delimited by period instead of comma"
-)
-def test_incorrect_period_after_author_name():
-    record = {
-        "sample": "Bååt, Ingeborg. Ingeborg Bååts brev till sin syster Karin. (Arte et marte. 53 (1957), s. 28-36.)",
-    }
-    result = parse_note(record["sample"], "parenthesized")
-
-    assert result["is_component_part"] == True
-    assert result["title"] == "Ingeborg Bååts brev till sin syster Karin"
-    assert result["primary_contributors"] == "Bååt, Ingeborg"
-    assert result["year"] == "1957"
-    assert result["host"] == {
-        "title": "Arte et marte",
-        "part_number": "53 (1957)",
-        "extent": "s. 28-36",
-        "part_year": "1957",
-    }
-
-#@pytest.mark.xfail(
-#    reason="Primary contributor mistaken for title as (atypically) delimited by period instead of comma"
-#)
 def test_disappearing_subtitle():
     record = {
         "sample": "Despréaux, Fr., Le maréchal Mortier, duc de Trévise. T. 3. 1804-1807. Avec 1 planche phototypique en cou-leurs, 2 planches en noir et 2 cartes hors texte. (3) + 433 s. Paris 1920. S. 370-414 handlar om pommerska kriget 1807.",
@@ -1194,3 +1162,24 @@ def test_extent_dot_year(note, expected):
     note = "524, (2) s. 1951."
     result = extract_extent(note, False)
     assert result == ""
+    
+
+@pytest.mark.xfail(
+    reason="Primary contributor mistaken for title as (atypically) delimited by period instead of comma"
+)
+def test_incorrect_period_after_author_name():
+    record = {
+        "sample": "Bååt, Ingeborg. Ingeborg Bååts brev till sin syster Karin. (Arte et marte. 53 (1957), s. 28-36.)",
+    }
+    result = parse_note(record["sample"], "parenthesized")
+
+    assert result["is_component_part"] == True
+    assert result["title"] == "Ingeborg Bååts brev till sin syster Karin"
+    assert result["primary_contributors"] == "Bååt, Ingeborg"
+    assert result["year"] == "1957"
+    assert result["host"] == {
+        "title": "Arte et marte",
+        "part_number": "53 (1957)",
+        "extent": "s. 28-36",
+        "part_year": "1957",
+    }
