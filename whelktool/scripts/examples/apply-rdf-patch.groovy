@@ -5,9 +5,8 @@ import whelk.converter.TrigToJsonLdParser
 import java.util.concurrent.ConcurrentHashMap
 
 List<Map> loadDescriptions(Whelk whelk, String rdfSourcePath) {
-    Map data = new File(rdfSourcePath).withInputStream { TrigToJsonLdParser.parse(it) }
-    contextDocData = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
-    def results = TrigToJsonLdParser.compact(data, contextDocData)
+    Map context = whelk.storage.loadDocumentByMainId(whelk.systemContextUri, null).data
+    Map results = new File(rdfSourcePath).withInputStream { TrigToJsonLdParser.parse(it, context) }
 
     var graphButNotNamed = GRAPH in results && ID !in results
     return graphButNotNamed ? results[GRAPH] : (results instanceof List ? results : [results])
