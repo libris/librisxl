@@ -57,6 +57,16 @@
       {
         "type": "field_value_factor",
         "params": {
+          "field": "reverseLinks.totalItemsByRelation.itemOf",
+          "factor": 10,
+          "modifier": "ln1p",
+          "missing": 0
+        },
+        "weight": 10
+      },
+      {
+        "type": "field_value_factor",
+        "params": {
           "field": "reverseLinks.totalItemsByRelation.instanceOf.contribution.agent",
           "factor": 10,
           "modifier": "ln1p",
@@ -122,29 +132,14 @@
   ],
   "source_excludes": [
     "*_4_digits_*",
-    "@reverse.instanceOf.@reverse.itemOf.hasComponent",
-    "@reverse.instanceOf.@reverse.itemOf.itemOf",
-    "@reverse.instanceOf.@reverse.itemOf.librissearch:itemStatement",
-    "@reverse.instanceOf.@reverse.itemOf.librissearch:internalItemNote",
-    "@reverse.instanceOf.@reverse.itemOf.librissearch:additionalItemInformation",
-    "@reverse.instanceOf.@reverse.itemOf.librissearch:shelf",
-    "@reverse.instanceOf.@reverse.itemOf.meta",
-    "@reverse.instanceOf.@reverse.itemOf.sameAs",
-    "@reverse.instanceOf.@reverse.itemOf.shelfControlNumber",
-    "@reverse.instanceOf.@reverse.itemOf.shelfMark",
-    "@reverse.instanceOf.@reverse.itemOf.subject",
-    "@reverse.instanceOf.@reverse.itemOf.summary",
-    "@reverse.itemOf.hasComponent",
-    "@reverse.itemOf.itemOf",
-    "@reverse.itemOf.librissearch:itemStatement",
-    "@reverse.itemOf.librissearch:internalItemNote",
-    "@reverse.itemOf.librissearch:additionalItemInformation",
-    "@reverse.itemOf.librissearch:shelf",
-    "@reverse.itemOf.meta",
-    "@reverse.itemOf.sameAs",
-    "@reverse.itemOf.shelfControlNumber",
-    "@reverse.itemOf.shelfMark",
-    "@reverse.itemOf.subject",
-    "@reverse.itemOf.summary"
+    "*librissearch:*",
+    "*@reverse.itemOf.hasComponent",
+    "*@reverse.itemOf.itemOf",
+    "*@reverse.itemOf.meta",
+    "*@reverse.itemOf.sameAs",
+    "*@reverse.itemOf.shelfControlNumber",
+    "*@reverse.itemOf.shelfMark",
+    "*@reverse.itemOf.subject",
+    "*@reverse.itemOf.summary"
   ]
 }

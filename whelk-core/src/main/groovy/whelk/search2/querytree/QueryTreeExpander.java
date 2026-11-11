@@ -19,6 +19,7 @@ import whelk.util.Restrictions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -113,11 +114,27 @@ public class QueryTreeExpander {
     }
 
     private static List<Selector> expandCompositeProperty(Property.CompositeProperty property, JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
-        return property.getComponents(jsonLd)
-                .stream()
+        List<Selector> components = property.getComponents(jsonLd);
+        Optional<Property> coerced = coerceByType(components, jsonLd, rdfSubjectTypes);
+        if (coerced.isPresent()) {
+            return expandProperty(coerced.get(), jsonLd, rdfSubjectTypes, allowIncompatible);
+        }
+        return components.stream()
                 .flatMap(s -> expandSelector(s, jsonLd, rdfSubjectTypes, allowIncompatible).stream())
                 .distinct()
                 .toList();
+    }
+
+    private static Optional<Property> coerceByType(List<Selector> components, JsonLd jsonLd, Collection<String> rdfSubjectTypes) {
+        if (rdfSubjectTypes.isEmpty()) {
+            return Optional.empty();
+        }
+        List<Property> matching = components.stream()
+                .filter(s -> s instanceof Property.CoercingSubProperty csp && csp.isCoercingByDomain())
+                .map(Property.class::cast)
+                .filter(p -> rdfSubjectTypes.stream().allMatch(t -> p.appliesToType(t, jsonLd)))
+                .toList();
+        return matching.size() == 1 ? Optional.of(matching.getFirst()) : Optional.empty();
     }
 
     private static List<Selector> expandShorthandProperty(Property.ShorthandProperty property, JsonLd jsonLd, Collection<String> rdfSubjectTypes, boolean allowIncompatible) {
@@ -131,7 +148,7 @@ public class QueryTreeExpander {
                 .collect(Collectors.toSet());
 
         Predicate<Property> followIntegralRelation = integralProp ->
-                integralProp.range().stream().anyMatch(irRangeType -> property.mayAppearOnType(irRangeType, jsonLd));
+                integralProp.range().stream().anyMatch(irRangeType -> property.mayBeCompatibleWithType(irRangeType, jsonLd));
 
         List<List<Property>> altPaths = new ArrayList<>();
 
@@ -142,7 +159,7 @@ public class QueryTreeExpander {
                 .forEach(altPaths::add);
 
         // Include the original property too, if compatible with the queried subject types
-        if (rdfSubjectTypes.stream().anyMatch(t -> property.mayAppearOnType(t, jsonLd))) {
+        if (rdfSubjectTypes.stream().anyMatch(t -> property.mayBeCompatibleWithType(t, jsonLd))) {
             altPaths.add(List.of(property));
         }
 
