@@ -28,7 +28,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import static whelk.component.ElasticSearch.SystemFields.ES_ID;
-import static whelk.component.ElasticSearch.flattenedLangMapKey;
 import static whelk.search2.Disambiguate.getPropertyByKey;
 import static whelk.search2.QueryUtil.castToStringObjectMap;
 import static whelk.search2.esquery.ESMappings.FOUR_DIGITS_KEYWORD_SUFFIX;
@@ -304,7 +303,7 @@ public record ESQueryDefinition(QueryTree tree,
                                                        Collection<String> rdfSubjectTypes,
                                                        ESMappings mappings,
                                                        JsonLd jsonLd) {
-        String field = getSortField(tryExpandSortKey(k.key(), rdfSubjectTypes, jsonLd), mappings, jsonLd);
+        String field = getSortField(k.key(), rdfSubjectTypes, mappings, jsonLd);
         Map<String, Object> sort = new LinkedHashMap<>();
         sort.put("order", k.order());
         sort.put("missing", "_last");
@@ -314,17 +313,29 @@ public record ESQueryDefinition(QueryTree tree,
         return Map.of(field, sort);
     }
 
-    private static String tryExpandSortKey(String key, Collection<String> rdfSubjectTypes, JsonLd jsonLd) {
-        Property property;
+    private static String getSortField(String key,
+                                       Collection<String> rdfSubjectTypes,
+                                       ESMappings mappings,
+                                       JsonLd jsonLd) {
+        Optional<Property> sortKey = getSortKey(key, jsonLd);
+        if (sortKey.isPresent() && sortKey.get().hasIndexKey()) {
+            return sortKey.get().esField();
+        }
+        String field = sortKey.map(p -> expandSortKey(p, key, rdfSubjectTypes, jsonLd)).orElse(key);
+        return withSuffix(field, mappings);
+    }
+
+    private static Optional<Property> getSortKey(String key, JsonLd jsonLd) {
         try {
-            property = getPropertyByKey(key, jsonLd);
+            Property property = getPropertyByKey(key, jsonLd);
+            return property.isSortKey() ? Optional.of(property) : Optional.empty();
         } catch (IllegalArgumentException e) {
-            return key;
+            return Optional.empty();
         }
-        if (!property.isSortKey()) {
-            return key;
-        }
-        List<Selector> expanded = QueryTreeExpander.expandProperty(property, jsonLd, rdfSubjectTypes, false);
+    }
+
+    private static String expandSortKey(Property sortKey, String key, Collection<String> rdfSubjectTypes, JsonLd jsonLd) {
+        List<Selector> expanded = QueryTreeExpander.expandProperty(sortKey, jsonLd, rdfSubjectTypes, false);
         // TODO: Validate sort keys in general and report invalid ones to the client instead of passing them on
         //  to Elastic. For now, a sort key that is ambiguous (e.g. [p, instanceOf.p]) or incompatible with the
         //  queried types is passed on as is, just like any other unrecognized sort key.
@@ -333,28 +344,15 @@ public record ESQueryDefinition(QueryTree tree,
                 : key;
     }
 
-    private static String getSortField(String field, ESMappings mappings, JsonLd jsonLd) {
-        field = expandLangMapKeys(field, jsonLd);
-        if (mappings.hasFourDigitsShortField(field)) {
-            return String.format("%s%s", field, FOUR_DIGITS_SHORT_SUFFIX);
+    private static String withSuffix(String sortField, ESMappings mappings) {
+        if (mappings.hasFourDigitsShortField(sortField)) {
+            return String.format("%s%s", sortField, FOUR_DIGITS_SHORT_SUFFIX);
         }
-        else if (mappings.hasKeywordSubfield(field)) {
-            return String.format("%s.%s", field, KEYWORD);
+        else if (mappings.hasKeywordSubfield(sortField)) {
+            return String.format("%s.%s", sortField, KEYWORD);
         } else {
-            return field;
+            return sortField;
         }
-    }
-
-    private static String expandLangMapKeys(String field, JsonLd jsonLd) {
-        var parts = field.split("\\.");
-        if (parts.length > 0) {
-            var lastIx = parts.length - 1;
-            if (jsonLd.langContainerAlias.containsKey(parts[lastIx])) {
-                parts[lastIx] = flattenedLangMapKey(parts[lastIx]);
-                return String.join(".", parts);
-            }
-        }
-        return field;
     }
 
     private static <T> T with(T t, Consumer<T> f) {
