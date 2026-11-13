@@ -10,9 +10,11 @@ boolean interpretClassification(Map thing) {
 
   List<String> additionalCodes = []
 
-  for (Map cls : asList(thing.classification)) {
+  var relation = 'classification' in thing ? 'classification' : 'broadMatch'
+
+  for (Map cls : asList(thing[relation])) {
     if (asList(cls.inScheme).any {
-      it[ID] == SAB || it.code?.toLowerCase()?.startsWith("kssb")
+      it[ID] == SAB || (ID !in it && it.code?.toLowerCase()?.startsWith("kssb"))
     }) {
       def clsCode = cls.code
 
@@ -134,9 +136,9 @@ List<Map> splitSabCode(String code) {
 }
 
 List<String> parseSabCode(String code) {
-    // TODO: starts with any /[a-z]/?
-    if (code.startsWith('u')) {
-        code = code.substring(1) + ',u'
+    def m = code =~ /^(u[a-z]?)([A-Z].*)/
+    if (m.matches()) {
+        code = m.group(2) + ',' + m.group(1)
     }
 
     var spaceIdx = code.indexOf('z ')
@@ -157,7 +159,6 @@ selectBySqlWhere("""
 """) {
   def cls = it.graph[1]
 
-  // FIXME: Make *all* sab.ttl codes unique! (Use altLabel for "shortcode"?)
   def code = cls.code
   if (cls[TYPE].indexOf('Subdivision') > -1) {
     def firstIdChar = URLDecoder.decode(cls[ID].substring(SAB.size() + 1))[0]
