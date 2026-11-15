@@ -253,7 +253,7 @@ class LinkFinder {
                     if (sameAsList == null) {
                         data.put("sameAs", [])
                         sameAsList = data["sameAs"]
-                    } else if (!sameAsList instanceof List) { // Paranoia check
+                    } else if (!(sameAsList instanceof List)) { // Paranoia check
                         data.put("sameAs", [sameAsList])
                         sameAsList = data["sameAs"]
                     }
