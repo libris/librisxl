@@ -18,5 +18,9 @@ class QueryUtilSpec extends Specification {
         "abc%2Babc"                 | "abc%2Babc"
         "å/äö"                      | "%C3%A5/%C3%A4%C3%B6"
         "%C3%A5/%C3%A4%C3%B6"       | "%C3%A5/%C3%A4%C3%B6"
+        "San%2"                     | "San%252"
+        "San%252"                   | "San%252"
+        "100%"                      | "100%25"
+        "a%ZZb"                     | "a%25ZZb"
     }
 }
