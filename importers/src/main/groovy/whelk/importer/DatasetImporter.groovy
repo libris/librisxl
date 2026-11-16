@@ -338,6 +338,7 @@ class DatasetImporter {
 
         Map record = (Map) data.remove('meta') ?: [:]
         record[ID] = newRecordId
+        record["controlNumber"] = slug
         record[TYPE] = recordType
         record['mainEntity'] = [(ID): data[ID]]
 
