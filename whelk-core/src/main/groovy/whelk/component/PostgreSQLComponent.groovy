@@ -1177,7 +1177,7 @@ class PostgreSQLComponent {
                 throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT have URIs that are already in use for other records. The update contained an offending URI: " + id)
         }
 
-        if (preUpdateDoc.getControlNumber() != postUpdateDoc.getControlNumber())
+        if (preUpdateDoc.getControlNumber() != postUpdateDoc.getControlNumber() && preUpdateDoc.getControlNumber() != null)
             throw new RuntimeException("An update of " + preUpdateDoc.getCompleteId() + " MUST NOT change the controlNumber of the record in question. Existing controlNumber: "
                     + preUpdateDoc.getControlNumber() + " The rejected new controlNumber: " + postUpdateDoc.getControlNumber())
 
