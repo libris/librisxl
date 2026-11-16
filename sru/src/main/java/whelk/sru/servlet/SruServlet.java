@@ -124,13 +124,22 @@ public class SruServlet extends WhelkHttpServlet {
         }
 
         Map<String, Object> results;
-        String format;  
+        String format;
+        String site;
 
         try {
             String CqlQueryString = getParameter(parameters, "query");
             format = getParameter(parameters, "recordSchema");
             String XlQueryString = Translation.translateCqlToXlQuery(CqlQueryString);
 
+            site = getParameter(parameters, "_site");
+            if (site != null && site.contains("swepub")) {
+                XlQueryString = "(" + XlQueryString + ") AND meta.inDataset=\"https://id.kb.se/dataset/swepub\"";
+            }
+            if (site != null && site.contains("uppsok")) {
+                XlQueryString = "(" + XlQueryString + ") AND meta.inDataset=\"https://id.kb.se/dataset/uppsok\"";
+            }
+            
             // This part is a little weird
             HashMap<String, String[]> paramsAsIfSearch = new HashMap<>();
             String[] q = new String[]{XlQueryString};
