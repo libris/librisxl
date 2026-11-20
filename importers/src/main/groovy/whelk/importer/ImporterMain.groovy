@@ -1,7 +1,16 @@
 package whelk.importer
 
 import java.lang.annotation.*
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.Callable
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.regex.Pattern
 import java.util.zip.GZIPOutputStream
 
 import java.nio.file.FileVisitResult
@@ -12,10 +21,12 @@ import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 
 import groovy.cli.picocli.CliBuilder
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j as Log
 
 import org.apache.commons.io.output.CountingOutputStream
 import org.apache.commons.io.FilenameUtils
+import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation
 
 import whelk.Document
 import whelk.Whelk
@@ -294,52 +305,144 @@ class ImporterMain {
             outputStream = System.out
         }
 
-        if (shouldGzip) {
-            outputStream = new GZIPOutputStream(outputStream)
-        }
-
-        CountingOutputStream cos = new CountingOutputStream(outputStream)
+        CountingOutputStream cos = new CountingOutputStream(bufferedTrigOutput(outputStream, shouldGzip))
         def ctx = whelk.jsonld.context
+        // Only used for writing the prelude; records are serialized by the workers
         def serializer = new JsonLdToTrigSerializer(ctx, cos)
-
         serializer.prelude()
-        int i = 0
-        for (Document doc : whelk.storage.loadAll(collection)) {
-            if (doc.getShortId() in trigExcludeList) {
-                System.err.println("Excluding: ${doc.getShortId()}")
-                continue
-            }
+        serializer.flush()
 
-            def id = doc.completeId
-            if (i % 500 == 0) {
-                System.err.println("$i records dumped.")
-            }
-            ++i
-            filterProblematicData(id, doc.data)
-            try {
-                serializer.writeGraph(id, doc.data['@graph'])
-            } catch (Throwable e) {
-                // Part of the record may still have been written to the stream, which is now corrupt.
-                System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
-            }
+        // Records are read from the database here, filtered and serialized in parallel by
+        // the workers, and written by a single writer thread in the original order.
+        int threads = Integer.getInteger('xl.lddbToTrig.threads', Runtime.getRuntime().availableProcessors())
+        System.err.println("Serializing with ${threads} threads")
+        ExecutorService workers = Executors.newFixedThreadPool(threads)
+        ExecutorService writerExecutor = Executors.newSingleThreadExecutor()
+        BlockingQueue<Future<List<byte[]>>> pending = new ArrayBlockingQueue<>(threads * 4)
+        Future<List<byte[]>> endOfInput = CompletableFuture.completedFuture(null)
+        ThreadLocal<TrigRecordSerializer> workerSerializers = ThreadLocal.withInitial {
+            new TrigRecordSerializer(ctx)
+        }
 
-            if (writingToFile && maxChunkSizeInBytes > 0 && cos.getByteCount() > maxChunkSizeInBytes) {
-                ++partNumber
-                cos.close()
-                System.err.println("Writing ${String.format(chunkedFormatString, partNumber)}")
-                def fos = new FileOutputStream(String.format(chunkedFormatString, partNumber))
-                if (shouldGzip) {
-                    cos = new CountingOutputStream(new GZIPOutputStream(fos))
-                } else {
-                    cos = new CountingOutputStream(fos)
+        Future writer = writerExecutor.submit {
+            int i = 0
+            while (true) {
+                List<byte[]> records = pending.take().get()
+                if (records == null) {
+                    break
                 }
+                for (byte[] record : records) {
+                    if (i % 500 == 0) {
+                        System.err.println("$i records dumped.")
+                    }
+                    ++i
+                    cos.write(record)
 
-                serializer.setOutputStream(cos)
-                // Make sure each chunk gets the prefixes
-                serializer.prelude()
+                    if (writingToFile && maxChunkSizeInBytes > 0 && cos.getByteCount() > maxChunkSizeInBytes) {
+                        ++partNumber
+                        serializer.flush()
+                        cos.close()
+                        System.err.println("Writing ${String.format(chunkedFormatString, partNumber)}")
+                        def fos = new FileOutputStream(String.format(chunkedFormatString, partNumber))
+                        cos = new CountingOutputStream(bufferedTrigOutput(fos, shouldGzip))
+
+                        serializer.setOutputStream(cos)
+                        // Make sure each chunk gets the prefixes
+                        serializer.prelude()
+                        serializer.flush()
+                    }
+                }
+            }
+            cos.close()
+        }
+
+        try {
+            List<Document> batch = []
+            for (Document doc : whelk.storage.loadAll(collection)) {
+                if (doc.getShortId() in trigExcludeList) {
+                    System.err.println("Excluding: ${doc.getShortId()}")
+                    continue
+                }
+                batch.add(doc)
+                if (batch.size() >= TRIG_BATCH_SIZE) {
+                    List<Document> docs = batch
+                    enqueueTrigBatch(pending, workers.submit({ workerSerializers.get().serialize(docs) } as Callable<List<byte[]>>), writer)
+                    batch = []
+                }
+            }
+            if (batch) {
+                List<Document> docs = batch
+                enqueueTrigBatch(pending, workers.submit({ workerSerializers.get().serialize(docs) } as Callable<List<byte[]>>), writer)
+            }
+            enqueueTrigBatch(pending, endOfInput, writer)
+            writer.get()
+        } finally {
+            workers.shutdownNow()
+            writerExecutor.shutdownNow()
+        }
+    }
+
+    private static final int TRIG_BATCH_SIZE = 200
+
+    // Like pending.put(), but gives up if the writer has died (which would otherwise block forever)
+    private static void enqueueTrigBatch(BlockingQueue<Future<List<byte[]>>> pending, Future<List<byte[]>> batch, Future writer) {
+        while (true) {
+            if (writer.isDone()) {
+                writer.get() // throws if the writer failed
+                throw new IllegalStateException("TriG writer stopped unexpectedly")
+            }
+            if (pending.offer(batch, 1, TimeUnit.SECONDS)) {
+                return
             }
         }
-        cos.close()
+    }
+
+    /**
+     * Serializes records to TriG one at a time, for use by a single worker thread.
+     */
+    private static class TrigRecordSerializer {
+        // The serializer numbers blank nodes it has to generate (for @reverse relations) with a
+        // per-instance counter. Start each worker's counter in its own range so that labels stay
+        // unique across the whole dump, as they were when a single serializer was used.
+        private static final AtomicInteger instanceCount = new AtomicInteger()
+        private static final int BNODE_RANGE = 100_000_000
+
+        private final ByteArrayOutputStream buffer = new ByteArrayOutputStream(1 << 16)
+        private final JsonLdToTrigSerializer serializer
+
+        TrigRecordSerializer(Map context) {
+            serializer = new JsonLdToTrigSerializer(context, buffer)
+            serializer.setBnodeCounter(instanceCount.getAndIncrement() * BNODE_RANGE)
+        }
+
+        List<byte[]> serialize(List<Document> docs) {
+            List<byte[]> result = new ArrayList<>(docs.size())
+            for (Document doc : docs) {
+                String id = doc.getCompleteId()
+                filterProblematicData(id, doc.data)
+                try {
+                    serializer.writeGraph(id, doc.data.get('@graph'))
+                } catch (Throwable e) {
+                    // Part of the record may still have been written to the stream, which is now corrupt.
+                    System.err.println("${doc.getShortId()} conversion failed with ${e.toString()}")
+                }
+                serializer.flush()
+                result.add(buffer.toByteArray())
+                buffer.reset()
+            }
+            return result
+        }
+    }
+
+    // The TriG serializer writes many tiny strings, each of which PrintStream passes straight
+    // through, so buffer before the (comparatively expensive per call) gzip/file layer.
+    private static final int TRIG_BUFFER_SIZE = 1 << 16
+
+    private static OutputStream bufferedTrigOutput(OutputStream out, boolean gzip) {
+        if (gzip) {
+            out = new GZIPOutputStream(out, TRIG_BUFFER_SIZE)
+        }
+        return new BufferedOutputStream(out, TRIG_BUFFER_SIZE)
     }
 
     @Command(args='[FROM]')
@@ -349,41 +452,57 @@ class ImporterMain {
         whelk.storage.queueSparqlUpdatesFrom(fromUnixTime)
     }
 
-    private static void filterProblematicData(id, data) {
-        if (data instanceof Collection || data instanceof LinkedHashMap) {
-            data.eachWithIndex { it, index ->
-                // Virtuoso bulk load doesn't like some unusual characters, such as 0x02,
-                // so remove invisible control characters and unused code points
-                if (it instanceof String) {
-                    data[index] = cleanStringForVirtuoso(it)
-                } else if (it instanceof Map.Entry && it.value instanceof String) {
-                    it.value = cleanStringForVirtuoso(it.value)
+    @CompileStatic
+    private static void filterProblematicData(String id, Object data) {
+        if (data instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) data
+            // Virtuoso bulk load doesn't like some unusual characters, such as 0x02,
+            // so remove invisible control characters and unused code points
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                if (entry.value instanceof String) {
+                    entry.value = cleanStringForVirtuoso((String) entry.value)
                 }
             }
-        }
-
-        if (data instanceof Map) {
-            data.removeAll { entry ->
-                return entry.key.startsWith("generic") ||
-                        entry.key.equals("marc:hasGovernmentDocumentClassificationNumber") ||
-                        (entry.key.equals("encodingLevel") && entry.value instanceof String && entry.value.contains(" ")) ||
-                        !entry.value
+            map.entrySet().removeIf { Map.Entry<String, Object> entry ->
+                String key = entry.key
+                Object value = entry.value
+                return key.startsWith("generic") ||
+                        key == "marc:hasGovernmentDocumentClassificationNumber" ||
+                        (key == "encodingLevel" && value instanceof String && ((String) value).contains(" ")) ||
+                        !DefaultTypeTransformation.castToBoolean(value)
             }
-            data.keySet().each { property ->
-                filterProblematicData(id, data[property])
+            for (Object value : map.values()) {
+                filterProblematicData(id, value)
             }
         } else if (data instanceof List) {
-            if (data.removeAll([null])) {
+            List<Object> list = (List<Object>) data
+            ListIterator<Object> it = list.listIterator()
+            while (it.hasNext()) {
+                Object value = it.next()
+                if (value instanceof String) {
+                    it.set(cleanStringForVirtuoso((String) value))
+                }
+            }
+            if (list.removeIf { it == null }) {
                 log.warn("Removing null value from ${id}")
             }
-            data.each {
-                filterProblematicData(id, it)
+            for (Object value : list) {
+                filterProblematicData(id, value)
             }
         }
     }
 
+    private static final Pattern VIRTUOSO_UNSAFE_CHARS = Pattern.compile(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/)
+
+    @CompileStatic
     private static String cleanStringForVirtuoso(String data) {
-        return data.replaceAll(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/, "")
+        // Fast path: almost no strings contain control characters
+        for (int i = 0; i < data.length(); i++) {
+            if (data.charAt(i) < (char) 0x20) {
+                return VIRTUOSO_UNSAFE_CHARS.matcher(data).replaceAll("")
+            }
+        }
+        return data
     }
 
     static Map COMMANDS = getMethods().findAll {
