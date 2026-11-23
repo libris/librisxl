@@ -1,4 +1,4 @@
-// Use with care! *ALWAYS* run with --allow-loud --validation SKIP_AND_LOG
+// Use with care! *ALWAYS* run with plenty of memory, -Xmx4G at least and with --allow-loud --validation SKIP_AND_LOG
 // and *DO NOT CANCEL* once started! If you cancel mid-run, the records might be deleted without being recreated, which is mess to sort out.
 
 File holdsToRecreate = new File(scriptDir, "holdingsToRecreate.txt")
