@@ -1000,12 +1000,16 @@ class Document {
 
         // TODO...
         if (!work['hasTitle']) {
-            work['hasTitle'] = JsonLd.asList(instance['hasTitle']).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
+            work['hasTitle'] = primaryTitles(instance)
         }
 
         def graph = data[GRAPH_KEY] as List
         graph[0] = workRecord
         graph[1] = work
+    }
+
+    static List primaryTitles(Map thing) {
+        return JsonLd.asList(thing['hasTitle']).findAll{ it['@type'] == 'Title' || it['@type'] == 'KeyTitle' }
     }
 
     private boolean isSuppressedRecord() {
