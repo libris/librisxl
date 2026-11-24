@@ -12,8 +12,12 @@ public class JsonLdShapes {
     }
 
     public static Object reCompact(Object data, Map context, String baseIri) {
+      return reCompact(data, context, baseIri, null);
+    }
+
+    public static Object reCompact(Object data, Map context, String baseIri, String compactBaseIri) {
         var expanded = expand(data, baseIri);
-        return Compaction.compact(context, expanded);
+        return Compaction.compact(context, expanded, compactBaseIri);
     }
 
     public static Object reCompactWithEmbeddedBlanks(Object data, Map context) {
@@ -21,9 +25,13 @@ public class JsonLdShapes {
     }
 
     public static Object reCompactWithEmbeddedBlanks(Object data, Map context, String baseIri) {
+      return reCompactWithEmbeddedBlanks(data, context, baseIri, null);
+    }
+
+    public static Object reCompactWithEmbeddedBlanks(Object data, Map context, String baseIri, String compactBaseIri) {
         var expanded = expand(data, baseIri);
         var flattened = flatten(expanded);
-        var compacted = Compaction.compact(context, flattened, baseIri);
+        var compacted = Compaction.compact(context, flattened, compactBaseIri);
         EmbedBlanks.embedBlanks(compacted);
         return compacted;
     }
