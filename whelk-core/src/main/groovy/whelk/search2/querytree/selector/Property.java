@@ -208,21 +208,23 @@ public non-sealed class Property extends PathElement {
     }
 
     @Override
-    public boolean mayAppearOnType(String type, JsonLd jsonLd) {
+    public boolean mayBeCompatibleWithType(String type, JsonLd jsonLd) {
         return domain.isEmpty() || domain.stream().anyMatch(d -> jsonLd.directDescendants(d, type));
     }
 
     @Override
-    public boolean appearsOnType(String type, JsonLd jsonLd) {
-        // TODO: How strict should this be?
-//        return !domain.isEmpty() && domain.stream().anyMatch(d -> jsonLd.isSubClassOf(d, type));
+    public boolean isCompatibleWithType(String type, JsonLd jsonLd) {
         return !domain.isEmpty() && domain.stream().anyMatch(d -> jsonLd.directDescendants(d, type));
     }
 
     @Override
-    public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
+    public boolean isIndirectlyCompatibleWithType(String type, JsonLd jsonLd) {
         return QueryUtil.getIntegralRelationsForType(type, jsonLd).stream()
-                .anyMatch(relation -> relation.range().stream().anyMatch(t -> appearsOnType(t, jsonLd)));
+                .anyMatch(relation -> relation.range().stream().anyMatch(t -> isCompatibleWithType(t, jsonLd)));
+    }
+
+    public boolean appliesToType(String type, JsonLd jsonLd) {
+        return domain.stream().anyMatch(d -> jsonLd.isSubClassOf(type, d));
     }
 
     @Override
@@ -563,6 +565,10 @@ public non-sealed class Property extends PathElement {
         @Override
         public Map<String, Object> definition() {
             return superProperty.definition();
+        }
+
+        public boolean isCoercingByDomain() {
+            return isCoercing(definition) && definition.containsKey(DOMAIN);
         }
 
         @Override

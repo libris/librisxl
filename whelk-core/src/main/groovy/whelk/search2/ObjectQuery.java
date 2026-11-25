@@ -83,7 +83,7 @@ public class ObjectQuery extends Query {
 
         for (Property p : curatedPredicates) {
             List<String> compatibleGivenSubjectTypes = givenSubjectTypes.stream()
-                    .filter(t -> p.appearsOnType(t, ld) || p.indirectlyAppearsOnType(t, ld))
+                    .filter(t -> p.isCompatibleWithType(t, ld) || p.isIndirectlyCompatibleWithType(t, ld))
                     .toList();
             if (!compatibleGivenSubjectTypes.isEmpty()) {
                 predicateDefs.add(new ESQueryDefinition.PredicateDefinition(p, compatibleGivenSubjectTypes));

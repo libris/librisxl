@@ -51,17 +51,17 @@ public sealed abstract class Key extends PathElement permits Key.AmbiguousKey, K
     }
 
     @Override
-    public boolean mayAppearOnType(String type, JsonLd jsonLd) {
+    public boolean mayBeCompatibleWithType(String type, JsonLd jsonLd) {
         return false;
     }
 
     @Override
-    public boolean appearsOnType(String type, JsonLd jsonLd) {
+    public boolean isCompatibleWithType(String type, JsonLd jsonLd) {
         return false;
     }
 
     @Override
-    public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
+    public boolean isIndirectlyCompatibleWithType(String type, JsonLd jsonLd) {
         return false;
     }
 

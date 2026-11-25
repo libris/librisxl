@@ -25,9 +25,9 @@ public sealed interface Selector permits Path, PathElement {
     boolean isObjectProperty();
     boolean isLdSetContainer();
 
-    boolean mayAppearOnType(String type, JsonLd jsonLd);
-    boolean appearsOnType(String type, JsonLd jsonLd);
-    boolean indirectlyAppearsOnType(String type, JsonLd jsonLd);
+    boolean mayBeCompatibleWithType(String type, JsonLd jsonLd);
+    boolean isCompatibleWithType(String type, JsonLd jsonLd);
+    boolean isIndirectlyCompatibleWithType(String type, JsonLd jsonLd);
 
     Map<String, Object> definition();
 

@@ -75,18 +75,18 @@ public final class Path implements Selector {
     }
 
     @Override
-    public boolean mayAppearOnType(String type, JsonLd jsonLd) {
-        return first().mayAppearOnType(type, jsonLd);
+    public boolean mayBeCompatibleWithType(String type, JsonLd jsonLd) {
+        return first().mayBeCompatibleWithType(type, jsonLd);
     }
 
     @Override
-    public boolean appearsOnType(String type, JsonLd jsonLd) {
-        return first().appearsOnType(type, jsonLd);
+    public boolean isCompatibleWithType(String type, JsonLd jsonLd) {
+        return first().isCompatibleWithType(type, jsonLd);
     }
 
     @Override
-    public boolean indirectlyAppearsOnType(String type, JsonLd jsonLd) {
-        return first().indirectlyAppearsOnType(type, jsonLd);
+    public boolean isIndirectlyCompatibleWithType(String type, JsonLd jsonLd) {
+        return first().isIndirectlyCompatibleWithType(type, jsonLd);
     }
 
     @Override
