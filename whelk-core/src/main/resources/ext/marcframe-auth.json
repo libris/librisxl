@@ -931,15 +931,16 @@
   },
 
   "046" : {
-      "TODO": "parseDateTimeUsingFormatHints",
       "$f": {"property": "birthDate"},
       "$g": {"property": "deathDate"},
       "$q": {"property": "establishDate"},
       "$r": {"property": "terminateDate"},
       "$s": {"property": "activityStartDate"},
       "$t": {"property": "activityEndDate"},
-      "$2": {"property": "marc:sourceOfDateScheme"},
-      "TODO:edtf": "?",
+      "$2": {
+          "ignored": true,
+          "NOTE": "- Source of date scheme (NR) - No dateschemes in separate fields. 2026-11-25"
+      },
       "_spec": [
         {
           "name": "person birth/death dates, no source scheme",
@@ -956,36 +957,35 @@
           }}
         },
         {
-          "name": "establishment and termination dates with source scheme edtf",
+          "name": "Retain dates but discard MARC date-scheme code",
           "source": {
-            "046": {"ind1": " ", "ind2": " ", "subfields": [
-              {"q": "1957"},
-              {"r": "1999"},
-              {"2": "edtf"}
-            ]}
+            "046": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"q": "1957"},
+                {"r": "1999"},
+                {"2": "edtf"}
+              ]
+            }
           },
-          "result": {"mainEntity": {
-            "@type": "Identity",
-            "establishDate": "1957",
-            "terminateDate": "1999",
-            "marc:sourceOfDateScheme": "edtf"
-          }}
-        },
-        {
-          "name": "activity period dates with source scheme iso8601",
-          "source": {
-            "046": {"ind1": " ", "ind2": " ", "subfields": [
-              {"s": "1980"},
-              {"t": "1989"},
-              {"2": "iso8601"}
-            ]}
+          "normalized": {
+            "046": {
+              "ind1": " ",
+              "ind2": " ",
+              "subfields": [
+                {"q": "1957"},
+                {"r": "1999"}
+              ]
+            }
           },
-          "result": {"mainEntity": {
-            "@type": "Identity",
-            "activityStartDate": "1980",
-            "activityEndDate": "1989",
-            "marc:sourceOfDateScheme": "iso8601"
-          }}
+          "result": {
+            "mainEntity": {
+              "@type": "Identity",
+              "establishDate": "1957",
+              "terminateDate": "1999"
+            }
+          }
         }
       ]
   },
