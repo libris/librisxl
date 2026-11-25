@@ -41,7 +41,8 @@ public class QueryUtil {
     }
 
     public static String encodeUri(String uri) {
-        String decoded = URLDecoder.decode(uri.replace("+", "%2B"), StandardCharsets.UTF_8);
+        String escapedStrayPercent = uri.replace("+", "%2B").replaceAll("%(?![0-9A-Fa-f]{2})", "%25");
+        String decoded = URLDecoder.decode(escapedStrayPercent, StandardCharsets.UTF_8);
         return escapeQueryParam(decoded)
                 .replace("%23", "#")
                 .replace("+", "%20");
