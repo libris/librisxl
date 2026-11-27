@@ -77,13 +77,13 @@ class TransliterationAPISpec extends Specification {
         response.getStatus() == expectedStatus
         if (expectedStatus == SC_OK) {
             Map parsedResponse = jsonSlurper.parseText(response.getResponseBody())
-            parsedResponse.containsKey(expectedKey)
-            parsedResponse[expectedKey] == expectedValue
+            assert parsedResponse.containsKey(expectedKey)
+            assert parsedResponse[expectedKey] == expectedValue
         }
 
         where:
         tag | source | expectedKey | expectedValue | expectedStatus
-        "uk"  | "Королівська бібліотека Швеції"  | "uk-Latn-t-uk-Cyrl-m0-iso-1995"   | "Korolivsʹka biblioteka Šveciï"    | SC_OK
+        "uk"  | "Королівська бібліотека Швеції"  | "uk-Latn-t-uk-Cyrl-m0-iso-1968"   | "Korolivsʹka biblioteka Šveciï"    | SC_OK
         "grc" | "Εθνική βιβλιοθήκη της Σουηδίας" | "grc-Latn-t-grc-Grek-x0-skr-1980" | "Ethnikē bibliothēkē tēs Souēdias" | SC_OK
         "nonexistent" | "klsdfjsklfjsdf" | "" | "" | SC_BAD_REQUEST
     }
