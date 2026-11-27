@@ -29,6 +29,7 @@ import static whelk.JsonLd.RECORD_KEY
 import static whelk.JsonLd.REVERSE_KEY
 import static whelk.JsonLd.THING_KEY
 import static whelk.JsonLd.TYPE_KEY
+import static whelk.JsonLd.WORK_KEY
 import static whelk.JsonLd.asList
 import static whelk.component.ElasticSearch.SystemFields.CARD_STR
 import static whelk.component.ElasticSearch.SystemFields.CHIP_STR
@@ -616,7 +617,15 @@ class ElasticSearch {
         ]
 
         try {
-            searchCard[SORT_KEY_BY_LANG] = buildSortKeyByLang(searchCard, whelk)
+            Map searchCardCopy = new HashMap<String, Object>(searchCard)
+            if (document.isVirtual()) {
+                // Virtual records are sorted on the instance title, even if the work has its own title
+                List instanceTitles = Document.primaryTitles((Map) DocumentUtil.getAtPath(searchCard, [REVERSE_KEY, WORK_KEY, 0], [:]))
+                if (!instanceTitles.isEmpty()) {
+                    searchCardCopy['hasTitle'] = instanceTitles
+                }
+            }
+            searchCard[SORT_KEY_BY_LANG] = buildSortKeyByLang(searchCardCopy, whelk)
         } catch (Exception e) {
             log.error("Couldn't create sort key for {}: {}", document.shortId, e, e)
         }
@@ -748,20 +757,20 @@ class ElasticSearch {
     private static Map<String, String> buildSortKeyByLang(Map<String, Object> thing, Whelk whelk) {
         List<String> locales =  whelk.jsonld.locales
 
-        Map<String, String> searchKeyByLang = whelk.fresnelUtil.asStringByLang(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, whelk.jsonld.locales, [])
+        Map<String, String> sortKeyByLang = whelk.fresnelUtil.asStringByLang(thing, FresnelUtil.NestedLenses.CHIP_TO_TOKEN, locales, [])
                 .collectEntries {k, v -> [k, cleanForSort(v)] }
                 .findAll {!((String) it.value).isEmpty() }
 
-        if (!searchKeyByLang.isEmpty() && searchKeyByLang.size() < locales.size()) {
+        if (!sortKeyByLang.isEmpty() && sortKeyByLang.size() < locales.size()) {
             // If we have at least one value but not for all locales,
             // duplicate the first available value as a fallback.
             // Example:
             //   {"sv": "xyz"}  ->  {"sv": "xyz", "en": "xyz"}
-            String fallback = searchKeyByLang.values().first()
-            locales.each { searchKeyByLang.putIfAbsent(it, fallback) }
+            String fallback = sortKeyByLang.values().first()
+            locales.each { sortKeyByLang.putIfAbsent(it, fallback) }
         }
 
-        return searchKeyByLang
+        return sortKeyByLang
     }
 
     private static String cleanForSort(String s) {
